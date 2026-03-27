@@ -25,3 +25,48 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: MOLRNA
+      description: 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究
+      enabled: true
+      keywords:
+        - keyword: Higher-order network
+          keyword_cn: 高阶网络
+          query: H
+        - keyword: RNA foundation model
+          keyword_cn: RNA基础模型
+          query: large-scale foundation models for RNA sequence and structure
+        - keyword: molecule foundation model
+          keyword_cn: 分子基础模型
+          query: foundation models for molecular discovery and representation learning
+        - keyword: graph representation learning
+          keyword_cn: 图表示学习
+          query: graph representation learning for molecular structures
+        - keyword: Generative Models
+          keyword_cn: 生成模型
+          query: G
+        - keyword: topological deep learning
+          keyword_cn: 拓扑深度学习
+          query: topological deep learning for RNA and molecules
+      intent_queries:
+        - query: recent advances in molecule and RNA foundation models
+          query_cn: 分子与RNA基础模型的最新进展
+          enabled: true
+          source: manual
+          note: ''
+        - query: generative models for de novo molecular and RNA design
+          query_cn: 用于从头分子与RNA设计的生成模型
+          enabled: true
+          source: manual
+          note: ''
+        - query: advancements in topological deep learning for molecular property prediction
+          query_cn: 拓扑深度学习在分子性质预测中的进展
+          enabled: true
+          source: manual
+          note: ''
+        - query: diffusion models for RNA sequence and structure generation
+          query_cn: 用于RNA序列和结构生成的扩散模型
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-03-27T16:06:24.058Z'
