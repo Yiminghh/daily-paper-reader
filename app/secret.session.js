@@ -146,6 +146,19 @@
     return null;
   }
 
+  function inferRepoNameFromUrlPath(currentUrl) {
+    try {
+      const urlObj = new URL(currentUrl);
+      const parts = String(urlObj.pathname || '')
+        .split('/')
+        .map((item) => item.trim())
+        .filter(Boolean);
+      return parts.length ? parts[0] : '';
+    } catch {
+      return '';
+    }
+  }
+
   // 使用 GitHub Token 推断目标仓库 owner/repo（与订阅面板保持一致的推断规则）
   async function detectGithubRepoFromToken(token) {
     const userRes = await fetch('https://api.github.com/user', {
@@ -182,6 +195,9 @@
         if (parsedRepo) {
           repoOwner = parsedRepo.owner || repoOwner;
           repoName = parsedRepo.repo || repoName;
+        }
+        if (!repoName) {
+          repoName = inferRepoNameFromUrlPath(currentUrl);
         }
 
         if (!repoOwner) {
@@ -836,8 +852,27 @@
               )}。请在 GitHub 中重新生成 PAT。`,
             );
           }
+          const { owner, repo } = await detectGithubRepoFromToken(token);
+          const repoRes = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}`,
+            {
+              headers: {
+                Authorization: `token ${token}`,
+                Accept: 'application/vnd.github.v3+json',
+              },
+            },
+          );
+          if (!repoRes.ok) {
+            throw new Error(
+              `无法访问仓库 ${owner}/${repo}（HTTP ${repoRes.status}）。`,
+            );
+          }
+          const repoData = await repoRes.json().catch(() => ({}));
+          if (!repoData.permissions || !repoData.permissions.push) {
+            throw new Error(`没有仓库 ${owner}/${repo} 的写入权限。`);
+          }
           const userData = await res.json().catch(() => ({}));
-          githubStatusEl.innerHTML = `✅ 验证成功：用户 ${userData.login || ''}，权限：${scopeList.join(', ')}`;
+          githubStatusEl.innerHTML = `✅ 验证成功：用户 ${userData.login || ''}，仓库 ${owner}/${repo}，权限：${scopeList.join(', ')}`;
           githubStatusEl.style.color = '#28a745';
           githubOk = true;
         } catch (e) {
