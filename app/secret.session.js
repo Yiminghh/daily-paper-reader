@@ -119,6 +119,33 @@
     }
   }
 
+  async function readConfigYamlForRepo() {
+    const yaml = window.jsyaml || window.jsYaml || window.jsYAML || window.jsYml;
+    if (!yaml || typeof yaml.load !== 'function') {
+      return null;
+    }
+    const candidates = ['config.yaml', 'docs/config.yaml', '../config.yaml', '/config.yaml'];
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) continue;
+        const text = await res.text();
+        const cfg = yaml.load(text || '') || {};
+        const githubCfg = (cfg && cfg.github) || {};
+        if (githubCfg && typeof githubCfg === 'object') {
+          const owner = String(githubCfg.owner || '').trim();
+          const repo = String(githubCfg.repo || '').trim();
+          if (owner || repo) {
+            return { owner, repo };
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  }
+
   // 使用 GitHub Token 推断目标仓库 owner/repo（与订阅面板保持一致的推断规则）
   async function detectGithubRepoFromToken(token) {
     const userRes = await fetch('https://api.github.com/user', {
@@ -151,24 +178,10 @@
         repoOwner = githubPagesMatch[1];
         repoName = githubPagesMatch[2];
       } else {
-        // 其它域名：尝试从 config.yaml 中读取
-        try {
-          const res = await fetch('/config.yaml');
-          if (res.ok) {
-            const text = await res.text();
-            const yaml =
-              window.jsyaml || window.jsYaml || window.jsYAML || window.jsYml;
-            if (yaml && typeof yaml.load === 'function') {
-              const cfg = yaml.load(text) || {};
-              const githubCfg = (cfg && cfg.github) || {};
-              if (githubCfg && typeof githubCfg === 'object') {
-                if (githubCfg.owner) repoOwner = String(githubCfg.owner);
-                if (githubCfg.repo) repoName = String(githubCfg.repo);
-              }
-            }
-          }
-        } catch {
-          // 忽略 config.yaml 读取失败，后续用兜底逻辑
+        const parsedRepo = await readConfigYamlForRepo();
+        if (parsedRepo) {
+          repoOwner = parsedRepo.owner || repoOwner;
+          repoName = parsedRepo.repo || repoName;
         }
 
         if (!repoOwner) {
@@ -322,10 +335,16 @@
         await putSecret(item.name, item.value);
       }
 
-      return true;
+      return { ok: true, error: '' };
     } catch (e) {
       console.error('[SECRET] 保存 GitHub Secrets 失败：', e);
-      return false;
+      return {
+        ok: false,
+        error:
+          e && typeof e.message === 'string' && e.message
+            ? e.message
+            : String(e || '未知错误'),
+      };
     }
   }
 
@@ -960,7 +979,7 @@
           genBtn.disabled = true;
 
           // 1) 将总结大模型相关配置写入 GitHub Secrets（失败则中止后续流程）
-          const secretsOk = await saveSummarizeSecretsToGithub(
+          const secretSaveResult = await saveSummarizeSecretsToGithub(
             githubToken,
             platoKey,
             model,
@@ -970,9 +989,12 @@
               errorEl.style.color = '#666';
             },
           );
-          if (!secretsOk && errorEl) {
-            errorEl.textContent =
-              '❌ 写入 GitHub Secrets 失败，请检查网络、Token 权限（需 repo + workflow）或稍后重试。';
+          if ((!secretSaveResult || !secretSaveResult.ok) && errorEl) {
+            const detail =
+              secretSaveResult && secretSaveResult.error
+                ? `具体原因：${secretSaveResult.error}`
+                : '请检查网络、Token 权限（需 repo + workflow）或稍后重试。';
+            errorEl.textContent = `❌ 写入 GitHub Secrets 失败。${detail}`;
             errorEl.style.color = '#c00';
             return;
           }
