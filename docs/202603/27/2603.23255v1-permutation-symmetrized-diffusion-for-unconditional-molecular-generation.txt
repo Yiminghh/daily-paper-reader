@@ -1,0 +1,378 @@
+Title: Permutation-Symmetrized Diffusion for Unconditional Molecular Generation
+
+URL Source: https://arxiv.org/pdf/2603.23255v1
+
+Published Time: Wed, 25 Mar 2026 01:17:50 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+Published as a paper at the 2nd DeLTa Workshop, ICLR 2026 
+
+# PERMUTATION -S YMMETRIZED DIFFUSION FOR 
+
+# UNCONDITIONAL MOLECULAR GENERATION 
+
+Gyeonghoon Ko, Juho Lee 
+
+Korea Advanced Institute of Science and Technology 
+
+{kog, juholee }@kaist.ac.kr 
+
+## ABSTRACT 
+
+Permutation invariance is fundamental in molecular point-cloud generation, yet most diffusion models enforce it indirectly via permutation-equivariant networks on an ordered space. We propose to model diffusion directly on the quotient man-ifold ˜X = Rd×N /S N , where all atom permutations are identified. We show that the heat kernel on ˜X admits an explicit expression as a sum of Euclidean heat ker-nels over permutations, which clarifies how diffusion on the quotient differs from ordered-particle diffusion. Training requires a permutation-symmetrized score in-volving an intractable sum over SN ; we derive an expectation form over a poste-rior on permutations and approximate it using MCMC in permutation space. We evaluate on unconditional 3D molecule generation on QM9 under the EQGAT-Diff protocol, using SemlaFlow-style backbone and treating all variables continu-ously. The results demonstrate that quotient-based permutation symmetrization is practical and yields competitive generation quality with improved efficiency. 
+
+## 1 INTRODUCTION 
+
+Diffusion models provide a flexible framework for generative modeling and have recently achieved strong performance for 3D molecular generation when combined with equivariant architectures (Hoogeboom et al., 2022; Dunn & Koes, 2024; Vignac et al., 2023; Le et al., 2023). A key symmetry of molecules is permutation invariance: relabeling atoms does not change the underlying structure. Most diffusion approaches address this by representing molecules in an ordered space X = Rd×N
+
+and enforcing permutation equivariance of both the transition kernels and the score network (Zaheer et al., 2017). This guarantees that permuting the input permutes the output in the same way, but the diffusion trajectory still evolves in an ordered representation that implicitly tracks particle identities. We instead formulate diffusion directly on the quotient space ˜X = Rd×N /S N , where all permuta-tions are identified. We show that the heat kernel on ˜X admits an explicit expression as a sum of Euclidean heat kernels over permutations. This characterization highlights a qualitatively different behavior: during noising and denoising, particle identities may be effectively exchanged. The result-ing permutation-symmetrized score can be written as an expectation under a posterior distribution over permutations, which we approximate via MCMC. Related symmetrized diffusion ideas were in-troduced in Anonymous (2026), but their approach additionally requires training a physics-informed neural network (PINN). We evaluate on unconditional QM9 generation (Ramakrishnan et al., 2014) under the EQGAT-Diff framework (Le et al., 2023), using a lightweight SemlaFlow-style backbone (Irwin et al., 2024) and treating all variables continuously. 
+
+## 2 BACKGROUND 
+
+2.1 DIFFUSION MODELS ON RIEMANNIAN MANIFOLD 
+
+Consider an ambient space X in which the data lie. A noising process or forward process is a stochastic process {x(t)}Tt=0 starting from x(0) ∼ p0 = pdata , usually defined by a stochastic differ-ential equation (SDE) adding noises, with transition kernel pt|s(x(t)|x(s)) for 0 ≤ s < t ≤ T and marginal distribution pt(x(t)) = R pt|0(x(t)|x(0) )pdata (x(0) )dx(0) . A denoising process or reverse 
+
+1
+
+> arXiv:2603.23255v1 [cs.LG] 24 Mar 2026
+
+Published as a paper at the 2nd DeLTa Workshop, ICLR 2026 
+
+process is a stochastic process designed to reverse the noising process, starting from the noise dis-tribution qT (x(T )) ≈ pT at time T and aiming to recover the original data distribution pdata (x(0) ).The reverse process is also often characterized by a (reverse-time) SDE, with a learnable transition kernel qθ,s |t(x(s)|x(t)) for s < t , parametrized by a model parameter θ.For X = Rd, we use the Ornstein–Uhlenbeck (OU) forward SDE (Song et al., 2020) 
+
+dx(t) = − 12 x(t)dt + dw(t), (1) with closed-form Gaussian transitions pt|s(y | x) = N (y | μt|s(x), Σt|s) and marginals pt. The associated reverse-time SDE is 
+
+dx(t) =
+
+h
+
+− 12 x(t) − ∇ x(t) log pt(x(t))
+
+i
+
+dt + dw(t). (2) We learn the score with a network sθ (x, t ) ≈ ∇ x log pt(x) via denoising score matching, 
+
+θ∗ = arg min 
+
+> θ
+
+Et, x(0) sθ (x(t), t ) − ∇ x(t) log pt(x(t) | x(0) ) 2
+
+, (3) using the closed-form conditional score of the OU kernel. In practice we may use time-inhomogeneous variants and loss reweighting. The noising and denoising processes can also be defined well in a non-Euclidean manifold, if the manifold X is granted with a Riemannian metric. The Wiener process w(t) is replaced by its Rie-mannian version w(t) 
+
+> X
+
+, derived from the Laplace-Beltrami operator ∆X of X as an infinitesimal generator. Similar to the Euclidean case, one can define a forward SDE and its reverse 
+
+dx(t) = b(x(t))dt + dw(t) 
+
+> X
+
+, dx(t) = −[b(x(t)) + ∇x(t) log pt(x(t))] dt + dw(t) 
+
+> X
+
+(4) where b(x) is a tangent vector field on X . However, unlike the Euclidean case, the closed-form equations for transition kernels and marginal densities are unknown in general, which becomes one of the major challenges of Riemannian diffusion models. For later use, we also mention that having closed-form expressions for forward transition kernels is possible since the heat kernel K(t, x, y), i.e. the function satisfying ∂∂t K = ∆ y K with lim t→0 K =
+
+δ(x − y), is given by the Gaussian 
+
+K(t, x, y) = 1(4 πt )d/ 2 exp( − |x − y|2
+
+4t ). (5) For the Riemannian manifold X , the heat kernel KX is defined similarly with the Laplacian ∆
+
+replaced by the Laplace-Beltrami operator ∆X . The exact form of the heat kernel is unknown in general, and understanding them is a crucial component in modern mathematics. 
+
+## 3 METHOD 
+
+3.1 RETHINKING PERMUTATION SYMMETRY IN DIFFUSION MODELS 
+
+In molecule generation tasks, we usually consider a diffusion process on the space of point clouds 
+
+X = Rd×N = {x = ( x1, · · · , x N ) | xi ∈ RN for i = 1 , · · · , N }, with the space Rd consisting of coordinates and atom features, e.g. atom types. The molecules x = ( x1, · · · , x N ) have a per-mutation symmetry defined by the permutation group SN which acts by permuting the points as 
+
+σ(x) = ( xσ−1(1) , · · · , x σ−1(N )). A common recipe for incorporating the permutation symmetry is designing a permutation-equivariant transition kernel: 
+
+pt|s(x(t)|x(s)) = pt|s(σ(x(t))|σ(x(s))) , qθ,s |t(x(s)|x(t)) = qθ,s |t(σ(x(s))|σ(x(t))) (6) for all s < t and σ ∈ SN . In this formulation, the equivariance is achieved by using a permutation equivariant diffusion kernel (forward) and a permutation equivariant architecture (reverse). This formulation implies that if the input is altered by a permutation, then the output is altered accordingly by the same permutation, i.e. the process behaves identically under permutation. On the other hand, we can think of a stronger notion of utilizing the symmetry. Instead of building an equivariant diffusion on X = Rd×N , we model the diffusion process on the quotient manifold 2Published as a paper at the 2nd DeLTa Workshop, ICLR 2026 
+
+˜X = Rd×N /S N . Let π : X = Rd×N → ˜X = Rd×N /S N denote the quotient map, and let’s write ˜x = π(x) for brevity. In this formulation, we have simply ˜σ(x) = ˜ x, i.e. the elements are identical under permutation. The manifold ˜X = Rd×N /S N inherits the Euclidean metric, and hence has a well-defined heat kernel. The exact form of the heat kernel is given by Theorem 3.1: 
+
+Theorem 3.1. The heat kernel K ˜X (t, ˜x, ˜y) associated to the quotient manifold ˜X = Rd×N /S N is given by, for ˜x, ˜y ∈ ˜X ,
+
+K ˜X (t, ˜x, ˜y)= 1(4 πt )dN/ 2
+
+X
+
+> σ∈SN
+
+exp( − |x − σ(y)|2
+
+4t ) = 1(4 πt )dN/ 2
+
+X
+
+> σ∈SN
+> N
+
+Y
+
+> i=1
+
+exp( − (xi − yσ−1(i))2
+
+4t ),
+
+i.e. the heat kernel is simply the sum of the Euclidean heat kernels over all permutations. 
+
+The proof of Theorem 3.1 is postponed to Section A.1, but it just comes from the fact that permuta-tions are isometries of Euclidean spaces. Now, with the heat kernel identified, it looks much clearer how the diffusion processes in the quotient manifold behave. The classic diffusion process in the Euclidean space inherently assumes that first particle x1 diffuses to the first one y1, second one x2 diffuses to y2, and so on. However, our diffusion opens the possibilities that first particle x1 can be diffused to any yi for i ∈ { 1, · · · , N },and so on, over all the configurations σ ∈ SN . Intuitively, in this diffusion process, the identities of particles are all shared, so their identities can be swapped with each other while noising or denoising. This behavior resembles the behaviors of bosons in particle physics (Feynman & Mechanics, 1979). 3.2 SDE S ON THE QUOTIENT MANIFOLD 
+
+Let’s go back to the OU process as defined in Equation (1) and Equation (2). We’ll consider the pushforward of the OU process by the quotient map π : X 7 → ˜X . Although working with pushfor-ward process in arbitrary Riemannian manifolds would involve extremely complicated computations in general, the computations are significantly simplified in our case, because the OU process is in-variant under permutations and permutations are isometries of the Euclidean space. The forward and reverse equations of the pushforward of the OU process are given by 
+
+d˜x(t) = − 12 ˜x(t)dt + d ˜w(t), d˜x(t) =
+
+
+
+− 12 ˜x(t) − ∇ ˜x(t) log ˜ pt(˜ x(t))
+
+
+
+dt + d ˜w(t). (7) where we use ˜pt and ˜ps|t for marginals and transition kernels. Rigorously speaking, the term ˜x(t)
+
+multiplied to dt is a vector field ˜x(t) = ˜V (˜ x(t)) on ˜X defined by quotient-mapping the vector field on Euclidean space V (x) = x, i.e. ˜V = π◦V ◦π−1, well-defined since the vector field V is invariant under permutation. Similarly, the gradient ∇˜x(t) is in fact the gradient operator on the Riemannian manifold ˜X , but it locally behaves identical to the Euclidean gradient since the permuatations are isometries. The transition kernels ˜pt|s and marginals ˜pt can simply yielded by summing the original transition kernels pt|s and marginals pt over all permutations: 
+
+˜pt|s(˜ y|˜x) = X
+
+> σ∈SN
+
+pt|s(σ(y)|x), ˜pt(˜ y|˜x) = X
+
+> σ∈SN
+
+pt(σ(y)|x). (8) 3.3 TRAINING PERMUTATION SYMMETRIZED DIFFUSION 
+
+The transition kernel pt derived in Theorem 3.1 contains summmation over the permutation group 
+
+SN , hence naive computation would require at least O(N !) computations. Instead, we look at the score function ∇ log ˜ pt, which will be the target function of diffusion loss. Letting I(σ) = 
+
+− |x−σ(y)|2 
+
+> 4t
+
+, we have 
+
+∇˜y log pt(˜ y|˜x) = ∇y log X
+
+> σ∈SN
+
+exp( I(σ)) = X
+
+> σ∈SN
+
+exp( I(σ)) 
+
+P 
+
+> σ′∈SN
+
+exp( I(σ′)) ∇y I(σ).
+
+3Published as a paper at the 2nd DeLTa Workshop, ICLR 2026 Table 1: Comparison of QM9 unconditional generation metrics (%).                                    
+
+> Method Atom-Stab Mol-Stab Valid Uniq Nov EQGAT-Diff 99 .87 ±0.02 98 .24 ±0.11 98 .58 ±0.13 100 ±0.00 61 .62 ±1.55
+> Ours 99 .89 ±0.02 98 .48 ±0.27 98 .74 ±0.25 100 ±0.00 67 .72 ±1.55
+
+Thus, if we consider a distribution S on the permutation group SN whose probability mass function 
+
+q(σ) is proportional to exp I(σ), we have 
+
+∇y log pt(˜ x|˜y) = ES [∇y I(σ)] . (9) Note that ∇y I(σ) = x−σ(y)2t would be the score function for the original Euclidean diffusion model, associated with the original data x and its noised version σ(y). We can interpret the probability 
+
+q(σ) = q(σ|x, y) as the posterior of the permutation σ given the original and noised data, and the target function is the expected value of the original score function over the posterior q(σ). In fact, from the perspective of variational inference, learning towards this target function can be seen as minimizing the lower bound for the evidence lower bound (ELBO) of this diffusion model. This argument is explained in detail in Section A.2. Sampling permutations from S can be done using Markov chain Monte Carlo (MCMC). Define the cost matrix C = ( Cij ) with Cij = − (xi−yj )2 
+
+> 4t
+
+. We use an MCMC starting from σ0 = id ∈ SN and the proposals yielded by swapping entries of i, j , for i ∈ { 1, · · · , N } sampled uniformly at random and j sampled from distribution proportional to exp( Cij ). Once the permutations σ1, · · · , σ K ∼ S 
+
+are sampled, penalizing the model sθ towards ES [∇y I(σ)] ≈ PKk=1 ∇y I(σk) gives an unbiased estimate of the gradient: 
+
+∇θ sθ − ES [∇y I(σ)] 2 = Eσ1,··· ,σ K ∼S 
+
+
+
+∇θ sθ −
+
+> K
+
+X
+
+> k=1
+
+∇y I(σ) 2
+
+
+
+(10) since derivatives of quadratic functions are linear. 
+
+## 4 EXPERIMENT 
+
+We evaluate on unconditional 3D molecule generation on QM9 (Ramakrishnan et al., 2014). Our experimental pipeline follows EQGAT-Diff (Le et al., 2023) (data split, training schedule, sampling procedure, and evaluation), but we replace its backbone with the lighter SemlaFlow architecture (Irwin et al., 2024) that does not carry edge features for efficiency. Throughout, we treat all variables as continuous (i.e., no discrete diffusion over atom types). When computing the permutations using MCMC, edge features are ignored since they will require heavier computation. Each molecule is represented as a point cloud with 3D coordinates and continuous node features. We train on the QM9 training split and generate samples from the learned reverse-time dynamics following EQGAT-Diff. We compare primarily against EQGAT-Diff under its default QM9 setup. All methods are evaluated using the same split and metric implementation as in EQGAT-Diff and its prior works (Vignac et al., 2023). We report the standard QM9 generation metrics used in EQGAT-Diff, including atom stability, molecule stability, validity, uniqueness, and novelty. The experiments are performed five times, and their averages and standard deviations are reported in Table 1. Our model wins all the stability/validity metrics by a small margin, and achieves much higher novelty. 
+
+## 5 CONCLUSION 
+
+We presented a quotient-manifold formulation of permutation symmetry for diffusion models on point clouds, focusing on ˜X = Rd×N /S N . The resulting heat kernel admits a simple permutation-sum expression, and the corresponding symmetrized score can be estimated efficiently by MCMC over permutations. On QM9, following EQGAT-Diff framework (Le et al., 2023) with a lighter SemlaFlow architecture (Irwin et al., 2024), we show the approach is practical in a fully continuous setting. Future work includes improving permutation-sampler efficiency and extending the same quotient perspective to other symmetry quotients in geometric generative modeling. 4Published as a paper at the 2nd DeLTa Workshop, ICLR 2026 
+
+## REFERENCES 
+
+Anonymous. Riemannian diffusion models on general manifolds via physics-informed neural net-works. Unpublished manuscript (under anonymous review)., 2026. Ian Dunn and David Ryan Koes. Mixed continuous and categorical flow matching for 3d de novo molecule generation. ArXiv , pp. arXiv–2404, 2024. RP Feynman and AR Hibbs Quantum Mechanics. Path integrals. Lecture Notes Phys , 106:64, 1979. Emiel Hoogeboom, Vıctor Garcia Satorras, Cl´ ement Vignac, and Max Welling. Equivariant diffu-sion for molecule generation in 3d. In International conference on machine learning , pp. 8867– 8887. PMLR, 2022. Ross Irwin, Alessandro Tibo, Jon Paul Janet, and Simon Olsson. Semlaflow–efficient 3d molecular generation with latent attention and equivariant flow matching. arXiv preprint arXiv:2406.07266 ,2024. Tuan Le, Julian Cremer, Frank Noe, Djork-Arn´ e Clevert, and Kristof Sch¨ utt. Navigating the design space of equivariant diffusion-based generative models for de novo 3d molecule generation. arXiv preprint arXiv:2309.17296 , 2023. Raghunathan Ramakrishnan, Pavlo O Dral, Matthias Rupp, and O Anatole Von Lilienfeld. Quantum chemistry structures and properties of 134 kilo molecules. Scientific data , 1(1):1–7, 2014. Yang Song, Jascha Sohl-Dickstein, Diederik P Kingma, Abhishek Kumar, Stefano Ermon, and Ben Poole. Score-based generative modeling through stochastic differential equations. arXiv preprint arXiv:2011.13456 , 2020. Clement Vignac, Nagham Osman, Laura Toni, and Pascal Frossard. Midi: Mixed graph and 3d denoising diffusion for molecule generation. In Joint European Conference on Machine Learning and Knowledge Discovery in Databases , pp. 560–576. Springer, 2023. Manzil Zaheer, Satwik Kottur, Siamak Ravanbakhsh, Barnabas Poczos, Russ R Salakhutdinov, and Alexander J Smola. Deep sets. Advances in neural information processing systems , 30, 2017. 5Published as a paper at the 2nd DeLTa Workshop, ICLR 2026 
+
+## A MATHEMATICAL DETAILS 
+
+A.1 PROOF OF THEOREM 3.1 
+
+Proof. Let KX (t, x, y) be the Euclidean heat kernel on X ≃ RdN :
+
+KX (t, x, y) = 1(4 πt ) dN 
+
+> 2
+
+exp 
+
+
+
+− ∥x − y∥2
+
+4t
+
+
+
+, t > 0.
+
+Define, for representatives x, y ∈ X of ˜x = π(x) and ˜y = π(y),
+
+bK(t, x, y) := X
+
+> σ∈SN
+
+KX (t, x, σ (y)) .
+
+Step 1: bK descends to the quotient. Each permutation τ ∈ SN is an isometry of X , hence 
+
+∥τ (x) − τ (y)∥ = ∥x − y∥ and therefore KX (t, τ (x), τ (y)) = KX (t, x, y). Using this and the change of index σ′ = τ −1σ, we get 
+
+bK(t, τ (x), y) = X
+
+> σ∈SN
+
+KX (t, τ (x), σ (y)) = X
+
+> σ′∈SN
+
+KX (t, x, σ ′(y)) = bK(t, x, y),
+
+and similarly bK(t, x, τ (y)) = bK(t, x, y). Hence bK(t, x, y) depends only on the orbits ˜x = π(x)
+
+and ˜y = π(y), so we may define 
+
+K ˜X (t, ˜x, ˜y) := bK(t, x, y).
+
+Step 2: heat equation. For each fixed σ, the function x 7 → KX (t, x, σ (y)) solves (∂t − ∆X )u =0 for t > 0, hence so does the finite sum bK(t, x, y). Since bK is SN -invariant in x, it corresponds to a function on ˜X , and thus K ˜X (·, ·, ˜y) solves the heat equation on the quotient. 
+
+Step 3: initial condition. Let ˜f be a smooth test function on ˜X and let f := ˜f ◦ π be its SN -invariant lift to X . With respect to the Riemannian volume on ˜X , the heat semigroup defined by 
+
+K ˜X satisfies Z
+
+> ˜X
+
+K ˜X (t, ˜x, ˜y) ˜f (˜ y) d˜y = 1
+
+|SN |
+
+Z
+
+> X
+
+ X 
+
+> σ∈SN
+
+KX (t, x, σ (y)) 
+
+
+
+f (y) dy
+
+=
+
+Z
+
+> X
+
+KX (t, x, z) f (z) dz,
+
+where the last equality uses the change of variables z = σ(y) and the invariance f ◦ σ = f (each term in the sum is identical, cancelling the factor |SN |). As t ↓ 0, the right-hand side converges to 
+
+f (x) = ˜f (˜ x) by the standard delta initial condition for the Euclidean heat kernel. Thus K ˜X has the correct initial condition on the quotient. 
+
+Conclusion. We have shown that the expression in Theorem 3.1 defines a kernel on ˜X which solves the heat equation for t > 0 and converges to the delta distribution at t = 0 . By uniqueness of the heat kernel, it must equal the heat kernel on ˜X .A.2 BAYESIAN / VARIATIONAL INTERPRETATION OF PERMUTATION SYMMETRIZATION 
+
+Posterior over permutations. From Theorem 3.1, the symmetrized transition density on the quo-tient satisfies 
+
+˜pt(˜ y | ˜x) ∝ X
+
+> σ∈SN
+
+exp  I(σ), I(σ) := − ∥x − σ(y)∥2
+
+4t .
+
+Introduce a latent permutation σ with a uniform prior p(σ) = 1 /|SN | and define the (joint, unnor-malized) model 
+
+˜pt(˜ y, σ | ˜x) ∝ exp( I(σ)) .
+
+6Published as a paper at the 2nd DeLTa Workshop, ICLR 2026 Then the Bayes posterior is exactly the “soft assignment” used in the main text: 
+
+p(σ | ˜x, ˜y) = exp( I(σ)) 
+
+P 
+
+> σ′∈SN
+
+exp( I(σ′)) =: q(σ | x, y).
+
+Consequently (Fisher’s identity / mixture-score identity), 
+
+∇y log ˜ pt(˜ y | ˜x) = Eσ∼q(σ|x,y)
+
+∇y I(σ),
+
+which is the permutation-symmetrized score target. 
+
+ELBO view. For any distribution r(σ) on SN , Jensen’s inequality gives 
+
+log ˜ pt(˜ y | ˜x) = log X
+
+> σ
+
+exp( I(σ)) + const 
+
+= log Eσ∼r
+
+ exp( I(σ)) 
+
+r(σ)
+
+
+
++ const 
+
+≥ Er [I(σ)] + H(r) + const =: ELBO( r),
+
+and one can write the exact decomposition 
+
+log ˜ pt(˜ y | ˜x) = ELBO( r) + DKL 
+
+ r(σ) ∥ q(σ | x, y).
+
+Thus maximizing the evidence on the quotient is equivalent to maximizing this ELBO, and the optimal variational distribution is the posterior r⋆ = q(σ | x, y). Our training objective uses the corresponding posterior expectation of the Euclidean score; in practice we approximate Eq [·] by MCMC samples of σ.7

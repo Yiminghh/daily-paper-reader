@@ -1,0 +1,663 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-03-27T19:42:34.315973+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 28,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 53,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2603.19817v1",
+      "title": "GDEGAN: Gaussian Dynamic Equivariant Graph Attention Network for Ligand Binding Site Prediction",
+      "abstract": "Accurate prediction of binding sites of a given protein, to which ligands can bind, is a critical step in structure-based computational drug discovery. Recently, Equivariant Graph Neural Networks (GNNs) have emerged as a powerful paradigm for binding site identification methods due to the large-scale availability of 3D structures of proteins via protein databases and AlphaFold predictions. The state-of-the-art equivariant GNN methods implement dot product attention, disregarding the variation in the chemical and geometric properties of the neighboring residues. To capture this variation, we propose GDEGAN (Gaussian Dynamic Equivariant Graph Attention Network), which replaces dot-product attention with adaptive kernels that recognize binding sites. The proposed attention mechanism captures variation in neighboring residues using statistics of their characteristic local feature distributions. Our mechanism dynamically computes neighborhood statistics at each layer, using local variance as an adaptive bandwidth parameter with learnable per-head temperatures, enabling each protein region to determine its own context-specific importance. GDEGAN outperforms existing methods with relative improvements of 37-66% in DCC and 7-19% DCA success rates across COACH420, HOLO4k, and PDBBind2020 datasets. These advances have direct application in accelerating protein-ligand docking by identifying potential binding sites for therapeutic target identification.",
+      "authors": [
+        "Animesh",
+        "Plaban Kumar Bhowmick",
+        "Pralay Mitra"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-03-20T10:04:10+00:00",
+      "link": "https://arxiv.org/pdf/2603.19817v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "equivariant graph attention network for ligand binding",
+      "llm_evidence_cn": "用于配体结合的等变图注意力网络",
+      "llm_evidence": "用于配体结合的等变图注意力网络",
+      "canonical_evidence": "用于配体结合的等变图注意力网络",
+      "llm_tldr_en": "Proposes GDEGAN, an equivariant GNN for predicting protein-ligand binding sites.",
+      "llm_tldr_cn": "提出GDEGAN，一种用于预测蛋白质-配体结合位点的等变图神经网络。",
+      "llm_tldr": "提出GDEGAN，一种用于预测蛋白质-配体结合位点的等变图神经网络。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.20724v1",
+      "title": "Multi-RF Fusion with Multi-GNN Blending for Molecular Property Prediction",
+      "abstract": "Multi-RF Fusion achieves a test ROC-AUC of 0.8476 +/- 0.0002 on ogbg-molhiv (10 seeds), placing #1 on the OGB leaderboard ahead of HyperFusion (0.8475 +/- 0.0003). The core of the method is a rank-averaged ensemble of 12 Random Forest models trained on concatenated molecular fingerprints (FCFP, ECFP, MACCS, atom pairs -- 4,263 dimensions total), blended with deep-ensembled GNN predictions at 12% weight. Two findings drive the result: (1) setting max_features to 0.20 instead of the default sqrt(d) gives a +0.008 AUC gain on this scaffold split, and (2) averaging GNN predictions across 10 seeds before blending with the RF eliminates GNN seed variance entirely, dropping the final standard deviation from 0.0008 to 0.0002. No external data or pre-training is used.",
+      "authors": [
+        "Zacharie Bugaud"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-03-21T09:18:37+00:00",
+      "link": "https://arxiv.org/pdf/2603.20724v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "GNN blending for molecular property prediction",
+      "llm_evidence_cn": "用于分子性质预测的图神经网络融合",
+      "llm_evidence": "用于分子性质预测的图神经网络融合",
+      "canonical_evidence": "用于分子性质预测的图神经网络融合",
+      "llm_tldr_en": "Combines Random Forest ensembles with GNNs to achieve state-of-the-art molecular property prediction on OGB.",
+      "llm_tldr_cn": "结合随机森林集成与图神经网络，在OGB分子性质预测任务上取得领先性能。",
+      "llm_tldr": "结合随机森林集成与图神经网络，在OGB分子性质预测任务上取得领先性能。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.20970v1",
+      "title": "GraPHFormer: A Multimodal Graph Persistent Homology Transformer for the Analysis of Neuroscience Morphologies",
+      "abstract": "Neuronal morphology encodes critical information about circuit function, development, and disease, yet current methods analyze topology or graph structure in isolation. We introduce GraPHFormer, a multimodal architecture that unifies these complementary views through CLIP-style contrastive learning.   Our vision branch processes a novel three-channel persistence image encoding unweighted, persistence-weighted, and radius-weighted topological densities via DINOv2-ViT-S. In parallel, a TreeLSTM encoder captures geometric and radial attributes from skeleton graphs. Both project to a shared embedding space trained with symmetric InfoNCE loss, augmented by persistence-space transformations that preserve topological semantics.   Evaluated on six benchmarks (BIL-6, ACT-4, JML-4, N7, M1-Cell, M1-REG) spanning self-supervised and supervised settings, GraPHFormer achieves state-of-the-art performance on five benchmarks, significantly outperforming topology-only, graph-only, and morphometrics baselines. We demonstrate practical utility by discriminating glial morphologies across cortical regions and species, and detecting signatures of developmental and degenerative processes.   Code: https://github.com/Uzshah/GraPHFormer",
+      "authors": [
+        "Uzair Shah",
+        "Marco Agus",
+        "Mahmoud Gamal",
+        "Mahmood Alzubaidi",
+        "Corrado Cali",
+        "Pierre J. Magistretti",
+        "Abdesselam Bouzerdoum",
+        "Mowafa Househ"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-21T22:47:24+00:00",
+      "link": "https://arxiv.org/pdf/2603.20970v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "multimodal graph persistent homology for topology analysis",
+      "llm_evidence_cn": "用于拓扑分析的多模态图持续同调",
+      "llm_evidence": "用于拓扑分析的多模态图持续同调",
+      "canonical_evidence": "用于拓扑分析的多模态图持续同调",
+      "llm_tldr_en": "Combines graph structure and persistent homology via a multimodal Transformer for neuronal morphology analysis.",
+      "llm_tldr_cn": "通过多模态Transformer结合图结构与持续同调，用于神经元形态分析。",
+      "llm_tldr": "通过多模态Transformer结合图结构与持续同调，用于神经元形态分析。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.21601v1",
+      "title": "Riemannian Geometry Speaks Louder Than Words: From Graph Foundation Model to Next-Generation Graph Intelligence",
+      "abstract": "Graphs provide a natural description of the complex relationships among objects, and play a pivotal role in communications, transportation, social computing, the life sciences, etc. Currently, there is strong agreement that Graph Foundation Models (GFMs) are essential for advancing graph learning, yet considerable disagreement persists on how to build a powerful, general-purpose GFM analogous to Large Language Models (LLMs). Graph Neural Networks (GNNs) exhibit limitations in memory retention and principled interpretability when confronted with multi-domain pretraining and adaptation. The challenge of graph serialization hinders the direct application of LLMs, as the words struggle to capture the structural complexity and diversity inherent in graphs. In contrast, Riemannian geometry offers an elegant mathematical framework for modeling structures, while remaining compatible with graph semantic learning, even with LLMs. In this paper, we argue that, for graphs, Riemannian geometry speaks louder than words, and lay out the foundational principles for GFM. Reimagining with Riemannian geometry, we introduce a blue sky idea-Riemannian Foundation Model (RFM)-that opens a new pathway for capturing complex structural patterns and uncovering cross-domain generalities. RFM emphasizes intrinsic graph geometry and embodies endogenous capacities for structural inference and generation, moving beyond mere representation-space switching. Accordingly, we outline a progressive agenda that begins with universal structural understanding through intrinsic geometry, and then rebuilds LLM with a Riemannian engine for general-purpose graph modeling and beyond. Thus, RFM enables a paradigm shift from designing graph models to solving graph-structured applications with RFM agents, unlocking the next-generation graph intelligence.",
+      "authors": [
+        "Philip S. Yu",
+        "Li Sun"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-23T05:49:19+00:00",
+      "link": "https://arxiv.org/pdf/2603.21601v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "graph foundation models and Riemannian geometry",
+      "llm_evidence_cn": "图基础模型与黎曼几何",
+      "llm_evidence": "图基础模型与黎曼几何",
+      "canonical_evidence": "图基础模型与黎曼几何",
+      "llm_tldr_en": "Explores building graph foundation models using Riemannian geometry to overcome GNN limitations.",
+      "llm_tldr_cn": "探讨利用黎曼几何构建图基础模型，以克服传统图神经网络的局限性。",
+      "llm_tldr": "探讨利用黎曼几何构建图基础模型，以克服传统图神经网络的局限性。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.23255v1",
+      "title": "Permutation-Symmetrized Diffusion for Unconditional Molecular Generation",
+      "abstract": "Permutation invariance is fundamental in molecular point-cloud generation, yet most diffusion models enforce it indirectly via permutation-equivariant networks on an ordered space. We propose to model diffusion directly on the quotient manifold $\\tilde{\\calX}=\\sR^{d\\times N}/S_N$, where all atom permutations are identified. We show that the heat kernel on $\\tilde{\\calX}$ admits an explicit expression as a sum of Euclidean heat kernels over permutations, which clarifies how diffusion on the quotient differs from ordered-particle diffusion. Training requires a permutation-symmetrized score involving an intractable sum over $S_N$; we derive an expectation form over a posterior on permutations and approximate it using MCMC in permutation space. We evaluate on unconditional 3D molecule generation on QM9 under the EQGAT-Diff protocol, using SemlaFlow-style backbone and treating all variables continuously. The results demonstrate that quotient-based permutation symmetrization is practical and yields competitive generation quality with improved efficiency.",
+      "authors": [
+        "Gyeonghoon Ko",
+        "Juho Lee"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-03-24T14:20:42+00:00",
+      "link": "https://arxiv.org/pdf/2603.23255v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "diffusion for unconditional molecular generation on quotient manifolds",
+      "llm_evidence_cn": "商流形上的无条件分子生成扩散模型",
+      "llm_evidence": "商流形上的无条件分子生成扩散模型",
+      "canonical_evidence": "商流形上的无条件分子生成扩散模型",
+      "llm_tldr_en": "Proposes a permutation-symmetrized diffusion model for molecular point-cloud generation.",
+      "llm_tldr_cn": "提出了一种用于分子点云生成的置换对称扩散模型。",
+      "llm_tldr": "提出了一种用于分子点云生成的置换对称扩散模型。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.18389v1",
+      "title": "An SO(3)-equivariant reciprocal-space neural potential for long-range interactions",
+      "abstract": "Long-range electrostatic and polarization interactions play a central role in molecular and condensed-phase systems, yet remain fundamentally incompatible with locality-based machine-learning interatomic potentials. Although modern SO(3)-equivariant neural potentials achieve high accuracy for short-range chemistry, they cannot represent the anisotropic, slowly decaying multipolar correlations governing realistic materials, while existing long-range extensions either break SO(3) equivariance or fail to maintain energy-force consistency. Here we introduce EquiEwald, a unified neural interatomic potential that embeds an Ewald-inspired reciprocal-space formulation within an irreducible SO(3)-equivariant framework. By performing equivariant message passing in reciprocal space through learned equivariant k-space filters and an equivariant inverse transform, EquiEwald captures anisotropic, tensorial long-range correlations without sacrificing physical consistency. Across periodic and aperiodic benchmarks, EquiEwald captures long-range electrostatic behavior consistent with ab initio reference data and consistently improves energy and force accuracy, data efficiency, and long-range extrapolation. These results establish EquiEwald as a physically principled paradigm for long-range-capable machine-learning interatomic potentials.",
+      "authors": [
+        "Linfeng Zhang",
+        "Taoyong Cui",
+        "Dongzhan Zhou",
+        "Lei Bai",
+        "Sufei Zhang",
+        "Luca Rossi",
+        "Mao Su",
+        "Wanli Ouyang",
+        "Pheng-Ann Heng"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.AI"
+      ],
+      "published": "2026-03-19T01:16:11+00:00",
+      "link": "https://arxiv.org/pdf/2603.18389v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "SO(3)-equivariant neural potential for molecular systems",
+      "llm_evidence_cn": "分子系统的SO(3)等变神经势能",
+      "llm_evidence": "分子系统的SO(3)等变神经势能",
+      "canonical_evidence": "分子系统的SO(3)等变神经势能",
+      "llm_tldr_en": "Introduces EquiEwald, an equivariant neural potential for long-range interactions in molecular systems.",
+      "llm_tldr_cn": "引入EquiEwald，一种用于分子系统中长程相互作用的等变神经势能。",
+      "llm_tldr": "引入EquiEwald，一种用于分子系统中长程相互作用的等变神经势能。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2603.01274v1",
+      "title": "GlassMol: Interpretable Molecular Property Prediction with Concept Bottleneck Models",
+      "abstract": "Machine learning accelerates molecular property prediction, yet state-of-the-art Large Language Models and Graph Neural Networks operate as black boxes. In drug discovery, where safety is critical, this opacity risks masking false correlations and excluding human expertise. Existing interpretability methods suffer from the effectiveness-trustworthiness trade-off: explanations may fail to reflect a model's true reasoning, degrade performance, or lack domain grounding. Concept Bottleneck Models (CBMs) offer a solution by projecting inputs to human-interpretable concepts before readout, ensuring that explanations are inherently faithful to the decision process. However, adapting CBMs to chemistry faces three challenges: the Relevance Gap (selecting task-relevant concepts from a large descriptor space), the Annotation Gap (obtaining concept supervision for molecular data), and the Capacity Gap (degrading performance due to bottleneck constraints). We introduce GlassMol, a model-agnostic CBM that addresses these gaps through automated concept curation and LLM-guided concept selection. Experiments across thirteen benchmarks demonstrate that \\method generally matches or exceeds black-box baselines, suggesting that interpretability does not sacrifice performance and challenging the commonly assumed trade-off. Code is available at https://github.com/walleio/GlassMol.",
+      "authors": [
+        "Oscar Rivera",
+        "Ziqing Wang",
+        "Matthieu Dagommer",
+        "Abhishek Pandey",
+        "Kaize Ding"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-01T21:07:49+00:00",
+      "link": "https://arxiv.org/pdf/2603.01274v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "interpretable molecular property prediction with concept bottleneck models",
+      "llm_evidence_cn": "使用概念瓶颈模型进行可解释的分子性质预测",
+      "llm_evidence": "使用概念瓶颈模型进行可解释的分子性质预测",
+      "canonical_evidence": "使用概念瓶颈模型进行可解释的分子性质预测",
+      "llm_tldr_en": "Proposes GlassMol for interpretable molecular property prediction using Concept Bottleneck Models.",
+      "llm_tldr_cn": "提出GlassMol，利用概念瓶颈模型实现可解释的分子性质预测。",
+      "llm_tldr": "提出GlassMol，利用概念瓶颈模型实现可解释的分子性质预测。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "advancements in topological deep learning for molecular property prediction",
+      "matched_requirement_id": "req-9",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.01274v1",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.18314v1",
+      "title": "Approximate Subgraph Matching with Neural Graph Representations and Reinforcement Learning",
+      "abstract": "Approximate subgraph matching (ASM) is a task that determines the approximate presence of a given query graph in a large target graph. Being an NP-hard problem, ASM is critical in graph analysis with a myriad of applications ranging from database systems and network science to biochemistry and privacy. Existing techniques often employ heuristic search strategies, which cannot fully utilize the graph information, leading to sub-optimal solutions. This paper proposes a Reinforcement Learning based Approximate Subgraph Matching (RL-ASM) algorithm that exploits graph transformers to effectively extract graph representations and RL-based policies for ASM. Our model is built upon the branch-and-bound algorithm that selects one pair of nodes from the two input graphs at a time for potential matches. Instead of using heuristics, we exploit a Graph Transformer architecture to extract feature representations that encode the full graph information. To enhance the training of the RL policy, we use supervised signals to guide our agent in an imitation learning stage. Subsequently, the policy is fine-tuned with the Proximal Policy Optimization (PPO) that optimizes the accumulative long-term rewards over episodes. Extensive experiments on both synthetic and real-world datasets demonstrate that our RL-ASM outperforms existing methods in terms of effectiveness and efficiency. Our source code is available at https://github.com/KaiyangLi1992/RL-ASM.",
+      "authors": [
+        "Kaiyang Li",
+        "Shihao Ji",
+        "Zhipeng Cai",
+        "Wei Li"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-18T21:53:23+00:00",
+      "link": "https://arxiv.org/pdf/2603.18314v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "neural graph representations for biochemistry applications",
+      "llm_evidence_cn": "用于生物化学应用的神经图表征",
+      "llm_evidence": "用于生物化学应用的神经图表征",
+      "canonical_evidence": "用于生物化学应用的神经图表征",
+      "llm_tldr_en": "Combines graph transformers and reinforcement learning for approximate subgraph matching in biochemistry.",
+      "llm_tldr_cn": "结合图变换器和强化学习，用于生物化学中的近似子图匹配。",
+      "llm_tldr": "结合图变换器和强化学习，用于生物化学中的近似子图匹配。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.18274v1",
+      "title": "sbml4md: A computational platform for System-Bath Modeling via Molecular Dynamics powered by Machine Learning",
+      "abstract": "We introduce sbml4md, a newly developed algorithm implemented as a software package to extract parameters of multimode anharmonic Brownian (MAB) models from molecular dynamics (MD) trajectories for simulating nonlinear vibrational spectra of intramolecular modes of molecular liquids. By leveraging machine learning (ML) techniques to capture vibrational anharmonicity, intermolecular couplings, and bath correlation functions for each mode, sbml4md obviates empirical fitting and enables the modeling of environments with spatial and temporal heterogeneity. This work provides a set of parameters specifically tailored for the Hierarchical Equations of Motion (HEOM) framework, enabling numerically \"exact\" simulations of nonlinear vibrational spectra. Building upon our previous implementation for intramolecular vibrational modes [Park, Jo, and Tanimura, J. Chem. Phys. 163, 214104 (2025)], the present code enhances optimization efficiency by explicitly accounting for intermolecular vibrational contributions. This extension enables sbml4md to broaden the applicability of HEOM-based dynamical modeling by seamlessly integrating classical MD approaches, thereby providing a flexible and scalable framework for simulating both linear and nonlinear spectra under realistic conditions with minimal empirical input. The accompanying ML code, written in Python, is provided as supporting material.",
+      "authors": [
+        "Kwanghee Park",
+        "Seiji Ueno",
+        "Yoshitaka Tanimura"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph"
+      ],
+      "published": "2026-03-18T20:45:48+00:00",
+      "link": "https://arxiv.org/pdf/2603.18274v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "machine learning for molecular dynamics trajectories",
+      "llm_evidence_cn": "用于分子动力学轨迹的机器学习",
+      "llm_evidence": "用于分子动力学轨迹的机器学习",
+      "canonical_evidence": "用于分子动力学轨迹的机器学习",
+      "llm_tldr_en": "A platform using ML to extract parameters from molecular dynamics for vibrational spectra simulation.",
+      "llm_tldr_cn": "一个利用机器学习从分子动力学中提取参数以进行振动光谱模拟的平台。",
+      "llm_tldr": "一个利用机器学习从分子动力学中提取参数以进行振动光谱模拟的平台。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.01873v1",
+      "title": "Bi-TEAM: A Unified Cross-Scale Representation Learning Framework for Chemically Modified Biomolecules",
+      "abstract": "Representation learning for protein biochemical space faces a difficult trade-off: protein language models excel at capturing long-range biological semantics but often miss fine-grained chemical details. Conversely, chemical language models encode atomic information but lack broader sequence context. To address this, we introduce Bi-TEAM (Bi-gated Residual Space Modification), a general framework that injects localized chemical variation into global protein contexts. By ensuring robustness against perturbations such as non-canonical amino acids, post-translational modifications (PTMs), and topological constraints, Bi-TEAM uncovers functional chemical dependencies often missed by evolutionary baselines. Mechanistically, Bi-TEAM maps non-canonical residues to their natural counterparts and injects atomic-level data via a bi-gated residual fusion mechanism. Crucially, this process uses modification-aware prompts to ensure that local structural changes influence global functional representations without requiring alphabet expansion. We evaluated Bi-TEAM on ten datasets spanning chemically modified peptides, PTMs, and natural proteins. The model consistently outperformed state-of-the-art baselines, achieving up to a 66 percent improvement in Matthews correlation coefficient (MCC) on scaffold-similarity splits and a 350 percent increase in hemolysis prediction accuracy. Furthermore, when deployed as an oracle for generative modeling, Bi-TEAM nearly quadrupled the success rate for designing cell-penetrating cyclic peptides. By unifying biological semantics with chemical precision, Bi-TEAM provides a versatile foundation for machine learning driven exploration of peptide and protein biochemical space.",
+      "authors": [
+        "Chunbin Gu",
+        "Zijun Gao",
+        "Mutian He",
+        "Jingjie Zhang",
+        "Haipeng Wen",
+        "Zihao Luo",
+        "Xiaorui Wang",
+        "Hanqun Cao",
+        "Jiajun Bu",
+        "Chang-Yu Hsieh",
+        "Pheng Ann Heng"
+      ],
+      "primary_category": "q-bio.BM",
+      "categories": [
+        "q-bio.BM"
+      ],
+      "published": "2026-03-02T13:51:28+00:00",
+      "link": "https://arxiv.org/pdf/2603.01873v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "representation learning for chemically modified biomolecules and topological constraints",
+      "llm_evidence_cn": "化学修饰生物分子的表示学习与拓扑约束",
+      "llm_evidence": "化学修饰生物分子的表示学习与拓扑约束",
+      "canonical_evidence": "化学修饰生物分子的表示学习与拓扑约束",
+      "llm_tldr_en": "A framework for cross-scale representation learning of biomolecules considering chemical modifications.",
+      "llm_tldr_cn": "一种考虑化学修饰的生物分子跨尺度表示学习框架。",
+      "llm_tldr": "一种考虑化学修饰的生物分子跨尺度表示学习框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.01873v1",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.18505v1",
+      "title": "From Snapshots to Symphonies: The Evolution of Protein Prediction from Static Structures to Generative Dynamics and Multimodal Interactions",
+      "abstract": "The protein folding problem has been fundamentally transformed by artificial intelligence, evolving from static structure prediction toward the modeling of dynamic conformational ensembles and complex biomolecular interactions. This review systematically examines the paradigm shift in AI driven protein science across five interconnected dimensions: unified multimodal representations that integrate sequences, geometries, and textual knowledge; refinement of static prediction through MSA free architectures and all atom complex modeling; generative frameworks, including diffusion models and flow matching, that capture conformational distributions consistent with thermodynamic ensembles; prediction of heterogeneous interactions spanning protein ligand, protein nucleic acid, and protein protein complexes; and functional inference of fitness landscapes, mutational effects, and text guided property prediction. We critically analyze current bottlenecks, including data distribution biases, limited mechanistic interpretability, and the disconnect between geometric metrics and biophysical reality, while identifying future directions toward physically consistent generative models, multimodal foundation architectures, and experimental closed loop systems. This methodological transformation marks artificial intelligence's transition from a structural analysis tool into a universal simulator capable of understanding and ultimately rewriting the dynamic language of life.",
+      "authors": [
+        "Jingzhi Chen",
+        "Lijian Xu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-19T05:25:17+00:00",
+      "link": "https://arxiv.org/pdf/2603.18505v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Generative frameworks including diffusion models for biomolecular interactions",
+      "llm_evidence_cn": "包含扩散模型在内的生物分子相互作用生成框架",
+      "llm_evidence": "包含扩散模型在内的生物分子相互作用生成框架",
+      "canonical_evidence": "包含扩散模型在内的生物分子相互作用生成框架",
+      "llm_tldr_en": "Reviews AI evolution in protein science, covering multimodal representations and diffusion models.",
+      "llm_tldr_cn": "综述了蛋白质科学中AI的演进，涵盖多模态表示和扩散模型。",
+      "llm_tldr": "综述了蛋白质科学中AI的演进，涵盖多模态表示和扩散模型。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.18992v1",
+      "title": "Foundations of Schrödinger Bridges for Generative Modeling",
+      "abstract": "At the core of modern generative modeling frameworks, including diffusion models, score-based models, and flow matching, is the task of transforming a simple prior distribution into a complex target distribution through stochastic paths in probability space. Schrödinger bridges provide a unifying principle underlying these approaches, framing the problem as determining an optimal stochastic bridge between marginal distribution constraints with minimal-entropy deviations from a pre-defined reference process. This guide develops the mathematical foundations of the Schrödinger bridge problem, drawing on optimal transport, stochastic control, and path-space optimization, and focuses on its dynamic formulation with direct connections to modern generative modeling. We build a comprehensive toolkit for constructing Schrödinger bridges from first principles, and show how these constructions give rise to generalized and task-specific computational methods.",
+      "authors": [
+        "Sophia Tang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-19T14:59:56+00:00",
+      "link": "https://arxiv.org/pdf/2603.18992v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "mathematical foundations of diffusion and Schrödinger bridges",
+      "llm_evidence_cn": "扩散模型和薛定谔桥的数学基础",
+      "llm_evidence": "扩散模型和薛定谔桥的数学基础",
+      "canonical_evidence": "扩散模型和薛定谔桥的数学基础",
+      "llm_tldr_en": "Provides a theoretical guide to Schrödinger bridges as a unifying principle for diffusion and generative models.",
+      "llm_tldr_cn": "为薛定谔桥作为扩散和生成模型的统一原理提供了理论指导。",
+      "llm_tldr": "为薛定谔桥作为扩散和生成模型的统一原理提供了理论指导。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.02810v1",
+      "title": "ChemFlow:A Hierarchical Neural Network for Multiscale Representation Learning in Chemical Mixtures",
+      "abstract": "Accurate prediction of the physicochemical properties of molecular mixtures using graph neural networks remains a significant challenge, as it requires simultaneous embedding of intramolecular interactions while accounting for mixture composition (i.e., concentrations and ratios). Existing approaches are ill-equipped to emulate realistic mixture environments, where densely coupled interactions propagate across hierarchical levels - from atoms and functional groups to entire molecules - and where cross-level information exchange is continuously modulated by composition. To bridge the gap between isolated molecules and realistic chemical environments, we present ChemFlow, a novel hierarchical framework that integrates atomic, functional group, and molecular-level features, facilitating information flow across these levels to predict the behavior of complex chemical mixtures. ChemFlow employs an atomic-level feature fusion module, Chem-embed, to generate context-aware atomic representations influenced by the mixture state and atomic characteristics. Next, bidirectional group-to-molecule and molecule-to-group attention mechanisms enable ChemFlow to capture functional group interactions both within and across molecules in the mixture. By dynamically adjusting representations based on concentration and composition, ChemFlow excels at predicting concentration-dependent properties and significantly outperforms state-of-the-art models in both concentration-sensitive and concentration-independent systems. Extensive experiments demonstrate ChemFlow's superior accuracy and efficiency in modeling complex chemical mixtures.",
+      "authors": [
+        "Jinming Fan",
+        "Chao Qian",
+        "Wilhelm T. S. Huck",
+        "William E. Robinson",
+        "Shaodong Zhou"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG"
+      ],
+      "published": "2026-03-03T09:54:34+00:00",
+      "link": "https://arxiv.org/pdf/2603.02810v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Hierarchical graph neural network for molecular mixture representation learning",
+      "llm_evidence_cn": "用于分子混合物表示学习的分层图神经网络",
+      "llm_evidence": "用于分子混合物表示学习的分层图神经网络",
+      "canonical_evidence": "用于分子混合物表示学习的分层图神经网络",
+      "llm_tldr_en": "ChemFlow uses hierarchical graph networks to model multiscale interactions in chemical mixtures.",
+      "llm_tldr_cn": "ChemFlow利用分层图网络模拟化学混合物中的多尺度相互作用。",
+      "llm_tldr": "ChemFlow利用分层图网络模拟化学混合物中的多尺度相互作用。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.02810v1",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.18876v1",
+      "title": "Bridging Crystal Structure and Material Properties via Bond-Centric Descriptors",
+      "abstract": "Although chemical bonding is the fundamental mechanistic bridge connecting atomic structure to macroscopic material properties, current data-driven materials science largely treats it as an implicit \"black box\". Existing machine learning (ML) models rely predominantly on geometric coordinates, forcing them to implicitly relearn complex quantum mechanics from scratch. This lack of intermediate physical features limits model interpretability and generalizability, particularly when training data is scarce. To solve this problem, we introduce MattKeyBond, a bond-centric materials database that explicitly maps the local electronic landscape and bonding interactions of materials. Building on this, we propose Bonding Attractivity (BA), a novel element-specific descriptor that quantifies the intrinsic capability of atoms to form covalent networks. By providing pre-calculated, energy-dimensional bonding descriptors, MattKeyBond transforms the implicit \"black box\" into physically interpretable features. This strategy relieves ML models from the burden of deducing physical laws from pure geometry, enabling accurate predictions even with limited data and seamlessly integrating electronic structure theory into modern AI workflows.",
+      "authors": [
+        "Jian-Feng Zhang",
+        "Ze-Feng Gao",
+        "Xiao-Qi Han",
+        "Bo Zhan",
+        "Dingshun Lv",
+        "Miao Gao",
+        "Kai Liu",
+        "Xinguo Ren",
+        "Zhong-Yi Lu",
+        "Tao Xiang"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-03-19T13:21:25+00:00",
+      "link": "https://arxiv.org/pdf/2603.18876v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "mapping atomic structure to material properties via descriptors",
+      "llm_evidence_cn": "通过描述符将原子结构映射到材料属性",
+      "llm_evidence": "通过描述符将原子结构映射到材料属性",
+      "canonical_evidence": "通过描述符将原子结构映射到材料属性",
+      "llm_tldr_en": "Introduces bond-centric descriptors to bridge crystal structures and material properties.",
+      "llm_tldr_cn": "引入以键为中心的描述符，连接晶体结构与材料属性。",
+      "llm_tldr": "引入以键为中心的描述符，连接晶体结构与材料属性。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.20115v1",
+      "title": "Conditioning Protein Generation via Hopfield Pattern Multiplicity",
+      "abstract": "Protein sequence generation via stochastic attention produces plausible family members from small alignments without training, but treats all stored sequences equally and cannot direct generation toward a functional subset of interest. We show that a single scalar parameter, added as a bias to the sampler's attention logits, continuously shifts generation from the full family toward a user-specified subset, with no retraining and no change to the model architecture. A practitioner supplies a small set of sequences (for example, hits from a binding screen) and a multiplicity ratio that controls how strongly generation favors them. The method is agnostic to what the subset represents: binding, stability, specificity, or any other property. We find that the conditioning is exact at the level of the sampler's internal representation, but that the decoded sequence phenotype can fall short because the dimensionality reduction used to encode sequences does not always preserve the residue-level variation that defines the functional split. We term this discrepancy the calibration gap and show that it is predicted by a simple geometric measure of how well the encoding separates the functional subset from the rest of the family. Experiments on five Pfam families (Kunitz, SH3, WW, Homeobox, and Forkhead domains) confirm the monotonic relationship between separation and gap across a fourfold range of geometries. Applied to omega-conotoxin peptides targeting a calcium channel involved in pain signaling, curated seeding from 23 characterized binders produces over a thousand candidates that preserve the primary pharmacophore and all experimentally identified binding determinants. These results show that stochastic attention enables practitioners to expand a handful of experimentally characterized sequences into diverse candidate libraries without retraining a generative model.",
+      "authors": [
+        "Jeffrey D. Varner"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.BM",
+        "q-bio.QM"
+      ],
+      "published": "2026-03-20T16:38:15+00:00",
+      "link": "https://arxiv.org/pdf/2603.20115v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "conditioning protein sequence generation",
+      "llm_evidence_cn": "蛋白质序列生成的条件控制",
+      "llm_evidence": "蛋白质序列生成的条件控制",
+      "canonical_evidence": "蛋白质序列生成的条件控制",
+      "llm_tldr_en": "Enables controllable protein sequence generation toward specific functional subsets without retraining the model.",
+      "llm_tldr_cn": "在无需重新训练模型的情况下，实现针对特定功能子集的蛋白质序列可控生成。",
+      "llm_tldr": "在无需重新训练模型的情况下，实现针对特定功能子集的蛋白质序列可控生成。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.05343v1",
+      "title": "Preserving Continuous Symmetry in Discrete Spaces: Geometric-Aware Quantization for SO(3)-Equivariant GNNs",
+      "abstract": "Equivariant Graph Neural Networks (GNNs) are essential for physically consistent molecular simulations but suffer from high computational costs and memory bottlenecks, especially with high-order representations. While low-bit quantization offers a solution, applying it naively to rotation-sensitive features destroys the SO(3)-equivariant structure, leading to significant errors and violations of conservation laws. To address this issue, in this work, we propose a Geometric-Aware Quantization (GAQ) framework that compresses and accelerates equivariant models while rigorously preserving continuous symmetry in discrete spaces. Our approach introduces three key contributions: (1) a Magnitude-Direction Decoupled Quantization (MDDQ) scheme that separates invariant lengths from equivariant orientations to maintain geometric fidelity; (2) a symmetry-aware training strategy that treats scalar and vector features with distinct quantization schedules; and (3) a robust attention normalization mechanism to stabilize gradients in low-bit regimes. Experiments on the rMD17 benchmark demonstrate that our W4A8 models match the accuracy of FP32 baselines (9.31 meV vs. 23.20 meV) while reducing Local Equivariance Error (LEE) by over 30x compared to naive quantization. On consumer hardware, GAQ achieves 2.39x inference speedup and 4x memory reduction, enabling stable, energy-conserving molecular dynamics simulations for nanosecond timescales.",
+      "authors": [
+        "Haoyu Zhou",
+        "Ping Xue",
+        "Hao Zhang",
+        "Tianfan Fu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-03-05T16:20:21+00:00",
+      "link": "https://arxiv.org/pdf/2603.05343v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "SO(3)-equivariant GNNs for molecular simulations",
+      "llm_evidence_cn": "用于分子模拟的SO(3)等变图神经网络",
+      "llm_evidence": "用于分子模拟的SO(3)等变图神经网络",
+      "canonical_evidence": "用于分子模拟的SO(3)等变图神经网络",
+      "llm_tldr_en": "Proposes a geometric-aware quantization framework to accelerate equivariant GNNs for molecular simulations.",
+      "llm_tldr_cn": "提出了一种几何感知量化框架，以加速用于分子模拟的等变图神经网络。",
+      "llm_tldr": "提出了一种几何感知量化框架，以加速用于分子模拟的等变图神经网络。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.05343v1",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2603.18957v1",
+      "title": "BVSIMC: Bayesian Variable Selection-Guided Inductive Matrix Completion for Improved and Interpretable Drug Discovery",
+      "abstract": "Recent advances in drug discovery have demonstrated that incorporating side information (e.g., chemical properties about drugs and genomic information about diseases) often greatly improves prediction performance. However, these side features can vary widely in relevance and are often noisy and high-dimensional. We propose Bayesian Variable Selection-Guided Inductive Matrix Completion (BVSIMC), a new Bayesian model that enables variable selection from side features in drug discovery. By learning sparse latent embeddings, BVSIMC improves both predictive accuracy and interpretability. We validate our method through simulation studies and two drug discovery applications: 1) prediction of drug resistance in Mycobacterium tuberculosis, and 2) prediction of new drug-disease associations in computational drug repositioning. On both synthetic and real data, BVSIMC outperforms several other state-of-the-art methods in terms of prediction. In our two real examples, BVSIMC further reveals the most clinically meaningful side features.",
+      "authors": [
+        "Sijian Fan",
+        "Liyan Xiong",
+        "Dayuan Wang",
+        "Guoshuai Cai",
+        "Ray Bai"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "stat.ME"
+      ],
+      "published": "2026-03-19T14:25:10+00:00",
+      "link": "https://arxiv.org/pdf/2603.18957v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Bayesian model for variable selection in drug discovery",
+      "llm_evidence_cn": "用于药物发现中变量选择的贝叶斯模型",
+      "llm_evidence": "用于药物发现中变量选择的贝叶斯模型",
+      "canonical_evidence": "用于药物发现中变量选择的贝叶斯模型",
+      "llm_tldr_en": "Proposes a Bayesian matrix completion model to improve interpretability and accuracy in drug discovery.",
+      "llm_tldr_cn": "提出了一种贝叶斯矩阵补全模型，以提高药物发现中的可解释性和准确性。",
+      "llm_tldr": "提出了一种贝叶斯矩阵补全模型，以提高药物发现中的可解释性和准确性。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

@@ -1,0 +1,910 @@
+Title: Bridging Crystal Structure and Material Properties via Bond-Centric Descriptors
+
+URL Source: https://arxiv.org/pdf/2603.18876v1
+
+Published Time: Fri, 20 Mar 2026 01:09:09 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+## Bridging Crystal Structure and Material Properties via Bond-Centric Descriptors 
+
+Jian-Feng Zhang, 1, ∗ Ze-Feng Gao, 2, 3 Xiao-Qi Han, 2, 3 Bo Zhan, 4 Dingshun Lv, 5
+
+Miao Gao, 6 Kai Liu, 2, 3, † Xinguo Ren, 4, ‡ Zhong-Yi Lu, 2, 3, 7, § and Tao Xiang 4, 8, ¶
+
+> 1
+
+Center for High Pressure Science and Technology Advanced Research, Beijing 100193, China. 
+
+> 2
+
+School of Physics and Beijing Key Laboratory of Opto-electronic Functional Materials & Micro-nano Devices, Renmin University of China, Beijing 100872, China 
+
+> 3
+
+Key Laboratory of Quantum State Construction and Manipulation (Ministry of Education), Renmin University of China, Beijing 100872, China 
+
+> 4
+
+Institute of Physics, Chinese Academy of Sciences, Beijing 100190, China 
+
+> 5
+
+Field Quantum Research Institute, Beijing 100084, China 
+
+> 6
+
+Department of Physics, School of Physical Science and Technology, Ningbo University, Zhejiang 315211, China 
+
+> 7
+
+Hefei National Laboratory, Hefei 230088, China 
+
+> 8
+
+Collaborative Innovation Center of Quantum Matter, Beijing 100190, China 
+
+(Dated: March 20, 2026) Although chemical bonding is the fundamental mechanistic bridge connecting atomic structure to macroscopic material properties, current data-driven materials science largely treats it as an implicit “black box”. Existing machine learning (ML) models rely predominantly on geometric coordinates, forcing them to implicitly relearn complex quantum mechanics from scratch. This lack of interme-diate physical features limits model interpretability and generalizability, particularly when training data is scarce. To solve this problem, we introduce MattKeyBond, a bond-centric materials database that explicitly maps the local electronic landscape and bonding interactions of materials. Building on this, we propose Bonding Attractivity (BA), a novel element-specific descriptor that quantifies the intrinsic capability of atoms to form covalent networks. By providing pre-calculated, energy-dimensional bonding descriptors, MattKeyBond transforms the implicit “black box” into physically interpretable features. This strategy relieves ML models from the burden of deducing physical laws from pure geometry, enabling accurate predictions even with limited data and seamlessly integrating electronic structure theory into modern AI workflows. 
+
+I. INTRODUCTION 
+
+Crystal structure dictates the physical properties of materials, yet it is chemical bonding that mechanisti-cally links atomic arrangement to electronic structure and macroscopic behavior. In solids, each atom inter-acts with a local environment determined by neighbor-ing atoms and the resulting crystal field. Through field-induced charge redistribution and orbital hybridization, inter-atomic bonding yields an inherent electronic struc-ture strictly dependent on atomic arrangement. Anal-yses at the atom-bond resolution are therefore essential for establishing mechanistic connections between struc-ture and properties, and for enabling the rapid screening and design of materials. However, despite the emergence of a rich ecosystem of materials databases, current resources generally lack this crucial information. Existing platforms primarily capture structural geometry and global scalar proper-ties. General-purpose databases, such as the Materials Project (MP)[1], Atomly[2], OQMD[3, 4], AFLOW[5], and NOMAD[6], aggregate high-throughput calculations      
+
+> ∗jianfeng.zhang@hpstar.ac.cn
+> †kliu@ruc.edu.cn
+> ‡renxg@iphy.ac.cn
+> §zlu@ruc.edu.cn
+> ¶txiang@iphy.ac.cn
+
+to provide structures, formation energies, and elec-tronic bands. Similarly, domain-targeted databases like C2DB[7, 8], JARVIS-DFT[9], CoRE MOF[10], and the Open Catalyst Project (OC20/OC22)[11, 12] focus on specific material classes. Despite their breadth, the ab-sence of physics-based intermediate features limits cur-rent data-driven science. Models are forced to rely pre-dominantly on geometric coordinates[13–16], effectively treating the chemical bond as an implicit “black box” (top panel of Figure 1). This compels machine learn-ing models to implicitly relearn quantum mechanics from geometry alone, which limits their interpretability and generalizability, particularly in complex systems where experimental data is scarce, such as superconductors. While recent efforts have attempted to incorporate electronic features by learning continuous charge den-sities or DFT Hamiltonians [17, 18], a comprehensive, bond-centric database remains absent. To bridge this gap and decode the underlying interactions, we intro-duce MattKeyBond , a bond-centric materials database constructed from high-throughput first-principles cal-culations. Leveraging the Closest Wannier Functions (CWF)[19] method and integral crystal orbital Hamil-ton population (ICOHP) analyses[20–22], MattKeyBond transcends conventional structural geometry to map the electronic landscape into a real-space, bond-resolved rep-resentation. Through its high-fidelity, atom-pair resolved features, including charge transfer, orbital Hamiltonian, bond energy, and bond order density matrix, MattKey-Bond enables systematic, searchable, and comparable 
+
+> arXiv:2603.18876v1 [cond-mat.mtrl-sci] 19 Mar 2026
+
+2Crystal 
+
+Structure 
+
+MattKeyBond 
+
+Macroscopic 
+
+Properties 
+
+> Explicit Physics:
+> Electronic Landscape
+> & Bonding
+> Implicit Learning
+> “Black Box”
+> FIG. 1. MattKeyBond: Enhancing implicit learning with in-terpretable electronic and bonding descriptors.
+
+bonding insights across 36,377 inorganic compounds in the current release. Building on this extensive dataset, we further pro-pose Bonding Attractivity (BA) , a novel element-specific descriptor designed to quantify the intrinsic ca-pability of atoms to form covalent networks. While tradi-tional electronegativity and its modern extensions[23, 24] primarily characterizes the tendency for charge transfer (ionicity), it does not fully capture the energetic con-tributions of shared electrons (covalency). BA comple-ments this classical concept by explicitly measuring the strength of orbital hybridization that binds atoms to-gether. Leveraging 3.6 million bond records, we have successfully parametrized BA for elements from Hydro-gen ( Z = 1) to Bismuth ( Z = 83), quantifying its depen-dence on bond length and valence state. As a human-readable descriptor, this metric provides an intuitive way to understand the intrinsic bonding ability of elements in covalent systems. Crucially, we position MattKeyBond and BA not merely as static data, but as physically interpretable in-termediate features that connect atomic coordinates to macroscopic behavior. Unlike purely structural inputs, these descriptors add an explicit energy dimension de-rived from rigorous electronic structure theory. For the “AI for Science” community, this represents a strategy: by providing pre-calculated quantum insights, we relieve machine learning models from the burden of learning physical laws from scratch. MattKeyBond thus serves as a foundational resource, integrating electronic structure theory into modern AI workflows to accelerate bonding-guided materials discovery.  
+
+> II. DESCRIPTOR OF CHEMICAL BOND
+
+Fundamentally, material synthesizability is governed by energy minimization, a process intrinsically driven by the formation of chemical bonds. The release of energy serves as a quantitative measure of bond strength, typi-cally described by metrics such as cohesive energy, bond energy, formation energy, or energy above the hull (de-pending on different reference). Consequently, beyond specific electronic or mechanical properties, a numerical descriptor of chemical bond strength offers a direct met-ric for energetic stability. Below, we briefly outline the formation of chemical bonds, their descriptors, and their relationship to bond energy. As illustrated in Figure 2, consider isolated atoms A
+
+and B. Their atomic orbitals, denoted as |aA/B ⟩, exhibit element-specific spherical harmonic distributions and en-ergy levels (omitting orbital indices for simplicity). Tak-ing a simple diatomic molecule as an example, as atoms 
+
+A and B approach to each other, their orbitals undergo overlap, renormalization, and hybridization under the in-fluence of the unclear field, resulting in new molecular orbitals |n⟩:
+
+|n⟩ = CnA |˜aA⟩ + CnB |˜aB ⟩ . (1) Here, |˜aA/B ⟩ represents the renormalized atomic or-bital in environment, and CnA/B denotes the combina-tion coefficients. Within the framework of density func-tional theory (DFT)[25, 26], this process is described by the redistribution of charge density and self-consistent field. In single-particle representation, this redistribu-tion is reflected in the reduced density matrix (RDM) of 
+
+⟨˜aA| ˆD|˜aB ⟩. As illustrated in the third row of Fig. 2, along the bond between A and B, the RDM reconstructs in two primary aspects: one is the hybridization between atomic orbitals (orange arrows), which provides the co-hesive force between the bonding atoms; the other is the charge transfer from one atom to another (blue arrows), resulting in their respective valence states x. These two aspects represent two major pathways for energy release during bond formation. Within the DFT framework[25, 26], the total energy of a system can be decomposed into a band-structure term,, a double counting correction of Hartree and exchange-correlation energy, and the ion-ion Ewald energy: 
+
+Etot = Eband − Edc + EEwald . (2) The EEwald terms arise from ion-ion Coulomb repulsion interactions, which generally increase as bonding atoms approach each other. Edc strongly depends on the charge density derived from the eigenstates |n⟩ of Eband , and generally exhibits a consistent tendency with Eband due to the self-consistent nature of the calculation. Conse-quently, during chemical bond formation, the released energy primarily originates from the first term, Eband ,which sums the energies εn of all occupied single-particle 3Isolated atoms 
+
+Atomic orbitals 
+
+|𝐀 𝐀 Anti-bonding state 
+
+Bonding state 
+
+𝐀 𝐀  
+
+> 𝐀
+
+𝐀 𝐀 ,𝐀 + 𝐀 𝐀  
+
+> 𝐀
+
+𝐀 𝐀 ,𝐀 
+
+𝐀 𝐀 |𝐀 𝐀 + 𝐀 𝐀 |𝐀 𝐀 
+
+Bloch states 
+
+𝐀 𝐀 
+
+Crystal Diatomic molecule 
+
+𝐀 𝐀  
+
+> ′
+
+|𝐀 𝐀 + 𝐀 𝐀  
+
+> ′
+
+|𝐀 𝐀 
+
+|𝐀 𝐀 
+
+𝐀 𝐀 0
+
+0 𝐀 𝐀 
+
+𝐀 𝐀 − 𝐀 𝐀 𝐀 𝐀 
+
+𝐀 𝐀 𝐀 𝐀 𝐀 + 𝐀 
+
+> Energy RDM
+
+Charge transfer Orbital hybrid 
+
+Bond PBC 
+
+Covalent bond 
+
+Metallic bond 
+
+vdW 
+
+Non-polar 
+
+Polar 
+
+Ionic bond 
+
+Orbital hybrid 
+
+Charge transfer 
+
+(Bonding attractivity) 
+
+(Electronegativity) 
+
+Bond 
+
+FIG. 2. The evolution of electronic structure from isolated atomic orbitals to hybridized molecular orbitals and finally to Bloch states in a periodic crystal. The reconstruction of the Reduced Density Matrix (RDM) highlights two distinct energetic pathways driving bond formation: charge transfer (represented by blue arrows), and orbital hybridization (represented by orange arrows). The last column lists a conceptual classification of chemical bonds based on these two primary dimensions. 
+
+eigenstates |n⟩. Within the subspace of the atomic-orbital basis, Eband can be further separated into an on-site term and an inter-site hybridization term: 
+
+Eband = Eonsite + Ehybrid , (3) which alse respectively correspond to the two major pro-cesses in bond formation: charge transfer and orbital hy-bridization. Furthermore, the respective contributions from Eonsite 
+
+and Ehybrid provide a basis for classifying chemical bonds. As illustrated in the last column of Fig. 2, based on the tendency for charge transfer, bonds can be described as non-polar (no transfer), polar (partial transfer), or ionic (full transfer). From the perspective of orbital hybridiza-tion strength, one can roughly distinguish between the weakest van der Waals (vdW) interactions, weak metal-lic bonds, and the strongest covalent bonds. For any energy εn contributing to Eband , COHP anal-ysis resolves it into pairwise contributions[20–22]: 
+
+εn = X
+
+> A,B
+
+COHP nA,B = Re X
+
+> A,B
+
+Cn∗ 
+
+> A
+
+CnB ⟨˜aA| ˆH|˜aB ⟩. (4) The sign of COHP nAB characterizes the nature of the in-teraction: COHP < 0 indicates a bonding state, while COHP > 0 indicates an anti-bonding state between atoms A and B. Additionally, based on the magnetic quantum number m of |aA/B ⟩ (aligning the A-B bond along the z-axis), they can hybridize into strong σ bonds (m = 0), intermediate π bonds ( m = ±1), or weaker δ
+
+bonds ( m = ±2). Summing over all occupied states, the integral of COHP (ICOHP) yields: 
+
+Eonsite = X
+
+> A
+
+ICOHP AA ,Ehybrid = X
+
+> A̸=B
+
+ICOHP AB , (5) which enables bond-resolved energetics for every inter-atomic pair ( A, B ) in complex structures. This integra-tion in energy space also simplifies the calculations of ICOHP AB by: ICOHP AB = ⟨˜aB | ˆD|˜aA⟩⟨ ˜aA| ˆH|˜aB ⟩ (6) Generally, ICOHP < 0 indicates a stabilizing interaction. For crystal systems (third column of Fig. 2) with periodic boundary conditions (PBC), the combination coefficients in Eq. 1 acquire a Bloch phase factor in the momentum-
+
+k representation. While discrete molecular orbital levels 4SCF calculation         
+
+> 𝜌 scf (𝒓 )
+> NSC Fcalculation (more bands)
+> 𝜀 𝑛 𝒌 ,𝜓 𝑛 𝒌
+> Atomic orbital projection
+> 𝑎 𝑛 𝒌 ,𝑎 𝑏
+> Closest Wannier Function
+> 𝐻 (𝑹 )𝑎𝑏 ,𝐷 (𝑹 )𝑎𝑏
+> Bond analysis
+> ICOHP (𝑹 )𝐴𝐵
+> Materials Project
+> 154,879
+> Energy hull < 0.3 eV/atom
+> 135,315
+> With synthesis record in ICSD
+> 50,008
+> Exclude radioactive element
+> 47,730
+> Material Screening Calculation workflow
+> High -through calculation
+> 36,377 convergent
+
+# Calculation workflow 
+
+pwscf 
+
+pslibrary 
+
+FIG. 3. The materials screening criterions and high through-put calculation/analysis workflow. 
+
+evolve into continuous band structures, the physical basis of the chemical bond and the analytical tools of ICOHP remain identical to those used in molecular systems. See the Appendix B and C for more details regarding PBC and multi-orbital systems. Although ICOHP does not account for all contribu-tions to the total bond energy, it provides a direct mea-sure of the energy associated with orbital hybridiza-tion between specific atomic pairs. Furthermore, this hybridization energy is intrinsically tied to interatomic binding forces and thus informs a range of material properties, including hardness, interatomic force con-stants (phonon stiffness), and, in metal systems, electron-phonon coupling strength, electronic transport, and, superconductivity[27]. Therefore, in this work, we adopt ICOHP as a primary descriptor of bond strength for the construction of the database. 
+
+III. HIGH-THROUGHPUT WORKFLOW 
+
+In this work, we first retrieved all crystal structures available in the MP database[1], comprising 154,879 en-tries up to October 2025. A detailed screening crite-rion and the computational workflow are summarized in Fig. 3. To ensure energetic stability, we retained com-pounds with energy above hull less than 0.3 eV/atom, resulting in 135,315 stable or metastable structures. To further guarantee synthesizability, we restricted the set to compounds with experimental records in the Inorganic Crystal Structure Database (ICSD)[28], yielding 50,008 materials. We additionally excluded systems contain-ing radioactive elements, resulting in 47,730 candidates for high-throughput calculations. At present, within the constraints of allotted wall-time and convergence criteria, 36,377 materials have been successfully computed and are included in this initial release. For each material, the calculations and analyses pro-ceed in five steps: 
+
+1. Self-consistent field (SCF) calculation. We performed DFT SCF calculations using the Quantum ESPRESSO (QE) package [29] to obtain the electronic ground state and charge density. Additional settings (functional[30], pseudopotentials[31], k-point meshes, smearing, and convergence thresholds) are provided in Appendix A. 
+
+2. Non-self-consistent field (NSCF) calculation. 
+
+For subsequent Wannier downfolding, we carried out NSCF calculations with an increased number of bands. The total number of bands was empirically set to 
+
+nbnd = Natomorb + 5 Natom ,
+
+where Natomorb is the total number of atomic valence or-bitals included in the projection and Natom is the num-ber of atoms in the primitive cell (See TABLE I in Ap-pendix). Both SCF and NSCF steps were executed with 
+
+pw.x in QE[29]. 
+
+3. Atomic-orbital projections. Using projwfc.x 
+
+of QE[29], we computed (i) the projection matrix be-tween atomic orbitals and Kohn-Sham eigenstates, ⟨a |
+
+n⟩, and (ii) the overlap integrals between neighboring atomic orbitals, ⟨a | b⟩. Here |a⟩ and |b⟩ denote atomic-like orbitals, and |n⟩ denotes a Kohn-Sham eigenstate obtained from the DFT calculations above. 
+
+4. Closest Wannier Functions downfolding. To capture the orbital renormalization in the crystal field, we constructed CWF using atomic orbitals as guiding func-tions to downfold the plane-wave Kohn-Sham subspace into a compact Wannier basis[19]. This procedure yields a CWF-based tight-binding Hamiltonian and RDM for each system. Algorithmic details and numerical settings are provided in Appendix B. 
+
+5. ICOHP-based bond analysis. We ana-lyzed bonding using crystal orbital Hamilton population (COHP) and its energy integral (ICOHP) for all inter-atomic pairs with real-space distances shorter than 6 ˚ A. The resulting bond-resolved energetics was used to quan-tify bond strength across all distinct bonded pairs[20–22]. Additional details are provided in Appendix C. To demonstrate the microscopic insights provided by MattKeyBond, we present a representative analysis of the nearest carbon-carbon bond in graphene in Figure 4. As shown in panel (d), our CWF downfolding (pur-ple circles) yields a accurate reproduction to the DFT band structure (gray lines) around Fermi level. Be-yond global electronic structure, MattKeyBond provides the local inter-atomic (b) Hamiltonian and (c) RDM for every orbital pair. These matrices allow for advanced post-processing, such as decomposing the total interac-tion into independent bonding channels via the Singu-lar Value Decomposition (SVD) of RDM. As shown in panel (f), this analysis can automatically identify the strong σ bond (ICOHP = -5.68 eV) formed by sp 2-like hybrids ( p1/3|s⟩ ± p2/3|px⟩) and the characteristic π
+
+bond (ICOHP = -0.77 eV) formed by vertical pz orbitals. 5C1 s C1 pz C1 py C1 px                                                           
+
+> C2s-5.26 5.47
+> C2pz -2.92
+> C2py -2.97
+> C2px -5.47 7.3 7
+> C1sC1pz C1py C1px
+> C2s0.1 7-0.2 2
+> C2pz 0.26
+> C2py 0.03
+> C2px 0.2 2-0.3 3
+> ICOHP (eV) C1orbital C2orbital
+> σbond -5.6 80.57 |𝐀 +0.82 |𝐀𧐀 0.57 |𝐀 −0.82 |𝐀𧐀
+> πbond -0.7 7|𝐀𧐀 |𝐀𧐀
+> π’ bond -0.10 |𝐀𧐀 |𝐀𧐀
+> σ’ bond -0.01 0.82 |𝐀 −0.57 |𝐀𧐀 0.82 |𝐀 +0.57 |𝐀𧐀
+> Total: -6.56
+> C1C2
+> Inter-atomic Hamiltonian (eV)
+> Inter-atomic RDM
+
+(a) 
+
+(b) 
+
+(d )
+
+(f) 
+
+> SVD
+
+(e) 
+
+(c)             
+
+> Graphene
+> FIG. 4. Detailed bonding analysis of the nearest C-C bond in graphene as a representative example. (a) Crystal structure of graphene with the target C 1-C 2atomic pair highlighted. (b) The real-space inter-atomic Hamiltonian matrix and (c) RDM for the C 1-C 2pair in the atomic orbital basis ( s, p z, p y, p x). (d) Comparison of the electronic band structures calculated by DFT (gray lines) and our constructed CWF (purple circles). (e) Bond-resolved COHP curves in energy space, clearly distinguishing the contributions and strengths from σ(black), π(red), π′(blue), and σ′(green). (f) Quantitative decomposition of the bond strength via the SVD of RDM.
+
+The remaining two are the inner-layer π′ bond formed by py orbitals and the σ′ bond resulting from the tail-to-tail overlap of |s⟩ and |px⟩ orbitals. Together with their COHP distributions in energy space of panel (e), these analyses allow users to go beyond total bond energies and dissect the specific orbital mechanisms driving material properties (e.g. metallized B-B σ bond driven high-T c
+
+superconductivity in MgB 2 compound[27]).  
+
+> IV. BONDING ATTRACTIVITY
+
+Element-specific bonding trends are traditionally sum-marized by electronegativity (EN)[23, 24], such as the Pauling scale, which was inferred primarily from experi-mental bond energies across compounds. EN captures an element’s tendency to attract electrons. Electrons tend to transfer from the elements with weak EN to that with strong EN. Inspired by the definition of Pauling EN, us-ing currently released 3,665,789 bond records (ICOHP values) cross 36,377 materials presently available in Mat-tKeyBond, we introduce Bonding Attractivity (BA), de-noted as ηA(R, x A). Unlike EN, which primarily char-acterizes the tendency for charge transfer (ionicity), BA complements this classical concept by quantifying the in-trinsic capability of an atom to bind with neighbors via covalent-like orbital hybridization (covalency). As dis-cussed previously, orbital hybridization plays a decisive role in many physical properties, including inter-atomic force constant, atomic dimerization, and even electron-phonon coupling strength which can influence the elec-tronic transport and superconductivity. Therefore, in ad-dition to providing new insights into structure-bonding relationships, the introduction of BA also enables inter-pretable property prediction and supports data-driven discovery of functional materials. In complex crystal environments, bond strength is in-fluenced by numerous factors, including element identity, bond type, hybridized orbital character, valence state, bond length, and crystal-field effects. To obtain a sim-ple, human-readable, yet tractable descriptor, we neglect the dependencies on orbital character and local crystal field but retain bond length R and the atomic valence state xA as the two dominant variables controlling the BA of atom A.Analogous to Pauling’s treatment of bond energies[23], we postulate that the ICOHP between two bonded atoms 
+
+A and B can be expressed as the product of their respec-61 2                                                                                 
+
+> 345678910
+> 11 12 13 14 15 16 17 18
+> 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36
+> 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54
+> 55 56 57 -71 72 73 74 75 76 77 78 78 80 81 82 83
+> 57 -71 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71
+
+# Bonding Attractivity Period Table 
+
+## 1
+
+2.230 - - - - - - - - 𝜂 𝐴 
+
+0 (eV 1/2 )
+
+0.711 - - - - - - - - 𝐿 𝐴 (Å) 
+
+1.038 - - - - - - - - 𝑀 𝐴 
+
+La ~Lu 
+
+# H
+
+## 𝜂 𝐴 
+
+0
+
+0.0 2.3 
+
+La ~Lu 
+
+III B IV B V B VI B VII B VIII  I B II B
+
+III A IV A V A VI A VII A
+
+I A
+
+II A
+
+0
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+H He 
+
+Li  Be  B C N O F Ne 
+
+Na  Mg  Al  Si  P S Cl  Ar 
+
+K Ca  Sc  Ti  V Cr  Mn  Fe  Co  Ni  Cu  Zn  Ga  Ge  As  Se  Br  Kr 
+
+Rb  Sr  Y Zr  Nb  Mo  Tc  Ru  Rh  Pd  Ag  Cd  In  Sn  Sb  Te  I Xe 
+
+Cs  Ba  Hf  Ta  W Re  Os  Ir  Pt  Au  Hg  Tl  Pb  Bi 
+
+La  Ce  Pr  Nd  Pm  Sm  Eu  Gd  Tb  Dy  Ho  Er  Tm  Yb  Lu 
+
+> 2.230
+> 0.711
+> 1.038
+> 0.549
+> 0.508
+> 0.762
+> 0.914
+> 1.052
+> -0.324
+> 1.610
+> 0.887
+> -0.214
+> 1.980
+> 0.732
+> -0.087
+> 2.118
+> 0.655
+> 0.067
+> 2.006
+> 0.633
+> -0.020
+> 2.079
+> 0.613
+> 0.076
+> 0.066
+> 0.435
+> 0.723
+> 0.663
+> 1.068
+> -0.069
+> 0.939
+> 1.355
+> -0.165
+> 1.349
+> 1.075
+> 0.194
+> 1.354
+> 0.818
+> 0.112
+> 1.419
+> 0.853
+> 0.021
+> 1.428
+> 0.711
+> 0.220
+> 0.138
+> 0.661
+> 0.504
+> 0.177
+> 0.666
+> -0.004
+> 0.232
+> 0.791
+> -0.138
+> 0.273
+> 0.700
+> 0.034
+> 0.224
+> 0.590
+> -0.021
+> 0.419
+> 0.702
+> -0.020
+> 0.462
+> 0.850
+> -0.074
+> 0.859
+> 1.011
+> 0.019
+> 1.113
+> 1.372
+> 0.135
+> 1.239
+> 1.313
+> 0.187
+> 0.877
+> 0.923
+> 0.100
+> 1.077
+> 0.997
+> -0.168
+> 1.184
+> 0.876
+> -0.083
+> 1.310
+> 0.883
+> -0.001
+> 1.241
+> 0.807
+> -0.000
+> 1.278
+> 0.818
+> 0.074
+> 1.201
+> 0.725
+> 0.214
+> 0.105
+> 0.717
+> 0.341
+> 0.102
+> 0.564
+> -0.167
+> 0.333
+> 0.723
+> 0.129
+> 0.551
+> 0.890
+> -0.032
+> 0.588
+> 0.786
+> -0.056
+> 0.456
+> 0.682
+> 0.003
+> 0.946
+> 0.857
+> 0.117
+> 0.616
+> 0.922
+> -0.089
+> 0.711
+> 1.210
+> 0.021
+> 0.624
+> 1.263
+> -0.124
+> 0.432
+> 0.880
+> 0.146
+> 0.422
+> 0.764
+> 0.262
+> 1.084
+> 0.968
+> 0.048
+> 1.075
+> 0.987
+> -0.105
+> 1.031
+> 0.916
+> -0.095
+> 1.079
+> 0.866
+> -0.016
+> 1.029
+> 0.850
+> 0.040
+> 0.010
+> 0.545
+> -0.360
+> 0.031
+> 0.545
+> 0.361
+> 0.417
+> 0.865
+> 0.029
+> 0.421
+> 0.737
+> 0.134
+> 0.623
+> 0.755
+> -0.029
+> 0.574
+> 0.738
+> -0.097
+> 0.665
+> 0.803
+> -0.163
+> 0.764
+> 0.812
+> -0.018
+> 0.826
+> 0.861
+> 0.017
+> 0.627
+> 0.653
+> 0.075
+> 0.622
+> 0.601
+> -0.039
+> 0.962
+> 0.785
+> -0.021
+> 0.912
+> 0.787
+> -0.068
+> 0.997
+> 0.811
+> 0.059
+> 0.214
+> 0.653
+> 0.029
+> 0.304
+> 0.860
+> -0.003
+> 0.248
+> 0.691
+> 0.030
+> 0.245
+> 0.667
+> 0.085
+> 0.265
+> 0.685
+> 0.077
+> 0.222
+> 0.733
+> -0.072
+> 0.230
+> 0.647
+> 0.040
+> 0.312
+> 0.754
+> 0.011
+> 0.317
+> 0.742
+> 0.038
+> 0.306
+> 0.735
+> 0.024
+> 0.352
+> 0.762
+> 0.080
+> 0.337
+> 0.750
+> 0.135
+> 0.341
+> 0.886
+> 0.123
+> 0.370
+> 0.790
+> 0.086
+
+FIG. 5. Periodic table of Bonding Attractivity. The three numbers in each element block are, respectively, the primitive bonding attractivity η0
+
+> A
+
+, the characteristic decay length LA, and the valence-state modulation factor MA. The background color encodes η0
+
+> A
+
+.
+
+tive BAs: 
+
+−ICOHP AB (R, x A, x B ) = ηA(R, x A) ηB (R, x B ). (7) Here η(R, x ) > 0 has units of eV 1/2. To capture bond-length decay and valence-state modulation, we adopt the exponential form 
+
+ηA(R, x A) = η0
+
+A exp −(R − 2rA)/L A + MAxA
+
+, (8) with the reference value 
+
+η0
+
+A = ηA(2 rA, 0) . (9) Here η0
+
+A is an element-specific baseline BA; rA is the co-valent radius of element A [32], serving as a reference for typical bond lengths; LA (in ˚ A) is the characteristic decay length of BA with respect to R; and MA (dimensionless) quantifies the modulation by the valence state. Conse-quently, the triplet ( η0
+
+A, L A, M A) fully parameterizes the BA for element A. As implied by Eq. (9), ( η0
+
+A)2 corre-sponds to the −ICOHP of an A-A bond at R = 2 rA and 
+
+xA = 0, so we treat η0
+
+A as the fundamental BA quantity for element A.Using 3,665,789 bond records (ICOHP values) span-ning diverse element combinations, bond lengths, and valence states collected from 36,377 materials in Mat-tKeyBond, we performed a least-squares fit of Eqs. (7) and (8). The fitting availability can also be found in the Fig. 5 ∼8 of Appendix. Fitted parameters from H (Z=1) to Bi (Z=83) are summarized in the periodic-table map of Fig. 5. In each element block, the three numbers re-port η0
+
+A, LA, and MA, and the background color encodes 
+
+η0
+
+A from 0.0 (blue) to 2.3 (red). Overall, the distribution of η0
+
+A shows broad similarity to classic Pauling EN [23], with the following trends: 1. Elements with valence 2 p orbitals (B ∼F) exhibit high η0
+
+A, consistent with their propensity to form strong covalent bonds. 2. Elements on the left side of the table: al-kali, alkaline-earth, lanthanides, and many group III–VII B elements show relatively low η0
+
+A, aligning with their common cationic roles in compounds. 3. Heavier p-block elements (n > 2) and numerous late transition metals generally exhibit intermediate η0
+
+A
+
+values. A notable difference from Pauling EN is that the largest η0
+
+A is obtained for Hydrogen, followed by typical 2p elements. In contrast, Fluorine has the highest EN on the Pauling scale. This discrepancy reflects the distinct physics captured: BA measures orbital-hybridization 7strength, whereas EN includes more contributions from charge-transfer energetics. Fluorine’s large EN mainly arises from charge-transfer term rather than hybridiza-tion energy, favoring ionic bonding with comparatively weaker covalent binding. Hydrogen, conversely, read-ily forms strong bonds via hybridization across diverse chemical environments, a feature consistent with its be-havior in hydrogen storage materials. In addition to the baseline η0
+
+> A
+
+, Eq. (8) introduces bond-length and valence-state dependencies through LA and 
+
+MA (see Fig. 6 for element-resolved maps). The decay length LA governs how rapidly BA weakens with increas-ing R. A small LA manifests in two typical ways: it in-dicates either a tendency to form short, stiff bonds with large force constants (characteristic of 2 p elements like C, N, O, and F), or a steep rise in bonding attractivity as atoms approach each other (seen in reactive alkali, alkaline-earth, and halogen elements). In both cases, hybridization-driven bonding is favored primarily with nearest neighbors. Conversely, as shown in Fig. 6, only five elements (Al, Co, Ni, Rh, and Pd) exhibit conspic-uously large LA values, suggesting that their chemical bonding capabilities remain relatively stable across vary-ing local environments. The valence modulation factor MA displays a sign os-cillation. In Fig. 6, the sign of MA is encoded by back-ground color (red for positive, blue for negative). A pos-itive MA implies that removing electrons (higher oxida-tion state) enhances BA, whereas a negative MA indi-cates that adding electrons strengthens BA. Classical EN arguments suggest that gaining electrons should reduce an atom’s electron-attracting tendency, pointing toward positive MA. This behavior indeed appears for many sim-ple alkali and halogen elements with a single half-filled valence orbital. However, for elements in the middle of the table with multi-orbital valence manifolds, adding an electron may create new unpaired or half-filled orbital and thereby enhance the hybridization with other atoms, yielding negative MA. Consequently, depending on de-tailed valence-electron counts and orbital occupations, 
+
+MA exhibits oscillatory trends within a period. We emphasize that the current calculations and analyses are performed exclusively for non-magnetic states. For systems with robust magnetic order or high Neel/Curie temperatures, the present BA formulation may yield suboptimal descriptions of bonding energetics. Furthermore, in addition to magnetism, the local envi-ronment and specific orbital characters can play decisive roles in ICOHP. For elements with a single dominant va-lence orbital (e.g., many chalcogens and halogens), Eq. 7 captures ICOHP accurately. However, for elements with multiple bonding orbitals (e.g., boron), stronger envi-ronmental and orbital dependencies introduce additional complexity, as evidenced by the parity between BA-fitted and DFT-calculated −ICOHP values in Fig3. 5 ∼8 of the Appendix. Despite these limitations, our simplified BA formulation successfully captures the essential trends of atomic bonding across the periodic table. This validates BA as a compact, intuitive, and interpretable descriptor that compresses complex electronic structure information into a human-readable format.  
+
+> V. SUMMARY
+
+In summary, we have developed MattKeyBond, abond-centric materials database constructed through high-throughput first-principles calculations, Closest Wannier Function (CWF) downfolding, and integral crystal orbital Hamilton population (ICOHP) analy-sis. Currently encompassing 36,377 inorganic com-pounds and over 3.6 million bonded atomic pairs, this database provides a high-fidelity, real-space mapping of local electronic landscapes and bonding interactions. By moving beyond traditional geometric coordinates and global scalar properties, MattKeyBond extracts explicit, energy-dimensional intermediate features at the atom-bond resolution, establishing a mechanistic bridge be-tween atomic arrangements and macroscopic material be-haviors. Building upon this extensive dataset, we introduced Bonding Attractivity (BA), denoted as ηA(R, x A), anovel element-specific descriptor parameterized by base-line attractivity, characteristic decay length, and valence-state modulation. While classical electronegativity pri-marily characterizes the tendency for ionic charge trans-fer, BA serves as a crucial complementary metric that quantifies the intrinsic capability of atoms to form bonds via covalent orbital hybridization. By distilling com-plex quantum mechanical information into an intuitive, human-readable format, BA provides a tractable and physically interpretable metric for bond strength across diverse chemical environments. The introduction of MattKeyBond and BA represents a significant advancement for the “AI for Science” com-munity. These pre-calculated, physics-based descriptors provide machine learning models with explicit electronic structure information, relieving them of the burden of im-plicitly reconstructing complex quantum mechanics from pure geometry. This integration fundamentally enhances model interpretability and generalizability, particularly in scenarios where experimental training data is scarce, thereby enabling more robust and accurate property pre-dictions. Furthermore, as generative AI and foundation models continue to evolve, embedding these physics-rich, bond-resolved descriptors into modern workflows holds immense potential for inverse materials design. Moving forward, we plan to continuously expand Mat-tKeyBond by incorporating newly predicted and poten-tially synthesizable crystal structures. Additionally, fu-ture iterations of the database will explicitly account for advanced physical interactions, including spin-orbit coupling and magnetism, to provide an even more com-prehensive and rigorous description of chemical bonding. We anticipate that this foundational resource will signif-icantly accelerate the data-driven discovery and mecha-8nistic understanding of next-generation functional mate-rials, such as unconventional superconductors, advanced catalysts, and novel energy storage systems. 
+
+ACKNOWLEDGMENTS 
+
+This work was supported by the Project funded by China Postdoctoral Science Foundation (No. 2022M723355), the Chinese funding sources applied via HPSTAR, the National Natural Science Foundation of China (12488201), and the National Key Research and Development Project of China (2021ZD0301800, 2022YFA1403103). 
+
+[1] A. Jain, S. P. Ong, G. Hautier, W. Chen, W. D. Richards, S. Dacek, S. Cholia, D. Gunter, D. Skinner, G. Ceder, and K. A. Persson, Commentary: The materials project: A materials genome approach to accelerating materials innovation, APL Materials 1, 011002 (2013). [2] S. M. Miao Liu, Atomly.net materials database and its application in inorganic chemistry, SCIENTIA SINICA Chimica 53 , 19 (2023). [3] J. E. Saal, S. Kirklin, M. Aykol, B. Meredig, and C. Wolverton, Materials design and discovery with high-throughput density functional theory: The open quan-tum materials database (oqmd), JOM 65 , 1501 (2013). [4] S. Kirklin, J. E. Saal, B. Meredig, A. Thompson, J. W. Doak, M. Aykol, S. R¨ uhl, and C. Wolverton, The open quantum materials database (oqmd): assessing the accu-racy of dft formation energies, npj Computational Mate-rials 1, 15010 (2015). [5] H. Eckert, S. Divilov, M. J. Mehl, D. Hicks, A. C. Zettel, M. Esters, X. Campilongo, and S. Curtarolo, The aflow library of crystallographic prototypes: Part 4, Computa-tional Materials Science 240 , 112988 (2024). [6] Nomad: A distributed web-based platform for managing materials science research data, Journal of Open Source Software 8, 5388 (2023). [7] S. Haastrup, M. Strange, M. Pandey, T. Deilmann, P. S. Schmidt, N. F. Hinsche, M. N. Gjerding, D. Torelli, P. M. Larsen, A. C. Riis-Jensen, J. Gath, K. W. Jacobsen, J. Jørgen Mortensen, T. Olsen, and K. S. Thygesen, The computational 2d materials database: high-throughput modeling and discovery of atomically thin crystals, 2D Materials 5, 042002 (2018). [8] M. N. Gjerding, A. Taghizadeh, A. Rasmussen, S. Ali, F. Bertoldo, T. Deilmann, N. R. Knøsgaard, M. Kruse, A. H. Larsen, S. Manti, T. G. Pedersen, U. Petralanda, T. Skovhus, M. K. Svendsen, J. J. Mortensen, T. Olsen, and K. S. Thygesen, Recent progress of the computa-tional 2d materials database (c2db), 2D Materials 8,044002 (2021). [9] K. Choudhary, K. F. Garrity, A. C. E. Reid, B. DeCost, A. J. Biacchi, A. R. Hight Walker, Z. Trautt, J. Hattrick-Simpers, A. G. Kusne, A. Centrone, A. Davydov, J. Jiang, R. Pachter, G. Cheon, E. Reed, A. Agrawal, X. Qian, V. Sharma, H. Zhuang, S. V. Kalinin, B. G. Sumpter, G. Pilania, P. Acar, S. Mandal, K. Haule, D. Vanderbilt, K. Rabe, and F. Tavazza, The joint au-tomated repository for various integrated simulations (jarvis) for data-driven materials design, npj Computa-tional Materials 6, 173 (2020). [10] Y. G. Chung, E. Haldoupis, B. J. Bucior, M. Ha-ranczyk, S. Lee, H. Zhang, K. D. Vogiatzis, M. Mil-isavljevic, S. Ling, J. S. Camp, B. Slater, J. I. Siep-mann, D. S. Sholl, and R. Q. Snurr, Advances, updates, and analytics for the computation-ready, experimental metal–organic framework database: Core mof 2019, Jour-nal of Chemical & Engineering Data 64 , 5985 (2019), https://doi.org/10.1021/acs.jced.9b00835. [11] L. Chanussot, A. Das, S. Goyal, T. Lavril, M. Shuaibi, M. Riviere, K. Tran, J. Heras-Domingo, C. Ho, W. Hu, A. Palizhati, A. Sriram, B. Wood, J. Yoon, D. Parikh, C. L. Zitnick, and Z. Ulissi, Open catalyst 2020 (oc20) dataset and community challenges, ACS Catalysis 11 ,6059 (2021), https://doi.org/10.1021/acscatal.0c04525. [12] R. Tran, J. Lan, M. Shuaibi, B. M. Wood, S. Goyal, A. Das, J. Heras-Domingo, A. Kolluru, A. Rizvi, N. Shoghi, A. Sriram, F. Therrien, J. Abed, O. Voznyy, E. H. Sargent, Z. Ulissi, and C. L. Zitnick, The open catalyst 2022 (oc22) dataset and challenges for ox-ide electrocatalysts, ACS Catalysis 13 , 3066 (2023), https://doi.org/10.1021/acscatal.2c05426. [13] T. Xie and J. C. Grossman, Crystal graph convolutional neural networks for an accurate and interpretable predic-tion of material properties, Phys. Rev. Lett. 120 , 145301 (2018). [14] C. Chen, W. Ye, Y. Zuo, C. Zheng, and S. P. Ong, Graph networks as a universal machine learning framework for molecules and crystals, Chemistry of Materials 31 , 3564 (2019). [15] K. Choudhary and B. DeCost, Atomistic line graph neu-ral network for improved materials property predictions, npj Computational Materials 7, 185 (2021). [16] C. Chen and S. P. Ong, A universal graph deep learn-ing interatomic potential for the periodic table, Nature Computational Science 2, 718 (2022). [17] H. Li, Z. Wang, N. Zou, M. Ye, R. Xu, X. Gong, W. Duan, and Y. Xu, Deep-learning density functional theory hamiltonian for efficient ab initio electronic-structure calculation, Nature Computational Science 2,367 (2022). [18] T. Lv, Z. Zhong, Y. Liang, F. Li, J. Huang, and R. Zheng, Deep charge: Deep learning model of electron density from a one-shot density functional theory calculation, Phys. Rev. B 108 , 235159 (2023). [19] T. Ozaki, Closest wannier functions to a given set of lo-calized orbitals, Phys. Rev. B 110 , 125115 (2024). [20] R. Dronskowski and P. E. Bloechl, Crystal orbital hamil-ton populations (cohp): energy-resolved visualization of chemical bonding in solids based on density-functional calculations, The Journal of Physical Chemistry 97 , 8617 9                                        
+
+> (1993). [21] V. L. Deringer, A. L. Tchougr´ eeff, and R. Dronskowski, Crystal orbital hamilton population (cohp) analysis as projected from plane-wave basis sets, J. Phys. Chem. A
+> 115 , 5461 (2011). [22] S. Maintz, V. L. Deringer, A. L. Tchougr´ eeff, and R. Dronskowski, Analytic projection from plane-wave and paw wavefunctions and application to chemical-bonding analysis in solids, J. Comput. Chem. 34 , 2557 (2013). [23] L. Pauling, The nature of the chemical bond. application of results obtained from the quantum mechanics and from a theory of paramagnetic susceptibility to the structure of molecules, Journal of the American Chemical Society
+> 53 , 1367 (1931). [24] M. Rahm, T. Zeng, and R. Hoffmann, Electronegativity seen as the ground-state average valence electron binding energy, Journal of the American Chemical Society 141 ,342 (2019). [25] P. Hohenberg and W. Kohn, Inhomogeneous electron gas, Phys. Rev. 136 , B864 (1964). [26] W. Kohn and L. J. Sham, Self-consistent equations in-cluding exchange and correlation effects, Phys. Rev. 140 ,A1133 (1965). [27] J. Nagamatsu, N. Nakagawa, T. Muranaka, Y. Zenitani, and J. Akimitsu, Superconductivity at 39 K in magne-sium diboride, Nature 410 , 63 (2001). [28] D. Zagorac, H. M¨ uller, S. Ruehl, J. Zagorac, and S. Rehme, Recent developments in the inorganic crys-tal structure database: theoretical crystal structure data and related features, J. Appl. Cryst. 52 , 918 (2019). [29] QUANTUM ESPRESSO: a modular and open-source software project for quantum simulations of materials, J. Phys.: Condens. Matter 21 , 395502 (2009). [30] J. P. Perdew, K. Burke, and M. Ernzerhof, Generalized gradient approximation made simple, Phys. Rev. Lett.
+> 77 , 3865 (1996). [31] A. Dal Corso, Pseudopotentials periodic table: From h to pu, Computational Materials Science 95 , 337 (2014). [32] B. Cordero, V. G´ omez, A. E. Platero-Prats, M. Rev´ es, J. Echeverr´ ıa, E. Cremades, F. Barrag´ an, and S. Alvarez, Covalent radii revisited, Dalton Trans. , 2832 (2008). [33] A. A. Mostofi, J. R. Yates, G. Pizzi, Y.-S. Lee, I. Souza, D. Vanderbilt, and N. Marzari, An updated version of wannier90: A tool for obtaining maximally-localised wannier functions, Comput. Phys. Commun. 185 , 2309 (2014).
+> Appendix A: First-principles calculation
+
+The electronic structure and atomic orbital projec-tion of above 50,000 materials were high-throughput investigated based on the density functional theory (DFT) [25, 26] calculations as implemented in the Quan-tum ESPRESSO (QE) package [29]. The interactions between electrons and nuclei were described by the ultra-soft pseudopotentials as implemented in the PSLI-BRARY [31]. The generalized gradient approximation (GGA) of Perdew-Burke-Ernzerhof (PBE) [30] type was adopted for the exchange-correlation functional. For ele-ments from Z=1 (H) to Z=83 (Bi) present in our dataset, their valence orbital configurations and the number of atomic orbitals used in the Wannier downfolding are listed in TABLE I. The wave-function and charge density cutoff of plane-wave basis was set to be 1.3 times of the suggested values by PSLIBRARY. A Gamma-center k-point mesh with a grid spacing of 0.2 ˚ A−1 was adopted for the Brillouin zone (BZ) sampling. The Gaussian smear-ing method with a width of 0.004 Ry was employed for the Fermi surface broadening. The lattice constants and internal atomic positions were all adopted same with the material project database. All the calculations were per-formed in the non-magentic framework. 
+
+> Appendix B: Closest Wannier Function
+
+In plane-wave-based DFT calculations, the atomic or-bitals used for post-processing and projection analysis are typically incomplete and non-orthogonal: 
+
+X
+
+> ab
+
+⟨n | a⟩S−1 
+
+> ab
+
+⟨b | n⟩̸ = 1 
+
+Sab = ⟨a | b⟩̸ = δab .
+
+(B1) Here |n⟩ is the calculated eigen- Kohn Sham state in plane-wave bases. |a⟩ and |b⟩ are two atomic orbital from two neighbouring atoms, and Sab is their orbital overlap integration. bS−1 is the inversion of matrix bS.Notably, these incomplete and non-orthogonal atomic or-bitals pose significant challenges for bonding analysis. Although some strategies have been adopted for solv-ing the problem in orthogonal (like the Lowdin orthogo-nalization or directly cutting the orbital wave-function in real space), the incomplete atomic orbitals is still hard to well describe all our concerned electronic states, specially for the electronic states around or above the Fermi level. An ideal strategy is to construct a set of complete and orthogonal Wannier Functions. Nowa-days, the most widely used orbital downfolding method is the maximally-localised Wannier functions (MLWF)[33]. However, the construction of MLWF is very parameter sensitive. It is inevitable to involve the artificial adjust-ments in the calculation process and not suitable for the high-throughput calculation. In this work, for construct-ing a set of ideal Wannier function to represent the origi-nal atomic orbital, we adopted a recently developed Clos-est Wannier functions (CWFs) method[19]. The CWFs characters in the slight parameter dependency and free of human intervention. Unlike MLWF construction, which requires iterative calculations to optimize an artificial spread function Ω, CWFs are obtained through a single-step singular value decomposition of the projection ma-trix bA:
+
+bA = bV + bΛ bU . (B2) Here bA is a non-squared matrix whose elements Aan re-flect the projected information between atomic orbital 10 H He                                                                             
+
+> Li Be BCNOFNe
+> Na Mg Al Si PSCl Ar
+> KCa Sc Ti VCr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr
+> Rb Sr YZr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te IXe
+> Cs Ba La Hf Ta WRe Os Ir Pt Au Hg Tl Pb Bi
+> La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu
+
+## 𝑀 𝐴 
+
+-1.0 1.0                                                                              
+
+> HHe
+> Li Be BCNOFNe
+> Na Mg Al Si PSCl Ar
+> KCa Sc Ti VCr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr
+> Rb Sr YZr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te IXe
+> Cs Ba La Hf Ta WRe Os Ir Pt Au Hg Tl Pb Bi
+> La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu
+
+## 𝐿 𝐴 
+
+0.5 1.4 (Å) 
+
+FIG. 6. A visual version of the characteristic decay length LA, and the valence state modulation factor MA on Bonding Attractivity. 
+
+|a⟩ and the eigen- Kohn-Sham state |n⟩ from DFT calcu-lation. In general, bA is not unitary. But we can further define a half unitary matrix bB using: 
+
+bB = bV + bU . (B3) Utilizing the half-unitarity of bB, we can therefore con-struct a set of orthogonal and complete Wannier func-tion: 
+
+|aCWF ⟩ = X
+
+> n
+
+|n⟩Ban . (B4) As proved in Ref. [19], this set of |aCWF ⟩ own the min-imal difference with the original guiding functions from 
+
+bA, so called Closest WFs. The unique parameter-dependency of CWF is just the defining for the guiding function bA. In earlier works, this was defined by the atomic orbital projection matrix 
+
+⟨a | n⟩ with a weight of wn:
+
+Aan = ⟨a | n⟩wn. (B5) The role of wn is just to highlight our concerned energy window, similar with the frozen windows of MLWF. Here we let 
+
+wn = 1
+
+e εn −εf −∆∆ + 1 + o (B6) to ensure all the occupation states can be well described by CWFs. ∆ is a broaden index to control the energy window above the Fermi level. o is a finite small quantity to ensure all the singular value of bA are non-zero. In our works, we set ∆ = 2.0 eV and o = 0.01. 11 In addition to wn, in the definition of guiding matrix bA,we also involved the dual bases. As the nonorthogonality of the original set of atomic orbitals |a⟩, we can define a set of their dual bases |a′⟩:
+
+|a′⟩ = X
+
+> b
+
+|b⟩S−1 
+
+> ba
+
+. (B7) In mathematics, the dual orbital |a′⟩ describes the unique Hilbert space of |a⟩ and therefore is orthometric to other atomic orbitals: 
+
+⟨a′ | b⟩ = δab . (B8) Here we further introduced two projection matrix bC and 
+
+bD for the original atomic orbital |a⟩ and its dual orbital 
+
+|a′⟩, respectively: 
+
+Can = ⟨a | n⟩
+
+Dan = ⟨a′ | n⟩. (B9) In practice, the types and number of orbitals included in the CWF downfolding can significantly influence the bonding analysis. Typically, certain outer-shell orbitals contribute minimally to atomic bonding as they are nearly unoccupied, like the Mg atomic 3 p orbitals or the Ti atomic 4 p orbitals. However, due to their spatial ex-tension, they can easily overlap with other atomic or-bitals and contend the electron state that doesn’t belong to them, like the core electronic state. For avoiding the dependency of these insignificant out shelled orbitals, we used a composite strategy when constructing bA matrix: 
+
+Aan = [ fnDan + (1 − fn) Can ]wn. (B10) Here fn is the Fermi distribution of the eigenstate |n⟩.As shown by this formation, we used the projection ma-trix of dual orbital Dan in the occupied state. This can effectively exclude the influence and dependency of out shelled orbitals on the bond analysis of occupied states. In the MLWF downfolding calculation[33], one needs to optimize a local indicator Ω. This involves the over-lap calculation between the wave-functions of different k
+
+points: ⟨mk| e−ibr |nk + b⟩. But for CWFs, the calcu-lations of every k-points are fully independent. We just need to calculate the CWFs transition matrix bB(k) of every k-points. The final tight-binding model and RDM of CWFs in real space can be further got from a Fourier transform of H(k)ab and D(k)ab , respectively: 
+
+H(R)ab = X
+
+> k
+
+e−ikR H(k)ab 
+
+H(k)ab = X
+
+> n
+
+εnkBan (k)B∗
+
+> bn
+
+(k)(B11) 
+
+D(R)ab = X
+
+> k
+
+e−ikR D(k)ab 
+
+D(k)ab = X
+
+> n
+
+fnkBan (k)B∗
+
+> bn
+
+(k)(B12) Notable, as the CWFs character in the closest with the guiding functions, they cannot meanwhile be well local-ized like the MLWF. So, within our set k-mesh or BVK conditions, sometimes the long-distance orbital hopping cannot fully decay to zero. Usually, this may slightly in-fluence the effectiveness of Wannier interpolation. How-ever, for our concerned short-distance adjacent bonding atoms, their orbital hybridization can still be well de-scribed. 
+
+> Appendix C: Bond analysis of ICOHP
+
+In this work, we employed the CWF-based integrated Crystal Orbital Hamilton Population (ICOHP) to quan-titatively describe atomic bond strength [20–22]. Crystal Orbital Hamilton Population (COHP) is a computational tool used in quantum chemistry and solid-state physics to analyze the electronic structure of molecules and solids. Within the DFT total energy calculation, ICOHP repre-sents the contribution of orbital hybridization and helps in understanding the covalency of chemical bonds within materials. After the CWFs downfolding, we can rewrite the elec-tronic eigen- wave-functions |nk⟩ in CWF basis: 
+
+|nk⟩ = X
+
+> Aa
+
+Cnk
+
+> Aa
+
+|Aa k⟩, (C1) Here |Aa k⟩ denotes the CWF of atomic orbital a on atom 
+
+A in k-space, and Cnk 
+
+> Aa
+
+is the corresponding combination coefficient. The band structure εnk can be therefore de-duced by: 
+
+εnk = ⟨nk| bH|nk⟩ = X
+
+> Aa,Bb
+
+Cnk∗ 
+
+> Bb
+
+Cnk
+
+> Aa
+
+⟨Bb k| bH|Aa k⟩
+
+= X
+
+> RAa, R′Bb
+
+Cnk∗ 
+
+> Bb
+
+Cnk
+
+> Aa
+
+eik(R′−R) R′Bb bH|RAa ⟩.
+
+(C2) Here we employed a Fourier transform |Aa k⟩ =P 
+
+> R
+
+e−ikR |RAa ⟩ for the bond analysis between specific atomic pair in real space. In the summation of Eq. C2, the contribution between the |RAa ⟩ and |R′Bb ⟩ orbital pair provide their COHP in |nk⟩ state: COHP nkRAa, R′Bb = Cnk∗ 
+
+> Bb
+
+Cnk
+
+> Aa
+
+eik(R′−R) R′Bb bH|RAa ⟩.
+
+(C3) In general, peoples are more concerned about its distri-bution in energy space: COHP RAa, R′Bb (ε) = X
+
+> nk
+
+δ (ε − εnk) COHP nkRAa, R′Bb 
+
+(C4) And the ICOHP between |RAa ⟩ and |R′Bb ⟩ orbital is defined by the integration of COHP RAa, R′Bb (ε) below the Fermi level: ICOHP RAa, R′Bb =
+
+Z εf
+
+> −∞
+
+dε COHP RAa, R′Bb (ε)= ⟨RAa | bD R′Bb R′Bb bH|RAa ⟩
+
+(C5) 12 Here we induced the reduced density matrix (RDM) op-erator bD:
+
+bD = X
+
+> nk
+
+|nk⟩fnk⟨nk|, (C6) whose offset terms also own a meaning of bond order. fnk
+
+is Fermi distribution with a finite temperature broaden of 0.2 eV. The total ICOHP between the RA and R′B
+
+atomic pair need an additional summation of their hybrid orbitals: ICOHP RA, R′B = X
+
+> a∈A,b ∈B
+
+ICOHP RAa, R′Bb (C7) 13 
+
+FIG. 7. Parity plots of BA-predicted ICOHP versus DFT-calculated ICOHP, resolved by central element from Z = 1 to Z = 23. Each panel aggregates all A − B bonds that include the labeled element, with the diagonal indicating perfect agreement. Numbers inside each panel denote the sample size used for that element’s bonds. 14 
+
+FIG. 8. Parity plots of BA-predicted ICOHP versus DFT-calculated ICOHP, resolved by central element from Z = 24 to Z = 44. Each panel aggregates all A − B bonds that include the labeled element, with the diagonal indicating perfect agreement. Numbers inside each panel denote the sample size used for that element’s bonds. 15 
+
+FIG. 9. Parity plots of BA-predicted ICOHP versus DFT-calculated ICOHP, resolved by central element from Z = 45 to Z = 66. Each panel aggregates all A − B bonds that include the labeled element, with the diagonal indicating perfect agreement. Numbers inside each panel denote the sample size used for that element’s bonds. 16 
+
+FIG. 10. Parity plots of BA-predicted ICOHP versus DFT-calculated ICOHP, resolved by central element from Z = 67 to Z = 83. Each panel aggregates all A − B bonds that include the labeled element, with the diagonal indicating perfect agreement. Numbers inside each panel denote the sample size used for that element’s bonds. 17 
+
+TABLE I. List of every element’s valence orbital configurations, orbital numbers[31], and covalent radius[32] (in unit of ˚ A) used in our calculation and analysis. Element Orbital Conf. Orbital Num. rA Element Orbital Conf. Orbital Num. rA
+
+H 1s 1 0.31 Tc 4s4p5s4d5p 13 1.47 He 1s 1 0.28 Ru 4s4p5s4d 10 1.46 Li 1s2s2p 5 1.28 Rh 4s4p5s4d 10 1.42 Be 2s2p 4 0.96 Pd 4s4p5s4d 10 1.39 B 2s2p 4 0.84 Ag 4s4p5s4d 10 1.45 C 2s2p 4 0.76 Cd 4s4p5s4d 10 1.44 N 2s2p 4 0.71 In 4d5s5p 9 1.42 O 2s2p 4 0.66 Sn 4d5s5p 9 1.39 F 2s2p 4 0.57 Sb 5s5p 4 1.39 Ne 2s2p 4 0.58 Te 5s5p 4 1.38 Na 2s2p3s 5 1.66 I 5s5p 4 1.39 Mg 2s2p3s3p 8 1.41 Xe 4d5s5p 9 1.40 Al 3s3p 4 1.21 Cs 5s5p6s 5 2.44 Si 3s3p 4 1.11 Ba 5s5p6s 5 2.15 P 3s3p 4 1.07 La 5s5p6s5d6p4f 20 2.07 S 3s3p 4 1.05 Ce 5s5p6s5d6p 13 2.04 Cl 3s3p 4 1.02 Pr 5s5p6s5d6p 13 2.03 Ar 3s3p 4 1.06 Nd 5s5p6s5d6p 13 2.01 K 3s3p4s4p 8 2.03 Pm 5s5p6s5d6p 13 1.99 Ca 3s3p4s4p 8 1.76 Sm 5s5p6s5d6p 13 1.98 Sc 3s3p4s3d 10 1.70 Eu 5s5p6s5d6p 13 1.98 Ti 3s3p4s3d 10 1.60 Gd 5s5p6s5d6p 13 1.96 V 3s3p4s3d 10 1.53 Tb 5s5p6s5d6p 13 1.94 Cr 3s3p4s3d 10 1.39 Dy 5s5p6s5d6p 13 1.92 Mn 3s3p4s3d 10 1.39 Ho 5s5p6s5d6p 13 1.92 Fe 4s3d4p 9 1.32 Er 5s5p6s5d6p 13 1.89 Co 4s3d4p 9 1.26 Tm 5s5p6s5d6p 13 1.90 Ni 4s3d4p 9 1.24 Yb 5s5p6s5d6p 13 1.87 Cu 4s3d4p 9 1.32 Lu 5s5p6s5d6p 13 1.87 Zn 4s3d4p 9 1.22 Hf 5s5p6s5d 10 1.75 Ga 4s3d4p 9 1.22 Ta 5s5p6s5d 10 1.70 Ge 4s4p 4 1.20 W 5s5p6s5d6p 13 1.62 As 4s4p 4 1.19 Re 5s5p6s5d 10 1.51 Se 4s4p 4 1.20 Os 5s5p6s5d 10 1.44 Br 4s4p 4 1.20 Ir 5s5p6s5d 10 1.41 Kr 4s3d4p 9 1.16 Pt 5s5p6s5d 10 1.36 Rb 4s4p5s5p 8 2.20 Au 5s5p6s5d 10 1.36 Sr 4s4p5s5p 8 1.95 Hg 5s5p6s5d 10 1.32 Y 4s4p5s4d5p 13 1.90 Tl 5d6p6s 9 1.45 Zr 4s4p5s4d5p 13 1.75 Pb 5d6p6s 9 1.46 Nb 4s4p5s4d5p 13 1.64 Bi 5d6p6s 9 1.48 Mo 4s4p5s4d 10 1.54

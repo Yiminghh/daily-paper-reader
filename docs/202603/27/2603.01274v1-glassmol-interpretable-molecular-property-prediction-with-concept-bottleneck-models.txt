@@ -1,0 +1,407 @@
+Title: GlassMol: Interpretable Molecular Property Prediction with Concept Bottleneck Models
+
+URL Source: https://arxiv.org/pdf/2603.01274v1
+
+Published Time: Tue, 03 Mar 2026 03:45:05 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# GlassMol : Interpretable Molecular Property Prediction with Concept Bottleneck Models 
+
+Oscar Rivera 1[0009-0005-5742-1740] , Ziqing Wang 1[0009-0004-8940-0461] ,Matthieu Dagommer 2[0009-0006-3260-6455] , Abhishek Pandey 2[0009-0008-7905-5712] , and Kaize Ding 1[0000-0001-6684-6752]  
+
+> 1
+
+Northwestern University, Evanston, IL 60201, USA 
+
+oscarrivera2028@u.northwestern.edu  
+
+> 2
+
+AbbVie, Chicago, IL 60064, USA 
+
+Abstract. Machine learning accelerates molecular property prediction, yet state-of-the-art Large Language Models and Graph Neural Networks operate as black boxes. In drug discovery, where safety is critical, this opacity risks masking false correlations and excluding human expertise. Existing interpretability methods suffer from the effectiveness-trustworthiness trade-off: explanations may fail to reflect a model’s true reasoning, degrade performance, or lack domain ground-ing. Concept Bottleneck Models (CBMs) offer a solution by projecting inputs to human-interpretable concepts before readout, ensuring that explanations are in-herently faithful to the decision process. However, adapting CBMs to chemistry faces three challenges: the Relevance Gap (selecting task-relevant concepts from a large descriptor space), the Annotation Gap (obtaining concept supervision for molecular data), and the Capacity Gap (degrading performance due to bottleneck constraints). We introduce GlassMol , a model-agnostic CBM that addresses these gaps through automated concept curation and LLM-guided concept selec-tion. Experiments across thirteen benchmarks demonstrate that GlassMol gen-erally matches or exceeds black-box baselines, suggesting that interpretability does not sacrifice performance and challenging the commonly assumed trade-off. Code is available at https://github.com/walleio/GlassMol. 
+
+## 1 Introduction 
+
+Machine learning-enabled molecular property prediction seeks to leverage the high-throughput nature of computation to identify promising areas of research for wet-lab chemists, increasing the efficiency of the entire research pipeline [10,22,38]. By learn-ing from vast chemical databases where exhaustive experimental testing is prohibitively expensive, ML models prioritize promising compounds for wet-lab validation, reducing both cost and development timelines. This computational approach has already demon-strated tangible impact in identifying novel antibiotics, optimizing molecular properties, and enabling de novo drug design [10,22,41,2]. Among the most successful approaches are Graph Neural Networks (GNNs) [37,19,4,7] and Large Language Models (LLMs) [42,43]. By design, GNNs rely on graph-structured data, enabling message-passing between nodes (i.e., atoms), and are thus well suited for processing intrinsically graph-like molecular information [6]. Though LLMs fail to ex-ploit graph structure, they have demonstrated strong encoding and reasoning capabili-ties for natural-language molecular tasks [48]. Both paradigms achieve strong predictive  
+
+> arXiv:2603.01274v1 [cs.LG] 1 Mar 2026 2O. Rivera, Z. Wang, et al.
+
+performance, yet both operate as black boxes: GNNs produce high-dimensional graph embeddings that resist interpretation, while LLMs function through billions of opaque parameters [47,46]. In drug discovery, where regulatory approval and patient safety de-mand rigorous justification, such opacity poses significant challenges. The need for interpretability extends beyond regulatory compliance to fundamental questions of scientific validity. Without understanding why a model predicts toxicity, researchers cannot verify whether predictions reflect genuine structure-activity relation-ships or spurious correlations. A model might correctly flag a molecule as hepatotoxic for reasons unrelated to its actual mechanism, making it difficult to guide lead optimiza-tion. Existing interpretability methods, including attention visualization, gradient-based attribution, and subgraph exploration, attempt to address this gap [46,44]. However, these post-hoc approaches face a fundamental effectiveness-trustworthiness trade-off: explanations may degrade predictive accuracy, may not faithfully reflect actual model reasoning, or may lack grounding in chemical knowledge [36]. Concept Bottleneck Models (CBMs) offer a principled alternative by embedding in-terpretability directly into model architecture [26,1,32]. A CBM first predicts human-understandable intermediate concepts, then uses exclusively these concepts for final predictions. This design ensures that explanations are inherently faithful to the decision process, as every prediction must pass through the interpretable concept layer. However, adapting CBMs to molecular property prediction presents domain-specific challenges: 
+
+➊ How to select concepts? (Relevance Gap) : Unlike computer vision, where concepts are intuitive (e.g., wing color), the chemical descriptor space contains hundreds of physicochemical properties. Identifying the specific subset relevant to a down-stream task (e.g., toxicity) is non-trivial and often exceeds manual expert capacity. 
+
+➋ Where is the data? (Annotation Gap) : Standard molecular datasets provide only structures and final labels. Training a CBM requires supervision on intermediate concepts, which are typically absent, creating a barrier to entry. 
+
+➌ Are performance and transparency mutually exclusive? (Capacity Gap) : There is a common concern that imposing a bottleneck of human-interpretable concepts may constrain the model’s expressivity, leading to inferior performance compared to black-box end-to-end models. To address these challenges, we propose GlassMol , a model-agnostic adaptation of CBMs to molecular property prediction. Although formally model-agnostic, we experi-mentally verify GlassMol using GNN and LLM backbones because of their relevance and suitability for chemical tasks [29,9,37]. GlassMol bridges the Annotation Gap by computing chemical descriptors via RDKit, addresses the Relevance Gap through LLM-guided concept selection, and empirically demonstrates that interpretability need not sacrifice performance. In summary, this paper makes the following contributions: 
+
+– Method. A model-agnostic CBM framework and corresponding open-source code applicable to molecular property prediction tasks with continuous concept labels. 
+
+– Evaluation. A systematic evaluation on thirteen benchmark datasets demonstrating competitive or superior performance compared to black-box baselines, empirically addressing the Capacity Gap. 
+
+– Verification. A grounded validation of interpretability through case studies com-paring concept attributions with established structural importance methods. GlassMol 3
+
+Fig. 1: The proposed GlassMol framework . The inputs to the encoder are the raw data, either a SMILES string or a molecular graph. The embeddings generated by the LLM or GNN are projected onto a set of task-relevant concepts selected by an LLM. The predicted concept values are then passed to a linear layer to produce the final predic-tion. The importance of each concept is determined by the magnitude of its contribution to the final output, computed as the product of the concept value and its weight. 
+
+## 2 Related Work 
+
+Molecular Representation Learning. GNNs [21] have been extensively applied to 2D and 3D molecular tasks, utilizing supervised and unsupervised approaches to capture topological nuances [12,9]. LLM-based methods, including chemical pre-training and prompting variations, have performed comparably to their GNN counterparts [37,19]. Recent research efforts, moreover, seek to synthesize GNN and LLM embeddings to maximize information expressibility [29,8]. Though both learning strategies exhibit state-of-the-art performance on molecular tasks, they are not designed with an interpret-ability-first approach, limiting collaboration with domain experts [30,33]. Indeed, GNNs and LLMs intrinsically lack interpretability: GNNs encode molecular structures into dense vector representations that are difficult to decompose, while LLMs distribute knowledge across billions of parameters without explicit reasoning traces [47,45]. 
+
+Explainability in Drug Discovery. To address this opacity, add-on methods often gauge model behavior using data manipulation, input probing, subgraph exploration, and un-certainty quantification. Although not requiring re-training, these post-hoc approaches face the “trustworthiness” problem: they approximate the model’s reasoning rather than exposing it, potentially learning faulty concepts [20,18,5]. In contrast, self-explanatory methods are considered the gold standard for interpretability in chemistry because they are human-intelligible and integrated into the model [35]. However, existing self-explanatory approaches often synthesize exclusively subgraph-based explanations, re-maining difficult for non-experts to interpret [31,17,3]. 
+
+Concept Bottleneck Models. CBMs offer a path toward self-explanation by project-ing latent features into a semantic concept space before prediction [26,24] and have demonstrated their efficacy on computer vision and text-based tasks [23,25,39]. Sev-eral architectures have been proposed: linear layers projecting from hidden states to predefined concepts [39], and neuron-level concept representations [16]. In the image domain, LLMs have been used to curate concept banks [34]. However, these approaches 4 O. Rivera, Z. Wang, et al. 
+
+have not been systematically adapted to molecular property prediction, where the Rel-evance Gap and Annotation Gap pose challenges. GlassMol builds upon these foun-dations while following the guidance of [11] to avoid concept prediction inaccuracy. 
+
+## 3 Proposed Approach 
+
+In this section, we introduce GlassMol , a model-agnostic framework designed for transparency in molecular property prediction. Though formally model-agnostic, we experimentally verify our approach on LLMs and GNNs because of their relevance and aptitude for chemical tasks [33,29,30]. By explicitly aligning high-dimensional molec-ular embeddings with human-understandable chemical concepts, GlassMol bridges the gap between black-box performance and scientific interpretability. 
+
+3.1 Problem Formulation 
+
+Let D = {(xi, y i)}Ni=1 denote a molecular dataset, where xi ∈ X is the molecular input (e.g., graph or SMILES) and yi ∈ Y is the target property. Standard black-box models learn a direct mapping F : X → Y . In contrast, CBMs introduce an intermediate concept space C ⊆ RK , decomposing the prediction into a structured process: 
+
+ˆyi = hψ (gϕ(fθ (xi)) 
+
+| {z }
+
+> ˆci
+
+) = σ(w⊤ˆci + b) (1) Here, fθ extracts latent embeddings, gϕ projects them to interpretable concept scores 
+
+ˆci ∈ RK , and hψ makes the final prediction via a linear combination parameterized by weights w. This linearity ensures that the decision logic is transparent. 
+
+Challenges. Training such a system requires supervision on the intermediate concepts 
+
+ˆci, but molecular datasets lack ground-truth concept annotations c∗, creating an Anno-tation Gap. Further, the chemical descriptor space is vast, making the identification of a task-relevant subset of K concepts a non-trivial Relevance Gap. GlassMol addresses both gaps by constructing a surrogate ground-truth c∗ via automated domain reasoning. 
+
+3.2 Automated Concept Curation via LLM 
+
+To bridge the Annotation and Relevance Gaps, we propose a two-stage curation pipeline that leverages computational chemistry for precision and LLMs for reasoning. 
+
+Stage 1: Ground Truth Generation. First, to address the Annotation Gap, we utilize RDKit [27] as a computational oracle. For every molecule xi ∈ D , we compute a com-prehensive set of M = 200 physicochemical descriptors, denoted as the global concept pool Cpool = {c(1) , . . . , c (M )}. These descriptors include topological properties, chem-ical fragments, molecular properties, surface area estimates, heterocycle estimates, 3D structural properties, Lipinski parameters, and quantitative estimation of drug-likeness (QED). This step transforms the original dataset into D′ = {(xi, y i, cpool i )}, providing scientifically accurate ground-truth values without manual labor. 
+
+Stage 2: Task-Aware Concept Selection. Utilizing the entire descriptor pool Cpool 
+
+(M = 200 ) is suboptimal (see Figure 5a) as irrelevant concepts introduce noise and dilute interpretability. To address this Relevance Gap, we employ ChatGPT (GPT-4) [15] as a semantic filter. Formally, let T be the textual description of the downstream GlassMol 5
+
+task (e.g., “Predicting drug-induced liver injury”). We model the LLM as a selection operator SLLM that identifies the indices of the top-K most task-relevant concepts: 
+
+Itask = SLLM (T, Cpool ) ⊂ { 1, . . . , M }, |I task | = K (2) The final task-specific concept vector c∗ 
+
+> i
+
+∈ RK for molecule xi is then constructed by gathering the selected descriptors: c∗ 
+
+> i
+
+= [ c(j) 
+
+> i
+
+]j∈I task . This process yields a compact and scientifically grounded supervision target. 
+
+3.3 The GlassMol Architecture 
+
+The architecture of GlassMol progressively transforms molecular data from raw in-puts to latent embeddings, then to interpretable concept scores, and finally to task pre-dictions. As depicted in Figure 1, this process involves three tightly integrated modules. 
+
+Latent Feature Extraction. The process begins with the Backbone Encoder fθ , which serves as the feature extraction engine. A key design principle of GlassMol is its adaptability to different molecular modalities. For graph-structured inputs, we instanti-ate fθ with a GINEConv-based GNN [13] to capture topological nuances. For sequential SMILES inputs, we employ the chemistry-specific SMILY-APE LLM [28]. Regardless of the backbone choice, this module maps the raw molecule x into a latent embedding 
+
+e = fθ (x) ∈ Rd.
+
+Concept Projection. To bridge the gap between these abstract representations and hu-man understanding, a Concept Projector gϕ transforms the embedding e. Unlike stan-dard classifiers that map embeddings directly to labels, this module—a Multi-Layer Perceptron—projects the latent vector onto the task-specific concept space defined in the previous section, yielding a predicted concept vector: 
+
+ˆc = gϕ(e) ∈ RK (3) Each element of ˆc represents the model’s estimation of a physicochemical property (e.g., LogP), requiring the network to explicitly represent the molecule’s attributes. 
+
+Transparent Inference. Finally, the prediction is made by the Linear Predictor hψ .By constraining this layer to a simple linear transformation, we ensure that the decision logic remains fully transparent: 
+
+ˆy = hψ (ˆ c) = σ(w⊤ˆc + b) (4) This design guarantees that the final prediction is solely a function of the predicted concepts, with interpretability arising from the linearity of hψ .
+
+3.4 Optimization and Interpretable Inference 
+
+Joint Optimization. To ensure that GlassMol achieves both high predictive accuracy and faithful concept learning, we optimize the entire framework end-to-end using a composite objective function. The loss is formulated as: 
+
+L = Ltask (y, ˆy) + λ · L concept (c∗, ˆc) (5) where Ltask is the binary cross-entropy loss for the classification target. The concept supervision term, Lconcept , is defined as the Mean Absolute Error (L1 loss) between the predicted concept scores ˆc and the RDKit-computed ground truth c∗:6 O. Rivera, Z. Wang, et al. 
+
+Lconcept = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+|c∗ 
+
+> k
+
+− ˆck| (6) The hyperparameter λ governs the trade-off between task performance and concept alignment. As demonstrated in our ablation study (see Figure 5), setting λ = 1 typ-ically yields the optimal balance. A lower λ, moreover, has been linked to worsened interpretability and lower concept accuracy [11]. 
+
+Interpretable Inference. Once trained, the model provides more than just a prediction; it offers a granular explanation of its decision-making process. Due to the linearity of the final predictor hψ , the logit of the prediction can be exactly decomposed into the sum of individual concept contributions. For a given molecule, the contribution score 
+
+sk of the k-th concept is calculated as: 
+
+sk = wk · ˆck (7) Here, w ∈ RK directly quantifies the contribution of each concept: a large positive 
+
+sk implies that concept k strongly drives the model toward a positive prediction, while a negative value suggests an inhibitory effect. This enables domain experts to verify whether the model’s reasoning aligns with established chemical principles. 
+
+## 4 Experiments 
+
+We conduct comprehensive experiments to validate the effectiveness of GlassMol .These experiments aim to investigate the following research questions: 
+
+– RQ1 (Effectiveness): Can the model demonstrate competitive performance with both GNN and LLM backbones? 
+
+– RQ2 (Interpretability): Does GlassMol learn chemically meaningful concepts? 
+
+– RQ3 (Ablation): How critical is each model component to performance? 
+
+4.1 Experimental Setup 
+
+Datasets. We evaluate our framework on 13 widely-used benchmark datasets from the Therapeutics Data Commons [14]. These datasets are categorized into ADME prop-erties (e.g., BBB, HIA) and Toxicity tasks (e.g., DILI, AMES). For all datasets, we employ a scaffold split (80/10/10) to rigorously evaluate the model’s generalization ca-pability to unseen chemical structures. 
+
+Baselines. To evaluate the effectiveness of our proposed framework, we compare it against baseline methods from two primary categories: (1) GNN Baselines : We include established GNNs such as GINE [13], GCN, GAT, and GraphSAGE; (2) LLM Base-lines : We benchmark against various LLM-based methods, primarily the chemistry-specific SMILY-APE [28], as well as Qwen and Llama. 
+
+Implementation Details. For the bottleneck layer, we utilize RDKit to generate ground-truth concepts and ChatGPT for task-aware selection. Following the guidance of our ablation study, the hyperparameter λ is set to 1, and 40 concepts are chosen. All exper-iments and analyses are conducted on a single NVIDIA H100 GPU. 
+
+4.2 Performance Comparison (RQ1) 
+
+Table 1 compares GlassMol against black-box baselines to examine the relationship between transparency and performance. GlassMol 7
+
+Table 1: Experimental results on Therapeutics Data Commons datasets. Besides the absence of a concept loss and concept layer, the baseline architectures are identical to their respective GlassMol architectures. We report the AUROC (mean ± std) over five runs. Bold indicates the best performance within the same architecture. The columns for our method ( GlassMol ) are highlighted. 
+
+Dataset LLM Architecture GNN Architecture 
+
+Baseline GlassMol (Ours) Baseline GlassMol (Ours) 
+
+—ADME Properties— 
+
+BBB 0.856 ± 0.010 0.892 ± 0.023 0.840 ± 0.006 0.867 ± 0.014 
+
+Bioavailability 0.556 ± 0.054 0.679 ± 0.010 0.615 ± 0.044 0.572 ± 0.045 
+
+HIA 0.880 ± 0.111 0.989 ± 0.007 0.768 ± 0.041 0.867 ± 0.057 
+
+Pgp 0.801 ± 0.005 0.903 ± 0.003 0.899 ± 0.011 0.861 ± 0.014 
+
+CYP2C9 0.822 ± 0.001 0.859 ± 0.010 0.851 ± 0.008 0.875 ± 0.004 
+
+CYP2D6 0.761 ± 0.004 0.793 ± 0.021 0.802 ± 0.003 0.843 ± 0.005 
+
+CYP3A4 0.799 ± 0.002 0.848 ± 0.002 0.840 ± 0.002 0.868 ± 0.004 
+
+CYP2C9_Subs 0.504 ± 0.031 0.545 ± 0.024 0.599 ± 0.044 0.627 ± 0.043 
+
+CYP2D6_Subs 0.670 ± 0.014 0.747 ± 0.024 0.665 ± 0.023 0.695 ± 0.034 
+
+CYP3A4_Subs 0.532 ± 0.015 0.548 ± 0.022 0.523 ± 0.036 0.540 ± 0.039 
+
+—Toxicity— 
+
+DILI 0.814 ± 0.008 0.851 ± 0.011 0.818 ± 0.030 0.850 ± 0.027 
+
+hERG 0.726 ± 0.027 0.765 ± 0.013 0.790 ± 0.030 0.695 ± 0.029 
+
+AMES 0.792 ± 0.009 0.842 ± 0.008 0.855 ± 0.005 0.855 ± 0.003 
+
+Average 0.732 0.789 0.766 0.778 
+
+Challenging the Trade-Off. Contrary to common concerns, our results demonstrate that interpretability does not necessitate a compromise in performance. In the LLM set-ting, GlassMol consistently outperforms the baseline across all datasets, achieving an average AUROC improvement of 0.057. Similarly, in the GNN setting, our interpretable model outperforms the black-box baselines on 9 out of 13 tasks and ties on one, with an average improvement of 0.012. 
+
+Task-Specific Gains. Notably, the performance gains are most pronounced in toxi-city tasks (e.g., DILI, AMES). This suggests that the explicit modeling of chemical concepts helps the model focus on specific toxicophores (structural alerts) rather than overfitting to spurious correlations in the high-dimensional latent space. This addresses 
+
+RQ1 : GlassMol demonstrates that the CBM architecture performs competitively with baseline models, with the LLM architecture showing consistent improvements and the GNN architecture remaining competitive on most tasks. 
+
+4.3 Interpretability and Verification (RQ2) 
+
+To address RQ2 , we validate whether the learned concepts are chemically meaningful through both latent space visualization and granular case studies. 
+
+Latent Space Disentanglement. Figure 2 visualizes the t-SNE embeddings of the penultimate layer. While the baseline model (left) produces entangled representations with no clear decision boundary, GlassMol (right) yields distinct, well-separated clus-ters. This suggests that explicit concept supervision helps disentangle the latent chemi-cal space, enabling the linear predictor to make robust, informed decisions. 8 O. Rivera, Z. Wang, et al. 10 5 0 5      
+
+> t-SNE Component 1
+> 10
+> 5
+> 0
+> 5
+> 10
+> t-SNE Component 2
+> Baseline
+> Class 0
+> Class 1 7.5 5.0 2.5 0.0 2.5 5.0 7.5
+> t-SNE Component 1
+> 6
+> 4
+> 2
+> 0
+> 2
+> 4
+> t-SNE Component 2
+> GlassMol (Ours)
+> Class 0
+> Class 1
+
+Fig. 2: t-SNE visualization of learned representations on the HIA dataset. Left: 
+
+The baseline shows entangled representations with no clear decision boundary. Right: 
+
+GlassMol (ours) produces well-separated clusters for the two classes. 
+
+Fig. 3: Qualitative comparison of concept attribution against ground-truth struc-tural importance. The blue highlights represent the TopoPool ground-truth importance clusters. Red circles indicate the substructures identified by GlassMol where solid lines −→ GNN architecture and dashed lines −→ LLM architecture. 
+
+Case Studies and Ground Truth Verification. We verify the faithfulness of our expla-nations by comparing the concept contributions of molecular substructures ( sk) against structural importance maps from TopoPool [40]. We select two representative molecules from different tasks to demonstrate interpretability. Note that the overlap between high-lights and circles suggests strong model alignment with the ground truth. As illustrated in Figure 3, we analyze the following molecules: 
+
+– Famciclovir (HIA Task): The GNN-based GlassMol correctly identifies the ani-line , aromatic nitrogens , and tertiary amines as the largest contributors, aligning with TopoPool’s assessment. Interestingly, the LLM architecture shows a more fo-cused attribution pattern, solely highlighting the aniline group with a contribution score ten times larger than the second factor. 
+
+– Mitomycin C (DILI Task): The GNN-based GlassMol correctly identifies the 
+
+methoxy group , carbonyl oxygens , and the piperazine group as key drivers for liver injury prediction. The LLM architecture again chooses fewer concepts but remains well aligned with TopoPool. These substructures are known metabolic liabilities, confirming that the model aligns with medicinal chemistry intuition. These results address RQ2 , confirming that GlassMol learns faithful and chemically grounded concepts. 
+
+4.4 Ablation Studies (RQ3) 
+
+We investigate the contribution of individual components to answer RQ3 . The compre-hensive results are visualized in Figure 4, covering three critical dimensions. GlassMol 9DILI         
+
+> BBB
+> CYP2C9
+> CYP2D6
+> AMES
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> AUROC
+> LLM: Model Backbone
+> Ours (SMILY-APE) Qwen Llama
+> DILI
+> BBB
+> CYP2C9
+> CYP2D6
+> AMES
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> LLM: Concept Selection
+> Ours (GPT-4)
+> Llama-3-70B
+> Random Lasso
+> DILI
+> BBB
+> CYP2C9
+> CYP2D6
+> AMES
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> LLM: Robustness
+> Ours Noisy Labels
+> DILI
+> BBB
+> CYP2C9
+> CYP2D6
+> AMES
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> AUROC
+> GNN: Model Backbone
+> Ours (GINE) GCN SAGE
+> DILI
+> BBB
+> CYP2C9
+> CYP2D6
+> AMES
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> GNN: Concept Selection
+> Ours (GPT-4)
+> Llama-3-70B
+> Random Lasso
+> DILI
+> BBB
+> CYP2C9
+> CYP2D6
+> AMES
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> GNN: Robustness
+> Ours Noisy Labels
+
+Fig. 4: Ablation studies on critical model components for LLM (top row) and GNN (bottom row) architectures. Left: Comparison of model backbones. For LLMs, our task-specific small model (red) significantly outperforms general large models (blue/beige). For GNNs, our GINE-based architecture remains competitive. Middle: 
+
+Evaluation of concept selection strategies. GPT-4 selected concepts (red) achieve the best performance, with the open-source Llama-3-70B selector (blue) serving as a strong alternative to proprietary models. Right: Robustness analysis showing that our method maintains high performance even with noisy concept labels (blue). 
+
+Model Backbone (Left Panel). We investigate the influence of architecture and model size on performance. 
+
+– LLM: Replacing our default chemistry-specific small model (SMILY-APE, 34.7M) with general-purpose models like Qwen-7B and Llama-8B leads to substantial performance degradation (red vs. blue/beige bars). This highlights that domain-specific pre-training is critical for molecular concept learning. 
+
+– GNN: For graph encoders, our GINE-based architecture remains competitive. While SAGE marginally outperforms GINE on 2 datasets, GINE provides the most consis-tent performance across the board, justifying its selection as the default backbone. 
+
+Concept Selection Strategy (Middle Panel). We probe the concept selection strategy to determine whether or not a large LLM selector is necessary. The results show that using chemically relevant concepts selected by GPT-4 (red) significantly outperforms random selection (beige). Lasso-based sparse learning (gray) performs poorly, suggesting that end-to-end concept discovery struggles to converge. Notably, the open-source Llama-3-70B selector (blue) achieves performance comparable to GPT-4. This is a crucial finding for practicality, allowing GlassMol to run entirely on local hardware. 
+
+Robustness (Right Panel). Real-world data is often imperfect. We test GlassMol 
+
+with noisy labels by randomly perturbing ground-truth concepts. Remarkably, the per-formance drop is negligible (red vs. blue bars), demonstrating that the architecture is robust to annotation noise. This suggests that the model learns to extract meaningful patterns from imperfect supervision rather than memorizing exact concept values. 10 O. Rivera, Z. Wang, et al. 20 40 60 80 120 200 
+
+> Number of Concepts
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> AUROC
+> LLM-based
+> GNN-based
+
+(a) Impact of concept quantity ( K)0.25 0.5 1 1.5 2 5 
+
+> Lambda ( λ) Value
+> 0.84
+> 0.86
+> 0.88
+> 0.90
+> AUROC
+> LLM-based
+> GNN-based
+
+(b) Sensitivity to weight parameter λ
+
+Fig. 5: Hyperparameter sensitivity analysis. (a) Performance vs. number of concepts (K). Accuracy improves rapidly and saturates around K = 40 , balancing representation power and complexity. (b) Performance vs. loss weight λ. A balanced weight of λ = 1 
+
+yields optimal results, while extreme values degrade performance. 
+
+Hyperparameter Sensitivity. We analyze the impact of two key hyperparameters: the number of concepts K and the loss balancing weight λ. Figure 5a shows that model performance improves significantly as K increases from 10 to 40, indicating that a suf-ficient number of concepts is required to capture complex chemical properties. How-ever, the performance plateau beyond K = 40 suggests that adding more concepts yields diminishing returns and may introduce noise. Regarding the loss weight, Figure 5b demonstrates that λ = 1 offers the optimal trade-off. A small λ fails to align the concept space (poor interpretability), while an excessively large λ forces the model to prioritize concept reconstruction over the primary classification task. 
+
+## 5 Conclusion 
+
+In this work, we apply CBMs to molecular property prediction, allowing a model to project GNN and LLM embeddings to the concept space before generating a prediction. By leveraging RDKit for automated concept computation and LLMs for task-aware concept selection, we effectively bridge the annotation and relevance gaps that have previously hindered the adoption of CBMs for molecular tasks. Our experiments on thirteen diverse chemical datasets demonstrate that GlassMol generally matches or exceeds black-box baselines, suggesting that interpretability need not come at the cost of performance. Case studies further validate that the learned concept attributions align with established structural importance methods. As machine learning methods evolve in both quality and complexity, the CBM architecture offers a promising path to keep human experts informed and engaged in the prediction process, potentially accelerating the discovery of safe and effective therapeutics. 
+
+Acknowledgments. This research was supported in part through the computational resources and staff contributions provided for the Quest high performance computing facility at Northwest-ern University which is jointly supported by the Office of the Provost, the Office for Research, and Northwestern University Information Technology. Funding for this research was provided by the OURG at Northwestern University in the form of a SURG grant. 
+
+Disclosure of Interests. Kaize Ding is the head of and Oscar Rivera and Ziqing Wang are mem-bers of the REAL Lab which is participating in a collaborative research effort between North-western University and AbbVie Inc. GlassMol 11 
+
+## References 
+
+1. Belinkov, Y., Glass, J.: Analysis methods in neural language processing: A survey. TACL. 2019 2. Blaschke, T., Arús-Pous, J., Chen, H., et al.: Reinvent 2.0: an ai tool for de novo drug design. JCIM. 2020 3. Cao, P.Y., He, Y., Cui, M.Y., et al.: Group graph: a molecular graph representation with enhanced performance, efficiency and interpretability. Journal of Cheminformatics. 2024 4. Chen, X., Liu, Y., Ma, X., et al.: Self-explainable molecular property prediction via multi-view hypergraph learning 5. Dai, E., Wang, S.: Towards self-explainable graph neural network. CIKM. 2021 6. Deng, J., Yang, Z., Wang, H., et al.: A systematic study of key elements underlying molecular property prediction. Nature communications. 2023 7. Ding, K., Xu, Z., Tong, H., et al.: Data augmentation for deep graph learning: A survey. ACM SIGKDD Explorations Newsletter. 2022 8. Fan, Y., Wu, Y., French, R.H., et al.: Hierarchical attention graph learning with llm enhance-ment for molecular solubility prediction. Digital Discovery. 2026 9. Fung, V., Zhang, J., Juarez, E., et al.: Benchmarking graph neural networks for materials chemistry. npj Computational Materials. 2021 10. Gómez-Bombarelli, R., Aguilera-Iparraguirre, J., Hirzel, T.D., et al.: Design of efficient molecular organic light-emitting diodes by a high-throughput virtual screening and exper-imental approach. Nature materials. 2016 11. Havasi, M., Parbhoo, S., Doshi-Velez, F.: Addressing leakage in concept bottleneck models. NeurIPS. 2022 12. Hu, F., Chen, D., Liu, Q., et al.: Improving multi-task gnns for molecular property prediction via missing label imputation. Machine Intelligence Research. 2025 13. Hu, W., Liu, B., Gomes, J., et al.: Strategies for pre-training graph neural networks. arXiv preprint. 2019 14. Huang, K., Fu, T., Gao, W., et al.: Therapeutics data commons: Machine learning datasets and tasks for drug discovery and development. arXiv preprint. 2021 15. Hurst, A., Lerer, A., Goucher, A.P., et al.: Gpt-4o system card. arXiv preprint. 2024 16. Ismail, A.A., Oikarinen, T., Wang, A., et al.: Concept bottleneck language models for protein design. arXiv preprint. 2024 17. Jiang, T., Yao, Q., Wang, Z., et al.: Expert-guided substructure information bottleneck for molecular property prediction. JCIM. 2025 18. Jiménez-Luna, J., Grisoni, F., Schneider, G.: Drug discovery with explainable artificial intel-ligence. Nature Machine Intelligence. 2020 19. Ju, J., Zheng, Y., Koh, H.Y., et al.: M2llm: Multi-view molecular representation learning with large language models. IJCAI. 2025 20. Kim, B., Wattenberg, M., Gilmer, J., et al.: Interpretability beyond feature attribution: Quan-titative testing with concept activation vectors (tcav). ICML. 2018 21. Kipf, T.N., Welling, M.: Semi-supervised classification with graph convolutional networks. 2017 22. Klucznik, T., Mikulak-Klucznik, B., McCormack, M.P., et al.: Efficient syntheses of diverse, medicinally relevant targets planned by computer and executed in the laboratory. Chem. 2018 23. Koh, P.W., Nguyen, T., Tang, Y.S., et al.: Concept bottleneck models. ICML. 2020 24. Kumar, N., Berg, A.C., Belhumeur, P.N., et al.: Attribute and simile classifiers for face veri-fication. ICCV. 2009 25. Labadie-Tamayo, R., Slijepˇ cevi´ c, D., Chen, X., et al.: Distilling knowledge from large lan-guage models: A concept bottleneck model for hate and counter speech recognition. IP&M. 2026 12 O. Rivera, Z. Wang, et al. 26. Lampert, C.H., Nickisch, H., Harmeling, S.: Learning to detect unseen object classes by between-class attribute transfer. CVPR. 2009 27. Landrum, G., others: Rdkit: Open-source cheminformatics software. 2016 28. Leon, M., Perezhohin, Y., Peres, F., et al.: Comparing smiles and selfies tokenization for enhanced chemical language modeling. Scientific Reports. 2024 29. Li, H., Li, D., Zhang, J., et al.: 3d-molgl: A multimodal framework for integrating 3d molec-ular graphs into language models. ESWA. 2026 30. Li, L., Zhang, Y., Wang, G., et al.: Kolmogorov–arnold graph neural networks for molecular property prediction. Nature Machine Intelligence. 2025 31. Liu, Y., Ding, K., Lu, Q., et al.: Towards self-interpretable graph-level anomaly detection. NeurIPS. 2023 32. Madsen, A., Reddy, S., Chandar, S.: Post-hoc interpretability for neural nlp: A survey. ACM Computing Surveys. 2022 33. Niyongabo Rubungo, A., Arnold, C., Rand, B.P., et al.: Llm-prop: predicting the properties of crystalline materials using large language models. npj Computational Materials. 2025 34. Oikarinen, T., Das, S., Nguyen, L.M., et al.: Label-free concept bottleneck models. arXiv preprint. 2023 35. Qadri, Y.A., Shaikh, S., Ahmad, K., et al.: Explainable artificial intelligence: a perspective on drug discovery. Pharmaceutics. 2025 36. Radhakrishnan, A., Nguyen, K., Chen, A., et al.: Question decomposition improves the faith-fulness of model-generated reasoning. arXiv preprint. 2023 37. Ross, J., Belgodere, B., Chenthamarakshan, V., et al.: Large-scale chemical language repre-sentations capture molecular structure and properties. Nature Machine Intelligence. 2022 38. Schneider, G., Fechner, U.: Computer-based de novo design of drug-like molecules. Nature reviews Drug discovery. 2005 39. Tan, Z., Cheng, L., Wang, S., et al.: Interpreting pretrained language models via concept bottlenecks. PAKDD. 2024 40. Thieme, M., Hassan, M., Rupakheti, C., et al.: Topopool: An adaptive graph pooling layer for extracting molecular and protein substructures. NeurIPS. 2024 41. Wang, Z., Wen, Y., Pattie, W., et al.: Polo: Preference-guided multi-turn reinforcement learn-ing for lead optimization. arXiv preprint. 2025 42. Wang, Z., Zhang, K., Zhao, Z., et al.: A survey of large language models for text-guided molecular discovery: from molecule generation to optimization. arXiv preprint. 2025 43. Wen, Y., Xu, C., Hu, J.Y.C., et al.: Alignab: Pareto-optimal energy alignment for designing nature-like antibodies. 2024 44. Ye, X., Durrett, G.: The unreliability of explanations in few-shot prompting for textual rea-soning, 2022. arXiv preprint. 2022 45. Yuan, H., Yu, H., Gui, S., et al.: Explainability in graph neural networks: A taxonomic survey. TPAMI. 2022 46. Yuan, H., Yu, H., Wang, J., et al.: On explainability of graph neural networks via subgraph explorations. ICML. 2021 47. Zhao, H., Chen, H., Yang, F., et al.: Explainability for large language models: A survey. TIST. 2024 48. Zheng, Y., Koh, H.Y., Ju, J., et al.: Large language models for scientific discovery in molec-ular property prediction. Nature Machine Intelligence. 2025

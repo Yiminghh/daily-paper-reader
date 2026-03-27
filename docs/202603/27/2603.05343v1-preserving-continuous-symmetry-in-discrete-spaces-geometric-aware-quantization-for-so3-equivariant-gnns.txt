@@ -1,0 +1,388 @@
+Title: Preserving Continuous Symmetry in Discrete Spaces: Geometric-Aware Quantization for SO(3)-Equivariant GNNs
+
+URL Source: https://arxiv.org/pdf/2603.05343v1
+
+Published Time: Fri, 06 Mar 2026 02:15:29 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+> COURSE NAME/NUMBER: PROJECT NAME 1
+
+# Preserving Continuous Symmetry in Discrete Spaces: Geometric-Aware Quantization for SO(3)-Equivariant GNNs 
+
+Haoyu Zhou 1, Ping Xue 2, Hao Zhang 2, Tianfan Fu 1
+
+Abstract —Equivariant Graph Neural Networks (GNNs) are essential for physically consistent molecular simulations but suffer from high computational costs and memory bottlenecks, especially with high-order representations. While low-bit quantization offers a solution, applying it naively to rotation-sensitive features destroys the SO (3) -equivariant structure, leading to significant errors and violations of conservation laws. To address this issue, in this work, we propose a Geometric-Aware Quantization (GAQ) framework that compresses and accelerates equivariant models while rigorously preserving continuous symmetry in discrete spaces. Our approach introduces three key contributions: (1) a Magnitude–Direction Decoupled Quantization (MDDQ) scheme that separates invariant lengths from equivariant orientations to maintain geometric fidelity; (2) a symmetry-aware training strat-egy that treats scalar and vector features with distinct quantization schedules; and (3) a robust attention normalization mechanism to stabilize gradients in low-bit regimes. Experiments on the rMD17 benchmark demonstrate that our W4A8 models match the accuracy of FP32 baselines (9.31 meV vs. 23.20 meV) while reducing Local Equivariance Error (LEE) by over 30 × compared to naive quantization. On consumer hardware, GAQ achieves 
+
+2.39 × inference speedup and 4× memory reduction, enabling stable, energy-conserving molecular dynamics simulations for nanosecond timescales. 
+
+I. I NTRODUCTION 
+
+Many important problems in science and engineering involve data with inherent geometric symmetries. In particular, 3D 
+
+SO (3) -equivariant GNNs—neural networks whose outputs transform consistently under 3D rotations—have become pivotal for molecular property prediction and simulation. Recent 
+
+SO (3) -equivariant networks like NequIP and So3krates achieve state-of-the-art accuracy on small molecules and periodic systems by explicitly enforcing rotational symmetry [1], [2]. By encoding physical rotation symmetry, these models honor fundamental conservation laws: according to Noether’s theorem, each continuous symmetry corresponds to a conserved quan-tity, so rotational invariance implies conservation of angular momentum [3]. Early work on energy-conserving force fields leveraged equivariant neural networks to guarantee energy conservation [4]. Enforcing SO (3) equivariance in learned interatomic potentials thus helps ensure that predictions remain physically consistent under arbitrary orientation changes. In MD simulations, such symmetry preservation is critical; if a model’s rotational equivariance is broken, it can introduce spu-rious torques or artifacts, leading to violations of conservation 
+
+> 1
+
+Nanjing University, Nanjing, China. 
+
+> 2
+
+Suzhou Lab, Suzhou, China. 
+
+(manifesting, for instance, as a gradual energy drift over long trajectories) [5], [6]. Despite their superior accuracy and physical faithfulness, equivariant GNNs are computationally expensive. Their expres-siveness often relies on high-order geometric tensor products and elaborate basis representations, causing the number of operations and parameters to grow combinatorially with model depth and order. This can lead to a combinatorial explosion in both computation and memory footprint, especially as one incorporates higher-order SO (3) features. Earlier works have noted that the cost of these representations can hinder scalability, and have even sought to eliminate expensive tensor-product operations to improve efficiency [7]–[9]. Recent efforts to construct equivariant multilayer perceptrons or to identify optimal invariant bases [10]–[12] further underscore the tension between expressivity and efficiency in equivariant models. In addition, modern high-performance computing faces the memory wall: memory bandwidth and capacity have not kept pace with arithmetic throughput. Large-scale or long-timescale simulations may require millions of GNN evaluations, making memory access the primary bottleneck. As a result, full-precision (32-bit) equivariant models become impractical for such scenarios due to excessive memory traffic and slow inference. Innovations such as FlashAttention and other I/O-aware kernels for transformers [13], [14] and more efficient Euclidean transformers for force-field prediction [15] have been proposed to reduce memory overhead, yet the challenge remains particularly acute in SO (3) -equivariant GNNs, where each hidden channel carries multiple irreducible components, compounding memory and compute demands. Low-bit quantization is a natural solution to these efficiency challenges. By using reduced numerical precision (e.g., 8-bit integers), we can shrink model size and accelerate memory-bound operations, effectively mitigating the memory wall. The deep-learning community has explored quantization ex-tensively: early low-bit convolutional networks like DoReFa-Net [16], LSQ [17], and quantization-aware training for vision models [18] paved the way; more recent techniques such as QDrop [19], SmoothQuant [20] and ZeroQuant [21] provide high-quality post-training quantization for large language models. In graph settings, Degree-Quant extends quantization-aware training to graph neural networks [22]. However, these generic approaches are geometry-agnostic : they treat feature channels as unstructured scalars. When applied to equivariant GNNs, naive quantization of vector components ( ℓ = 1 ) on Cartesian axes destroys the algebraic relationships required by                     
+
+> arXiv:2603.05343v1 [cs.LG] 5 Mar 2026 COURSE NAME/NUMBER: PROJECT NAME 2
+> Fig. 1. Overview of the proposed equivariant quantization framework. (a) MDDQ : Decouples equivariant vectors into magnitude ∥v∥and direction
+> uto preserve geometric orientation under low precision. (b) Branch-separated QAT : Treats invariant and equivariant features differently with a staged training schedule. (c) Robust Attention : Stabilizes dot-products via ℓ2normalization and temperature scaling τ. (d) Results Summary : Our method achieves
+> 2.37 –2.73 ×faster inference and ∼4×memory reduction with ultra-low equivariance error (LEE ≈0.15 ).
+
+Wigner-D matrices, leading to quantization-induced symmetry breaking . Naively discretizing continuous-valued features on a fixed grid introduces small invariant errors that accumulate through network layers. In an SO (3) -equivariant GNN, even minor rounding inconsistencies can violate equivariance. This symmetry breaking is especially problematic in physics-driven applications: if rotational symmetry is not rigorously preserved, the model may produce outputs that drift from true physics over time (e.g., predicting forces that do not conserve energy or angular momentum). The central question is how to preserve continuous SO (3) symmetry within a discrete, quantized neural network. In this work, we propose a geometric-aware quantization framework that resolves the above conflict by design. The core idea is to incorporate group-theoretic structure into the quantization process, so that discrete representations remain as equivariant as their continuous counterparts. We build upon the insight that a 3D vector can be factored into an invariant magnitude and an equivariant direction on the unit sphere, following the representation theory of SO (3) used in tensor field networks and SE(3) transformers [7], [8]. By quantizing these components separately (and judiciously), we can reduce precision while controlling the error in orientations. Specifically, we introduce a magnitude–direction decoupled quantization (MDDQ) scheme that quantizes the norm of each vector and the direction (unit vector) on S2 independently. This decoupling ensures that rotations of the input primarily affect the directional part, which is handled on a discrete spherical codebook designed to respect SO (3) rotations. We show that if the directional quantizer commutes with rotations, then the overall quantization is equivariant up to bounded error. In addition to the quantization scheme itself, maintaining accuracy under low precision requires careful training strategies and architectural modifications. We propose a symmetry-aware quantization-aware training approach in which we branch-separate the network’s channels by their transformation proper-ties. In our SO (3) -equivariant transformer architecture, some feature channels are invariant scalars (e.g., chemical attributes or learned radial features) while others are equivariant vectors or tensors (geometric features). We treat these two types of features differently during quantization and training: invariant channels can be quantized more aggressively or with different calibration than equivariant channels. Conversely, equivariant feature channels are quantized in a manner that prioritizes preserving their transformation behavior. This branch-separated training ensures that quantization noise does not disproportion-ately harm the equivariant components of the model. We also incorporate a robust attention normalization mechanism de-signed for low-precision arithmetic. The self-attention module, which mixes invariant and equivariant information, is modified to normalize its inputs (e.g., attention scores) in a way that counteracts the higher quantization error at low bit-widths. Similar ideas have been explored for standard transformers in the context of query-key normalization [23] and scaling vision transformers [14]; here we tailor the normalization for 
+
+SO (3) -equivariant data. COURSE NAME/NUMBER: PROJECT NAME 3
+
+We evaluate our geometric-aware quantization framework on standard 3D molecular benchmarks (QM9 for molecular properties and rMD17 for molecular forces and energies). Our 8-bit quantized SO (3) -equivariant GNN achieves comparable accuracy to full 32-bit models on energy and force prediction tasks, indicating that our symmetry-preserving quantization does not degrade predictive performance. Just as importantly, we measure the equivariance error of the network using the Local Equivariance Error (LEE) metric and find that our quantized models retain near-perfect equivariance, in stark contrast to naive quantization approaches that exhibit significant symmetry error. Empirically, the quantized models remain stable in long MD simulations, showing no noticeable energy drift or other signs of physical law violation. Thanks to the 4×
+
+reduction in model memory and optimized low-bit operations, we observe 2.37 –2.73 × faster inference per molecule on a CPU, enabling faster simulation rates. These gains underscore that quantization can be a mathematically principled tool (not just a brute-force compression) to overcome the combinatorial complexity of equivariant models and the memory wall of modern hardware. (1) Geometric-aware quantization via MDDQ: We introduce a magnitude–direction decoupled quantization scheme that quantizes each vector’s length and direction separately. This group-theoretic approach preserves SO (3) equivariance on the discrete quantization grid, preventing symmetry breaking even at 8-bit precision. (2) Symmetry-aware branch-separated QAT: We develop a quantization-aware training strategy that splits the model into invariant and equivariant branches. By handling scalar and geometric features with tailored quantization and calibration, we maintain high accuracy under low precision while rigorously respecting the different roles each channel plays in preserving symmetry. (3) Equivariant attention normalization: We propose an 
+
+SO (3) -equivariant attention normalization mechanism that stabilizes the transformer’s attention calculations in low-bit settings. This technique improves the robustness of attention operations against quantization noise, drawing inspiration from query-key normalization [14], [23], and further ensures that the overall network remains stable and symmetry-preserving after quantization. II. R ELATED WORK 
+
+Geometric Deep Learning and Equivariance. Incorporating physical symmetries into neural networks is foundational for molecular modeling. Early works established group convolu-tions for discrete symmetries [24] and continuous symmetries such as rotations and reflections via harmonic networks and steerable filters [25], [26]. In 3D atomistic tasks, architectures like Tensor Field Networks [7] and SE(3)-Transformers [8] enforce equivariance via spherical harmonics and tensor prod-ucts. Recent state-of-the-art models, such as NequIP [1] and So3krates [2], leverage higher-order irreps ( ℓ ≥ 2) to capture complex many-body interactions. However, the computational cost of mixing these high-ℓ features scales super-linearly [9], creating a bottleneck for large-scale simulations. Alternatives      
+
+> Fig. 2. Detailed architecture and quantization pipeline. Inputs Zand r
+> are processed through decoupled invariant and equivariant paths, employing specialized quantization strategies (Linear vs. MDDQ) for each branch.
+
+such as 3D steerable CNNs [26], harmonic networks [25] and recent Euclidean transformers [15] explore different trade-offs between expressivity and efficiency. 
+
+a) Optimal Bases and Codebooks.: Addressing the com-plexity of equivariant representations, Allen et al. [11] theo-retically characterized optimal invariant bases, suggesting that compact sets of invariants can losslessly represent atomic envi-ronments. Our work operationalizes this insight for quantization: we construct a discrete spherical codebook to approximate continuous orientations, effectively learning a minimal basis that balances efficiency with symmetry preservation. 
+
+b) Measuring Equivariance.: Quantifying symmetry vi-olation is critical for discretized models. Gruver et al. [27] proposed a Lie derivative-based metric to measure sensitivity to infinitesimal rotations. While valuable for global diagnosis, this continuous metric does not capture the discrete errors introduced by low-bit quantization. In contrast, we utilize the 
+
+Local Equivariance Error (LEE) , which measures discrepancies under finite rotations and serves as a direct training signal to minimize quantization-induced symmetry breaking. 
+
+Quantization in Geometric Contexts. Neural network quan-tization is a standard compression technique [18]. Advanced methods like LSQ [17] and QDrop [19] mitigate accuracy loss by learning step sizes or stochastic dropping. However, these generic approaches are geometry-agnostic : they treat feature channels as unstructured scalars. When applied to equivariant GNNs, naive quantization of vector components ( ℓ = 1 ) on Cartesian axes destroys the algebraic relationships required by Wigner-D matrices, leading to quantization-induced symmetry breaking .Prior GNN-specific works, such as Degree-Quant [22], adapt quantization based on graph topology (e.g., node degree) but overlook geometric topology. They fail to preserve the directionality of vector features. Our work bridges this gap by proposing Magnitude–Direction Decoupled Quantization (MDDQ) . Unlike prior arts, we perform quantization on the spherical manifold S2, decoupling the invariant magnitude from the equivariant direction. This ensures that the discrete repre-sentation respects the underlying SO (3) geometry, enabling efficient deployment without sacrificing physical validity. COURSE NAME/NUMBER: PROJECT NAME 4
+
+III. M ETHOD 
+
+We propose an SO (3) -equivariant quantization framework for transformer-based GNNs, aiming for fast low-bit inference without sacrificing accuracy or symmetry. Our method builds on a So3krates-like architecture with separate invariant (scalar) and equivariant (vector) branches. Before detailing the model, we briefly review the mathematical foundations of SO (3) -equivariance. We then describe the architecture and our key contributions: a spectral codebook quantization for equivariant features, an optimization strategy on the unit-sphere manifold, a robust attention normalization, and an equivariance-preserving regularizer, along with a time-step adaptive quantization for generative modeling. 
+
+A. Preliminaries: Group Representations and Equivariance 
+
+The rotation group and irreducible representations. We briefly review the SO (3) symmetry underlying our model. The group SO (3) consists of all 3D rotations (orthogonal 3 × 3
+
+matrices with determinant 1). An irreducible representation 
+
+(irrep) of SO (3) is labeled by a nonnegative integer ℓ (the angular momentum degree) [7], [26]. Each irrep ℓ is (2 ℓ +1) -dimensional. For example, ℓ = 0 corresponds to scalar features (invariant under rotation), ℓ = 1 corresponds to 3D vector features, and higher ℓ (e.g. ℓ = 2 , 3, . . . ) correspond to higher-order tensor features. Under a rotation R ∈ SO (3) , a feature h(ℓ) ∈ R2ℓ+1 transforms as h(ℓ) 7 → D(ℓ)(R)h(ℓ), where 
+
+D(ℓ)(R) is the (2 ℓ + 1) × (2 ℓ + 1) Wigner-D matrix for the 
+
+ℓ representation. In particular, D(0) (R) = 1 (trivial action on scalars) and D(1) (R) = R (the standard 3D rotation of vectors). In fact, the ℓ-th irreps can be realized as the space of spherical harmonics of degree ℓ; the (2 ℓ + 1) real (or complex) spherical harmonic basis functions Yℓm (−ℓ ≤ m ≤ ℓ) transform under rotations exactly according to the Wigner-D matrices [7]. This correspondence provides a direct link between group theory and the features used in equivariant networks. 
+
+Tensor products and equivariant networks. Equivariant neural networks enforce that all operations respect these transformations. A key property is that the tensor product of two representations decomposes into a direct sum of irreps. For instance, combining an ℓ1 feature with an ℓ2 feature can produce components transforming as irreps of degree ℓ in the range |ℓ1 − ℓ2| ≤ ℓ ≤ ℓ1 + ℓ2. In practice, message-passing layers use this principle: e.g., a scalar embedding (ℓ = 0 ) can be multiplied by a spherical harmonic ( ℓ = 1 
+
+function of a relative position) to yield a vector ( ℓ = 1 )that transforms properly under rotations [8]. Libraries like 
+
+e3nn implement such Clebsch–Gordan decompositions to ensure SO (3) -equivariance throughout the network. Formally, let f : G 7 → y be the function computed by the GNN, mapping a molecular graph G to outputs y (such as an energy and/or force vectors). The model is equivariant if for any rotation 
+
+R, the output transforms according to the same group action: 
+
+f (R · G) = ρ(R) f (G), where ρ(R) is the block-diagonal representation acting on each output. For example, if y includes a vector-valued force Fi for each atom i, then ρ(R) rotates each Fi by R (while leaving any scalar outputs unchanged). 
+
+Local Equivariance Error (LEE). To quantify deviations from perfect equivariance, we define the Local Equivariance Error . Given a rotation R and sample G, LEE measures the difference between the model’s prediction on the rotated input and the rotated prediction on the original input: 
+
+LEE( f ; G, R ) := ∥f (ρin (R) · G) − ρout (R) f (G)∥2 . (1) For an ideally equivariant model, LEE( f ; G, R ) = 0 holds for all G and all R ∈ SO (3) . For quantized models, exact equivariance is generally impossible; our goal is bounded approximate equivariance , i.e., ER[LEE( f ; G, R )] remains small and stable across R.
+
+B. Equivariant GNN Architecture Overview 
+
+Building on the above principles, our base model follows the design of So3krates [2]. The detailed architecture and locations of quantization modules are illustrated in Fig. 2. Given a 3D molecular graph G = ( V, E ) (atoms V , edges E defined by bonds or a distance cutoff), we construct a fully-connected graph among atoms within a cutoff radius. Each atom i has coordinates ri and initial features (e.g., atom type, charge). Interatomic geometry is encoded via spherical harmonics for the equivariant message path [8], ensuring rotation-equivariant updates of vector features, while the attention weights are computed from invariant (scalar-branch) features with invariant geometric encodings (Sec. 3.5). In each layer of this SO (3) -equivariant transformer, every node carries both invariant 
+
+scalar features and equivariant vector features. For example, each atom i has scalar features h(0)  
+
+> i
+
+(such as learned atomic embeddings) and vector features h(1)  
+
+> i
+
+(3D vectors for ℓ = 1 
+
+representations, e.g. forces or dipoles). (Higher-order ℓ > 1
+
+features can be used in principle, though ℓ ≤ 1 is common for efficiency [15].) The transformer updates these in two parallel branches that interact only via attention: self-attention is applied to the scalar (invariant) channels, and the vector channels are updated by equivariant message functions modulated by those attention weights [2], [8]. This separation of invariant and equivariant branches is crucial, as it allows us to quantize each type of feature with a specialized strategy. 
+
+C. Magnitude–Direction Decoupled Quantization (MDDQ) 
+
+We focus on the ℓ = 1 equivariant channels, i.e., 3D vector features v ∈ R3 that transform as v 7 → Rv for 
+
+R ∈ SO (3) . The key observation is that a vector admits a unique factorization into an invariant magnitude and an equivariant unit direction on the sphere. 
+
+a) Definition 3.1 (Magnitude–Direction Decoupled Quan-tization).: For a non-zero vector v ∈ R3, define the magnitude 
+
+m = ∥v∥2 and unit direction u = v/∥v∥2 ∈ S2. MDDQ uses two quantizers: (i) a magnitude quantizer Qm : R+ → ˆR+,and (ii) a direction quantizer Qd : S2 → C , where C ⊂ S2 is a spherical codebook. The overall quantizer is 
+
+Q(v) := Qm(∥v∥2) · Qd
+
+ v
+
+∥v∥2
+
+
+
+. (2) 
+
+Theoretical Analysis: From Exact to Approximate Equiv-ariance. Ideally, the quantization function Q would preserve COURSE NAME/NUMBER: PROJECT NAME 5
+
+exact equivariance. This requires the direction quantizer Qd to commute with all rotations: 
+
+Qd(Ru) = R Q d(u), ∀R ∈ SO (3) , ∀u ∈ S2. (3) However, strictly satisfying this condition implies that the codebook C must be invariant under any rotation R ∈ SO (3) ,which is topologically impossible for a finite set of points on the sphere. Consequently, exact equivariance is unattainable with discrete representations. Instead, we target bounded approximate equivariance by minimizing the commutation error: 
+
+εd(R, u) := Qd(Ru) − R Q d(u) 2, (4) which we explicitly suppress during training via LEE regular-ization (Sec. III-D). 
+
+b) Proposition 3.4 (Angular error bound on S2).: Let 
+
+Qd(u) = c ∈ C be the selected codebook direction and define the (geodesic) angular error θ = ∠(u, c) ∈ [0 , π ]. Then 
+
+∥u − c∥2 = 2 sin( θ/ 2) ,
+
+equivalently θ = 2 arcsin 
+
+ ∥u − c∥2
+
+2
+
+
+
+. (5) Define the codebook covering radius 
+
+δd := sup 
+
+> u∈S2
+
+min  
+
+> c∈C
+
+∠(u, c). (6) If Qd chooses the nearest codeword in angle, then θ ≤ δd for all u. In the small-angle regime, ∥u − c∥2 ≈ θ.
+
+Bounded approximate equivariance. Because SO (3) is continuous, any finite discrete representation (e.g., an INT8 grid or a finite spherical codebook) cannot satisfy exact commutation with all rotations. Our objective is therefore 
+
+bounded approximate equivariance , quantified by the Local Equivariance Error above, which is sufficient to maintain long-run stability in downstream physical simulations. 
+
+D. Optimization on the Spherical Manifold 
+
+Training quantized networks typically relies on the Straight-Through Estimator (STE) to approximate gradients through non-differentiable discretization steps. However, standard STE assumes a Euclidean geometry where ∂Q (x) 
+
+> ∂x
+
+≈ I. For ℓ = 1 
+
+equivariant vector directions constrained to the unit sphere 
+
+S2, this assumption fails. A naive application of Euclidean gradients introduces radial noise that violates the geometric constraints of the representation. In this section, we formulate the training process as a Riemannian optimization problem and derive a geometrically consistent gradient estimator. 
+
+a) Manifold Gradient Flow.: Let M = S2 be the Riemannian manifold of unit directions. The quantization of a direction u ∈ M to a codebook vector q ∈ C ⊂ M introduces a discretization error. During backpropagation, the goal is to update the pre-quantized feature u (or the weights generating it) to minimize the task loss L. In Euclidean space, a gradient step moves u in the direction of −∇ uL. However, on the sphere, this vector generally points off the manifold. The mathematically correct update direction is the Riemannian gradient grad ML(u), which is the orthogonal projection of the Euclidean gradient onto the tangent space TuM:
+
+grad ML(u) = Proj TuM
+
+ ∇uL. (7) 
+
+b) Geometric Straight-Through Estimator (Geometric STE).: Standard STE propagates the gradient from the quan-tized output q directly to the input u, i.e., ∇uL ≈ ∇ qL. If 
+
+∇qL contains a component parallel to u (a radial component), it attempts to change the magnitude of u. Since ∥u∥ ≡ 1
+
+is structurally enforced by MDDQ, these radial gradients are physically invalid and act as high-variance noise that destabilizes training. To resolve this, we propose the Geometric STE , which filters out radial components. Formally, for a feature vector u and its quantized version q, the backward pass is defined as: 
+
+∂L
+
+∂u :=  I − uu ⊤ ∂L
+
+∂q . (8) Here, Pu = ( I−uu ⊤) is the projection matrix onto the tangent space at u.
+
+Proposition III.1. (Orthogonality of Updates). The Geometric STE ensures that the gradient update is strictly orthogonal to the feature vector, i.e., ⟨u, ∂L 
+
+> ∂u
+
+⟩ = 0 . This implies that to first order, the optimization trajectory remains on the manifold S2
+
+without altering the feature magnitude. 
+
+By enforcing this geometric constraint, we ensure that the learning signal focuses exclusively on optimizing the 
+
+orientation of the features (rotation), which is the only degree of freedom relevant for Qd, thereby accelerating convergence. 
+
+c) Branch-Separated Scheduling.: The optimization land-scape for equivariant GNNs is heterogeneous: invariant scalars (ℓ = 0) and equivariant vectors ( ℓ = 1) exhibit distinct dynamics. Scalars are typically bell-shaped and centered at zero, while vector magnitudes follow a Chi distribution. To accommodate this, we employ a Branch-Separated QAT 
+
+strategy: 1) Dual Quantizers: We use standard symmetric linear quantization for the invariant branch and MDDQ (with Geometric STE) for the equivariant branch. 2) Staged Warm-up: Since directional quantization is highly sensitive to the quality of the underlying rep-resentation, we freeze the quantization of the equivariant branch for the first Nwarm epochs. This allows the model to learn a coarse geometric structure using the scalar branch before subjecting the vector fields to the non-convex optimization on the spherical manifold. 
+
+E. Robust Attention Normalization 
+
+Transformer-style architectures propagate information via scaled dot-product attention, where similarity scores between query and key vectors determine how messages are passed. In an equivariant transformer like So3krates, attention is computed on invariant (scalar) feature embeddings, but can incorporate geometric context. The attention score for a message from atom j to atom i can be written abstractly as: 
+
+aij = AttentionScore  qi, k j , d ij 
+
+ , (9) where qi and kj are invariant (scalar-branch) query and key vectors for atoms i and j, and dij is an invariant geometric encoding of the pairwise geometry, such as radial basis COURSE NAME/NUMBER: PROJECT NAME 6
+
+features of ∥rij ∥2 (and other SO (3) -invariants constructed from relative geometry). Equivariant geometric terms—such as spherical harmonics Yℓm (ˆ rij )—are handled in the equivariant message path rather than being treated as invariant attention biases. Consequently, in our formulation the attention weights depend on geometry only through invariant scalars dij . We observed that attention computations are particularly sensitive to quantization: small rounding errors in the dot product 
+
+q⊤ 
+
+> i
+
+kj can perturb the ordering of attention scores, leading to disproportionately large changes after the softmax. This effect is most pronounced when q or k have large norms or outliers. To stabilize attention under quantization, we introduce a simple cosine normalization for queries and keys. Specifically, we modify the attention calculation as follows: 1) Apply L2-normalization to queries and keys: ˜qi =
+
+qi/∥qi∥2, ˜kj = kj /∥kj ∥2 (with a small ϵ added to the norm for numerical stability). 2) Compute attention logits using these normalized vectors: use ˜q⊤ 
+
+> i
+
+˜kj in place of q⊤ 
+
+> i
+
+kj (optionally adding any invariant bias or dij -dependent terms). 3) Scale the logits by a temperature factor τ and apply softmax: Since ˜qi and ˜kj are unit vectors, their dot product lies in [−1, 1] . To prevent the softmax distribution from becoming overly smooth (which would hinder the model’s ability to focus on specific atoms), we apply a scaling factor τ > 1 (inverse temperature) rather than the standard 1/√d scaling: 
+
+αij = exp  τ · (˜ q⊤ 
+
+> i
+
+˜kj )P  
+
+> m∈N (i)
+
+exp  τ · (˜ q⊤ 
+
+> i
+
+˜km) , (10) where τ is a hyperparameter (or learnable scalar) that sharpens the attention weights. In our experiments, we set τ to maintain a magnitude similar to standard attention logits (e.g., τ ≈
+
+10 ). The resulting weights αij are then used to aggregate the corresponding value vectors (invariant or equivariant features from atom j). Normalizing q and k in this manner ensures that their dot product is bounded in [−1, 1] and depends only on their relative orientation (cosine similarity). Consequently, even in low precision, ˜qi and ˜kj lie (approximately) on the unit hypersphere, preventing any single large magnitude from dominating the softmax. In effect, attention now depends only on the direction of the query and key vectors, not their scale. (Any necessary scale information can be carried by the value vectors or by separate invariant features.) We found that this change has negligible impact on full-precision accuracy, but it greatly improves the stability of the INT8 model: the attention weights in our 8-bit model closely track those of the FP32 model across all layers. This approach is related to prior work on cosine or unit-length queries/keys for attention [14], [23], but here we adopt it specifically to counteract low-precision noise in an equivariant transformer. 
+
+F. Equivariance-Preserving Loss (LEE Regularization) 
+
+Quantization may still introduce slight equivariance errors: the model’s outputs are no longer guaranteed to transform exactly according to SO (3) . To correct this, we incorporate a small equivariance-penalizing term during training. As defined above, LEE( f ; G, R ) measures the norm difference between 
+
+f (R · G) and ρ(R)f (G). In our QAT, we randomly sample rotations R for each training example and add a regularization term LLEE = ER
+
+LEE( f ; G, R ) to the loss. In practice, we apply this penalty only to the equivariant outputs (e.g., force-vector predictions), since scalar outputs are inherently invariant. We weight LLEE by a small coefficient so as not to dominate the main loss (energy/force prediction error). This regularization significantly reduces the observed equivariance error in the final 8-bit model. Intuitively, it discourages the model (especially the vector branch) from exploiting any rotation-specific quirks introduced by quantization. In full precision, the architecture is designed to be equivariant, hence LLEE is typically near zero up to numerical error; quantization can increase LEE , and the regularizer steers the model back toward bounded approximate equivariance. For a complementary formalism, one can also measure equivariance via Lie-derivative metrics as proposed by Gruver et al. [27]; we found the direct LEE penalty to be effective and easy to implement. 
+
+G. Complexity and the Memory Wall 
+
+Let n be the number of atoms, ⟨N ⟩ the average neighbors per atom, F the number of channels per irrep (feature size for each ℓ), and ℓmax the maximum representation order used. Using all irreps up to ℓmax yields (ℓmax + 1) 2 channels per node (since an ℓ-order tensor has 2ℓ+1 components). Deeper or higher-ℓ models can dramatically increase computational cost. In fact, the worst-case complexity of combining two features of order ℓmax scales as O((2 ℓmax + 1) 4) due to summing over all m components in the tensor product. This highlights the cost difference between, e.g., NequIP (which uses ℓmax = 3 )and So3krates ( ℓmax ≤ 1) in Table I. In practice, these equivariant GNNs often have low arithmetic intensity: a great deal of data (many channels and neighbor messages) is moved per arithmetic operation. As a result, they are typically bandwidth-bound on modern hardware, meaning performance is limited by memory throughput (the ”memory wall”) rather than compute FLOPs. Similar observations have been made in large transformer models, where I/O-aware kernels like FlashAttention [13] improve performance by reducing memory traffic. Quantization effectively acts as a bandwidth multiplier by reducing the size of each data transfer. In theory, reducing precision from 32-bit to k-bit lowers the memory and compute cost by a factor of ρk = k/ 32 . Under an idealized performance model, the runtime should scale accordingly: 
+
+Cquant 
+
+Cfull 
+
+≈ Tquant 
+
+Tfull 
+
+= ρk, Sk = 32 
+
+k , (11) where C denotes computation or memory cost, T denotes runtime, and Sk is the theoretical speedup factor. For instance, 
+
+k = 8 (INT8) yields S8 = 4 , i.e., a 4× potential speedup, and k = 4 would yield S4 = 8. In our case, verifying the memory-bound hypothesis, we observe a significant end-to-end speedup of 2.39 × compared to the FP32 baseline (Table IV). Crucially, the speedup is primarily driven by the weight loading phase, which achieves a near-ideal 4.0×
+
+reduction in latency ( 120 .5μs → 30 .1μs ), consistent with COURSE NAME/NUMBER: PROJECT NAME 7                                                                                 
+
+> TABLE I
+> COMPLEXITY WITH AND WITHOUT QUANTIZATION .CFULL IS PER -LAYER ASYMPTOTIC COST IN FULL PRECISION ;CQUANT IS THE COST WHEN BOTH WEIGHTS AND ACTIVATIONS ARE k-BIT (HERE ρk≡k/ 32 ). Q UANTIZATION YIELDS A CONSTANT -FACTOR SPEEDUP ≈ρkWITHOUT CHANGING SCALING IN n,⟨N⟩,F,OR ℓmax . F OR SO3KRATES ,WE UTILIZE ℓmax = 1 AS DISCUSSED IN [2] FOR EFFICIENCY AND COMPATIBILITY WITH OUR VECTOR QUANTIZATION SCHEME ,THOUGH THE ARCHITECTURE SUPPORTS HIGHER ORDERS .Architecture Cfull (FP32) ℓmax Cquant (k-bit) Gain Cquant /C full
+> PaiNN [28] O(n⟨N⟩4F)1ρkO(n⟨N⟩4F)ρk
+> SpookyNet [29] O(n⟨N⟩(ℓmax + 1) 2F)2ρkO(n⟨N⟩(ℓmax + 1) 2F)ρk
+> NequIP [1] O(n⟨N⟩(ℓmax + 1) 6F)3ρkO(n⟨N⟩(ℓmax + 1) 6F)ρk
+> So3krates [2] O(n⟨N⟩(( ℓmax + 1) 2+F)) 1ρkO(n⟨N⟩(( ℓmax + 1) 2+F)) ρk
+
+the theoretical bandwidth multiplier S8 = 4 . The difference between the total speedup ( 2.39 ×) and the theoretical limit ( 4×)is attributed to compute-bound operations (e.g., small-batch GEMMs) and attention mechanisms, which do not scale linearly with quantization or are limited by activation I/O. Thus, while Amdahl’s law constrains the total runtime reduction, our results confirm that quantization effectively eliminates the dominant memory bottleneck. Crucially, quantization does not change the asymptotic scaling in n, ⟨N ⟩, F , or ℓmax ; it only reduces constant factors. Thus a quantized equivariant GNN retains the same model capacity and leading-order complexity as its full-precision counterpart, but at a fraction of the memory footprint and execution time. An important benefit of this improved efficiency is the ability to increase model expressivity under a fixed hardware budget. Because low-bit weights and activations consume k/ 32 of the memory, one can afford proportionally more channels or higher ℓmax without running out of memory. In other words, quantization ameliorates the memory wall by compressing data—allowing us to explore richer higher-order representations that would be prohibitively slow or large in FP32. In our experiments, we find that 8-bit quantization essentially doubles the maximum feasible model size on a given device (in terms of number of channels or ℓ values) while still meeting real-time inference constraints. This suggests that equivariant quantization is not only a tool for speedup, but also for enabling more complex SO (3) -equivariant models on resource-constrained hardware. Beyond runtime improvements, quantization drastically reduces memory footprint (our INT8 model uses about 4× less memory than FP32), which is crucial for deploying equivariant GNNs on small devices. IV. E XPERIMENTS 
+
+A. Experimental Setup 
+
+Benchmarks. We evaluate our framework on the rMD17 bench-mark [30], which contains molecular dynamics trajectories for small organic molecules. While we validate our FP32 baselines on lighter molecules like ethanol (achieving 1.2 meV energy MAE), our primary analysis focuses on Azobenzene 
+
+(C12 H10 N2). Azobenzene is a challenging system due to its photo-isomerization properties and complex torsional energy surface, serving as a rigorous stress test for force field stability and symmetry preservation. For completeness, we note that the original MD17 dataset comprises 134 k molecules with quantum-chemistry structures and properties [31], and the rMD17 dataset provides revised trajectories that correct integration and sampling artefacts [30]. 
+
+Baselines. We compare our Geometric-Aware Quantization (GAQ) framework against: (1) FP32 Baseline: The uncom-pressed So3krates model [2]. (2) Naive INT8: Standard post-training quantization applying per-tensor min-max scaling to all features, ignoring geometric types. (3) SVQ-KMeans: Avector quantization baseline using K-Means clustering on the sphere with hard assignments (no gradient approximation). (4) 
+
+Degree-Quant: A graph-specific quantization-aware training method that adapts quantization based on node degree [22]. We also ablate LSQ [17] and QDrop [19] to highlight the importance of geometry in quantization. 
+
+Training Protocol. We employ a finetune-only strategy: starting from a converged FP32 checkpoint, we apply Quantization-Aware Training for 80 epochs using the Adam optimizer. Our proposed method uses an aggressive W4A8 configuration (4-bit weights, 8-bit activations) for the equivariant branch to test the limits of compression, while retaining 8-bit precision for invariant scalars. We freeze quantization on the equivariant branch for the first 10 epochs (warm-up) and gradually decay learning rates and quantization ranges thereafter. 
+
+B. Performance on Force Field Prediction 
+
+Table II summarizes the performance on the Azobenzene dataset based on our latest experiments.                                   
+
+> TABLE II
+> PERFORMANCE COMPARISON ON AZOBENZENE (RMD17). ENERGY
+> MAE IN ME VAND FORCE MAE IN ME V/ ˚ A. ”S TABILITY ”INDICATES WHETHER THE TRAINING CONVERGED .
+> Method Bits (W/A) E-MAE F-MAE Stability
+> FP32 Baseline 32 / 32 23.20 21.20 Stable Naive INT8 8 / 8 118.20 102.39 Degraded
+> SVQ-KMeans 8 / 8 226.20 ∗N/A Diverged
+> Degree-Quant [22] 8 / 8 63.20 58.90 Stable
+> Ours (GAQ) 4 / 8 9.31 22.60 Stable
+> ∗Validation loss stagnated due to gradient fracture.
+
+Failure of Naive Quantization. The Naive INT8 model suffers a catastrophic accuracy drop, with energy MAE increasing by 
+
+4× compared to FP32. This empirically validates our theoretical analysis: applying Cartesian grid quantization to rotation-sensitive vectors destroys the SO (3) -equivariant structure, leading to large anisotropic errors. Degree-Quant partially mitigates the loss by adjusting quantization range according to node degree, but still suffers significant degradation relative to FP32 because it does not preserve directional geometry. COURSE NAME/NUMBER: PROJECT NAME 8    
+
+> Fig. 3. Energy conservation in NVE dynamics (1 ns). The Naive INT8 model (red ) exhibits catastrophic energy divergence and explosion within 100 ps due to symmetry breaking. In contrast, our W4A8 model ( orange ) maintains excellent stability comparable to the FP32 baseline ( gray ). Note that the realistic thermal fluctuations observed in our model confirm that the simulation retains correct physical dynamics without long-term drift ( <0.15 meV/atom/ps).
+
+Gradient Fracture in Hard Clustering. The SVQ-KMeans baseline failed to converge; the validation loss stagnated due to zero gradients. This confirms that hard vector quantization creates zero gradients almost everywhere, necessitating our proposed Geometric STE for effective manifold optimization. 
+
+The Regularization Effect of W4A8. Remarkably, our W4A8 model achieves a lower energy MAE (9.31 meV) than the FP32 baseline (23.20 meV). We hypothesize that the low-bit constraint acts as a strong structural regularizer. By limiting the model’s capacity to fit high-frequency noise in the DFT training data, quantization forces the network to learn a smoother, more physical potential energy surface. 
+
+C. Molecular Dynamics Stability (NVE) 
+
+Accuracy on static test sets does not guarantee physical validity. To test conservation laws, we ran NVE ensemble 
+
+simulations (constant N, V, E ) for 1 ns (2 000 000 steps, 0.5 fs step size) using the predicted force fields. In an NVE simulation, the total energy should remain approximately constant when the force field is conservative and the numerical integrator/step size are stable. Symmetry breaking and quantization noise can introduce non-conservative components, which may accumulate and manifest as long-term energy drift or blow-up. As illustrated in Fig. 3, the Naive INT8 model exhibits rapid energy divergence, leading to simulation explosion within 100 ps. This “heating” artifact is a direct consequence of symmetry breaking... 
+
+D. Symmetry Preservation Analysis 
+
+We quantify symmetry violation using LEE as defined in Eq. 1. For force-field tasks, we report ER[LEE( f ; G, R )] where 
+
+ρout (R) rotates the predicted forces. As shown in Table III, Naive INT8 yields a high LEE of 5.23 meV/ ˚A, meaning the predicted forces fluctuate significantly purely due to grid orientation. Degree-Quant reduces this error but still leaves a substantial equivariance violation. Our method suppresses the error to 0.15 meV/ ˚A. While not strictly zero (due to discrete manifold approximation), this error magnitude is                  
+
+> TABLE III
+> SYMMETRY ANALYSIS .LEE MEASURES THE SENSITIVITY OF PREDICTIONS TO INPUT ROTATION (LOWER IS BETTER ). O UR METHOD REDUCES THE SYMMETRY ERROR BY >30 ×COMPARED TO NAIVE QUANTIZATION .
+> Method LEE (meV/ ˚ A) Remark
+> FP32 Baseline ≈0.0Exact equivariance Naive INT8 5.23 Broken symmetry Degree-Quant 2.10 Partially preserved
+> Ours (W4A8) 0.15 Preserved
+
+negligible compared to the force prediction error ( ∼ 22 meV/ ˚A), ensuring that physical symmetries are effectively preserved. 
+
+E. Efficiency: Breaking the Memory Wall 
+
+To verify the alleviation of the memory wall, we profiled the inference latency on an NVIDIA RTX 4090 with a batch size of 1 (simulating online inference).    
+
+> TABLE IV
+> LATENCY BREAKDOWN .TIME IN μS. O UR METHOD ACHIEVES SPEEDUP PRIMARILY BY REDUCING MEMORY I/O.
+
+Operation FP32 Ours (W4A8) Speedup 
+
+Memory I/O (Weights) 120.5 30.1 4.0 ×
+
+Compute (GEMM) 45.0 25.0 1.8 ×
+
+Quant Overhead 0.0 5.2 -Attention 15.2 15.2 1.0 ×
+
+Total Latency 180.7 75.5 2.39 ×
+
+Table IV shows that the primary speedup comes from the 
+
+4× reduction in weight loading time. Since equivariant GNNs are typically memory-bound rather than compute-bound, our W4A8 quantization translates directly into a 2.39 × end-to-end speedup, validating our strategic pivot towards solving the memory bottleneck in AI for science. V. C ONCLUSION 
+
+In this work, we tackle the fundamental conflict between discrete numerical computation and continuous geometric symmetries in deep learning. We identify that naive quantization of SO (3) -equivariant GNNs leads to symmetry breaking due to the topological mismatch between anisotropic Cartesian grids and the isotropic spherical manifold. This misalignment disrupts equivariance and violates conservation laws, as dictated by Noether’s theorem—which states that rotational invariance implies angular momentum conservation [3]. To resolve this, we propose Geometric-Aware Quantiza-tion (GAQ), a principled framework combining: (1) magni-tude–direction decoupled quantization on the sphere S2 to preserve directional fidelity; (2) geometric straight-through estimators to maintain Riemannian constraints during back-propagation; and (3) spherical attention normalization for robust gradient flow in low-bit regimes. Empirically, our method enables aggressive compression (W4A8) while preserving long-term physical integrity. Unlike naive INT8 baselines that cause simulation divergence due COURSE NAME/NUMBER: PROJECT NAME 9
+
+to non-conservative forces, GAQ maintains energy conser-vation in 1 ns NVE dynamics, achieving a drift rate of only 0.15 meV/atom/ps—on par with full-precision baselines. Remarkably, the low-bit model even surpasses FP32 in energy accuracy (9.31 vs 23.20 meV), suggesting that quantization can act as a structural regularizer by filtering high-frequency noise from DFT datasets. On the system level, we achieve a 2.39 × inference speedup and 4 × memory reduction, effectively breaking the memory wall that has limited the scalability of equivariant models. Our findings indicate that symmetry-preserving quantiza-tion is not merely a hardware trick, but a foundational methodology for robust, scalable AI for science. It enables long-timescale, symmetry-consistent simulations on resource-constrained platforms. In future work, we plan to extend this manifold-decoupled framework to higher-order irreducible representations ( ℓ ≥ 2) and explore theoretical connections to Lie-algebra-aware symplectic integrators and geometric integrators for physically faithful computation [5], [12]. COURSE NAME/NUMBER: PROJECT NAME 10 
+
+REFERENCES [1] S. Batzner, A. Musaelian, L. Sun, M. Geiger, J. P. Mailoa, M. Kornbluth, N. Molinari, T. E. Smidt, and B. Kozinsky, “E (3)-equivariant graph neural networks for data-efficient and accurate interatomic potentials,” 
+
+Nature communications , vol. 13, no. 1, p. 2453, 2022. [2] T. Frank, O. Unke, and K.-R. M ¨uller, “So3krates: Equivariant attention for interactions on arbitrary length-scales in molecular systems,” Advances in Neural Information Processing Systems , vol. 35, pp. 29 400–29 413, 2022. [3] E. Noether, “Invariant variation problems,” Transport theory and statisti-cal physics , vol. 1, no. 3, pp. 186–207, 1971. [4] S. Chmiela, A. Tkatchenko, H. E. Sauceda, I. Poltavsky, K. T. Sch ¨utt, and K.-R. M ¨uller, “Machine learning of accurate energy-conserving molecular force fields,” Science advances , vol. 3, no. 5, p. e1603015, 2017. [5] E. H. M ¨uller, “Exact conservation laws for neural network integrators of dynamical systems,” Journal of Computational Physics , vol. 488, p. 112234, 2023. [6] A. Musaelian, S. Batzner, A. Johansson, L. Sun, C. J. Owen, M. Korn-bluth, and B. Kozinsky, “Learning local equivariant representations for large-scale atomistic dynamics,” Nature Communications , vol. 14, no. 1, p. 579, 2023. [7] N. Thomas, T. Smidt, S. Kearnes, L. Yang, L. Li, K. Kohlhoff, and P. Riley, “Tensor field networks: Rotation-and translation-equivariant neural networks for 3d point clouds,” arXiv preprint arXiv:1802.08219 ,2018. [8] F. Fuchs, D. Worrall, V. Fischer, and M. Welling, “Se (3)-transformers: 3d roto-translation equivariant attention networks,” Advances in neural information processing systems , vol. 33, pp. 1970–1981, 2020. [9] I. Batatia, D. P. Kovacs, G. Simm, C. Ortner, and G. Cs ´anyi, “Mace: Higher order equivariant message passing neural networks for fast and accurate force fields,” Advances in neural information processing systems ,vol. 35, pp. 11 423–11 436, 2022. [10] M. Finzi, M. Welling, and A. G. Wilson, “A practical method for constructing equivariant multilayer perceptrons for arbitrary matrix groups,” in International conference on machine learning . PMLR, 2021, pp. 3318–3328. [11] A. E. A. Allen, E. Shinkle, R. Bujack, and N. Lubbers, “Optimal invariant bases for atomistic machine learning,” 2025. [Online]. Available: https://arxiv.org/abs/2503.23515 [12] Z. Meng, L. Zeng, Z. Song, T. Xu, P. Zhao, and I. King, “Towards geometric normalization techniques in se (3) equivariant graph neural networks for physical dynamics simulations,” in Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence ,2024, pp. 5981–5989. [13] T. Dao, D. Fu, S. Ermon, A. Rudra, and C. R ´e, “Flashattention: Fast and memory-efficient exact attention with io-awareness,” Advances in neural information processing systems , vol. 35, pp. 16 344–16 359, 2022. [14] M. Dehghani, J. Djolonga, B. Mustafa, P. Padlewski, J. Heek, J. Gilmer, A. P. Steiner, M. Caron, R. Geirhos, I. Alabdulmohsin et al. , “Scaling vision transformers to 22 billion parameters,” in International conference on machine learning . PMLR, 2023, pp. 7480–7512. [15] J. T. Frank, O. T. Unke, K.-R. M ¨uller, and S. Chmiela, “A euclidean transformer for fast and stable machine learned force fields,” Nature Communications , vol. 15, no. 1, p. 6539, 2024. [16] S. Zhou, Y. Wu, Z. Ni, X. Zhou, H. Wen, and Y. Zou, “Dorefa-net: Training low bitwidth convolutional neural networks with low bitwidth gradients,” arXiv preprint arXiv:1606.06160 , 2016. [17] S. K. Esser, J. L. McKinstry, D. Bablani, R. Appuswamy, and D. S. Modha, “Learned step size quantization,” arXiv preprint arXiv:1902.08153 , 2019. [18] B. Jacob, S. Kligys, B. Chen, M. Zhu, M. Tang, A. Howard, H. Adam, and D. Kalenichenko, “Quantization and training of neural networks for efficient integer-arithmetic-only inference,” in Proceedings of the IEEE conference on computer vision and pattern recognition , 2018, pp. 2704–2713. [19] X. Wei, R. Gong, Y. Li, X. Liu, and F. Yu, “Qdrop: Randomly dropping quantization for extremely low-bit post-training quantization,” arXiv preprint arXiv:2203.05740 , 2022. [20] G. Xiao, J. Lin, M. Seznec, H. Wu, J. Demouth, and S. Han, “Smoothquant: Accurate and efficient post-training quantization for large language models,” in International conference on machine learning .PMLR, 2023, pp. 38 087–38 099. [21] Z. Yao, R. Yazdani Aminabadi, M. Zhang, X. Wu, C. Li, and Y. He, “Zeroquant: Efficient and affordable post-training quantization for large-scale transformers,” Advances in neural information processing systems ,vol. 35, pp. 27 168–27 183, 2022. [22] S. A. Tailor, J. Fernandez-Marques, and N. D. Lane, “Degree-quant: Quantization-aware training for graph neural networks,” arXiv preprint arXiv:2008.05000 , 2020. [23] A. Henry, P. R. Dachapally, S. S. Pawar, and Y. Chen, “Query-key normalization for transformers,” in Findings of the Association for Computational Linguistics: EMNLP 2020 , 2020, pp. 4246–4253. [24] T. Cohen and M. Welling, “Group equivariant convolutional networks,” in International conference on machine learning . PMLR, 2016, pp. 2990–2999. [25] D. E. Worrall, S. J. Garbin, D. Turmukhambetov, and G. J. Brostow, “Harmonic networks: Deep translation and rotation equivariance,” in 
+
+Proceedings of the IEEE conference on computer vision and pattern recognition , 2017, pp. 5028–5037. [26] M. Weiler, M. Geiger, M. Welling, W. Boomsma, and T. S. Cohen, “3d steerable cnns: Learning rotationally equivariant features in volumetric data,” Advances in Neural information processing systems , vol. 31, 2018. [27] N. Gruver, M. Finzi, M. Goldblum, and A. G. Wilson, “The lie derivative for measuring learned equivariance,” arXiv preprint arXiv:2210.02984 ,2022. [28] K. Sch ¨utt, O. Unke, and M. Gastegger, “Equivariant message passing for the prediction of tensorial properties and molecular spectra,” in 
+
+International conference on machine learning . PMLR, 2021, pp. 9377– 9388. [29] O. T. Unke, S. Chmiela, M. Gastegger, K. T. Sch ¨utt, H. E. Sauceda, and K.-R. M ¨uller, “Spookynet: Learning force fields with electronic degrees of freedom and nonlocal effects,” Nature communications , vol. 12, no. 1, p. 7273, 2021. [30] A. B. Christensen, L. A. Bratholm, F. A. Faber, and O. A. von Lilienfeld, “Revised md17 dataset (rmd17),” Figshare dataset, 2020, https://figshare. com/articles/dataset/Revised MD17/12682038. [31] R. Ramakrishnan, P. O. Dral, M. Rupp, and O. A. Von Lilienfeld, “Quantum chemistry structures and properties of 134 kilo molecules,” 
+
+Scientific data , vol. 1, no. 1, pp. 1–7, 2014.

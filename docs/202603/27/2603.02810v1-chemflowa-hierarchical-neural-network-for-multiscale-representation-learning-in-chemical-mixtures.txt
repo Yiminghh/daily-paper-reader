@@ -1,0 +1,1812 @@
+Title: Microsoft Word - ChemFlow_manuscript_27_02_26 (002)_WR_jinming
+
+URL Source: https://arxiv.org/pdf/2603.02810v1
+
+Published Time: Wed, 04 Mar 2026 01:50:06 GMT
+
+Number of Pages: 32
+
+Markdown Content:
+# ChemFlow ：A Hierarchical Neural Network for Multiscale 
+
+# Representation Learning in Chemical Mixtures 
+
+Jinming Fan a b c , Chao Qian a c , Wilhelm T. S. Huck b, William E. Robinson b,
+
+Shaodong Zhou a c * 
+
+> a
+
+College of Chemical and Biological Engineering, Zhejiang Provincial Key Laboratory 
+
+of Advanced Chemical Engineering Manufacture Technology, Zhejiang University, 
+
+310027 Hangzhou (P. R. China)  
+
+> b
+
+Institute for Molecules and Materials, Radboud University, Nijmegen, The 
+
+Netherlands  
+
+> c
+
+Institute of Zhejiang University – Quzhou, 324000 Quzhou (P.R. China) 
+
+E-mail: szhou@zju.edu.cn Abstract: Accurate prediction of the physicochemical properties of mixtures of 
+
+molecules using graph neural networks remains a significant challenge, as it requires 
+
+simultaneous embedding of intramolecular interactions as well as accounting for 
+
+composition of the mixture (i.e. concentrations and ratios). Existing approaches are ill-
+
+equipped to emulate realistic mixture environments, where densely coupled 
+
+interactions propagate across hierarchical levels—from atoms and functional groups 
+
+to entire molecules—and where cross-level information exchange is continuously 
+
+modulated by composition. To bridge the gap between isolated molecules and realistic 
+
+chemical environments, we present ChemFlow, a novel hierarchical framework that 
+
+integrates atomic, functional group, and molecular-level features, facilitating the flow 
+
+of information across these levels to predict the behaviors of complex chemical 
+
+mixtures. ChemFlow employs an atomic-level feature fusion module, Chem-embed, to 
+
+generate context-aware atomic representations influenced by the mixture’s state and 
+
+atomic characteristics. Next, bidirectional group-to-molecule and molecule-to-group 
+
+attention mechanisms allow ChemFlow to capture the interactions of functional groups 
+
+both within and across molecules in the mixture. By dynamically adjusting 
+
+representations based on concentration and composition, ChemFlow excels at 
+
+predicting concentration-dependent properties and significantly outperforms state-of-
+
+the-art models in both concentration-sensitive and non-concentration-dependent 
+
+systems. Extensive experiments validate ChemFlow's superior accuracy and 
+
+efficiency in modeling complex chemical mixtures. 
+
+# Introduction 
+
+Data-driven machine learning (ML) techniques, 1-6 especially deep learning, have 
+
+emerged as a powerful paradigm to accelerate material discovery and chemical 
+
+process design. 7-10 Through complex modeling of large datasets, ML models, 11-18 and 
+
+especially Graph Neural Networks (GNNs), 19,20 can be trained to correlate the 
+
+structural features of molecules with their chemical properties. GNNs treat molecules 
+
+as graphs, classifying atoms and bonds as nodes and edges, respectively, thus enabling efficient information collection and passing. 21-22 However, this approach 
+
+primarily captures intramolecular interactions and relies on non-linear transformations 
+
+of atomic features and limited chemical descriptors (e.g., hybridization, valence). 23 To 
+
+achieve a comprehensive prediction of molecules in a complex chemical environment, 
+
+the model must be augmented with proper descriptors of both intrinsic atomic 
+
+properties and the compositional interplay. 24 However, the development of descriptors 
+
+that comprehensively capture the intrinsic nature of intermolecular interactions and 
+
+simultaneously incorporate the concentration-dependent effects on these interactions 
+
+remains an open and challenging problem. 
+
+The conventional graph-based molecular representations used by GNNs, while 
+
+effective for single molecules, 20-21 are inherently limited to intramolecular interactions. 
+
+This makes them unsuitable for modeling multi-molecular systems, where 
+
+intermolecular interactions, solvent-induced perturbations, and composition-
+
+dependent behaviors drive the emergent physicochemical properties. Recent efforts 
+
+to extend GNNs to solution-phase systems have sought to address this challenge by 
+
+introducing dual-network architectures to separately encode solutes and solvents. 25-26 
+
+These approaches allow for cross-molecular message passing, while methods like 3D 
+
+structure-based pretraining improve the model’s robustness to conformational 
+
+variability. 27 However, these models remain heavily pairwise, molecule-specific, or 
+
+tightly coupled to specific architectures, making them difficult to generalize to complex, 
+
+ternary or higher-order mixtures, incorporate concentration effects, or aggregate data 
+
+from heterogeneous molecular components. 
+
+Furthermore, some models treat molecules as nodes and attempt to learn 
+
+macroscopic interactions at the molecular scale. 28-29 While effective for coarse 
+
+correlations, such abstractions struggle to capture the chemical origin of interactions 
+
+in mixtures , which is often governed by functional-group interactions and group– 
+
+molecule couplings . In particular, they overlook that atomic descriptors should change 
+
+with chemical context, that functional groups can communicate across molecular 
+
+boundaries, and that composition can modulate interaction propensity. A coherent framework is therefore needed to bridge atomic chemistry with mesoscale organization 
+
+in mixtures. 
+
+To address this gap, we propose ChemFlow, as illustrated in Fig. 1a. At the atomic 
+
+scale, Chem-Embed performs mixture-aware multimodal feature fusion by integrating 
+
+diverse chemical descriptors from multiple sources. Specifically, atomic- and element-
+
+level features are fused through a hierarchical multi-stage process, enabling 
+
+complementary information to be incorporated across representation levels. The 
+
+hierarchical modulation process adjusts each atom’s features at different levels, 
+
+ensuring that the atom-level features adapt to the chemical environment while 
+
+integrating the mixture effects. This fusion of diverse features forms a strong 
+
+foundation for downstream interaction modeling. Building upon atomic representations, 
+
+features are progressively aggregated to the group and molecular levels. A
+
+bidirectional attention mechanism between group and molecular representations is 
+
+employed to model potential intra- and intermolecular interactions within mixtures. As 
+
+shown in Fig. 1b, a concentration-aware control module further modulates 
+
+representations across atomic, group, and molecular levels, enabling the model to 
+
+account for variations in mixture composition and their influence on interaction patterns. 
+
+Collectively, these design choices restore continuity from atomistic descriptors to 
+
+mesoscale organization and ultimately to mixture-level properties, providing a unified 
+
+and chemically faithful representation of complex mixtures. Figure 1. Schematic diagram of of ChemFlow. (a) Conceptual diagram of the model. 
+
+(b) Definition of Molecular graph, Group hypergraph, and Molecular hypergraph, and 
+
+the mechanism of concentration aware modulation on diverse graphfeatures. (c) 
+
+Chem-Embed for mixture-aware multimodal atomic fusion. (d) Bidirectional group-
+
+molecule interactions in ChemFlow. 
+
+# Overview of ChemFlow 
+
+Graph Definitions 
+
+Molecular Graph. For a mixture sample 𝑠 , we consolidate atoms from all 𝐾 ௦
+
+component molecules and concatenate them in a fixed order. Let 𝒱 (௦) = ൛𝑣 ଵ, … , 𝑣 ேೞ ൟ
+
+be the 𝑁 ௦ atoms with initial atomic features ℎ௜. The molecular graph is 𝒢 ௔ 
+
+> (௦)
+
+= ቀ𝒱 (௦), ℰ௔௧௢௠  
+
+> (௦)
+
+ቁ,
+
+where ℰ௔௧௢௠  
+
+> (௦)
+
+represents the set of intramolecular chemical bonds. For any bond (𝑖 , 𝑗 ) ∈  
+
+> ℰ௔௧௢௠
+> (௦)
+
+，the edge feature is denoted as 𝑒 ௜௝ .
+
+Functional-group instances (hyperedges) and incidence . We predefine a functional-
+
+group vocabulary (customizable per domain knowledge) and detect group instances 
+
+by substructure matching. Let 𝐺 ௦ be the number of matched instances . For the 𝑚 -th 
+
+group instance ( 𝑚 ∈ {1, … , G ୱ}), let 𝐴 ௠ ⊆ {1, … , 𝑁 ௦} be its member-atom index set, 
+
+defining a hyperedge: 
+
+𝑒 ௠ 
+
+> ௚௥௢௨௣
+
+= { 𝑣 ௜ | 𝑖 ∈ 𝐴 ௠}
+
+Equivalently, the atom–group relation is encoded by an incidence matrix 𝐁 (௦) ∈
+
+{0,1} ே௦ ×ீ ೞ with 
+
+𝐵 ௜,௠ 
+
+> (௦)
+
+= 1 ⟺ 𝑖 ∈ 𝐴 ௠
+
+stored in sparse COO format (equivalently, a star-expansion bipartite incidence graph). 
+
+Molecular membership and incidence . Each atom belongs to exactly one component 
+
+molecule. Let 𝑚𝑜𝑙 (𝑖 ) ∈ {1, … , 𝐾 ௦} denote the component index of atom 𝑖 . The 𝑘 -th 
+
+molecule corresponds to the atom set 
+
+𝑀 ௞ = {𝑖 |𝑚𝑜𝑙 (𝑖 ) = 𝑘 }
+
+and can be equivalently represented by 𝐒 (௦) ∈ {0,1} ே௦ ×௄ೞ with 
+
+𝑆 ௜,௞ 
+
+> (௦)
+
+= 1 ⟺ 𝑖 ∈ 𝑀 ௞
+
+implemented as bool masks in practice. 
+
+Composition signal and concentration-awareness . Let 𝑐 denote the mixture 
+
+composition/concentration encoding (scalar or vector), used to modulate 
+
+representations via learnable functions 𝛾 (𝑐 ) and 𝛽 (𝑐 ). As illustrated in Fig. 1b, this 
+
+modulation mechanism assigns composition-dependent weights and biases to 
+
+representations at the atomic, group, and molecular scales, thereby adjusting the 
+
+strength of feature interactions under different mixture compositions. This design 
+
+enables the model to adapt its internal representations according to changes in mixture 
+
+composition, allowing different interaction patterns to emerge across hierarchical levels. 
+
+Computational Pipeline 
+
+Chem-Embed: Mixture-aware Multimodal Atomic Representation. As illustrated 
+
+in Fig. 1c, Chem-Embed produces mixture-conditioned atomic embeddings via 
+
+multimodal, feature-level fusion under a hierarchical conditioning pathway. For each 
+
+atom 𝑣 ௜, we organize context signals from coarse to fine as: (i) global descriptors of 
+
+the other components ( ⨁ 𝑯 𝒈 ଚ
+
+ሬሬሬሬሬሬሬ⃑𝑵 
+
+> 𝒋 ୀ𝟏
+> 𝒋 ஷ𝒊
+
+) in the mixture together with their concentrations ( 𝑐 ), 
+
+(ii) the global descriptor of the atom’s parent molecule ( 𝑯 𝒈 ଙ
+
+ሬሬሬሬሬሬሬ⃑ ) together with its 
+
+concentration ( 𝑐 ), (iii) the atom’s functional-group assignment encoded as a one-hot 
+
+vector ( ℎ௜ି௚ ), and (iv) local environment descriptors of the atom ( ℎ௜ି௕ ,e.g., valence 
+
+state and hybridization). This hierarchy reflects a core premise of mixtures: atomic 
+
+behavior is not solely determined by intrinsic structure, but is dependent onthe 
+
+surrounding components and composition (for more details on descriptors, see 
+
+Method). Formally, chem-Embed injects mixture effects sequentially along the 
+
+hierarchy ：
+
+(ໄ 𝑯 𝒈 ଚ
+
+ሬሬሬሬሬሬሬ⃑
+
+> 𝑵
+> 𝒋 ୀ𝟏
+> 𝒋 ஷ𝒊
+
+, 𝑐 ) ⇒ ( 𝑯 𝒈 ଙ
+
+ሬሬሬሬሬሬሬ⃑ , 𝑐 ) ⇒ ℎ ௜ି௚ ⇒ ℎ ௜ି௕ 
+
+implemented with cross-attention so that higher-level signals modulate the lower-level 
+
+descriptors. Concretely, the “other-components” context provides a global mixture 
+
+state that conditions the parent-molecule representation; the parent -molecule context 
+
+then regulates which functional-group cues are emphasized for the atom; finally, the 
+
+group-conditioned signal refines the atom’s local environment descriptors, yielding an 
+
+atomic representation that is both chemically expressive and composition-aware. 
+
+After hierarchical conditioning, we collect the environment-dependent features as the 
+
+initial hidden state 
+
+𝑥 (0) = 𝑐𝑎𝑡 (ℎ ௜ି௚ , ℎ ௜ି௕ , 𝑐 )
+
+The elemental feature vector 𝐼 (0) = ℎ ௜ି௔ is then fused with 𝑥 (0) in a (Closed-Form 
+
+Continuous-Time) CFC based (Neural Circuit Policies) NCP unit. 30-31 This fusion 
+
+process allows the model to refine atomic representations and extract atomic features ℎ௜.
+
+Hierarchical Representation and information flow between levels 
+
+After obtaining the context-conditioned atomic embeddings through Chem-Embed, 
+
+ChemFlow proceeds to construct higher-level representations through hierarchical 
+
+aggregation. The atomic features ℎ௜ are first aggregated to form functional-group-
+
+level embeddings by pooling over each group’s constituent atoms. Specifically, for 
+
+each group the features of its constituent atoms {ℎ ௜ | 𝑖 ∈ 𝐴 ௠} are pooled to the group 
+
+embedding 𝐺 ௠：
+
+𝐺 ௠ = 𝑝𝑜𝑜𝑙𝑖𝑛𝑔 {ℎ ௜ | 𝑖 ∈ 𝐴 ௠}
+
+where 𝐴 ௠ is the index set of atoms in the 𝑚 -th group instances, these group 
+
+embeddings 𝐺 ௠ represent the chemically significant motifs and are enriched by 
+
+incorporating the environmental context provided by atomic-level features. 
+
+Next, we apply concentration-dependent modulation to adjust the group 
+
+embeddings according to the mixture's composition. This is achieved through: 
+
+𝐺 ௠ = 𝐺 ௠ ⊙ 𝛾 (𝑐 ) + 𝛽 (𝑐 )
+
+, where 𝛾 (𝑐 ) and 𝛽 (𝑐 ) are learnable parameters modulated 
+
+by the concentration 𝑐 , allowing the group representations to be sensitive to the 
+
+changing composition of the mixture. 
+
+To compensate for potential loss of atomic details and key inter-atomic interactions 
+
+during the atom-to-group aggregation, we perform message passing between atoms 
+
+within each molecule to capture atomic-level interactions. This message passing 
+
+process allows the atom-level features to exchange information, which helps preserve 
+
+essential atomic details (the specific computation details of the message passing 
+
+mechanism can be found in the Method section). 
+
+After the message passing step, we further aggregate the updated atomic 
+
+representations within each molecule to obtain the molecule-level embeddings. This 
+
+aggregation serves to enrich the group-level representation by recovering the atomic-
+
+level details that might be lost during the atom-to-group pooling process. The 
+
+molecule-level embedding 𝑀 ௞ is obtained by pooling over the atomic embeddings 
+
+{ℎ ௜ | 𝑖 ∈ 𝑀 ௞} for each molecule: 
+
+𝑀 ௞ = 𝑝𝑜𝑜𝑙𝑖𝑛𝑔 {ℎ ௜ | 𝑖 ∈ 𝑀 ௞}followed by concentration-dependent modulation: 𝑀 ௞ = 𝑀 ௞ ⊙ 𝛾 (𝑐 ) + 𝛽 (𝑐 ) . By 
+
+modulating atomic, group, and molecule-level features with concentration, ChemFlow 
+
+ensures that the features at each hierarchical level reflect their respective proportion 
+
+in the mixture. 
+
+Self-Attention: Intra- and Inter-Molecular Group Interactions. Once the group 
+
+embeddings are computed, we apply self-attention over the entire set of functional-
+
+group embeddings {𝐺 ௠} to capture intra- and inter-molecular interactions. This self-
+
+attention mechanism allows functional groups to exchange information both within the 
+
+same molecule and across molecules in the mixture, facilitating the discovery of 
+
+cooperative interactions. Formally, we compute the updated group embeddings 𝐺 ௠
+
+as follows: 
+
+𝐺 ௠ = SelfAttention({ 𝐺 ௠}௠ୀଵ ீ 
+
+> ೞ
+
+)
+
+This step captures the mesoscale interactions between functional groups, allowing the 
+
+model to learn how local substructures (i.e., functional groups) influence each other 
+
+within the chemical system. 
+
+Cross-Attention: Group–Molecule Interactions. At this stage, the model introduces 
+
+cross-attention between functional groups and component molecules (Fig. 2b). This 
+
+bidirectional interaction ensures that both group-level and molecule-level 
+
+representations influence each other. Specifically, each group embedding 𝐺 ௠ attends 
+
+to all molecule-level representations 𝑀 ௞, and vice versa, to capture global mixture 
+
+dynamics. 
+
+Groups to molecules: Groups influence molecules by modulating the component-
+
+level representations based on the group-specific interaction propensity. Formally: 
+
+𝑀 ௞ = CrossAttention( 𝑄 = 𝑀 ௞, 𝐾 = 𝐺 ௠, V = 𝐺 ௠ )
+
+where 𝑄 = 𝑀 ௞ is the query (molecule-level embedding), 𝐾 , 𝑉 = 𝐺 ௠ are the key and 
+
+value (group-level embeddings), this mechanism updates the molecule-level 
+
+embeddings 𝑀 ௞, incorporating information from the functional groups. 
+
+Molecules to groups : Similarly, molecule representations 𝑀 ௞ attend to all group 
+
+embeddings 𝐺 ௠ to provide context and adjust group representations: 𝐺 ௠ = CrossAttention( 𝑄 = 𝐺 ௠, 𝐾 = 𝑀 ௞, V = 𝑀 ௞ )
+
+which updates the group-level embeddings 𝐺 ௠, refining group-level features based on 
+
+the molecular environment. 
+
+Finally, the updated molecule-level and group-level embeddings are pooled to 
+
+generate a global mixture-level representation. 
+
+# Results and Discussion 
+
+Dataset 
+
+To comprehensively evaluate the capacity of ChemFlow to model complex mixture 
+
+systems, we curated a set of representative datasets from the literature, each reflecting 
+
+a distinct class of physicochemical behavior in multi-component environments. 
+
+Concentration-dependent multi-component datasets :1. Activity coefficients 29 :
+
+Binary and ternary mixture datasets covering a broad range of composition ratios (mole 
+
+fractions) and capturing how non-ideal intermolecular interactions evolve with mixture 
+
+composition. 2.MixSolDB 28 : Solubility measurements of diverse solutes in single-, 
+
+binary-, and ternary-solvent systems spanning a wide range of solvent mixing ratios, 
+
+reflecting the sensitivity of dissolution processes to multi-component solvent 
+
+environments. 3. Surface tension 32 : Single- and binary-solute systems with varying 
+
+concentrations, providing a benchmark for modeling interfacial behavior that depends 
+
+critically on solute abundance and cooperative molecular interactions. 
+
+All concentration-dependent datasets were reformulated into a unified mixture-
+
+modeling task (for example, merging datasets on binary and ternary mixtures by filling 
+
+entries with a fraction of 0), enabling ChemFlow to learn from heterogeneous chemical 
+
+systems within a single representational framework. 
+
+Non–concentration-dependent photophysical dataset : To assess the 
+
+generality of the model beyond composition-varying systems, we additionally included 
+
+properties of in single solute–solvent pairs 33 , including: 1. absorption wavelength 33 . 2. 
+
+emission wavelength 33 . 3. life time 33 . 4. Solubility: CombiSolv 34 dataset. Table 1 . Prediction results of concentration-dependent multi-component and binary 
+
+solvent–solute dataset using different models. 
+
+Concentration-Dependent Multi-Component Binary Solvent–Solute 
+
+Dateset Activity 
+
+coefficient 
+
+surface 
+
+tension 
+
+MixSolDB Absor 
+
+ption 
+
+wavel 
+
+ength 
+
+Emiss 
+
+ion 
+
+wavel 
+
+ength 
+
+Life 
+
+time 
+
+Comb 
+
+iSolv 
+
+modeling 
+
+approach 
+
+Ternary Combi 
+
+ned 
+
+binary 
+
+and 
+
+ternary 
+
+Combi 
+
+ned 
+
+single 
+
+and 
+
+binary 
+
+Binary Combin 
+
+ed 
+
+single, 
+
+binary 
+
+and 
+
+ternary 
+
+Binary Binary Binary Binary 
+
+Dataset size 160000 36000 
+
+0
+
+892 29158 56789 17276 18141 6961 8780 
+
+AttentiveFP 
+
+N/A N/A N/A N/A N/A 
+
+22.86 28.70 0.871 
+
+0.471 
+
+CIGIN 25 N/A N/A N/A N/A N/A 19.66 25.84 0.821 0.464 
+
+CGIB 26 N/A N/A N/A N/A N/A 18.37 24.52 0.808 0.448 
+
+CGIB+ 
+
+3DMRL 27 
+
+N/A N/A N/A N/A N/A 17.93 23.92 0.733 0.442 
+
+SolvGNN 29 /
+
+Subgraph 
+
+GNN 28 
+
+0.0370 0.0294 2.2259 0.67 1.07 
+
+22.00 26.34 0.789 
+
+0.523 
+
+NGNN 24 0.0380 0.0305 2.0255 0.45 0.87 20.22 26.55 0.837 0.482 ChemFlow 0.0205 0.0156 1.4391 0.088 0.57 17.24 23.34 0.722 0.403 
+
+Note: “N/A” indicates that the model does not support concentration-dependent or 
+
+multi-component predictions. All training was conducted using a five-fold cross 
+
+validation with a training: validation: test of 0.8:0.1:0.1. The evaluation criteria for 
+
+Concentration-Dependent Multi-Component are MAE. The evaluation criteria for 
+
+Binary Solvent–Solute are RMSE. 
+
+Benchmark Comparison 
+
+We used data sourced from the literature, to better compare the performance of our 
+
+model, we compared the results with those from the best-performing models (CIGIN 25 ,
+
+CGIB 26 , CGIB+ 3DMRL 27 , SolvGNN 29 , SubgraphGNN 28 , NGNN 24 ) in the literature. All 
+
+training was conducted using a five-fold cross validation with a training: validation: test 
+
+of 0.8:0.1:0.1, and the error was the average of the test set results obtained from the 
+
+best five training validation sets. The concentration dependent dataset results are the 
+
+average of a single five-fold cross validation, which is the average of five training 
+
+iterations. The non-concentration dependent dataset is the average of 3 different five-
+
+fold cross validations, i.e. the average of 15 training iterations). The evaluation index 
+
+for concentration dependent multi-component datasets is MAE, and the evaluation 
+
+index for non-concentration dependent properties is RMSE. Figure 2. Parity plots for different datasets, with marginal histograms showing data 
+
+distributions. (a) Results for the concentration dependent dataset. (b) Results for the 
+
+non-concentration dependent dataset. Note: Blue, green, and red points denote 
+
+training, validation, and test sets, respectively. Marginal histograms show the 
+
+distributions of the true and predicted values. 
+
+We compared ChemFlow against state-of-the-art mixture prediction models 
+
+across all datasets (Table 1). ChemFlow achieves SOTA performance on both non– 
+
+concentration-dependent multi-component datasets and single solute–solvent tasks. 
+
+Importantly, the advantage becomes especially pronounced in the concentration-
+
+dependent multi-component datasets (Activity coefficient, surface tension and 
+
+MixSolDB), where intermolecular interactions are stronger, highly nonlinear, and more 
+
+challenging to model. As shown in Figure 2a, it maintains high accuracy in predicting 
+
+activity coefficient, solubility (MixSolDB), and surface tension, and its advantage is 
+
+particularly significant in a large number of datasets (test set: R 2>0.996). 
+
+Notably, ChemFlow surpasses even models that incorporate 3D structure–based pretraining (CGIB+ 3DMRL 27 ) on single solute–solvent tasks (Absorption wavelength, 
+
+Emission wavelength, Life time and CombiSolv) —despite ChemFlow using no 
+
+pretraining in our experiments. This highlights the generality of our multiscale 
+
+representation: ChemFlow captures fundamental chemical principles that remain 
+
+consistent across systems, not relying on dataset-specific architectural tailoring or 
+
+extensive pretraining for each solute–solvent pair. As further illustrated in Table 1 and 
+
+Figure 2b, on single solute–solvent tasks, ChemFlow shows more substantial 
+
+improvements on datasets associated with stronger intermolecular interactions 
+
+(CombiSolv), while maintaining high predictive accuracy (Figure 2b). In contrast, for 
+
+datasets in which intermolecular interactions play a comparatively less dominant role 
+
+(e.g., absorption and emission wavelengths), the performance gain over competing 
+
+models is more modest, and the overall accuracy is relatively lower (Figure 2b). This 
+
+trend is consistent with the interpretation that ChemFlow is particularly effective at 
+
+modeling properties governed by intermolecular interactions. Figure 3. Ablation experiments and extrapolation experiments. (a) Ablation results on 
+
+the concentration-dependent multi-component dataset (activity coefficients) showing 
+
+the impact of removing different modules on prediction error (MAE), and the impact of 
+
+removing different modules on convergence speed. (b) Ablation results on the non-
+
+concentration-dependent binary dataset (absorption wavelength) showing the impact 
+
+of removing different modules on prediction error (RMSE), and the impact of removing 
+
+different modules on convergence speed. (c) Extrapolation performance (RMSE) for 
+
+solvents in absorption wavelength, emission wavelength, and solubility datasets. (d) 
+
+Extrapolation performance for unseen fractions and concentrations with and without 
+
+the concentration-aware module (C-aware). Ablation and Extrapolation Experiments. To validate the contribution of each model 
+
+component and assess the predictive capability in unseen domains, we conducted 
+
+systematic ablation and extrapolation experiments. As shown in Figures 3a and 3b, we 
+
+selected the concentration-dependent activity coefficient dataset and the non– 
+
+concentration-dependent absorption wavelength dataset to perform ablation studies. 
+
+These experiments investigate the impact of removing individual modules on 
+
+model performance. For the Chem-Embed module, two ablation strategies were 
+
+considered: (i) replacing it with a linear layer, and (ii) substituting the Neural Circuit 
+
+Policies (NCP) module with an attention layer to compute atomic interactions and 
+
+update atomic features. For the concentration-aware (C-aware) module, we removed 
+
+all concentration-dependent modulations at the atomic, group, and molecular levels. 
+
+To analyze the role of inter-group and inter-molecular attention mechanisms, we further 
+
+conducted ablations by removing group-level and molecule-level representations, 
+
+respectively. In addition, we included a base model, in which all specialized modules 
+
+were removed and the prediction was made solely by aggregating message-passed 
+
+molecular graph representations into a mixture representation. 
+
+Figure 3 demonstrates that all modules contribute considerably to overall 
+
+performance, with Chem-Embed playing a particularly critical role. Removing this 
+
+module leads to a substantial degradation in prediction accuracy, indicating that Chem-
+
+embed serves as a foundational component of the model by providing meaningful 
+
+atom-level representations that facilitate subsequent feature interactions. Furthermore, 
+
+we analyzed the effect of different modules on training efficiency. The presence of 
+
+Chem-Embed significantly accelerates model convergence, likely because it supplies 
+
+each atom with a prior estimate of its behavior in the mixture, enabling faster and more 
+
+efficient parameter updates during training. 
+
+For extrapolation experiments, we first evaluated the model’s performance on 
+
+unseen solvents, as shown in Figure 3c. The model exhibits a pronounced advantage 
+
+over the base model in solubility prediction, while the improvements for absorption and 
+
+emission wavelengths are less significant. This observation may be attributed to the 
+
+fact that solvent variation has a relatively minor influence on spectral wavelengths but a much stronger effect on solubility, which is consistent with chemical intuition. 
+
+Furthermore, we conducted extrapolation experiments on unseen mixture 
+
+fractions and concentrations in the activity coefficient and surface tension datasets, 
+
+comparing the full model with a variant that excludes the concentration-aware module 
+
+(Figure 3d). The results demonstrate that the C-aware module substantially enhances 
+
+the model’s extrapolation capability, highlights the importance of the C-aware module, 
+
+which effectively modulates the representation of features in response to variations in 
+
+concentration and composition. 
+
+Figure 4. Visualization of different hierarchical features (atomic-level, group-level, 
+
+molecular-level and mixture-level) in the activity coefficient dataset. (a) 3D t-SNE 
+
+distribution of atomic, group, and molecular features in all mixture data within the same 
+
+training batch. (b) The distribution of atomic features in mixture by the type and fraction. 
+
+(c) The distribution of group-level representation in mixture by fraction. (d) The 
+
+distribution of molecular-level representation in mixture by fraction. (e) The distribution of mixture-level representation by fraction, different colors represent mixtures with 
+
+different composition fractions. 
+
+Hierarchical Feature Representations and Concentration Dependence in mixture. 
+
+To further probe what the model has learned, we perform a feature-level visualization 
+
+study on the activity coefficient dataset. This dataset is particularly suitable because it 
+
+is large-scale and covers hundreds of chemically diverse molecules across a wide 
+
+range of mixture fractions, enabling a fine-grained examination of both composition-
+
+and concentration-driven effects. 
+
+As shown in Fig. 4a, the 3D t-SNE projection reveals that the model learns 
+
+hierarchically structured representations at three levels—atomic, group, and 
+
+molecular—that occupy distinct yet partially overlapping regions in embedding space. 
+
+This organization indicates that the network does not collapse all information into a 
+
+single latent space. In 3D space, the group-level embeddings appear to act as an 
+
+intermediate bridge between atom-level local chemistry and molecule-level global 
+
+context, consistent with the intended design of hierarchical message passing and 
+
+aggregation. 
+
+At the atomic level, the distribution colored by atom type (Fig. 4b, left) shows that 
+
+atomic embeddings exhibit clear chemical differentiation, where atoms with the same 
+
+elemental identities form separable sub-structures. Importantly, when coloring the 
+
+same atomic embeddings by mixture fraction (Fig. 4b, right), the points display a locally 
+
+smooth, continuous transition rather than abrupt switches—atoms occupy nearby 
+
+regions while their colors gradually change. This suggests that the model encodes not 
+
+only intrinsic atomic identity but also how the atomic environment is modulated by 
+
+concentration, capturing fraction-dependent local interactions. 
+
+Moving to higher levels, the group-level representations (Fig. 4c) show an even 
+
+more pronounced fraction-dependent organization: the embedding manifold exhibits a 
+
+clear gradient where nearby points correspond to similar fractions, and the fraction 
+
+varies smoothly along the geometry of the latent space. This implies that functional 
+
+groups serve as a sensitive carrier of fraction effects—groups aggregate atom-level signals into mesoscopic descriptors that strongly reflect composition-controlled 
+
+interaction patterns, such as preferential association or repulsion between specific 
+
+motifs in mixtures. 
+
+Next, the molecular-level embeddings (Fig. 4d) maintain a more globally mixed 
+
+distribution while still preserving local fraction continuity. Compared with group-level 
+
+features, the molecular space appears less strictly ordered by fraction, which is 
+
+expected: molecule-level representations must simultaneously encode global structure 
+
+and identity across many different species, so fraction becomes one (important) factor 
+
+among multiple global determinants. Nevertheless, the absence of sharp boundaries 
+
+and the presence of local transitions indicate that the model captures continuous 
+
+concentration-driven shifts at the molecule level as well, rather than treating different 
+
+fractions as unrelated regimes. 
+
+At the mixture level (Fig. 4e), embeddings appear dispersed and irregular, with no 
+
+specific order tied to fractions. This suggests that the model does not impose a rigid 
+
+compositional hierarchy but instead synthesizes atomic, group, and molecular features 
+
+to navigate chemical mixtures, integrating multi-level information to handle the 
+
+complexity of chemical systems. 
+
+In summary, across all analyzed levels, the model demonstrates its ability to 
+
+connect and integrate information, effectively handling the multi-scale nature of 
+
+chemical systems. Importantly, as the level of complexity increases (atomic → group 
+
+→ molecular → mixture), the dependence of feature distributions on mixture fraction 
+
+gradually decreases. This occurs because at the atomic and group levels, local 
+
+chemical environments and functional group interactions are highly sensitive to mixture 
+
+composition, making fraction changes significantly influence embedding distributions. 
+
+In contrast, at the molecular and mixture levels, representations must integrate more 
+
+global structural information and complex inter-species interactions, so the influence 
+
+of a single fraction factor is relatively diluted, resulting in reduced fraction dependence. Figure 5. Visualization of attention maps for different mixtures in the activity coefficient 
+
+dataset (a) Introduction to the content represented by each region of the attention 
+
+matrix. (b) Attention maps for five different mixtures. 
+
+Attention Mechanism Analysis at the Group–Molecule Interface. To gain deeper 
+
+insight into how the model captures interactions both between functional groups and 
+
+between groups and molecules within mixtures, we selected several mixtures involving 
+
+smaller molecules. We then visualized the learned attention maps for five mixtures in 
+
+the activity coefficient dataset, as shown in Fig. 5. For clarity, Fig. 5a provides a partial 
+
+schematic interpretation of the two types of attention maps to facilitate understanding. 
+
+In Fig. 5b, the group–group self-attention assigns relatively higher weights to 
+
+phenyl-related groups, while the group-to-molecule attention places greater emphasis 
+
+on nitro groups. In Fig. 5c, the group–group self-attention highlights ether groups, 
+
+whereas the group-to-molecule attention focuses more strongly on amide groups. The 
+
+remaining cases (Fig. 5d–e) further illustrate distinct patterns of group–group and 
+
+group–molecule interaction strengths across different mixtures, demonstrating that 
+
+ChemFlow adaptively allocates attention according to the dominant chemical interaction motifs present in each system. Overall, these results demonstrate a clear 
+
+division of labor among the three attention mechanisms: group–group attention models 
+
+local functional group interactions, group-to-molecule attention injects salient group 
+
+information into molecular representations. Together, they enable the model to learn 
+
+chemically meaningful, multi-scale representations for complex mixtures. 
+
+Limitations and Future Directions 
+
+While ChemFlow offers a significant advance in the modeling of complex chemical 
+
+systems, limitation remains. One notable challenge lies in the predefined group 
+
+encodings and the construction of group-level hypergraphs based on chemical priors, 
+
+which can introduce additional complexity in model construction. Moreover, this 
+
+approach may overlook certain unique molecular structures that do not conform to the 
+
+predefined group definitions ; incorporating adaptive group definitions could potentially 
+
+address this issue. Furthermore, the inclusion of Neural Circuit Policies (NCP), while 
+
+enhancing the model's ability to adapt atomic features, results in longer inference time 
+
+compared to simpler architectures, e.g. the linear layers. 
+
+Looking ahead, pretraining ChemFlow on multiple, diverse chemical datasets 
+
+could offer promising opportunities for the model to learn broader chemical knowledge. 
+
+Such pretraining would allow ChemFlow to acquire rich, generalizable representations 
+
+of chemical structures and interactions, which could then be fine-tuned to specific tasks, 
+
+improving its adaptability and accuracy across a wider range of chemical systems. 
+
+Additionally, integrating physical constraints directly into the training process via the 
+
+loss function could further enhance the model’s generalization capabilities, ensuring it 
+
+is not only better suited for specific tasks but also more aligned with real-world 
+
+chemical phenomena. 
+
+By incorporating these advancements, future improvement of ChemFlow could 
+
+proceed toward even more powerful and versatile capability of handling increasingly 
+
+complex and diverse chemical environments with greater efficiency and accuracy. Conclusion 
+
+ChemFlow offers a robust, multi-scale framework for modeling the intricate interactions 
+
+that govern the behavior of chemical mixtures. By hierarchically linking atomic, group, 
+
+and molecular representations, ChemFlow captures the core dynamics of both 
+
+intramolecular and intermolecular interactions that dictate mixture properties. In 
+
+comparative evaluations across a range of datasets, ChemFlow consistently achieves 
+
+state-of-the-art performance, particularly in modeling concentration-sensitive 
+
+behaviors. The model’s ability to dynamically adjust embeddings at multiple levels— 
+
+driven by the surrounding molecular environment and mixture concentration—ensures 
+
+that it not only models group-level interactions within molecules but also how molecular 
+
+interactions across mixtures influence each other. This hierarchical, concentration-
+
+aware feature flow mechanism is central to ChemFlow's capability to handle the 
+
+complex, context-dependent nature of chemical systems. Crucially, ChemFlow goes 
+
+beyond descriptive modeling, enabling the simulation of the fundamental interactions 
+
+that underlie chemical behavior at multiple scales, positioning it as a powerful and 
+
+generalizable tool for advancing predictive chemistry. 
+
+# Methods 
+
+Graph Representation and feature of ChemFlow 
+
+The following are detailed details about various features that were not mentioned in 
+
+the main text: 
+
+To represent the true physicochemical states of atoms, functional groups, and 
+
+molecules within complex chemical environments, we construct one molecular graph  
+
+> 𝒢 ௔
+> (௦)
+
+= ቀ𝒱 (௦), ℰ௔௧௢௠  
+
+> (௦)
+
+ቁ and two hypergraphs: (1) the group hypergraph ℋ௚௥௢௨௣  
+
+> (௦)
+
+=
+
+ቀ𝒱 (௦), ℰ௚
+
+> (௦)
+
+ቁ and (2) the molecular hypergraph ℋ௠௢௟  
+
+> (௦)
+
+= ൫𝒱 (௦), ℰ௠௢௟  
+
+> ௦
+
+൯.
+
+For a mixture sample 𝑠 , we consolidate atoms from all 𝐾 ௦ component molecules and concatenate them in a fixed order. Let 𝒱 (௦) = ൛𝑣 ଵ, … , 𝑣 ேೞ ൟ denote the node set 
+
+containing all 𝑁 ௦ atoms in the mixture, each node possesses features ℎ௜. concatenated 
+
+in a fixed order. The atomic graph is defined as: 
+
+𝒢 ௔ 
+
+> (௦)
+
+= ቀ𝒱 (௦), ℰ௔௧௢௠  
+
+> (௦)
+
+ቁ,
+
+where ℰ௔௧௢௠  
+
+> (௦)
+
+represents the set of intramolecular chemical bonds. For any bond (𝑖 , 𝑗 ) ∈ 
+
+ℰ௔௧௢௠  
+
+> (௦)
+
+，the edge feature is denoted as 𝑒 ௜௝ .
+
+To capture local substructures, we model functional groups as hyperedges over the 
+
+atomic node set 𝑉 (௦). We identify functional groups using SMARTS pattern matching. 
+
+Let 𝐺 ௦ be the total number of matched group instances in sample 𝑠 . For the 𝑚 -th group 
+
+instance ( 𝑚 ∈ {1, … , G ୱ}), let 𝐴 ௠ ⊆ {1, … , 𝑁 ௦} be the index set of its constituent atoms. 
+
+The corresponding group hyperedge is defined as: 
+
+𝑒 ௠ 
+
+> ௚௥௢௨௣
+
+= { 𝑣 ௜ ∈ 𝒱 (௦) | 𝑖 ∈ 𝐴 ௠}
+
+The group hypergraph is then defined on the atomic node set as: 
+
+ℋ௚௥௢௨௣  
+
+> (௦)
+
+= ቀ𝒱 (௦), ℰ௚
+
+> (௦)
+
+ቁ , where ℰ௚ 
+
+> (௦)
+
+= ൛𝑒 ௠
+
+> ௚௥௢௨௣
+
+ൟ௠ୀଵ ீ
+
+> ೞ
+
+The connectivity between atoms and groups can be formally represented by an incidence 
+
+matrix 𝐁 (௦) ∈ {0,1} ே௦ ∗ீ ೞ :
+
+𝐵 ௜,௠ 
+
+> (௦)
+
+= ൜1, 𝑖𝑓 𝑣 ௜ ∈ 𝑒 ௠
+
+> ௚௥௢௨௣
+
+0, otherwise 
+
+Implementation Note: Since 𝐁 (௦) is highly sparse, we store it in Coordinate Format (COO) 
+
+as an edge list. 
+
+Analogous to the group level, we explicitly model each component molecule in the 
+
+mixture as a hyperedge to learn global component-level representations. 
+
+Let the mixture contain 𝐾 ௦ component molecules. Since atoms are concatenated, each 
+
+atom 𝑣 ௜ belongs to exactly one component molecule. We define the 𝑘 -th molecular 
+
+hyperedge as the set of atoms belonging to the 𝑘 -th component: 
+
+𝑚 ௞(𝑖 ) ∈ {0,1 }, 𝑘 ∈ {1, … … 𝐾 ௦}
+
+The 𝑘 -th molecular hyperedge is defined as 
+
+𝑒 ௞ 
+
+> ௠௢௟
+
+= { 𝑣 ௜ ∈ 𝒱 (௦) | atom 𝑖 belongs to component 𝑘 }The molecular hypergraph is defined as:  
+
+> ℋ௠௢௟
+> (௦)
+
+= ൫𝒱 (௦), ℰ௠௢௟  
+
+> ௦
+
+൯, 𝑤 ℎ𝑒𝑟𝑒 ℰ௠௢௟  
+
+> ௦
+
+= ൛𝑒 ௞
+
+> ௠௢௟
+
+ൟ௞ୀଵ 
+
+> ௄ೞ
+
+Equivalently, this relationship is represented by a molecular incidence matrix 𝐒 (௦) ∈
+
+{0,1} ே௦ ∗௄ೞ :
+
+𝑆 ௜,௞ 
+
+> (௦)
+
+= ൜ 1, 𝑖𝑓 𝑣 ௜ ∈ 𝑒 ௞
+
+> ௠௢௟
+
+0, otherwise 
+
+Implementation Note: In practice, is implemented using boolean masks 
+
+(e.g., mask_1, ..., mask_k), which effectively partition the node set 𝒱 (௦) into disjoint 
+
+components. 
+
+Additionally, to establish a hierarchy, we map each functional group to its parent 
+
+molecule 𝑘 , denoted as mol_id( 𝑚 ) = 𝑘 .
+
+In the molecular graph, each atom is represented using three complementary 
+
+descriptors: 
+
+(i) h୧ି୥ : group assignment, specifying the functional group to which each atom 
+
+belongs and capturing the hierarchical atom–group relationship ;
+
+(ii) h୧ିୠ : environment descriptor, local chemical environment descriptor ,
+
+summarizing bonded structural and electronic features that define the atom’s 
+
+immediate chemical surroundings; The atomic features ( ℎ௜ି௕ ) considered are 
+
+summarized as follows: (1) Symbol. (2) Number of Valence Electrons. (3) Number of 
+
+Hydrogens. (4) Formal charge. (5) Hybridization. (6) Ring Membership (isInRing). (7) 
+
+Aromaticity (isAromatic). 
+
+(iii) h୧ିୟ : intrinsic physicochemical attributes , characterizing the elemental 
+
+properties that underlie its baseline steric and electronic behavior. such as: (1) atomic 
+
+number. (2) electronegativity. (3) covalent radius. (4) atomic mass. (5) first ionization 
+
+energy. (6) electron affinity. 
+
+To encode functional-group information for both atoms and groups, we construct 
+
+a custom SMARTS dictionary and perform substructure matching on each SMILES. 
+
+The SMARTS dictionary is user-defined and specifies a vocabulary of functional fragments. In this work, we include a set of common groups such as phenyl rings, 
+
+hydroxyl, carboxyl, carbonyl, ether, aromatic five-membered rings, amid es, etc.; 
+
+implementation details are provided in our code. 
+
+Given the SMARTS matches, we assign: (i) an atom-level group membership 
+
+vector h୧ି୥ (one-hot or multi-hot when overlaps occur), (ii) a molecule-level global 
+
+group encoding that counts the occurrences of each group type in the molecule 
+
+(represented as a group-count vector), and (iii) group instances (matched 
+
+substructures) used to construct the group hypergraph by treating each matched 
+
+instance as a hyperedge over its constituent atoms. 
+
+Importantly, the SMARTS dictionary is not fixed: readers can adapt or extend the 
+
+group vocabulary based on domain knowledge and the target properties of interest, 
+
+yielding a more appropriate group partitioning and improving model suitability for 
+
+specific chemical domains. 
+
+Group-level representations 𝐺 ௠ and molecular-level representations 𝑀 ௞ are 
+
+obtained by aggregating atomic features, thereby preserving essential electronic and 
+
+environmental information at higher structural levels. 
+
+ChemFlow architecture 
+
+Chem-embed: Mixture-Induced Multimodal Atomic Representation. 
+
+Firstly, we fuse the different features of each atom step by step, and the specific 
+
+calculation process is as follows: 
+
+Mixture → molecule: 
+
+𝑄 = 𝐻 ௚ప 
+
+ሬሬሬሬሬሬ⃑ ∗ 𝑊 ொ ,
+
+𝐾 = ⨁ (𝑐𝑜𝑛𝑐𝑎𝑡 ൫𝐻 ௚ఫ 
+
+ሬሬሬሬሬሬ⃑ , 𝐶 ௚௝ ൯)ே
+
+> ௝ୀଵ
+> ௝ஷ௜
+
+∗ 𝑊 ௄,
+
+𝑉 = ⨁ (𝑐𝑜𝑛𝑐𝑎𝑡 ൫𝐻 ௚ఫ 
+
+ሬሬሬሬሬሬ⃑ , 𝐶 ௚௝ ൯)ே
+
+> ௝ୀଵ
+> ௝ஷ௜
+
+∗ 𝑊 ௏
+
+𝐴𝑡𝑡𝑒𝑛𝑡𝑖𝑜𝑛 = 𝑠𝑜𝑓𝑡𝑚𝑎𝑥 ቆ𝑄𝐾 ்
+
+ඥ𝑑 ௞
+
+ቇ ∗ 𝑉 
+
+𝐻 ௚ప 
+
+ሬሬሬሬሬሬ⃑ = 𝐿𝑎𝑦𝑒𝑟𝑁𝑜𝑟𝑚 (𝑄 + 𝐴𝑡𝑡𝑒𝑛𝑡𝑖𝑜𝑛 )
+
+Here, 𝑊 ொ, 𝑊 ௄ and 𝑊 ௏ denote the query, key, and value matrices used in computing the cross-attention mechanism, respectively; 𝐶 ௚௝ represents the concentration of 
+
+neighboring molecules. 
+
+molecule → atomic group assignment: 
+
+ℎపି௚ 
+
+ሬሬሬሬሬሬሬሬ⃑ = 𝐿𝑎𝑦𝑒𝑟𝑁𝑜𝑟𝑚 (𝑄 + 𝑠𝑜𝑓𝑡𝑚𝑎𝑥 ቆ𝑄𝐾 ்
+
+ඥ𝑑 ௞
+
+ቇ ∗ 𝑉 )
+
+where 𝑄 = ℎపି௚ 
+
+ሬሬሬሬሬሬሬሬ⃑ ∗ 𝑊 ொ, 𝐾 = 𝐻 ௚ప 
+
+ሬሬሬሬሬሬ⃑ ∗ 𝑊 ௄, 𝑉 = 𝐻 ௚ప 
+
+ሬሬሬሬሬሬ⃑ ∗ 𝑊 ௏.
+
+Group assignment → atomic environment: 
+
+ℎపି௕ 
+
+ሬሬሬሬሬሬሬሬ⃑ = 𝐿𝑎𝑦𝑒𝑟𝑁𝑜𝑟𝑚 (𝑄 + 𝑠𝑜𝑓𝑡𝑚𝑎𝑥 ቆ𝑄𝐾 ்
+
+ඥ𝑑 ௞
+
+ቇ ∗ 𝑉 )
+
+Where 𝑄 = ℎపି௕ 
+
+ሬሬሬሬሬሬሬሬ⃑ ∗ 𝑊 ொ, 𝐾 = ℎ పି௚ 
+
+ሬሬሬሬሬሬሬሬ⃑ ∗ 𝑊 ௄, 𝑉 = ℎ పି௚ 
+
+ሬሬሬሬሬሬሬሬ⃑ ∗ 𝑊 ௏.
+
+Atom-wise Feature Generation with NCP Units 
+
+We generate each atom’s physical descriptors by integrating its environment-
+
+conditioned state and its local concentration. 
+
+The initial hidden state is: 𝐻 ሬሬ⃑ ଴ = 𝑐𝑎𝑡 (ℎ ௜ି௕ , ℎ ௜ି௚ , 𝑐 )
+
+For NCP step k we compute: ℎపି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ ௞
+
+, 𝐻 ሬሬ⃑ ௞ = 𝑁𝐶𝑃 (ℎ పି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ ௞ିଵ 
+
+, 𝐻 ሬሬ⃑ ௞ିଵ )
+
+with the per-neuron update ：
+
+ℎపି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ ௞
+
+, 𝐻 ሬሬ⃑ ௞ = 𝜎 ቆ𝑓 ቀቂℎపି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ ௞ିଵ 
+
+, 𝐻 ሬሬ⃑ ௞ିଵ ቃቁቇ ⊙ 𝜎 ቆ𝑔 ቀቂℎపି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ ௞ିଵ 
+
+, 𝐻 ሬሬ⃑ ௞ିଵ ቃቁቇ + [1 
+
+− 𝜎 ቆ𝑓 ቀቂℎపି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ ௞ିଵ 
+
+, 𝐻 ሬሬ⃑ ௞ିଵ ቃቁቇ] ⊙ 𝜎 ቆℎ ቀቂℎపି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ ௞ିଵ 
+
+, 𝐻 ሬሬ⃑ ௞ିଵ ቃቁቇ
+
+in which 𝜎 denotes the activation function, while 𝑓 , 𝑔 , and ℎ are learnable 
+
+transformation functions. 
+
+The final atomic embedding concatenates multiple feature types: 
+
+ℎప
+
+ሬሬሬ⃑ = 𝑐𝑜𝑛𝑐𝑎𝑡 (ℎ పି௔ 
+
+ሬሬሬሬሬሬሬሬ⃑ , ℎ పି௕ 
+
+ሬሬሬሬሬሬሬሬ⃑ , ℎ పି௚ 
+
+ሬሬሬሬሬሬሬሬ⃑ )
+
+Message-Passing Step of atom (performed at every iteration k) ：
+
+At each message-passing iteration, we first modulate atomic features with the global 
+
+mixture context and then aggregate intra-molecular messages, concluding with a 
+
+concentration-aware memory update. (1) Feature-wise Linear Modulation: ℎప
+
+ሬሬሬ⃑ ௞
+
+= ℎ ప
+
+ሬሬሬ⃑ ௞
+
+⊙ 𝛾 (𝑐 ) + 𝛽 (𝑐 )
+
+where 𝛾 (·)
+
+and 𝛽 (·)are learned parameters. 
+
+(2) Atom-level aggregation: ℎప
+
+ሬሬሬ⃑ ௞
+
+= 𝛩 ℎప
+
+ሬሬሬ⃑ ௞ିଵ 
+
++ ଵ 
+
+> ே
+
+∑ ℎఫ
+
+ሬሬሬ⃑ ௞ିଵ 
+
+∗ ( 𝜎 (𝑊 ∗ 𝑒 పఫ ሬሬሬሬ⃑௝∈ே(௜) )) 
+
+which allows continuous update of atomic features upon integrating the information of 
+
+neighboring atoms. 
+
+(3) Concentration-Aware Memory Update: ℎప
+
+ሬሬሬ⃑ ௞
+
+, 𝐻 ሬሬ⃑ ௞ = 𝑁𝐶𝑃 (𝑐𝑎𝑡 (ℎ ప
+
+ሬሬሬ⃑ ௞
+
+, 𝐶 ), 𝐻 ሬሬ⃑ ௞ିଵ )
+
+Note: The memory state 𝐻 (𝑘 ) tracks concentration-aware evolution but does not 
+
+feed into subsequent message-passing updates; it is used only at the end. The above 
+
+concentration -aware is only used for predicting concentration dependent datasets and 
+
+is not used for predicting non concentration dependent optical property datasets. 
+
+Feature Aggregation and Interaction Computation 
+
+Atom → Group / Molecule aggregation with concentration modulation. To 
+
+aggregate atomic representations into functional-group and molecular representations, 
+
+we adopt Set2Set as a permutation-invariant readout. For the 𝑚 -th functional-group 
+
+instance with member-atom set 𝐴 ௠ and the 𝑘 -th molecule with atom set 𝑀 ௞, we 
+
+compute: 
+
+To explicitly model composition effects, we apply concentration-conditioned 
+
+feature modulation using learnable functions 𝛾 (𝑐 ) and 𝛽 (𝑐 )：
+
+𝐺 ௠ = set2set{ℎ ௜ | 𝑖 ∈ 𝐴 ௠}, 𝑀 ௞ = set2set{ℎ ௜ | 𝑖 ∈ 𝑀 ௞}
+
+Group self-attention (group–group interactions) . We then perform self-attention 
+
+over all functional-group embeddings {𝐺 ௠}௠ୀଵ ீ 
+
+> ೞ
+
+to capture both intra- and inter-
+
+molecular group interactions: 
+
+𝐺 ௠ = 𝐿𝑎𝑦𝑒𝑟𝑁𝑜𝑟𝑚 (𝑄 + 𝑠𝑜𝑓𝑡𝑚𝑎𝑥 ቆ𝑄𝐾 ்
+
+ඥ𝑑 ௞
+
+ቇ ∗ 𝑉 )
+
+Where 𝑄 = 𝐺 ௠ ∗ 𝑊 ொ, 𝐾 = 𝐺 ௠ ∗ 𝑊 ௄, 𝑉 = 𝐺 ௠ ∗ 𝑊 ௏.
+
+Bidirectional cross-attention (group ↔ molecule coupling). Next, we update groups and 
+
+molecules via bidirectional cross-attention, ensuring that each group is influenced by 
+
+all molecules in the mixture and each molecule is informed by all group-level semantics: Molecule← Groups: 
+
+𝐺 ௠ = 𝐿𝑎𝑦𝑒𝑟𝑁𝑜𝑟𝑚 (𝑄 + 𝑠𝑜𝑓𝑡𝑚𝑎𝑥 ቆ𝑄𝐾 ்
+
+ඥ𝑑 ௞
+
+ቇ ∗ 𝑉 )
+
+Where 𝑄 = 𝐺 ௠ ∗ 𝑊 ொ, 𝐾 = 𝑀 ௞ ∗ 𝑊 ௄, 𝑉 = 𝑀 ௞ ∗ 𝑊 ௏.
+
+Group← Molecule: 
+
+𝑀 ௞ = 𝐿𝑎𝑦𝑒𝑟𝑁𝑜𝑟𝑚 (𝑄 + 𝑠𝑜𝑓𝑡𝑚𝑎𝑥 ቆ𝑄𝐾 ்
+
+ඥ𝑑 ௞
+
+ቇ ∗ 𝑉 )
+
+Where 𝑄 = 𝑀 ௞ ∗ 𝑊 ொ, 𝐾 = 𝐺 ௠ ∗ 𝑊 ௄, 𝑉 = 𝐺 ௠ ∗ 𝑊 ௏.
+
+Finally, we pool the updated molecule- and group-level representations into a 
+
+mixture representation and then use a Multi-Layer Perceptron ( 𝑀𝐿𝑃 ) model is 
+
+employed to accomplish the final prediction, combining chemical and physical features 
+
+to produce a robust estimation of physiochemical properties. 
+
+Hyperparameter 
+
+To evaluate the impact of various dataset modeling strategies and sampling methods, 
+
+we conducted various tests on the activity coefficient dataset. As shown in Fig. 6a–6c, 
+
+ChemFlow demonstrated fast convergence and high accuracy on the mixed dataset, 
+
+suggesting that the combination of datasets with increasing complexity allowed the 
+
+model to better capture composition-dependent behavior. In Fig. 6d, we compare the 
+
+results of five-fold random cross-validation and five-fold stratified cross-validation 
+
+using the activity coefficient datasets. Both methods yielded consistent MAE, RMSE, 
+
+and R² values, confirming the robustness of ChemFlow under different cross-validation 
+
+schemes. 
+
+We also investigated the effect of different hyperparameters on model 
+
+performance. As shown in Fig. 6f, high learning rates caused convergence issues, 
+
+while even a relatively low learning rate ensured stable model performance, 
+
+highlighting ChemFlow’s robustness. In Fig. 6g, the choice of batch size had minimal 
+
+influence on the final prediction accuracy, suggesting that ChemFlow can achieve fast 
+
+convergence without being highly sensitive to batch size, ensuring efficient training. Figure 6. Influence of Dataset Modeling Strategies, Sampling Methods, and 
+
+Hyperparameters. (a) The training curves, (b) error bars, (c) the extrapolation (to 
+
+different concentrations) results, and (d) prediction results with different sampling 
+
+strategies with different activity coefficient datasets; (e) prediction results with different 
+
+dataset partitioning method; The influence of hyperparameters on the prediction 
+
+results of mixed multi-component activity coefficients (f) learning rate; (g) batch size. 
+
+# Data and Code availability 
+
+Further information about the data and framework is also available at 
+
+https://github.com/Fan1ing/ChemFlow. 
+
+# Acknowledgement 
+
+Generous financial support by the National Natural Science Foundation of China 
+
+(U24A20527) and the Key Research and Development Program of Zhejiang Province 
+
+(2023C01102, 2023C01208). References 
+
+1. Wang, T.; He, X.; Li, M.; et al. Ab Initio Characterization of Protein Molecular 
+
+Dynamics with AI2BMD. Nature 2024 , 635 , 1019-1027. 
+
+2. Butler, K. T.; Davies, D. W.; Cartwright, H.; Isayev, O.; Walsh, A. Machine learning 
+
+for molecular and materials science. Nature 2018, 559 , 547-555. 
+
+3. Granda, J. M.; Donina, L.; Dragone, V.; Long, D. L.; Cronin, L. Controlling an 
+
+organic synthesis robot with machine learning to search for new reactivity. Nature 
+
+2018, 559 , 377-381. 
+
+4. Zhou, M. G.; Liu, Z. P.; Yin, H. L.; Li, C. L.; Xu, T. K.; Chen, Z. B. Quantum Neural 
+
+Network for Quantum Neural Computing. Research 2023 , 6, 0134. 
+
+5. Zhang, K.; Nguyen, T. -T.; Su, Z.; Demortière, A. Self -supervised image quality 
+
+assessment for X-ray tomographic images of Li-ion battery. npj Comput. Mater. 2022, 
+
+8, 194. 
+
+6. Price, I.; Sanchez -Gonzalez, A.; Alet, F.; et al. Probabilistic Weather Forecasting 
+
+with Machine Learning. Nature 2025 , 637 , 84-90. 
+
+7.Feng, W.; Wang, L.; Lin, Z.; Zhu, Y.; Wang, H.; Dong, J.; Bai, R.; Wang, H.; Zhou, 
+
+J.; Peng, W.; et al. Generation of 3D molecules in pockets via a language model. 
+
+Nat. Mach. Intell. 2024 , 6, 62-73. 
+
+8. Guo, S.; Popp, J.; Bocklitz , T. Chemometric analysis in Raman spectroscopy from 
+
+experimental design to machine learning-based modeling. Nat. Protoc. 2021, 16 ,
+
+5426-5459. 
+
+9. Soleimany, A. P.; Amini, A.; Goldman, S.; Rus, D.; Bhatia, S. N.; Coley, C. W. 
+
+Evidential Deep Learning for Guided Molecular Property Prediction and Discovery. 
+
+ACS Cent. Sci. 2021, 7, 1356-1367. 
+
+10. Ulissi, Z. W.; Medford, A. J.; Bligaard, T.; Norskov, J. K. To address surface 
+
+reaction network complexity using scaling relations machine learning and DFT 
+
+calculations. Nat. Commun. 2017, 8, 14621. 
+
+11. Li, X.; Zhu, Q.; Zhao, C.; Qian, X.; Zhang, X.; Duan, X.; Lin, W. Tipping Point 
+
+Detection Using Reservoir Computing. Research 2023 , 6, 0174. 
+
+12. Fan, J.; Yuan, B.; Qian, C.; Zhou, S. Group Contribution Method Supervised 
+
+Neural Network for Precise Design of Organic Nonlinear Optical Materials. Precision 
+
+Chem. 2024 , 2, 263-272. 
+
+13.Zhong, M.; Tran, K.; Min, Y.; Wang, C.; Wang, Z.; Dinh, C.-T.; De Luna, P.; Yu, Z.; 
+
+Rasouli, A. S.; Brodersen, P.; Sun, S.; Voznyy, O.; Tan, C.-S.; Askerka, M.; Che, F.; 
+
+Liu, M.; Seifitokaldani, A.; Pang, Y.; Lo, S.-C.; Ip, A.; Ulissi, Z.; Sargent, E. H. 
+
+Accelerated discovery of CO2 electrocatalysts using active machine learning. Nature 
+
+2020, 581 , 178-183. 
+
+14. Gebauer, N. W. A.; Gastegger, M.; Hessmann, S. S. P.; Müller, K. R.; Schütt, K. 
+
+T. Inverse design of 3d molecular structures with conditional generative neural 
+
+networks. Nat. Commun. 2022 , 13 , 973. 
+
+15. Gomez-Bombarelli, R.; Wei, J. N.; Duvenaud, D.; Hernandez -Lobato, J. M.; 
+
+Sanchez-Lengeling , B.; Sheberla, D.; Aguilera -Iparraguirre, J.; Hirzel, T. D.; Adams, 
+
+R. P.; Aspuru -Guzik, A. Automatic Chemical Design Using a Data-Driven Continuous 
+
+Representation of Molecules. ACS Cent. Sci. 2018, 4, 268-276. 
+
+16. Dai, T.; Vijayakrishnan, S.; Szczypiński, F. T.; et al. Autonomous Mobile Robots 
+
+for Exploratory Synthetic Chemistry. Nature 2024 , 635 , 890-897. 
+
+17. Fan, J.; Qian, C.; Zhou, S. Machine Learning Spectroscopy Using a 2 -Stage, Generalized Constituent Contribution Protocol. Research 2023 , 6, 0115. 
+
+18. Yu, L.-Y.; Ren, G.-P.; Hou, X.-J.; Wu, K.-J.; He, Y. Transition State Theory-
+
+Inspired Neural Network for Estimating the Viscosity of Deep Eutectic Solvents. ACS 
+
+Cent. Sci. 2022 , 8, 983-995. 
+
+19. LeCun, Y.; Bengio, Y.; Hinton, G. Deep learning. Nature 2015, 521 , 436-444. 
+
+20. Fang, X.; Liu, L.; Lei, J.; He, D.; Zhang, S.; Zhou, J.; Wang, F.; Wu, H.; Wang, H. 
+
+Geometry-enhanced molecular representation learning for property prediction. Nat. 
+
+Mach. Intell. 2022 , 4, 127-134. 
+
+21. Fang, Y.; Zhang, Q.; Zhang, N.; Chen, Z.; Zhuang, X.; Shao, X.; Fan, X.; Chen, H. 
+
+Knowledge graph-enhanced molecular contrastive learning with functional prompt. Nat. 
+
+Mach. Intell. 2023 , 5, 542-553. 
+
+22. Young, A.; Röst, H.; Wang, B. Tandem mass spectrum prediction for small 
+
+molecules using graph transformers. Nat. Mach. Intell. 2024 , 6, 404-416. 
+
+23. Singh, K.; Munchmeyer, J.; Weber, L.; Leser, U.; Bande, A. Graph Neural 
+
+Networks for Learning Molecular Excitation Spectra. J. Chem. Theory Comput. 2022 ,
+
+18 , 4408-4417. 
+
+24. Fan, J.; Qian, C.; Zhou, S. A Univer sal Framework for General Prediction of 
+
+Physicochemical Properties: The Natural Growth Model. Research 2024 , 7, 0510. 
+
+25. Pathak, Y.; Laghuvarapu, S.; Mehta, S.; Priyakumar , U. D. Chemically 
+
+Interpretable Graph Interaction Network for Prediction of Pharmacokinetic Properties 
+
+of Drug-Like Molecules. Proc. AAAI Conf. Artif. Intell. 2020 , 34 , 873–880. 
+
+https://doi.org/10.1609/aaai.v34i01.5433. 
+
+26. Lee, N.; Hyun, D.; Na, G. S.; Kim, S.; Lee, J.; Park, C. Conditional Graph 
+
+Information Bottleneck for Molecular Relational Learning. Proc. Int. Conf. Mach. Learn. 
+
+2023 , 202 , 18852–18871. 
+
+27. Lee, N.; Oh, Y.; Noh, H.; Na, G. S.; Xu, M.; Wang, H.; Fu, T.; Park, C. 3D Interaction 
+
+Geometric Pre-training for Molecular Relational Learning. To appear in Proc. Neural 
+
+Inf. Process. Syst. 
+
+28. Jung, H.; Stubbs, C. D.; Kumar, S.; Pérez -Soto, R.; Song, S.; Kim, Y.; Kim, S. 
+
+Enhancing Predictive Models for Solubility in Multicomponent Solvent Systems Using 
+
+Semi-Supervised Graph Neural Networks. Digital Discovery. 2025 , 4, 1492–1504. 
+
+https://doi.org/10.1039/D5DD00015G. 
+
+29. Qin, S.; Jiang, S.; Li, J.; Balaprakash, P.; Van Lehn, R. C.; Zavala, M. Capturing 
+
+Molecular Interactions in Graph Neural Networks: A Case Study in Multi-Component 
+
+Phase Equilibrium. Digital Discovery 2023 , 2, 138-151. 
+
+30. Lechner, M.; Hasani, R.; Amini, A.; et al. Neural Circuit Policies Enabling Auditable 
+
+Autonomy. Nat. Mach. Intell. 2020 , 2, 642-652. 
+
+31. Hasani, R.; Lechner, M.; Amini, A.; et al. Closed-Form Continuous-Time Neural 
+
+Networks. Nat. Mach. Intell. 2022 , 4, 992-1003. 
+
+32. Qing, D.; Lu, Z.; Hou, L.; Dai, W.; Hong, J.; Ge, X. Predicting the Surface Tension 
+
+of Mixed Surfactant Systems through Theory and Machine Learning. Colloids Surf., A: 
+
+Physicochem. Eng. Asp. 2025 , 727 , 138427. 
+
+https://doi.org/10.1016/j.colsurfa.2025.138427. 
+
+33. Joung, J. F.; Han, M.; Jeong, M.; Park, S. Experimental Database of Optical 
+
+Properties of Organic Compounds. Sci. Data 2020 , 7, 295. 
+
+https://doi.org/10.1038/s41597-020-00634-8. 34. Vermeire, F. H. and Green, W. H. Transfer learning for solvation free energies: 
+
+From quantum chemistry to experiments. Chemical Engineering Journal . 2021, 
+
+418:129307.
