@@ -1,0 +1,350 @@
+Title: Information Routing in Atomistic Foundation Models: How Equivariance Creates Linearly Disentangled Representations
+
+URL Source: https://arxiv.org/pdf/2603.03155v1
+
+Published Time: Wed, 04 Mar 2026 02:31:24 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# Information Routing in Atomistic Foundation Models: How Equivariance Creates Linearly Disentangled Representations 
+
+## Joshua Steier March 2026 
+
+Abstract 
+
+What do atomistic foundation models encode in their intermediate representations, and how is that information organized? We introduce Composition Projection Decomposition (CPD), which uses QR projection to linearly remove composition signal from learned representations and probes the geometric residual. Across eight models from five architectural families on QM9 molecules and Materials Project crystals, we find a disentanglement gradient: tensor product equivariant architectures (MACE) produce representations where geometry is almost fully linearly accessible after composition removal ( R2 
+
+> geom
+
+= 0 .782 for HOMO-LUMO gap), while handcrafted descriptors (ANI-2x) entangle the same information nonlinearly ( R2 
+
+> geom
+
+= −0.792 
+
+under Ridge; R2 = +0 .784 under MLP). MACE routes target-specific signal through irreducible representation channels—dipole to L = 1 , HOMO-LUMO gap to L = 0 —a pattern not observed in ViSNet’s vector-scalar architecture under the same probe. We show that gradient boosted tree probes on projected residuals are systematically inflated, recovering R2 = 0 .68 –0.95 on a purely compositional target, and recommend linear probes as the primary metric. Linearly disentangled representations are more sample-efficient under linear probing, suggesting a practical advantage for equivariant architectures beyond raw prediction accuracy. 
+
+# 1 Introduction 
+
+Atomistic foundation models predict energies, forces, and molecular properties with increasing accu-racy, but accuracy alone does not tell us how these models organize chemical information internally. A model that predicts the HOMO-LUMO gap well could encode geometry and composition in cleanly separable subspaces, or it could entangle them so thoroughly that one cannot be read with-out the other. The distinction shapes whether representations are efficient for downstream tasks and how transparently they encode different physical factors. As we show, the answer is not binary but a gradient—and that gradient tracks architectural choices. Prior work has probed molecular representations without separating compositional from geo-metric contributions, and theoretical results show that invariant readouts discard equivariant infor-mation by construction, though this may not affect scalar targets (Section 2). This paper makes six contributions: 1. We introduce Composition Projection Decomposition (CPD), a QR-based method that lin-early removes composition signal from model representations, with a positive control that validates the erasure on all tested models. 2. We measure a disentanglement gradient across 8 models from 5 architectural families (tensor product equivariant, vector-scalar equivariant, learned invariant, directional invariant, and handcrafted descriptors) on 2 datasets—5 models with full CPD analysis on QM9 and 4 1
+
+> arXiv:2603.03155v1 [cs.LG] 3 Mar 2026
+
+on Materials Project crystals, with MACE appearing in both—showing that tensor product equivariant message passing produces the most linearly disentangled representations. 3. We show that ANI-2x’s MLP probe on the CPD residual recovers R2 = 0 .784 for HOMO-LUMO gap—matching MACE’s Ridge probe ( R2 
+
+> geom
+
+= 0 .782 )—but the signal collapses to 
+
+R2 
+
+> geom
+
+= −0.792 under a linear probe. Same information, different encoding geometry. 4. We report, to our knowledge, the first irreps-specific routing analysis in atomistic foundation models: MACE routes dipole signal to L = 1 channels and HOMO-LUMO gap signal to 
+
+L = 0 , while ViSNet’s vector channels carry no detectable signal under the same probe. 5. We discover that gradient boosted tree probes on CPD residuals are systematically inflated— recovering R2 = 0 .68 –0.95 on a purely compositional target (average atomic mass)—and recommend linear probes as the primary metric for any composition-projected analysis. 6. We show that MACE’s linearly disentangled representations converge faster under linear prob-ing with fewer labeled examples, though pretraining scale also contributes (Section 5.3). Section 2 reviews related work. Section 3 describes CPD and the probing protocol. Section 4 presents the core results: the disentanglement gradient (4.1), depth profiles (4.2), nonlinear encoding geometry (4.3), irreps routing (4.4), cross-domain transfer to crystals (4.5), and the GBT inflation analysis (4.6). Section 5 covers deep analysis including information concentration, weight orthog-onality, sample efficiency, and cross-model similarity. Section 6 discusses mechanistic implications and limitations; Section 7 concludes. 
+
+# 2 Related Work 
+
+Alain & Bengio (2016) systematized the use of linear classifiers on intermediate layers of deep networks to track how representations evolve through depth. Hewitt & Liang (2019) sharpened the approach by introducing control tasks that measure probe selectivity—the gap between a probe’s accuracy on a structured representation and on a randomized baseline. Their concern was that a probe performing well on both is memorizing rather than extracting. Our positive control is related in spirit: we test whether a probe on a composition-projected residual can still recover a purely compositional target, which serves as an analogous sanity check for our setting. The selectivity concern turns out to be severe for tree-based probes in our experiments (Section 4.6). Ravfogel et al. (2022) introduced R-LACE for erasing linear concept subspaces from representations via an adversarial game; Belrose et al. (2023) later gave a closed-form solution (LEACE) that provably prevents all linear classifiers from detecting a concept. CPD uses an equivalent single-step QR projection suited to our low-dimensional composition space (Section 3.1). Within atomistic machine learning, neural network representation probing is more recent. Pinto (2025) applied layer-wise linear probes to five molecular encoders on QM9 (Ramakrishnan et al., 2014) and QM7, tracking how probe accuracy changes through network depth. That work gives use-ful depth-profile baselines. It does not, however, separate compositional from geometric contributions— a model whose representations predict the HOMO-LUMO gap well might do so entirely through composition encoding, and standard probing cannot distinguish the two. Kim et al. (2025) embed-ded MACE, ORB, and EquiformerV2 representations into downstream Matbench tasks via gradient-boosted trees, focusing on transfer performance rather than representation structure. Their use of GBT on raw embeddings is not subject to the inflation concern we identify in Section 4.6, which 2Figure 1: Composition Projection Decomposition (CPD). A foundation model produces repre-sentation X; QR projection on composition features Z splits X into a composition component 
+
+Xcomp = QQ ⊤X and a geometric residual Xgeom = ( I − QQ ⊤)X. Each component is probed sepa-rately with Ridge regression. A positive control (probing for average atomic mass on the residual) validates that composition signal has been removed. applies specifically to probing projected residuals. Edamadaka et al. (2025) computed CKA (Korn-blith et al., 2019) similarity across more than 60 atomistic models and found that models trained on overlapping data tend to develop more similar representations, though architecture still matters. But CKA measures global similarity between representation matrices, not property-specific decom-position, so it cannot distinguish a model that entangles composition and geometry from one that separates them. There is also a theoretical angle. Talhi & Monod (2026) proved that invariant readouts— the standard pooling operations used to produce structure-level predictions—necessarily discard equivariant information, though for scalar target properties the discarded channels may carry little relevant signal. Their proof, via the Reynolds operator theorem, shows this is a mathematical prop-erty of invariant projection, not an empirical shortcoming of specific architectures. We measure the empirical consequences: how much target-relevant signal survives in different irreducible represen-tation channels after pooling, how that varies across architectures, and which channels carry which property-specific information. CPD addresses the missing composition control by projecting out composition before probing, with a positive control that validates the projection on all tested models. 
+
+# 3 Methods 
+
+## 3.1 Composition Projection Decomposition 
+
+CPD decomposes a model’s representation into a composition component and a geometric residual via orthogonal projection (Figure 1). Let X ∈ RN ×d be the mean-pooled representation matrix for N molecules, and Z ∈ RN ×k
+
+the composition feature matrix—element fractions plus standardized atom count (C, H, N, O, F fractions plus atom count; k = 6 for QM9). For Materials Project crystals, Z contains fractions for all elements present in the 2000-structure subset plus standardized atom count, so k varies by 3dataset. Compute the thin QR factorization Z = QR , with Q orthonormal. The composition component is Xcomp = QQ ⊤X; the geometric residual is Xgeom = ( I − QQ ⊤)X. We then probe each component separately with Ridge regression, defining R2 
+
+> geom
+
+:= R2(Ridge (Xgeom → y)) as our primary metric of linearly accessible geometric information. Two properties of this construction matter. First, it is exact: each column of Xgeom lies in the orthogonal complement of col (Z) in RN , so a linear probe on Xgeom cannot recover any linear function of the composition features. Second, it is only linear. Nonlinear functions of composition— interactions between element fractions, for instance—can survive in Xgeom , and a sufficiently flexible probe will find them. Section 4.6 quantifies how large this leakage can be. CPD can also remove geometric signal that happens to correlate linearly with composition, so R2 
+
+> geom
+
+is a lower bound on the true geometric content of the representation. A rank check confirms the decomposition is well-conditioned. Z has full column rank ( min |Rii | =1.05 ). Element fractions sum to 1, so if the Ridge model included an intercept, the residual would retain a one-dimensional projection of composition. We avoid this by fitting Ridge without an intercept on the residual. Including an intercept changes R2 by 0.0002 —negligible. As a positive control, we probe for average atomic mass—a purely compositional property. Ridge R2 
+
+> geom
+
+falls between −0.005 and −0.003 across all five QM9 models, confirming that CPD successfully removes linear composition signal. CPD is related to LEACE (Belrose et al., 2023), which erases linear concept subspaces from representations. When the concept features are fixed and the concept subspace is specified di-rectly rather than learned iteratively, LEACE’s erasure reduces to orthogonal projection onto the complement—the same operation CPD performs via QR. We use the QR formulation because it is closed-form and makes the rank and conditioning transparent. 
+
+## 3.2 Probing Protocol 
+
+All probing uses 5-fold cross-validation on the same 2000-molecule (QM9) or 2000-structure (MP) subset, selected with a fixed random seed. We use the pretrained MACE-MP-0 checkpoint (Batatia et al., 2022), referred to as MACE throughout. All probes use scikit-learn (Pedregosa et al., 2011). The primary probe is RidgeCV with 20 log-spaced regularization parameters α ∈ [10 −3, 10 6]. On CPD residuals, we fit Ridge without an intercept, since the projection already centers the data with respect to composition. For robustness, we also report results from four secondary probes: gradient boosted trees (100 estimators, max depth 4), kernel ridge regression with an RBF kernel, k-nearest neighbors ( k = 10 ), and Lasso. The probe zoo serves two purposes: it confirms that the model ranking is not an artifact of Ridge’s inductive bias, and the GBT–Ridge gap quantifies how much nonlinear leakage the residual contains (Section 4.6). Error bars come from 30 repeated 5-fold cross-validations with distinct random seeds, yielding 150 scores per model. We use these for effect-size reporting rather than calibrated p-values, since the 150 scores from repeated splits are not independent. Cross-model comparisons use Mann-Whitney 
+
+U on the 150-score distributions; the shared fold structure induces dependence that the test does not account for, so we treat it as a conservative ranking test and emphasize effect sizes over p-values. Within-model paired comparisons (e.g., L = 0 vs L = 1 channels for MACE) use the Wilcoxon signed-rank test on the 30-seed paired differences. All simultaneous comparisons are corrected with the Benjamini-Hochberg FDR procedure at q = 0 .05 .43.3 Equivariant Decomposition 
+
+MACE and ViSNet both produce equivariant features that separate into channels with different an-gular momentum. Probing these channels individually tests whether different molecular properties route to different irreducible representations. For MACE, the atom-level feature tensor at each interaction layer has shape (natoms , C, M ),where C = 128 channels and M = 16 multiplet components: 1 for L = 0 (scalar), 3 for L = 1 
+
+(vector), 5 for L = 2 , and 7 for L = 3 . We extract the L = 0 component directly— XL=0 = X[: , :, 0] —and mean-pool across atoms to obtain a molecule-level feature matrix of shape (N, 128) . For 
+
+L ≥ 1, raw components are orientation-dependent and average toward zero under mean-pooling. We therefore compute the per-channel norm across multiplet components at the atom level, then mean-pool the resulting scalar features across atoms: XL=1 ,norm = mean-pool (∥X[: , :, 1:4] ∥). This is an invariant summary of the vector content—it discards directional information but preserves magnitude. The same procedure applies to L = 2 and L = 3 .ViSNet separates scalar and vector outputs at each layer. The scalar stream is probed directly after mean-pooling. The vector stream is three-dimensional; we compute its per-atom norm and then mean-pool, for the same reason as above. An important caveat: because the L ≥ 1 norms are nonlinear functions of the raw features, prob-ing them with Ridge is not the same as linearly probing the equivariant representation. We report these results as evidence about which channels carry target-relevant signal, not as measurements of linear accessibility in the strict CPD sense. 
+
+## 3.4 Statistical Framework 
+
+We use three levels of statistical testing, matched to the comparison type. Cross-model comparisons—does MACE’s R2 
+
+> geom
+
+differ from SchNet’s?—use the Mann-Whitney 
+
+U test on the 150 per-model scores (30 seeds × 5 folds). Within-model paired comparisons—does MACE’s L = 1 channel outperform its L = 0 channel for dipole?—use the Wilcoxon signed-rank test on the 30-seed paired differences. The pairing controls for seed-to-seed variance. All families of simultaneous tests are corrected for multiple comparisons using the Benjamini-Hochberg procedure at q = 0 .05 .Two additional robustness checks address probe sensitivity. First, a GBT hyperparameter sweep across 36 configurations (four max depths × three ensemble sizes × three learning rates) yields a linearity ratio—Ridge R2 divided by GBT R2—of 0.475 ± 0.034 for MACE on HOMO-LUMO gap, confirming that the Ridge–GBT gap is stable across tuning choices. Second, we verify that the model ranking is invariant to Ridge regularization strength by sweeping 25 α values; the ordering does not change. 
+
+# 4 Results 
+
+## 4.1 Architectural Class Determines Linear Accessibility of Geometric Informa-tion 
+
+We apply CPD to five models spanning five architectural families on QM9 (Ramakrishnan et al., 2014) and probe the HOMO-LUMO gap with Ridge regression on the residual after removing com-position. The point is to ask a narrower question than standard layer-wise probing: not just whether the representation predicts the target, but whether it still does so once the obvious compositional 5Table 1: Disentanglement gradient for HOMO-LUMO gap across five QM9 models. R2
+
+> full
+
+: Ridge on full representation. R2
+
+> comp
+
+: Ridge on composition component. R2
+
+> geom
+
+: Ridge on geometric residual (primary metric). Values are means over 30 repeated 5-fold CV runs; standard deviations are below 0.009 for all models except ViSNet (single split). MACE was pretrained on MPTraj; all others trained on QM9. Model Architecture R2 
+
+> full
+
+R2 
+
+> comp
+
+R2
+
+> geom
+
+MACE Tensor product equivariant 0.784 0.283 0.782 
+
+ViSNet Vector-scalar equivariant 0.586 0.283 0.440 SchNet Learned invariant 0.572 0.283 0.430 DimeNet++ Directional invariant 0.440 0.283 0.283 ANI-2x Handcrafted descriptors 0.804 0.283 −0.792 
+
+signal is projected away. The result is not a neat five-model ladder; it is closer to three tiers (Figure 2; Table 1). MACE sits at the top. Its geometric residual yields R2 
+
+> geom
+
+= 0 .782 , barely budging from the full representation ( R2 
+
+> full
+
+= 0 .784 ). Under the linear Ridge probe, projecting out the composition subspace costs almost nothing. But MACE is also the only model here with large-scale MPTraj pretraining—millions of structures spanning the periodic table—so its margin over the QM9-trained baselines should be read as architecture plus pretraining, not architecture in isolation. (A caveat on the residual itself: because composition features do not distinguish structural isomers, R2
+
+> geom
+
+conservatively bundles 3D spatial geometry and 2D topological connectivity into a single “geometric” term.) ViSNet (Wang et al., 2024) and SchNet (Schütt et al., 2017) sit in the middle, and they are very close: R2 
+
+> geom
+
+= 0 .440 and 0.430 . Both preserve a substantial residual structural signal—roughly half of what MACE achieves—but their ordering is hard to interpret cleanly. ViSNet was trained directly on the HOMO-LUMO gap for 50 epochs; SchNet was trained on U0 for 30. So the 0.010 difference is suggestive of a vector-scalar equivariance benefit, not isolating. We do not yet have repeat-level uncertainty for ViSNet, which means we should not oversell that gap. 
+
+R2 
+
+> geom
+
+= 0 .283 for DimeNet++ (Klicpera et al., 2020). Same QM9 training data as SchNet, same 30 epochs, yet weaker disentanglement. DimeNet++ incorporates angular information through di-rectional message passing with spherical harmonics but processes it through strictly invariant inter-action blocks. The SchNet–DimeNet++ comparison is actually the cleanest in the table: matched data, matched budget, and a 0.147 gap that strongly suggests learned continuous filters outperform directional-but-invariant message passing for linear accessibility of geometric information. An MLP probe on nonlinearly erased ANI-2x (Devereux et al., 2020) residuals recovers target-relevant signal at R2 = 0 .784 . Under the linear Ridge probe, though, the geometric residual collapses to R2 
+
+> geom
+
+= −0.792 —far worse than predicting the mean. Rather than indicating absent information, this contrast points to severe linear entanglement: composition and geometry are thoroughly mixed in ANI-2x’s handcrafted symmetry functions, and a linear projection cannot cleanly separate them. Sum-pooling partially rescues the linear signal ( R2 
+
+> geom
+
+= +0 .490 ), suggesting the entanglement is partly a mean-pooling artifact. The ranking is not fragile. Across 30 repeated CV runs, MACE, SchNet, DimeNet++, and ANI-2x all show standard deviations below 0.009—the coarse ordering never flips. We report repeat-level effect sizes and 95% intervals rather than fold-level p-values, since the 150 per-model CV scores from repeated 5-fold splits are not independent observations. Matching all representations to 128 dimensions via PCA changes R2 
+
+> geom
+
+by at most 0.005, and the same stratification survives three 6Figure 2: Disentanglement gradient across five QM9 models. R2 
+
+> geom
+
+(Ridge on CPD residual) for HOMO-LUMO gap. Three tiers emerge: tensor product equivariant (MACE), intermediate (ViSNet, SchNet), and entangled (DimeNet++, ANI-2x). Error bars show standard deviation over 30 repeated 5-fold CV runs. different composition feature sets. What emerges is a coarse stratification that appears largely architectural. Tensor product mes-sage passing (MACE) produces the strongest linear separation, though we cannot fully disentangle its architectural contribution from its pretraining advantage. Vector-scalar equivariant layers and learned invariant filters cluster together at an intermediate level. Directional but invariant mes-sage passing sits lower. And handcrafted symmetry functions entangle composition and geometry entirely at the linear level—even as nonlinear probes confirm the underlying signal is intact. 
+
+## 4.2 Progressive Disentanglement Through Network Depth 
+
+Section 4.1 was about endpoints. Here the interesting part is the route. Once you look layer by layer, DimeNet++, MACE, and ViSNet do not all “get more disentangled” in the same way—they reach their final scores through very different depth profiles. The curves below are CPD residual probe scores, not raw probe accuracy on the full representations. We only have the main split for these layerwise numbers, so treat them as patterns rather than settled estimates. DimeNet++ (Klicpera et al., 2020) begins deep in the hole. At the embedding layer, R2 
+
+> geom
+
+=
+
+−7.733 for HOMO-LUMO gap and −11 .769 for polarizability (Figure 3)—Ridge regression on the geometric residual performs roughly 9–13 × worse than the mean baseline. At these early layers, the residual signal is simply not linearly accessible under this probe. Each interaction block claws back: −4.179 → − 0.703 → − 0.360 , crossing into positive territory only at the final block ( +0 .283 ). On the main split, DimeNet++ ends where MACE and ViSNet begin. MACE (Batatia et al., 2022) starts where DimeNet++ ends. Its first interaction layer yields 
+
+R2 
+
+> geom
+
+= 0 .614 , and the path through depth is non-monotonic (Figure 4). After interaction_0 7Figure 3: DimeNet++ depth profile. R2 
+
+> geom
+
+starts strongly negative at the embedding layer and climbs through each interaction block, crossing into positive territory only at the final block. Main split only. (0.614 ), the out1 scalar projection drops to 0.397 ; the subsequent tensor product layer recovers to 
+
+0.751 . A second pass shows a mixed pattern: interaction_1 at 0.381 , out1 rising to 0.567 , product_1 dipping to 0.550 , descriptors_final reaching 0.782 . One possible reading is that scalar projection reduces access to L > 0 content and later tensor-product mixing partly restores it—but the second cycle does not repeat cleanly, so this cannot be the full story. The out1 and product blocks differ in feature type and dimensionality. Some of the per-layer variation may reflect probe accessibility changes rather than information dynamics. What we can say is that MACE’s depth profile is high from the start and non-monotonic, unlike anything else in the table. ViSNet (Wang et al., 2024) shows steady improvement across its six ViS-MP backbone layers on the main split: 0.309 → 0.350 → 0.375 → 0.405 → 0.422 → 0.440 . The task-specific output network reaches 0.488 , which we report separately since it is trained directly for the supervised target. No oscillation, no entangled start. ViSNet’s vector-scalar interaction offers one possible explanation for the smoother profile, but this comparison is too confounded—different pretraining, different supervision—to support more than speculation. There is a plausible MACE story here. If you project equivariant features down to scalars, you should expect to lose access to L > 0 content, so the out1 dips are not especially surprising. That also fits the irrep-routing result in Section 4.4: L = 1 matters for vector-like targets such as dipole, whereas HOMO-LUMO is mostly already accessible from the scalar channels. Still, “fits” is not “proves.” We have not done the ablation that would show those dips are really caused by the projection step. These three models really do have different layerwise profiles, but only some of those differences are close to fair architectural comparisons. SchNet versus DimeNet++ is the clean one—same QM9 data, same 30-epoch budget—and was discussed in Section 4.1. MACE’s progression through depth reflects its MPTraj pretraining—millions of structures across the periodic table—as much as its 8Figure 4: MACE depth profile. R2 
+
+> geom
+
+is non-monotonic: scalar projection layers (out1) reduce access while tensor product layers partially restore it. Main split only. tensor product structure. So we would treat these curves as fingerprints of how the representations evolve, not as direct evidence of what computation each layer performs. 
+
+## 4.3 Same Information, Different Encoding Geometry 
+
+Sections 4.1 and 4.2 established that ANI-2x’s geometric residual collapses under a linear probe. The natural question is whether the information is absent or just not linearly accessible. Under the Ridge probe used here, it is not linearly accessible—but a nonlinear probe changes the picture entirely. We replace the linear Ridge probe on the CPD residual with a two-layer MLP. On the main split, the difference is dramatic (Figure 5). For HOMO-LUMO gap, ANI-2x goes from R2 
+
+> geom
+
+= −0.792 
+
+(Ridge) to +0 .784 (MLP). ZPVE swings from −5.627 to +0 .983 . Polarizability: −2.484 to +0 .918 .Dipole: −1.871 to +0 .496 . Every property flips from catastrophically negative to strongly positive once the probe can fit a nonlinear mapping. ANI-2x’s MLP residual scores end up in the same ballpark as MACE’s Ridge residual scores: 
+
++0 .784 vs +0 .782 for HOMO-LUMO, +0 .983 vs +0 .945 for ZPVE, +0 .918 vs +0 .820 for po-larizability, +0 .496 vs +0 .500 for dipole. That does not mean the two models have equivalent representations—the probe classes are different, so the comparison is only suggestive. But it is hard to look at these numbers and not conclude that ANI-2x retains a lot of target-relevant residual signal that Ridge simply cannot get at. The cleanest version of that statement is HOMO-LUMO. Dipole is still somewhat interpretable, but ZPVE and polarizability are messier because nonlinear composition leakage is a real possibility there. The obvious worry is that a small MLP on a high-dimensional residual is just picking up noise. The shuffle control argues against that: once we randomize the label-representation pairing, both MACE Ridge and ANI-2x Ridge drop to R2 = −0.003 ± 0.001 . That tells us the real signal is struc-tured. It does not answer the harder question—whether the MLP exploits nonlinear composition leakage—which is why we push the stronger compositional-target controls to Section 4.6. The point here is not that ANI-2x knows less. It clearly does not. The point is that the signal 9Figure 5: ANI-2x encodes the same information in a nonlinearly entangled form. Ridge (linear) probe on the CPD residual collapses to strongly negative R2 for all four properties, while an MLP (nonlinear) probe recovers strong positive scores. Main split. is arranged differently. In MACE—which combines tensor-product message passing with large-scale pretraining—the composition-projected residual is already usable with a linear probe. In ANI-2x, a lot of that same target-relevant signal is still there, but it is folded into a representation that only opens up once the readout is nonlinear. The difference is less about raw information content than about how accessible that information is after projection. 
+
+## 4.4 Vector Properties Route to Vector Channels in Tensor Product Networks 
+
+MACE (Batatia et al., 2022) and ViSNet (Wang et al., 2024) are both equivariant. They both maintain higher-order geometric information through their message-passing layers. But do they organize that information the same way? MACE’s intermediate representations decompose into irreducible representations (irreps): the 
+
+L = 0 scalars, L = 1 vectors, L = 2 symmetric traceless matrices, and higher-order tensors that transform predictably under rotation. After mean-pooling across atoms, the raw L ≥ 1 components remain orientation-dependent—awkward for scalar probing. We summarize them by per-channel norms to obtain invariant features. The Ridge scores below therefore measure accessibility after a nonlinear invariant summary, not linear decodability from raw equivariant features. We extract L =0 and L = 1 norm features separately from MACE’s first interaction block (each 128-dimensional) and probe them over 30 repeated cross-validation runs. The routing is property-specific (Figure 6). For dipole moment magnitude—a scalar derived from an underlying vector quantity— L = 1 norms outperform L = 0 scalars: R2 = 0 .586 ± 0.004 
+
+vs 0.379 ± 0.009 . For HOMO-LUMO gap, the pattern flips: L = 0 reaches 0.756 ± 0.002 while 
+
+L = 1 drops to 0.341 ± 0.003 . Across 30 repeated CV runs the ordering is stable and the effect sizes are large, so we emphasize mean differences rather than exact p-values from dependent resamples. 10 Figure 6: MACE irreps routing is property-specific. L = 1 norm features outperform L = 0 scalars for dipole magnitude, while the pattern reverses for HOMO-LUMO gap. Ridge R2 (mean ± std over 30 repeated CV runs) on MACE’s first interaction block. Table 2: ViSNet scalar and vector channel probing. Ridge R2 (mean ± std over 30 repeated CV runs) on ViSNet’s first backbone layer. Vector channels contribute negligible signal for both properties. Property Scalar only Vector only Scalar + Vector Dipole 0.315 ± 0.010 0.008 ± 0.002 0.316 ± 0.010 
+
+HOMO-LUMO 0.422 ± 0.008 0.018 ± 0.003 0.425 ± 0.008 
+
+L = 1 norms also outperform MACE’s own final descriptors for dipole by +0 .084 (17% relative), suggesting that the final invariant descriptors are less predictive of dipole magnitude than the early 
+
+L = 1 norm summaries. ViSNet also has separate scalar and vector streams, so we can ask the same question—with the caveat that the comparison is only as fair as the matched invariant summaries. But the answer is basically no. ViSNet’s vector channels contribute almost nothing (Table 2): R2 = 0 .008 ± 0.002 
+
+for dipole and 0.018 ± 0.003 for HOMO-LUMO gap. For dipole, adding vectors to scalars changes almost nothing— 0.316 ± 0.010 vs 0.315 ± 0.010 . On this probe, whatever usable signal ViSNet has sits in the scalar stream. Two equivariant models, both with explicit vector channels, and only one shows strong dipole signal in its L = 1 summaries. Under the training regimes used here, MACE exposes substantially more extractable vector-channel signal. Whether that difference is architectural—tensor product message passing via Clebsch-Gordan coefficients versus vector-scalar interaction—or partly driven by pretraining and supervision, we cannot say. MACE was pretrained on MPTraj with diverse targets; ViSNet was trained on QM9 HOMO-LUMO gap specifically. A ViSNet model trained with dipole supervision might show a different pattern entirely. 11 Table 3: CPD residual probe scores ( R2
+
+> geom
+
+, Ridge) on Materials Project crystals. MACE uses its final descriptor layer; ORB uses gnn_stack_5 (best layer for band gap). Single split; no repeat-level uncertainty. Property MACE ORB Band gap 0.206 0.206 Formation energy 0.180 0.180 Density 0.027 0.034 Volume per atom 0.027 0.034 A final structural detail: extractable vector-channel signal in MACE is concentrated in the first interaction block. There, L = 1 norms carry strong dipole signal ( R2 = 0 .586 ). By the second interaction block, the summarized L ≥ 1 channels are no longer linearly predictive under this probe— R2 ≈ − 0.002 for L = 1 , L = 2 , and L = 3 alike. MACE appears to expose irrep-specific accessibility early, then move toward invariant features in later layers. The routing is real but shallow. As best we can tell, prior atomistic probing papers do not report target-specific comparisons across explicitly separated irrep channels. Pinto (2025) looked at layer-wise representation quality, but not at irrep-resolved routing. Talhi & Monod (2026) showed that invariant projection discards equivariant information, but did not ask whether different targets concentrate in different channels. So the claim here should stay modest: the pattern fits the idea that tensor-product message passing helps create this kind of accessibility, but this single two-model experiment does not separate that from pretraining, supervision, pooling, or readout. 
+
+## 4.5 Cross-Domain Consistency on Periodic Crystals 
+
+Everything so far has been QM9—small organic molecules, 2000 structures, a single dataset. The natural worry is that these patterns are QM9-specific. We test this on Materials Project crystals, applying CPD to MACE (Batatia et al., 2022) and ORB v2 (Neumann et al., 2024) across four properties, with CKA (Kornblith et al., 2019) comparisons extending to CHGNet (Deng et al., 2023) and SevenNet (Park et al., 2024). On MP crystals, the surprising part is how close MACE and ORB get on the residual probe. At ORB’s best layer, the two match to three decimals on band gap ( 0.206 ) and formation energy (0.180 ). We would not call that formal equivalence—the MP comparison does not have repeat-level uncertainty—but it is a notable tie (Table 3). Density and volume per atom look different: both models sit near zero on R2 
+
+> geom
+
+(0.027 and 0.034 ), which is not too surprising when composition already explains more than 92% of the variance in the broader MP set. And for same-composition crystals, this baseline would collapse polymorph differences anyway, so near-zero residuals here should not be read as evidence that structural density variation is absent. CKA shows a divergent pattern internally. Similarity between MACE and ORB decreases mono-tonically through ORB’s 15 attention layers (Figure 7): 0.558 at gnn_stack_0, 0.362 at stack_2, 
+
+0.290 at stack_5, and down to 0.176 by stack_14. Early ORB layers are more aligned with MACE than later ones, and the gap widens progressively. Same probe-level endpoint, divergent internal geometry. Tracing ORB’s depth profile directly (Figure 8), band gap R2 
+
+> geom
+
+peaks mid-network at gnn_stack_5 (0.204 ) before fading to 0.089 by the final layer. Density washes out monotonically: 0.027 → 0.004 .Formation energy stays flat at roughly 0.175 regardless of depth. These trajectories suggest ORB 12 Figure 7: CKA similarity between MACE and ORB decreases monotonically through ORB’s 15 attention layers. Same probe-level endpoint, divergent internal geometry. concentrates band-gap residual signal in the middle of the network, while formation energy holds steady and composition-dominated properties shed what little residual they had under this probe. Among the MP crystal models, those using geometric message passing cluster together in CKA. MACE is closest to CHGNet ( 0.703 ), then to SevenNet ( 0.549 ). ORB is the outlier—its CKA with SevenNet is only 0.099 . So whatever ORB is doing internally, it is not especially close to the equivariant models in this comparison. Shared MPTraj data does not erase that gap. The MP results narrow the QM9 claim rather than settling it. CPD residuals still carry band-gap signal in crystals, and formation energy remains partially predictable from the residual as well. Similar probe-level scores can arise from quite divergent internal representations—a point the CKA analysis makes concrete. This four-property test is too limited to rule out dataset-specific effects, but the consistency with QM9 patterns is encouraging. 
+
+## 4.6 Nonlinear Probes Inflate Geometric Estimates 
+
+All the residual probe scores reported so far use Ridge regression. This is deliberate. In this setting, tree-based nonlinear probes—especially GBT—produce strongly inflated residual scores, and the inflation can be severe. We test this with a positive control. Average atomic mass is a purely compositional property— it depends only on which elements are present and in what proportions. After CPD removes the linear composition subspace, a well-behaved probe should return R2 
+
+> geom
+
+≈ 0. Ridge returns values between −0.003 and −0.005 across all five models (Figure 9). GBT does not come close. It recovers 
+
+R2 
+
+> geom
+
+= 0 .677 on MACE (Batatia et al., 2022), 0.705 on DimeNet++ (Klicpera et al., 2020), and 
+
+0.953 on ANI-2x—numbers that should be zero. These are not small leakages. GBT is reporting strong “geometric” signal for a property that has no geometric component whatsoever. One likely explanation is simple: QR projection removes the linear composition subspace, but it does not touch higher-order feature interactions that still track composition. A flexible probe can latch onto those; Ridge cannot. That is enough to break the mass control. The size of the failure 13 Figure 8: ORB depth profile on Materials Project. Band gap R2 
+
+> geom
+
+peaks mid-network (gnn_stack_5) then fades. Density washes out monotonically. Formation energy remains flat across layers. Single split. varies by model. It is worst for ANI-2x ( +0 .956 ), but DimeNet++ ( +0 .710 ) and MACE ( +0 .679 )also fail badly. SchNet (Schütt et al., 2017) and ViSNet are less extreme, though still far from clean (+0 .432 and +0 .581 ). The shuffle control shows the same pattern. On row-shuffled representations, Ridge correctly returns R2 = −0.003 ± 0.001 for both MACE and ANI-2x. But ANI-2x GBT on shuffled data still produces R2 = +0 .359 ± 0.004 —positive and reproducible even with no real structure-property relationship left. For MACE on HOMO-LUMO, the Ridge–GBT gap is stable across 36 GBT configurations ( 0.475 ± 0.034 by the linearity ratio); we have not run the same sweep on the mass control itself. That is why we use linear probes as the main metric on projected residuals throughout the paper. For this kind of setup, we think that is the safer default. Nonlinear probes are still worth reporting, but only as a secondary view of what a flexible readout can recover from the residual features, not as a primary estimate of what the representation makes linearly accessible. They need an explicit leakage check alongside them. Hewitt & Liang’s (2019) selectivity framework gets at a related problem, but not this exact one. 
+
+# 5 Deep Analysis 
+
+## 5.1 Information Concentration 
+
+Section 4 leaves one obvious question: where in these representations does the predictive signal ac-tually sit? We fit Lasso on the full representations for HOMO-LUMO gap, compute absolute SHAP values for that same Lasso model on the held-out folds, and report the number of dimensions needed to reach 50% and 90% of cumulative importance. This is an analysis of raw representations, not the CPD residual, so the concentration patterns reflect task-predictive signal broadly—composition and geometry combined. All four models place half of cumulative importance in a relatively small subset of dimensions, 14 Figure 9: GBT inflation on a purely compositional target (average atomic mass). After CPD removes the linear composition subspace, Ridge correctly returns R2 
+
+> geom
+
+≈ 0 for all models. GBT recovers 
+
+R2 = 0 .68 –0.95 —numbers that should be zero—confirming that nonlinear probes on projected residuals are not trustworthy without a leakage check. but the long tail differs sharply. DimeNet++ (Klicpera et al., 2020) and ANI-2x both reach 50% in 12 dimensions, though that means very different things: 9.4% of DimeNet++’s 128 features versus 1.2% of ANI-2x’s 1008. MACE (Batatia et al., 2022) and SchNet (Schütt et al., 2017) need 19. Using cumulative SHAP ranking as a descriptive heuristic, DimeNet++ reaches 90% by 51 dimensions (39.8% of 128), SchNet by 79 (61.7%), and MACE by 114 (44.5% of 256). ANI-2x needs 137 for 90%, but that is only 13.6% of its space. Because ANI-2x uses handcrafted Atomic Environment Vectors rather than dense learned embeddings, many basis dimensions may contribute little for a given QM9 structure—so the low percentage partly reflects representational sparsity, not just tight packing. That pattern connects to the linear-versus-nonlinear gap from Section 4.3. ANI-2x concentrates half its importance in 1.2% of its dimensions, yet Ridge on the CPD residual collapses to R2 
+
+> geom
+
+=
+
+−0.792 . The predictive signal is concentrated, but it is not linearly recoverable after composition projection. This is consistent with ANI-2x encoding target-relevant signal in a small set of features whose contribution is not linearly separable after CPD. MACE looks different. Its signal spreads more evenly—44.5% of features for 90% importance— but that signal is linearly extractable. For HOMO-LUMO gap under the linear probes used here, broader spread with linearly accessible signal is more predictive than tighter concentration with nonlinear entanglement. For MACE and ANI-2x, the top-ranked SHAP feature is stable under bootstrap resampling (90% consistency), suggesting that the leading features are not just resampling noise. Within each model, the overlap between Lasso built-in importance and SHAP importance is high: 17–18 of the top 20 features agree. 15 5.2 Multi-Task Weight Orthogonality 
+
+Ridge weight vectors trained on MACE’s full representations for different QM9 properties use largely orthogonal directions. No cosine similarity exceeds 0.5 except polarizability and ZPVE, which are substantially anti-aligned ( cos = −0.6)—overlapping features contribute with opposite signs. Dipole is isolated: its cosine with every other property stays below 0.1. That isolation is consistent with the irrep-routing result from Section 4.4, though it does not by itself identify vector-channel routing as the cause; dipole also differs from the other QM9 targets in type, scale, and difficulty. For MACE under this Ridge readout, different QM9 properties rely on different directions in representation space rather than a single shared readout direction. Orthogonal readout directions do not by themselves rule out a shared geometric subspace, but they do show that different properties rely on different linear combinations within the representation. This analysis uses MACE’s full representations, not the CPD residual. A CPD-specific claim would require repeating the analysis on the residual or projecting the weight vectors orthogonal to the composition subspace. 
+
+## 5.3 Sample Efficiency 
+
+If disentangled representations are easier to read with a linear probe, they should also be easier to read from fewer labeled examples. We test this by fitting Ridge probes at seven training sizes (n = 25 to 1500 , 10 random seeds per size) on both full representations and CPD residuals for HOMO-LUMO gap. On full representations, MACE converges fastest. At n = 100 , MACE has the highest mean 
+
+R2 in this sweep ( 0.584 vs 0.537 for SchNet and 0.381 for DimeNet++); seed-wise variability is reported in the appendix. ANI-2x reaches 0.804 at n = 1500 , eventually matching or exceeding MACE ( 0.786 ) once enough data compensate for its nonlinear encoding. On CPD residuals, MACE becomes clearly competitive early and is best from n = 500 onward, though SchNet is slightly higher at n = 200 (0.164 vs 0.143 ). DimeNet++ trails throughout. ANI-2x is the puzzle: its residual scores are positive and reach 0.307 at n = 1500 , unlike the −0.792 
+
+single-split result in Section 4.1. We treat the ANI-2x residual curve as protocol-sensitive and avoid using it as evidence for or against disentanglement without further reconciliation. The most likely explanation is that at small n, the heavy regularization required by Ridge in ANI-2x’s 1008-dimensional space dominates, temporarily masking the severe nonlinear entanglement that causes the residual fit to collapse at full sample size. Under the training setup used here, MACE gives a measurable head start for linear probes on small labeled datasets, though this comparison still mixes disentanglement, architecture, and pretraining scale. 
+
+## 5.4 Cross-Model Representation Similarity 
+
+The cross-model CKA matrix in Section 4.5 already shows that ORB (Neumann et al., 2024) remains separated from the models using explicitly geometric message passing; we do not repeat those numbers here. One additional observation from the full matrix: MACE (Batatia et al., 2022) is closer to CHGNet (Deng et al., 2023) ( 0.703 ) and SevenNet (Park et al., 2024) ( 0.549 ) than ORB is, but CHGNet and SevenNet are themselves highly dissimilar ( 0.108 ), so the pattern is not a clean equivariant cluster. Architecture details beyond simply using spatial coordinates clearly matter—and that observation stands even for models trained on overlapping MPTraj data. 16 6 Discussion 
+
+One way to read these results is through the lens of Clebsch-Gordan tensor products. MACE de-composes node features into irreducible representations indexed by angular momentum L: L = 0 
+
+channels carry scalar information (composition, scalar geometry), while L ≥ 1 channels carry direc-tional content that transforms equivariantly under rotation. During message passing, CG coefficients couple channels of different L—for instance, L=1 ⊗ L=1 produces L=0 , 1, 2 components—but the output decomposes cleanly into irreps, so the representation maintains a structured separation by angular momentum throughout. This is consistent with the routing pattern we observe in Sec-tion 4.4: dipole-relevant signal concentrates in L = 1 channels ( R2 = 0 .586 ), while HOMO-LUMO gap—an inherently scalar property—sits predominantly in L = 0 (R2 = 0 .756 ). The tensor product structure does not guarantee this routing, but it provides an inductive bias toward it: because CG products maintain the irrep decomposition, a model that learns to encode vector quantities in L = 1 
+
+channels can preserve that encoding through depth. ViSNet’s vector-scalar interaction operates dif-ferently: it couples scalar and vector streams through learned gates rather than CG products, and its vector channels carry essentially no target-relevant signal under our probe ( R2 = 0 .008 for dipole). Whether this reflects a fundamental limitation of the interaction mechanism or a consequence of ViSNet’s training setup is something this study cannot resolve. We should be clear about what these results do not say. All probing is on mean-pooled, structure-level representations. Atom-level disentanglement is a separate question that our experimental design does not address. The pooling ablation hints at why this matters: SchNet’s disentanglement is stable across four pooling strategies (mean, sum, max, and attention pooling), but ANI-2x flips from R2 
+
+> geom
+
+= −0.792 under mean-pooling to +0 .490 under sum-pooling. So at least part of ANI-2x’s entanglement is a pooling artifact, not a fundamental property of its atom-level features. And ViSNet’s vector channels, which appear dead after mean-pooling, may carry useful atom-level information that the norm-then-pool procedure simply fails to capture. The GBT inflation results (Section 4.6) connect to a broader concern in the probing literature. Hewitt & Liang (2019) argued that sufficiently expressive probes can memorize rather than extract, proposing selectivity as a diagnostic. Our positive control extends this argument to the supervised setting with explicit composition erasure: we show that GBT recovers R2 = 0 .68 –0.95 on a purely compositional target after linear composition removal, confirming that nonlinear probes on projected residuals are not trustworthy without a leakage check. For any study using concept erasure or subspace projection, we think the safer practice is to treat linear probes as the primary metric and report nonlinear results only alongside an explicit control. Several limitations constrain the scope of these conclusions. QM9 molecules have at most 9 heavy atoms—small, organic, and structurally simple compared to proteins or materials. We expect the disentanglement gradient to shift on larger molecules where geometry carries more independent information relative to composition, but the direction is not guaranteed—richer composition spaces could also absorb more signal. The training-data confound is real: MACE was pretrained on MPTraj while the QM9 baselines saw the full QM9 set of roughly 130K organic molecules. The ViSNet-versus-SchNet comparison partially isolates architecture from data scale, but MACE’s advantage remains entangled with its pretraining. We also lack results for EquiformerV2, UMA, and PaiNN due to installation and disk constraints at the time of submission. Eight models across five architectural families and two datasets is reasonable breadth, but not exhaustive. And the polymorph analysis we planned could not be executed—zero exact polymorphs appeared in our 2000-structure MP subsample. Two practical implications stand out. First, linearly disentangled representations appear more sample-efficient under linear probing (Section 5.3), though pretraining scale contributes to this 17 advantage. If a downstream task requires learning from small labeled datasets—a common scenario in materials discovery—this gives a concrete reason to prefer architectures that produce linearly disentangled features, independent of their raw prediction accuracy. Second, the irreps routing result suggests that extracting L = 1 features before the final invariant pooling is worth testing as a route to improved vector-property prediction, a direct response to the readout bottleneck identified by Talhi & Monod (2026). R2 
+
+> geom
+
+shows a positive but non-significant rank correlation with downstream performance ( r = 0 .73 , p = 0 .16 , n = 5 QM9 models; r = −0.44 , n = 4 
+
+MP models). The small sample sizes preclude strong conclusions, but the sign reversal between datasets suggests disentanglement is not simply a proxy for model quality—and that is what makes it independently worth measuring. 
+
+# 7 Conclusion 
+
+Equivariant tensor product message passing produces representations where composition and geom-etry occupy linearly separable subspaces. This is not a binary property but a gradient: across eight models and five architectural families, tensor product equivariant operations produce the greatest linear accessibility of geometric information after composition projection, with vector-scalar equiv-ariant and learned invariant architectures at an intermediate level. The gradient holds on QM9 molecules and transfers, at least partially, to Materials Project crystals. Two results have immediate practical value. The irreps-specific routing in MACE—dipole to L =1, HOMO-LUMO gap to L = 0 —suggests that extracting equivariant features before the invariant readout is worth testing as a route to improved vector-property prediction without retraining, a direct response to the readout bottleneck identified by Talhi & Monod (2026). And the GBT inflation analysis should serve as a warning for any study that probes projected residuals with flexible nonlinear models: without a positive control, the resulting scores are not trustworthy. The most obvious next steps are probing larger molecules where geometry carries more indepen-dent information, testing additional architectures (EquiformerV2, UMA, PaiNN), extending CPD to atom-level representations before pooling, and formalizing the connection between CG tensor products and linear disentanglement that the empirical results suggest but do not prove. 
+
+# Reproducibility Statement 
+
+All experiments use publicly available model checkpoints, public datasets, and standard scikit-learn (Pedregosa et al., 2011) probes. We describe the full probing protocol in Section 3.2, including cross-validation structure, regularization search, and statistical testing. Key implementation details: 
+
+• Data. QM9 (Ramakrishnan et al., 2014): 2000-molecule subset selected with random_state=42 .Materials Project: 2000-structure subset sampled from the MP-2021.11 release via the Mate-rials Project API. 
+
+• Model checkpoints. MACE-MP-0 (Batatia et al., 2022): official pretrained checkpoint from 
+
+https://github.com/ACEsuit/mace . SchNet (Schütt et al., 2017) and DimeNet++ (Klicpera et al., 2020): trained on QM9 for 30 epochs using PyTorch Geometric defaults. ViSNet (Wang et al., 2024): trained on QM9 HOMO-LUMO gap for 50 epochs using the official codebase. ANI-2x (Devereux et al., 2020): pretrained weights via TorchANI (Gao et al., 2020) v2.2. ORB v2 (Neumann et al., 2024): official checkpoint from https://github.com/ orbital-materials/orb-models . CHGNet (Deng et al., 2023) and SevenNet (Park et al., 2024): official pretrained checkpoints from their respective repositories. 18 • Probing. Ridge: RidgeCV with α ∈ [10 −3, 10 6] (20 log-spaced values), no intercept on CPD residuals. GBT: 100 estimators, max depth 4. MLP: two hidden layers (256, 128), ReLU, Adam optimizer, 200 epochs, early stopping on validation loss. All probes use 5-fold CV; error bars from 30 repeated runs with distinct random seeds. 
+
+• Composition features. QM9: element fractions (C, H, N, O, F) plus standardized atom count ( k = 6 ). Materials Project: fractions for all elements in the 2000-structure subset plus standardized atom count. 
+
+• CKA. Linear CKA (Kornblith et al., 2019) computed on mean-pooled representations using the unbiased HSIC estimator. Code to reproduce all results, including CPD projection, probing, statistical tests, and figure generation, will be released upon publication. 
+
+# Compute Resources 
+
+All experiments were run on a single workstation with an NVIDIA RTX A6000 (48 GB) GPU and 64 GB RAM. Representation extraction (forward passes through pretrained models) takes approx-imately 2–10 minutes per model on the 2000-structure subsets. Ridge probing with 30 repeated 5-fold CV runs completes in under 5 minutes per model-property pair. The full experimental pipeline—extraction, CPD, probing across all models, properties, and controls—runs in approx-imately 4 hours of wall-clock time. No model training from scratch was performed for MACE, ANI-2x, ORB, CHGNet, or SevenNet; SchNet and DimeNet++ were trained on QM9 for 30 epochs each (approximately 1 hour per model on the same hardware). Total compute for all experiments reported in this paper is estimated at approximately 20 GPU-hours. 
+
+# Broader Impact 
+
+This work is a diagnostic study of learned representations in atomistic foundation models. It does not introduce new models, new training procedures, or new datasets. The primary contribution is a probing methodology (CPD) and empirical findings about how existing models organize chemical information. We do not foresee direct negative societal consequences from this work. If the findings influence model selection in downstream applications such as materials discovery or drug design, the practical implications are indirect and depend entirely on the application context. The GBT inflation analysis (Section 4.6) highlights a methodological pitfall that could lead to overconfident conclusions in representation probing studies; we hope this serves as a useful warning for the broader community. 
+
+# References 
+
+I. Batatia, D. P. Kovács, G. N. C. Simm, C. Ortner, and G. Csányi. MACE: Higher order equivariant message passing neural networks for fast and accurate force fields. In NeurIPS , 2022. Y. Wang, T. Wang, S. Li, X. He, M. Li, Z. Wang, N. Zheng, B. Shao, and T.-Y. Liu. Enhancing geometric representations for molecules with equivariant vector-scalar interactive message passing. 
+
+Nature Communications , 15:313, 2024. 19 K. T. Schütt, P.-J. Kindermans, H. E. Sauceda, S. Chmiela, A. Tkatchenko, and K.-R. Müller. SchNet: A continuous-filter convolutional neural network for modeling quantum interactions. In 
+
+NeurIPS , 2017. J. Klicpera, J. Groß, and S. Günnemann. Directional message passing for molecular graphs. In 
+
+ICLR , 2020. J. Hewitt and P. Liang. Designing and interpreting probes with control tasks. In EMNLP , 2019. L. Pinto. Superior molecular representations from intermediate encoder layers. arXiv:2506.06443 ,2025. M. Talhi and A. Monod. Breaking symmetry bottlenecks in GNN readouts. arXiv:2602.05950 ,2026. M. Neumann, J. Gin, B. Rhodes, S. Bennett, Z. Li, H. Choubisa, A. Hussey, and J. Godwin. Orb: A fast, scalable neural network potential. arXiv:2410.22570 , 2024. B. Deng, P. Zhong, K. Jun, J. Riebesell, K. Han, C. J. Bartel, and G. Ceder. CHGNet as a pretrained universal neural network potential for charge-informed atomistic modelling. Nature Machine Intelligence , 5:1031–1041, 2023. Y. Park, J. Kim, S. Hwang, and S. Han. Scalable parallel algorithm for graph neural network interatomic potentials in molecular dynamics simulations. Journal of Chemical Theory and Com-putation , 20(11):4857–4868, 2024. S. Ravfogel, M. Twiton, Y. Goldberg, and R. Cotterell. Linear adversarial concept erasure. In 
+
+ICML , 2022. N. Belrose, D. Schneider-Joseph, S. Ravfogel, R. Cotterell, E. Raff, and S. Biderman. LEACE: Perfect linear concept erasure in closed form. In NeurIPS , 2023. S. Y. Kim, Y. J. Park, and J. Li. Leveraging neural network interatomic potentials for a foundation model of chemistry. arXiv:2506.18497 , 2025. S. Edamadaka, S. Yang, J. Li, and R. Gómez-Bombarelli. Universally converging representations of matter across scientific foundation models. arXiv:2512.03750 , 2025. G. Alain and Y. Bengio. Understanding intermediate layers using linear classifier probes. In ICLR Workshop , 2016. F. Pedregosa, G. Varoquaux, A. Gramfort, V. Michel, B. Thirion, O. Grisel, M. Blondel, P. Pretten-hofer, R. Weiss, V. Dubourg, J. Vanderplas, A. Passos, D. Cournapeau, M. Brucher, M. Perrot, and E. Duchesnay. Scikit-learn: Machine learning in Python. JMLR , 12:2825–2830, 2011. C. Devereux, J. S. Smith, K. K. Huddleston, K. Barros, R. Zubatyuk, O. Isayev, and A. E. Roitberg. Extending the applicability of the ANI deep learning molecular potential to sulfur and halogens. 
+
+Journal of Chemical Theory and Computation , 16(7):4192–4202, 2020. R. Ramakrishnan, P. O. Dral, M. Rupp, and O. A. von Lilienfeld. Quantum chemistry structures and properties of 134 kilo molecules. Scientific Data , 1:140022, 2014. S. Kornblith, M. Norouzi, H. Lee, and G. Hinton. Similarity of neural network representations revisited. In ICML , 2019. 20 X. Gao, F. Ramezanghorbani, O. Isayev, J. S. Smith, and A. E. Roitberg. TorchANI: A free and open source PyTorch-based deep learning implementation of the ANI neural network potentials. 
+
+Journal of Chemical Information and Modeling , 60(7):3408–3415, 2020. 21

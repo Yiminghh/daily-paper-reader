@@ -1,0 +1,1304 @@
+Title: Time-Aware Latent Space Bayesian Optimization
+
+URL Source: https://arxiv.org/pdf/2603.00935v1
+
+Published Time: Tue, 03 Mar 2026 02:12:33 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# TIME -A WARE LATENT SPACE BAYESIAN OPTIMIZATION 
+
+Tuan A. Vu 
+
+Aalto University 
+
+tuan.t.vu@aalto.fi 
+
+Julien Martinelli 
+
+Aalto University 
+
+Harri Lähdesmäki 
+
+Aalto University 
+
+## ABSTRACT 
+
+Latent-space Bayesian optimization (LSBO) extends Bayesian optimization to structured domains, such as molecular design, by searching in the continuous latent space of a generative model. However, most LSBO methods assume a fixed objective, whereas real design campaigns often face temporal drift (e.g., evolving preferences or shifting targets). Bringing time-varying BO into LSBO is non-trivial: drift can affect not only the surrogate, but also the latent search space geometry induced by the representation. We propose Time-Aware Latent-space Bayesian Optimization (TALBO), which incorporates time in both the surrogate and the learned generative representation via a GP-prior variational autoencoder, yielding a latent space aligned as objectives evolve. To evaluate time-varying LSBO systematically, we adapt widely used molecular design tasks to drifting multi-property objectives and introduce metrics tailored to changing targets. Across these benchmarks, TALBO consistently outperforms strong LSBO baselines and remains robust across drift speeds and design choices, while remaining competitive under actually time-invariant objectives. 
+
+## 1 Introduction 
+
+Many modern design problems reduce to optimizing a black-box function over large, structured spaces. Canonical examples include de novo molecular design [Gómez-Bombarelli et al., 2018], protein and antibody engineering [Torres et al., 2024, Amin et al., 2024], and crystal design [Boyar et al., 2025]. In these domains, candidate designs are discrete, high-dimensional objects evaluated through expensive simulations, laboratory assays, or human expertise, making the objective function accessible only via such queries. To tackle this class of problems, the go-to framework is Bayesian optimization (BO), a sample-efficient approach that maintains a probabilistic surrogate model, typically a Gaussian process (GP, Rasmussen and Williams 2006), whose posterior mean and uncertainty are combined through an acquisition function to guide sequential evaluations [Garnett, 2023]. However, vanilla BO methods are not easily amenable to discrete and highly structured domains such as molecules or biological sequences. Latent space BO (LSBO) overcomes this limitation by coupling BO with deep generative models that embed structured objects into a continuous latent space, where optimization is performed before decoding candidates back to the original domain [Gómez-Bombarelli et al., 2018, Tripp et al., 2020, Maus et al., 2022, Lee et al., 2025]. This formulation has become a standard paradigm for de novo molecular and protein design. A key assumption underlying LSBO methods is that the objective function remains fixed throughout optimization. In many practical design settings, however, objectives evolve over time due to changes in the underlying system or in the optimization criteria itself. Examples include antibody discovery against rapidly mutating pathogens, where emerging variants alter antibody binding landscape and designs must be updated or robustified [Frei et al., 2025]; human-in-the-loop optimization [Sundin et al., 2022, Xu et al., 2024]; and multi-objective design settings where preferences (scalarization weights) evolve over time [Vallerio et al., 2015, Rácz et al., 2025]. Failing to account for such temporal variation can result in stale latent representations and surrogate models that no longer reflect the current objective, leading to degraded optimization performance. While time-varying BO has been studied in continuous domains [Bogunovic et al., 2016, Bardou et al., 2024], a careful treatment of temporal variation in LSBO remains largely unexplored, as the search is mediated by a learned generative representation. 
+
+Contributions. We propose Time-Aware Latent-space Bayesian Optimization (TALBO), a framework for time-varying latent space optimization that models temporal drift both in the surrogate and in the learned representation. Figure 1      
+
+> arXiv:2603.00935v1 [stat.ML] 1 Mar 2026 100 200 300 400 500 600
+
+Iterations t
+
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> Score  ft
+
+Best value found every iteration 
+
+ft = max  
+
+> it
+
+ft (xi) = max    
+
+> itKk=1
+> t,k
+
+sk(x)
+
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> Property value
+
+Properties { s1, s2}     
+
+> 100 200 300 400 500 600
+
+Iterations t
+
+> 0.25
+> 0.50
+> 0.75
+> Weight
+
+Objective weights { 1, 2}  
+
+> Latent Space BO (InvBO)
+> Time-aware Latent Space BO (TALBO)
+> Property s1
+> Property s2
+
+Figure 1: Overview of our setting. At each iteration t, a black-box objective ft is defined as a weighted combination of two molecular properties, with a predefined time-varying weight schedule (details in Section 6.1). Left: The best score under the current objective ft among all molecules evaluated up to iteration t, (mean ± std over 10 seeds with different initial datasets). Top-right: mean property components. Bottom-right: objective weights (identical across seeds). TALBO, our time-aware method adapts more rapidly to changes in objective importance, resulting in consistently higher attained values ˜ft.
+
+provides a schematic overview of the setting and highlights why time-awareness is essential for tracking evolving objectives in structured design. Our contributions are: • Conceptual. We formalize time-varying LSBO : an optimization setting where the objective changes across rounds, while search is performed in a learned latent space. This formulation exposes a key challenge absent from standard LSBO— time can enter both the objective model and the latent embedding —and motivates principled mechanisms to handle temporal drift. • Methodological. We introduce TALBO, which couples a spatio-temporal surrogate with a conditional generative representation guided by time and possible other covariates, aligning the latent search space with the current objective function. • Empirical. We adapt widely used molecular design benchmarks to a controlled time-varying regime and perform extensive experiments under fixed budgets. TALBO consistently outperforms strong LSBO baselines, and a broad suite of controlled studies shows that these gains are robust across design choices and experimental settings. 
+
+## 2 Preliminaries 
+
+Let X be an input space and Y ⊂ R an output space. We study time-varying black-box optimization, where at each iteration t ∈ { 1, . . . , T } the learner observes noisy evaluations of an objective ft : X → Y ,
+
+ytb = ft(xtb ) + εt, εt ∼ N (0 , σ 2), (1) for a batch {xt1, . . . , xtB } ∈ X B , and aims to select a query xt+1 (or batch) that performs well under the evolving objective. For methodological descriptions, we may assume B = 1 . Since arg max x∈X ft(x) may change with t, the goal is not to recover a single static maximizer, but to adaptively track high-value inputs as ft drifts. 2X may be discrete, high-dimensional, and structured (e.g., molecules), making optimization difficult. This poses two challenges: handling time-varying objectives and navigating complex search spaces. Next, we introduce the components used to address them: time-varying Bayesian optimization and learned representations for structured designs. 
+
+2.1 Time-Varying Bayesian Optimization 
+
+BO provides a sequential strategy for black-box optimization and can be extended to time-varying objectives. 
+
+Bayesian Optimization. Given Dt = {(xi, t i, y i)}ti=1 , BO maintains a probabilistic surrogate over the objective, denoted p(f | D t), which induces a predictive distribution for f (x). The next query is selected by maximizing an 
+
+acquisition function that depends on this surrogate, 
+
+xt+1 ∈ arg max  
+
+> x∈X
+
+α x; p(f | D t), (2) where α trades off predicted value (exploitation) and uncertainty (exploration) under the surrogate. 
+
+Gaussian Processes. A common choice for the probabilistic surrogate is a Gaussian process (GP), 
+
+f ∼ GP  μ(·), k (·, ·), (3) where μ is typically set to zero and k is a positive semidefinite kernel encoding prior smoothness. Assuming a Gaussian likelihood and fixed hyperparameters, conditioning on Dt yields a Gaussian predictive distribution for f (x) with closed-form mean and variance. However, as exact inference scales cubically in |D t|, sparse or variational approximations are often used in practice Titsias [2009]. 
+
+Time-Varying BO. Here, the objective changes across rounds, ft(x), and the surrogate must therefore model temporal evolution and modulate the relevance of past observations. A common approach is to place a GP prior over a spatio-temporal function ft(x) := f (x, t ), using a kernel defined on (x, t ), such as k (x, t ), (x′, t ′) := kx(x, x′) kt(t, t ′).
+
+The acquisition function at round t is computed from the posterior predictive distribution of the current round f (·, t ) [Bo-gunovic et al., 2016]. 
+
+Metrics. As the objective changes over time, standard best-so-far metrics are insufficient. We therefore consider two evaluation criteria. (i) Current-objective best-so-far value ,
+
+˜ft = max  
+
+> i≤t
+
+ft(xi) (4) which evaluates all previously queried designs under the current objective ft and reports the best achievable value at time t. (ii) The cumulative regret ,
+
+RT := 
+
+> T
+
+X
+
+> t=1
+
+ f ⋆t − ˜ft
+
+, (5) where f ⋆t := max x∈X ft(x) denotes the optimal value of the objective at time t. It is worth noticing that ˜ft is generally 
+
+not monotone and can decrease when the objective shifts and previously good designs become less aligned with the new trade-off, as displayed in Figure 1. 
+
+2.2 Latent Space Bayesian Optimization 
+
+When X is discrete, structured, or high-dimensional, direct optimization is challenging. LSBO addresses this by learning a continuous representation, for example via a Variational Autoencoder (VAE) [Kingma and Welling, 2013]. A VAE defines a probabilistic encoder qϕ(z | x) and decoder pθ (x | z). In practice, LSBO operates on a deterministic embedding, e.g., the posterior mean Eqϕ(z|x)[z], together with a decoding map 
+
+Γ(z) := arg max  
+
+> x
+
+pθ (x | z), (6) which maps latent points back to the design space. This induces a continuous latent space Z ⊂ Rd in which Bayesian optimization can be performed: 
+
+zt+1 ∈ arg max  
+
+> z∈Z
+
+α z; p(g | D zt ), (7) where 
+
+g(z) := f (Γ(z)) , Dzt = {(zi, t i, y i)}ti=1 . (8) The selected latent point is decoded as 
+
+xt+1 = Γ(zt+1 ). (9) 
+
+Representation updates. Vanilla LSBO keeps the generative model fixed during optimization. Some variants periodically retrain it, often jointly with the surrogate [Chu et al., 2024, Maus et al., 2022], to better align latent geometry with observed values. These approaches, however, assume a static objective and do not address temporal drift. 33 Problem Statement 
+
+Extending LSBO to time-varying objectives introduces a structural challenge. In LSBO, optimization occurs in a learned latent space Z whose geometry is induced by a generative model. Under temporal drift, a static latent representation may become misaligned with the evolving objective. Classical time-varying BO addresses drift at the surrogate level by modeling f (x, t ) with a spatio-temporal kernel. In LSBO, however, the surrogate operates on latent codes via 
+
+g(z, t ) := ft(Γ(z)) , (10) where Γ denotes the decoder. Modeling time only in the surrogate can therefore be insufficient if the latent geometry itself remains static. 
+
+Dual Temporal Modeling. We incorporate time at two levels: a spatio-temporal GP models g(z, t ) in latent space, while the mapping x 7 → z is endowed with a GP prior over latent functions. This joint treatment allows both uncertainty and latent geometry to adapt under temporal drift. 
+
+## 4 Time-Aware LSBO with a GP-Prior Generative Model 
+
+We propose Time-Aware Latent Space Bayesian Optimization (TALBO), which instantiates dual temporal modeling by leveraging the GP-prior VAE with scalable basis-function approximation and global variational parameters (DG-BFGP) [Balık et al., 2025]. To our knowledge, this is the first use of temporal deep latent variable models within BO. Section 4.1 presents the latent representation, Section 4.2 the objective, and Section 4.3 the treatment of time. Algorithm 1 summarizes the full TALBO loop. 
+
+4.1 Structured latent representation 
+
+Each design x ∈ X is associated with R auxiliary covariates c(x, t ) ∈ RR, which may include continuous descriptors and time. Modeling these covariates explicitly enables the latent geometry to capture structured and temporally coherent variation, which is essential under objective drift. Given covariates c = ( c(1) , . . . , c (R)) := c(x, t ), DGBFGP defines a latent code z(c) ∈ Rd and a decoder pθ (x | z). The latent geometry is induced by an additive Gaussian process prior over covariate-dependent latent functions. 
+
+Basis-function GP prior. For each covariate component c(r), we place a GP prior on a univariate latent function h(r),
+
+h(r)(c(r)) ∼ GP  0, k (r)(·, ·), (11) where k(r) is a covariance kernel with hyperparameters σr , ℓ r . To obtain a scalable parameterization, DGBFGP employs a Hilbert-space basis-function approximation [Solin and Särkkä, 2020], yielding the linear form 
+
+h(r)(c(r)) ≈ a(r)⊤ϕ(r)(c(r)), (12) 
+
+a(r) ∼ N  0, S(r)(σr , ℓ r ), (13) where ϕ(r)(·) ∈ RM denotes Hilbert features and S(r)(σr , ℓ r ) is diagonal. We use squared-exponential kernels for continuous covariates. Detailed Hilbert-space feature constructions are provided in Appendix C.2. GP prior VAE models assume independent GP priors for each of the latent dimensions [Casale et al., 2018]. Defining 
+
+A(r) = [ a(r, 1) ⊤, . . . , a(r,d )⊤]⊤ ∈ Rd×M , the basis function approximation for the GP prior across all latent dimensions is 
+
+z(c) = A(r)ϕ(r)(c(r)) (14) 
+
+a(r,l ) ∼ N  0, S(r)(σr , ℓ r ), (15) where we have assumed shared kernel hyperparameters across latent dimensions. 
+
+Additive latent code. DGBFGP represents the latent code as a sum of covariate effects: 
+
+z(c; A) = 
+
+> R
+
+X
+
+> r=1
+
+A(r)ϕ(r)(c(r)), A(r) ∈ Rd×M , (16) where A = [ A(1) , . . . , A(R)]. DGBFGP enforces smoothness with appropriate priors for the kernel hyperparameters: 
+
+σr , ℓ r ∼ Lognormal(0 , 1) . (17) Note that time is included as one of the covariates, making the latent geometry explicitly time-dependent. 4Algorithm 1 TALBO (simplified version) 
+
+Require: Initial evaluated set {(xi, t i, y i)}n0
+
+> i=1
+
+. 
+
+> 1:
+
+Train DGBFGP on initial corpus to obtain q0(A, σ, ℓ ). 
+
+> 2:
+
+Construct initial BO dataset 
+
+D0 =   zi, t i, y i
+
+ n0
+
+> i=1
+
+, zi = Eq0
+
+z(c(xi, t i); A). 
+
+> 3:
+
+for t = 1 to T or until criterion satisfied do  
+
+> 4:
+
+Fit spatio-temporal surrogate on Dt−1 (Eq. S20).  
+
+> 5:
+
+Select ˆz ∈ arg max z∈Z α z; p(g(·, t ) | D t−1). 
+
+> 6:
+
+Decode design xt ∼ pθt−1 (· | ˆz). 
+
+> 7:
+
+Observe yt = ft(xt) + εt and ct = c(xt, t ). 
+
+> 8:
+
+Compute embedding zt ← Eqt−1 [z(ct; A)] . 
+
+> 9:
+
+Update BO dataset Dt ← D t−1 ∪ { (zt, t, y t)}. 
+
+> 10:
+
+if representation update triggered (Alg. 2-L18) then  
+
+> 11:
+
+Update DGBFGP posterior and decoder params. (qt, θ t) via warm-start SVI on current data.  
+
+> 12:
+
+Recompute Dt by re-embedding designs via qt. 
+
+> 13:
+
+end if  
+
+> 14:
+
+end for 4.2 Variational learning 
+
+Given a training set {(xn, cn)}Nn=1 , we model designs through the decoder likelihood 
+
+pθ (xn | A, cn) := pθ
+
+ xn | z(cn; A). (18) We learn global parameters with a factorized variational posterior 
+
+q(A, σ, ℓ ) = q(A) q(σ) q(ℓ), (19) where q(A) is Gaussian and q(σ) and q(ℓ) are log-normal. The ELBO takes the form 
+
+LDGBFGP = Eq(A)
+
+h NX
+
+> n=1
+
+log pθ
+
+ xn | z(cn; A)i
+
+− Eq(σ)q(ℓ)
+
+h
+
+KL  q(A) ∥ p(A | σ, ℓ )i
+
+− KL  q(σ) ∥ p(σ) − KL  q(ℓ) ∥ p(ℓ),
+
+(20) and is optimized by stochastic gradient methods with mini-batching [Balık et al., 2025]. In addition to the variational objective in Equation (20) , our time-aware representation updates incorporate two complementary mechanisms. First, we add alignment regularizers that encourage the latent geometry to remain smooth and well-scaled with respect to observed objective values [Lee et al., 2023]. Second, we apply latent inversion to mitigate misalignment between evaluated designs and their latent representations [Chu et al., 2024]. Finally, we train a variational GP surrogate on latent observations, using an SVGP objective [Hensman et al., 2015]. These components are detailed in Appendix B.2, B.3, and B.4, respectively. 
+
+4.3 Time-Conditioned Latent Representation 
+
+Since time t is included as an additional continuous covariate in c(x, t ), the latent code z(c(x, t ); A) becomes time-dependent, inducing a temporally coherent latent geometry. This allows the representation to evolve as objectives drift. Algorithm 1 summarizes the resulting BO loop. At each iteration, we embed evaluated design with DGBFGP covariates, update a spatio-temporal surrogate over (z, t ), and select a latent query to decode and evaluate. The generative model may be updated during optimization; when it is, latent embeddings are recomputed to maintain alignment. Of note, DGBFGP is decoder-only, so the posterior mean embedding of design xi is computed as zi = Eqt(A)
+
+z(c(xi, t i); A).Most LSBO papers describe only the high-level loop and omit many practical details; here we make a best effort to explicitly enumerate the modules and steps needed for faithful reproduction. A detailed procedure, including the update trigger, alignment regularizers [Lee et al., 2023], and latent inversion [Chu et al., 2024], is provided in Algorithm 2. 55 Related work 
+
+Latent space Bayesian optimization [Gómez-Bombarelli et al., 2018] extends traditional BO to discrete, structured, or high-dimensional input spaces by leveraging generative models such as VAEs [Kingma and Welling, 2013] to embed structured designs into a continuous latent space where standard BO can be applied. However, performing BO over a fixed VAE representation can suffer from poor sample efficiency, as the latent geometry may be misaligned with the optimization objective. To mitigate this, recent work has explored adapting the latent space during optimization, including weighted retraining schemes [Tripp et al., 2020], metric learning objectives [Grosnit et al., 2021], and joint inference over the surrogate and generative mapping, as in LOL-BO [Maus et al., 2022]. CoBO [Lee et al., 2023] proposes a Lipschitz-constrained fine-tuning objective to better align the latent representation with the target function, and InvBO [Chu et al., 2024] extends this line of work to mitigate decoder-induced misalignment via latent inversion. Other approaches decouple the generative and surrogate components [Moss et al., 2025] and incorporate domain-specific kernels such as the Tanimoto kernel [Tripp et al., 2023]. See González-Duque et al. [2024] for a comprehensive survey of LSBO methods. Despite this extensive literature, the extension to time-varying objectives remains underexplored. In such settings, the latent geometry may evolve not only through representation updates, but also due to temporal drift in the objective itself. 
+
+Time-varying Bayesian optimization tackles settings where the objective evolves over time. A common approach incorporates time as an additional input to a spatio-temporal surrogate kernel [Marchant and Ramos, 2012, Marchant et al., 2014]. Subsequent work has developed methods that manage outdated observations either by periodically resetting the dataset or by gradually discounting past data [Bogunovic et al., 2016, Brunzema et al., 2022]. More recently, adaptive relevance measures based on distributional distances have been proposed to assess the influence of past observations on future predictions [Bardou et al., 2024]. Despite these advances, time-varying BO has been studied almost exclusively in the original input space. Integrating it with latent-space optimization introduces additional challenges: in adaptive LSBO, the latent geometry evolves through representation updates, and in time-varying settings it may also shift due to temporal drift in the objective. Our method accounts for both sources of evolution. 
+
+Generative backbones for latent representations started with VAEs in LSBO [Kingma and Welling, 2013, Gómez-Bombarelli et al., 2018]. Extensions replace the standard Gaussian prior with Gaussian process priors to encode temporal or covariate-dependent correlations in latent space, as in GPPVAE [Casale et al., 2018], GP-VAE [Fortuin et al., 2020] and additive GP-prior models [Ramchandran et al., 2021], with BO applications [Ramchandran et al., 2025]. See Appendix B.7 for more background. Recent work, like DGBFGP [Balık et al., 2025], improves scalability, with basis-function approximations and global parameterizations. Alternative backbones have also been explored, like normalizing flows to obtain invertible latent mappings and mitigate reconstruction-induced discrepancies [Lee et al., 2025]. 
+
+## 6 Experiments 
+
+Baselines. We compare TALBO against representative LSBO methods: InvBO [Chu et al., 2024], CoBO [Lee et al., 2023], and LOL-BO [Maus et al., 2022]. TALBO and these baselines are equipped with Trust Region Bayesian Optimization (TuRBO; Eriksson et al. 2019), which improves high-dimensional BO by restricting search to adaptive local trust regions centered at promising incumbents. In addition, we report three baselines: standard LSBO without trust-region constraints, and LSBO combined with TuRBO, and a random search that samples latent codes uniformly and decodes them to candidate molecules. Our method is implemented with both the SELFIES VAE of Maus et al. [2022] and our proposed SELFIES DGBFGP model. Further implementation details are provided in Appendix C. 
+
+Implementation details. We follow Chu et al. [2024] and employ Thompson sampling as the acquisition function, using a variational GP surrogate [Hensman et al., 2015] with a deep kernel [Wilson et al., 2016] and an RBF covariance function (Appendix B.4). The surrogate and acquisition components are implemented in BoTorch [Balandat et al., 2020]. For molecular discovery, we consider both the SELFIES VAE of Maus et al. [2022] and our proposed SELFIES DGBFGP model, each pretrained on the 1.27M unlabeled molecules from the GuacaMol dataset [Brown et al., 2019]. Code will be available upon acceptance. 
+
+6.1 Multi-property optimization with drifting priorities 
+
+We consider a controlled scenario in which the relative importance of K property scores changes over time. This setting mimics situations where preferences shift, leading to a time-varying objective. 6Task Scoring functions             
+
+> Median molecules 1 sim( camphor ,ECFC4) sim( menthol ,ECFC4)
+> Median molecules 2 sim( tadalafil ,ECFC6) sim( sildenafil ,ECFC6)
+> Composite Similarity 1
+> sim( Sitagliptin ,ECFC4) sim( Ranolazine ,AP) sim( Osimertinib ,FCFC4)
+> Composite Similarity 2
+> sim( Celecoxib ,ECFC4) sim( Troglitazone ,ECFC4) sim( Thiothixene ,ECFC4)
+
+Table 1: Tasks and their associated scoring functions. Let sk(x) ∈ [0 , 1] denote K base property scores. At time t, the objective is defined as a convex combination 
+
+ft(x) = 
+
+> K
+
+X
+
+> k=1
+
+αt,k sk(x), (21) where αt ∈ RK 
+
+> +
+
+lies on the simplex, PKk=1 αt,k = 1 .
+
+Synthetic weight generation α. To induce smoothly drifting priorities, we sample K independent latent functions 
+
+wk(t) ∼ GP  0, k w(t, t ′), k = 1 , . . . , K, (22) where kw is a temporal covariance kernel. We then define 
+
+αt,k = exp  βw k(t)PKj=1 exp  βw j (t) , k = 1 , . . . , K, (23) which maps the latent GP draws to the probability simplex. The temperature parameter β > 0 controls how sharply priorities concentrate over time (Appendix C.1). 
+
+Property scores s. To create tasks that require explicit trade-offs between components as their relative importance shifts, we construct objectives based on molecular similarity scores. Following the median molecule tasks introduced by Brown et al. [2019], we select four scoring functions derived from the Guacamol benchmark suite. Specifically, two tasks correspond to components of the Median Molecules 1 and Median Molecules 2 benchmarks, while the remaining two are adapted from the similarity and rediscovery tasks. Each base score sk(x) ∈ [0 , 1] and ft(x) = PKk=1 αt,k sk(x),hence ft(x) ∈ [0 , 1] and f ⋆t = 1 for all t. The full set of scoring functions is detailed in Table 1. 
+
+Experimental protocol and budget. Each run consists of T = 600 BO rounds. Before the BO loop begins, we construct an initial dataset of Ninit = 100 evaluations by sampling 100 molecules uniformly from the GuacaMol pre-training corpus and evaluating each of them under the first 50 iterations. These evaluations are shared across methods for each seed, but time-agnostic baselines are only provided with the same 100 molecules evaluated solely at the most recent time step. Then, at round t, a batch of B = 10 latent points is selected (via q-batch Thompson sampling), decoded to molecules, and evaluated under ft. TALBO uses covariates described in Appendix C.2. 
+
+6.2 Results Overall performance. Figure 2 compares all methods using three complementary views: the current-objective best-so-far value (Equation 4), its associated cumulative regret (Equation 5), and regret-based ranks. Across all four tasks (Table 1), TALBO achieves the strongest overall performance in terms of best-per-time (first row), attaining the highest values over most of the optimization horizon. Competing baselines can occasionally match or even exceed TALBO early on, but they typically plateau or adapt more slowly once the objective priorities shift. The same trend is reflected in cumulative regret (second row), reported as percentage improvement relative to InvBO for readability. Across most tasks, TALBO attains the most favorable regret profiles, with an advantage that typically grows as optimization proceeds. An exception is the first task (first column), where the regret curves are closer and competing baselines remain competitive for larger portions of the horizon. To summarize performance in a scale-free way, the third row reports ranks induced by cumulative regret (lower is better). This view is helpful when absolute gaps in best-per-time or 7Baseline ℓw = 0 .1 ℓw = 0 .2 ℓw = 0 .3                                                               
+
+> TALBO 1.98 ±1.23 1.75 ±1.08 1.90 ±1.15
+> InvBO 3.77 ±1.39 3.90 ±1.24 3.52 ±1.38 CoBO 2.48 ±1.04 2.45 ±1.30 2.30 ±1.16 LOL-BO 2.42 ±1.01 2.73 ±1.11 2.92 ±1.10 LS-BO 6.41 ±0.65 6.62 ±0.60 6.59 ±0.65 TurBO 4.76 ±1.06 4.76 ±1.19 4.80 ±1.07 Random 5.35 ±0.81 5.79 ±0.97 5.62 ±0.89
+
+Table 2: Ablation study. Final baseline rank (mean ± 12 std over all tasks and 10 random seeds) for different GP lengthscales ℓw ∈ { 0.1, 0.2, 0.3} (Equation 22). Ranks are computed per task and seed from cumulative regret (lower is better) and then averaged across tasks and seeds. Bold entries denote the best (lowest) average rank for each ℓw,and underlined entries the second-best. TALBO achieves the best average rank across all tested lengthscales, demonstrating robustness to varying rates of objective drift. 
+
+regret are small and hard to interpret, since it highlights consistent relative performance over time and across tasks. Overall, all three metrics support the same conclusion: explicit time-awareness improves tracking of drifting objectives over strong LSBO baselines. For completeness, Figure S6 reports the results using the instantaneous objective value 
+
+ft(xt) at each iteration, leading to consistent qualitative conclusions. 
+
+Relating performance to the time-varying weights. The last row of Figure 2 shows the time-varying objective weights 
+
+αt,k that define the scalarization. These exhibit clear regime changes (e.g., crossings between components and periods where one component dominates), which induce changes in which regions of chemical space are optimal under ft.We observe that many turning points and transient drops in ˜ft coincide with weight transitions: when priorities shift, previously best molecules are re-scored under the new mixture and can temporarily become suboptimal, causing ˜ft to decrease. We hypothesize that TALBO’s time-aware surrogate and generative model help it refocus more quickly after such shifts, sustaining higher best-per-time values. 
+
+How hard is it to beat the pre-training set? To contextualize the difficulty of these time-varying objectives, we compute reference curves directly from the pre-training corpus. At each time t, we evaluate ft over the full pre-training set (1.27M GuacaMol molecules) and report the dataset maximum (solid black) together with high quantiles (dashed; top 5%, 1%, 0.1%, and 0.01%, see Figure S1). These curves indicate what could be achieved at each iteration by exhaustively searching the pre-training set. Complementarily, Figure S2 reports per-component reference trajectories on the same corpus, showing that, for the best molecule in the pre-training set per BO step, the best attainable values for individual objectives also undergo clear transitions aligned with the weight schedule, confirming that the underlying landscape shifts over time in a significant manner. Importantly, our optimization budget is tiny relative to this corpus: with T = 600 and B = 10 , we make about 6,000 
+
+oracle queries in total—roughly 0.5% of the 1.27M molecules in the pre-training dataset. Exceeding the top 0.1% baseline (i.e., outperforming all but roughly 1,270 molecules in the pre-training set) represents a particularly strong result. In Figure S1, TALBO frequently surpasses the 1% and 0.1% dataset baselines across tasks and time windows, indicating that it can identify competitive molecules with a restricted budget. Moreover, for the Similarity task, the optimization trajectory approaches the dataset-derived reference curve, indicating that the generative search can nearly recover the best molecules present in the pre-training corpus. While this behavior has previously been established in static settings [Maus et al., 2022], our results recover the same qualitative “beyond-dataset” effect in the more challenging drifting-objective regime. Conversely, when the “best in dataset” curve remains far above all methods, the resulting gap highlights the difficulty of reliably reaching rare, well-aligned molecules in a time-varying setting. 
+
+6.3 Ablation studies Dual Temporal Modeling. To disentangle where time-awareness matters, we ablate the two temporal components of TALBO: (i) a time-aware surrogate that models g(z, t ) with a spatio-temporal GP, and (ii) a time-aware representation 
+
+in which time enters the generative mapping through the covariates (Section 4.1). We compare the full model against three variants: (a) no time (neither component uses t), (b) surrogate-only (spatio-temporal GP on (z, t ), but a time-independent representation), and (c) representation-only (time-dependent representation, but a time-agnostic GP on 
+
+z). Figure S3 reports baseline ranks over the optimization trajectory under the same budgets as the main benchmark (ℓw = 0 .2). Overall, explicitly modeling time improves performance, while the relative impact of time-awareness in the representation versus the surrogate varies across tasks. 8200 400 600 
+
+> 0.2
+> 0.4
+> 0.6
+> Best per iteration
+> ft = max
+> i t
+> ft (xi)
+
+Median molecules 1   
+
+> 200 400 600
+
+Median molecules 2   
+
+> 200 400 600
+
+Composite similarity 1   
+
+> 200 400 600
+
+Composite similarity 2                               
+
+> 200 400 600
+> 20
+> 0
+> Cumulative regret
+> (% improve vs InvBO)
+> 200 400 600 200 400 600 200 400 600
+> 200 400 600
+> 2
+> 4
+> 6
+> Baseline ranks
+> (cumulative regret)
+> 200 400 600 200 400 600 200 400 600
+> 200 400 600
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Time-varying
+> weights  t, k
+> 200 400 600 200 400 600 200 400 600
+
+Iterations t      
+
+> TALBO InvBO CoBO LOL-BO LS-BO TurBO Random
+
+Figure 2: Performance comparison across dynamic multi-objective tasks. First row: current-objective best-so-far value. Second row: cumulative regret, expressed as percentage improvement relative to I NV BO. Third row: baseline rank at each iteration based on cumulative regret (lower is better). Fourth row: time-varying objective weights governing the dynamic multi-objective trade-off, using ℓw = 0 .2 for kw (Equation 22). Mean ± 12 std over 10 random seeds. All trajectories are smoothed using a moving average for improved readability. Across all tasks, TALBO consistently outperforms other baselines, attaining higher best-found values, lower regret, and better average rank. Sensitivity to priority drift speed. Table 2 reports the final baseline rank averaged over all tasks for GP lengthscales 
+
+ℓw ∈ { 0.1, 0.2, 0.3}. Here, ℓw is the (relative) lengthscale of the temporal kernel kw used to generate the weight trajectories in Equation 22. The effective temporal correlation length is ℓwT , where T = 600 is the optimization horizon; thus, ℓw = 0 .1, 0.2, 0.3 correspond to characteristic drift scales of approximately 60 , 120 , and 180 iterations, respectively. Smaller ℓw induces faster priority changes, while larger ℓw yields smoother, more slowly varying objectives Across all tested regimes, TALBO achieves the lowest average rank, indicating consistent superiority under both rapid and gradual priority shifts. Full per-task curves are provided in Figure S4, confirming that these trends are stable. 
+
+Time-invariant objective. A natural concern is that explicitly modeling time could hurt performance when the objective is fixed. Since one typically cannot know a priori whether drift will occur, it is important to verify that the method does not incur a systematic penalty in static settings. Figure S5 reports best-found trajectories for three representative tasks under a time-invariant objective. In this regime, the benefit of time-awareness naturally diminishes. TALBO remains competitive on some tasks, although it does not consistently outperform the strongest static baselines. Differences are task-dependent and may reflect architectural variations between the underlying generative models (e.g., DGBFGP versus standard VAEs). Overall, these results indicate no pronounced degradation when drift is absent. 97 Discussion 
+
+We introduced time-varying latent-space Bayesian optimization , where the objective evolves across rounds while search is conducted in a learned representation. We proposed TALBO, which incorporates time in both the surrogate and the representation, and showed robust performance across dynamic molecular design tasks, with ablations indicating task-dependent contributions of both temporal components. 
+
+Limitations and outlook. Our benchmarks induce drift through smoothly changing scalarization weights in multi-property optimization. This isolates a clean form of preference drift, but real campaigns may exhibit richer changes (e.g., updated assays, shifting constraints, abrupt regime changes, or other sources of non-repeatability). Importantly, our main tracking metric ˜ft = max i≤t ft(xi) involves re-scoring past molecules under the current objective. As such, 
+
+˜ft measures tracking : whether the optimizer maintains a set of candidates that remains competitive as preferences drift. In experimental regimes where ft reflects new measurements or conditions, however, re-scoring past designs may be infeasible, and the instantaneous value ft(xt) becomes the primary observable. Encouragingly, Figure S6 shows TALBO remains competitive under the instantaneous view ft(xt). Relevant avenues for future work include principled stale-data management in time-varying LSBO. Dynamic BO has explored forgetting mechanisms such as discounting, sliding windows, resets, and relevance-based pruning to handle observations collected under earlier objective slices that are no longer predictive for the current one [Bogunovic et al., 2016, Bardou et al., 2024]. Extending such policies to LSBO is particularly appealing because staleness can arise not only in the surrogate dataset (outdated labels), but also at the representation level: as the latent geometry evolves through retraining or explicit time-conditioning, the semantics of past latent observations may shift. Finally, our temporal surrogate relies on a simple stationary time kernel; more expressive temporal models (e.g., nonstationary kernels, change-point kernels, or state-space formulations) could better capture abrupt or multi-scale drift. 
+
+## References 
+
+Alan Nawzad Amin, Nate Gruver, Yilun Kuang, Lily Li, Hunter Elliott, Calvin McCarter, Aniruddh Raghu, Peyton Greenside, and Andrew Gordon Wilson. Bayesian optimization of antibodies informed by a generative model of evolving sequences. arXiv preprint arXiv:2412.07763 , 2024. Maximilian Balandat, Brian Karrer, Daniel Jiang, Samuel Daulton, Ben Letham, Andrew G Wilson, and Eytan Bakshy. BoTorch: A framework for efficient monte-carlo bayesian optimization. In Advances in Neural Information Processing Systems , 2020. Mehmet Yi˘ git Balık, Maksim Sinelnikov, Priscilla Ong, and Harri Lähdesmäki. Bayesian basis function approximation for scalable gaussian process priors in deep generative models. In Forty-second International Conference on Machine Learning , 2025. Anthony Bardou, Patrick Thiran, and Giovanni Ranieri. This too shall pass: Removing stale observations in dynamic bayesian optimization. Advances in Neural Information Processing Systems , 2024. Ilija Bogunovic, Jonathan Scarlett, and Volkan Cevher. Time-varying gaussian process bandit optimization. In Artificial Intelligence and Statistics , 2016. Onur Boyar, Yanheng Gu, Yuji Tanaka, Shunsuke Tonogai, Tomoya Itakura, and Ichiro Takeuchi. Crystal-lsbo: Automated design of de novo crystals with latent space bayesian optimization. Neural Computation , 2025. Nathan Brown, Marco Fiscato, Marwin HS Segler, and Alain C Vaucher. Guacamol: benchmarking models for de novo molecular design. Journal of chemical information and modeling , 2019. Paul Brunzema, Alexander Von Rohr, and Sebastian Trimpe. On controller tuning with time-varying bayesian optimization. In 2022 IEEE 61st Conference on Decision and Control (CDC) , 2022. Francesco Paolo Casale, Adrian Dalca, Luca Saglietti, Jennifer Listgarten, and Nicolo Fusi. Gaussian process prior variational autoencoders. Advances in neural information processing systems , 2018. Jaewon Chu, Jinyoung Park, Seunghun Lee, and Hyunwoo J Kim. Inversion-based latent bayesian optimization. 
+
+Advances in Neural Information Processing Systems , 2024. David Eriksson, Michael Pearce, Jacob Gardner, Ryan D Turner, and Matthias Poloczek. Scalable global optimization via local bayesian optimization. Advances in neural information processing systems , 2019. Vincent Fortuin, Dmitry Baranchuk, Gunnar Rätsch, and Stephan Mandt. Gp-vae: Deep probabilistic time series imputation. In International conference on artificial intelligence and statistics , 2020. Lester Frei, Beichen Gao, Jiami Han, Joseph M Taft, Edward B Irvine, Cédric R Weber, Rachita K Kumar, Benedikt N Eisinger, Andrey Ignatov, Zhouya Yang, et al. Deep mutational learning for the selection of therapeutic antibodies resistant to the evolution of omicron variants of sars-cov-2. Nature biomedical engineering , 2025. 10 Roman Garnett. Bayesian optimization . Cambridge University Press, 2023. Rafael Gómez-Bombarelli, Jennifer N Wei, David Duvenaud, José Miguel Hernández-Lobato, Benjamín Sánchez-Lengeling, Dennis Sheberla, Jorge Aguilera-Iparraguirre, Timothy D Hirzel, Ryan P Adams, and Alán Aspuru-Guzik. Automatic chemical design using a data-driven continuous representation of molecules. ACS central science , 2018. Miguel González-Duque, Richard Michael, Simon Bartels, Yevgen Zainchkovskyy, Søren Hauberg, and Wouter Boomsma. A survey and benchmark of high-dimensional bayesian optimization of discrete sequences. In The Thirty-eight Conference on Neural Information Processing Systems Datasets and Benchmarks Track , 2024. Antoine Grosnit, Rasul Tutunov, Alexandre Max Maraval, Ryan-Rhys Griffiths, Alexander I Cowen-Rivers, Lin Yang, Lin Zhu, Wenlong Lyu, Zhitang Chen, Jun Wang, et al. High-dimensional bayesian optimisation with variational autoencoders and deep metric learning. arXiv preprint arXiv:2106.03609 , 2021. James Hensman, Alexander Matthews, and Zoubin Ghahramani. Scalable variational gaussian process classification. In 
+
+Artificial intelligence and statistics , 2015. Diederik P Kingma and Max Welling. Auto-encoding variational bayes. arXiv preprint arXiv:1312.6114 , 2013. Seunghun Lee, Jaewon Chu, Sihyeon Kim, Juyeon Ko, and Hyunwoo J Kim. Advancing bayesian optimization via learning correlated latent space. Advances in Neural Information Processing Systems , 2023. Seunghun Lee, Jinyoung Park, Jaewon Chu, Minseo Yoon, and Hyunwoo J. Kim. Latent bayesian optimization via autoregressive normalizing flows. In The Thirteenth International Conference on Learning Representations , 2025. Roman Marchant and Fabio Ramos. Bayesian optimisation for intelligent environmental monitoring. In 2012 IEEE/RSJ international conference on intelligent robots and systems , 2012. Roman Marchant, Fabio Ramos, Scott Sanner, et al. Sequential bayesian optimisation for spatial-temporal monitoring. In UAI , 2014. Natalie Maus, Haydn Jones, Juston Moore, Matt J Kusner, John Bradshaw, and Jacob Gardner. Local latent space bayesian optimization over structured inputs. Advances in neural information processing systems , 2022. Henry Moss, Sebastian W. Ober, and Tom Diethe. Return of the latent space COWBOYS: Re-thinking the use of VAEs for Bayesian optimisation of structured spaces. In Proceedings of the 42nd International Conference on Machine Learning , 2025. Kevin P Murphy. Probabilistic machine learning: Advanced topics . MIT press, 2023. Anita Rácz, Levente M Mihalovits, Maximilian Beckers, Nikolas Fechner, Nikolaus Stiefl, Finton Sirockin, William McCoull, Emma Evertsson, Malin Lemurell, Gergely Makara, et al. The changing landscape of medicinal chemistry optimization. Nature Reviews Drug Discovery , 2025. Siddharth Ramchandran, Gleb Tikhonov, Kalle Kujanpää, Miika Koskinen, and Harri Lähdesmäki. Longitudinal variational autoencoder. In International Conference on Artificial Intelligence and Statistics , 2021. Siddharth Ramchandran, Manuel Haussmann, and Harri Lähdesmäki. High-dimensional bayesian optimisation with gaussian process prior variational autoencoders. In The Thirteenth International Conference on Learning Representations , 2025. C. Rasmussen and C. Williams. Gaussian Processes for Machine Learning . MIT Press, 2006. Kihyuk Sohn, Honglak Lee, and Xinchen Yan. Learning structured output representation using deep conditional generative models. Advances in neural information processing systems , 2015. Arno Solin and Simo Särkkä. Hilbert space methods for reduced-rank gaussian process regression. Statistics and Computing , 2020. Iiris Sundin, Alexey Voronov, Haoping Xiao, Kostas Papadopoulos, Esben Jannik Bjerrum, Markus Heinonen, Atanas Patronov, Samuel Kaski, and Ola Engkvist. Human-in-the-loop assisted de novo molecular design. Journal of Cheminformatics , 2022. Michalis Titsias. Variational learning of inducing variables in sparse gaussian processes. In Artificial intelligence and statistics , 2009. Marcelo DT Torres, Yimeng Zeng, Fangping Wan, Natalie Maus, Jacob Gardner, and Cesar de la Fuente-Nunez. A generative artificial intelligence approach for antibiotic optimization. bioRxiv , 2024. Austin Tripp, Erik Daxberger, and José Miguel Hernández-Lobato. Sample-efficient optimization in the latent space of deep generative models via weighted retraining. Advances in Neural Information Processing Systems , 2020. Austin Tripp, Sergio Bacallado, Sukriti Singh, and José Miguel Hernández-Lobato. Tanimoto random features for scalable molecular machine learning. Advances in Neural Information Processing Systems , 2023. 11 Mattia Vallerio, Jan Hufkens, Jan Van Impe, and Filip Logist. An interactive decision-support system for multi-objective optimization of nonlinear dynamic processes with uncertainty. Expert Systems with Applications , 2015. Andrew Gordon Wilson, Zhiting Hu, Ruslan Salakhutdinov, and Eric P Xing. Deep kernel learning. In Artificial intelligence and statistics , 2016. Wenjie Xu, Masaki Adachi, Colin N Jones, and Michael A Osborne. Principled bayesian optimization in collaboration with human experts. Advances in Neural Information Processing Systems , 2024. 12 The appendix is organized as follows: • Appendix A reports complementary experimental results referenced in the main text, including: 
+
+– performance comparison with pre-training dataset baselines (Figure S1); 
+
+– per-component dataset optima under drifting priorities (Figure S2); 
+
+– ablation on dual temporal modeling (Figure S3); 
+
+– additional results for different GP lengthscales used to generate drifting weight schedules (Figure S4); 
+
+– time-invariant objective results (Figure S5). 
+
+– Instantaneous value found metric results (Figure S6). • Appendix B provides implementation details for TALBO’s components and closely related mechanisms, including: 
+
+– DGBFGP implementation details (Appendix B.1); 
+
+– CoBO-style latent alignment regularizers (Appendix B.2); 
+
+– InvBO-style latent inversion (Appendix B.3); 
+
+– SVGP surrogate objective with deep kernel (Appendix B.4); 
+
+– trust-region Bayesian optimization (TuRBO) in latent space (Appendix B.5); 
+
+– the comprehensive TALBO loop (Appendix B.6); 
+
+– background on VAEs and GP-prior VAEs (Appendix B.7). • Appendix C documents implementation-level details of our experimental setup, including: 
+
+– global hyperparameters (Appendix C.1, Table S1); 
+
+– DGBFGP configuration and covariates (Appendix C.2, Tables S2–S3 and Figure S7); 
+
+– InfoTransformerVAE configuration (Appendix C.3); 
+
+– computational resources (Appendix C.4). 13 A Additional results 200 400 600 
+
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> Best per iteration
+> ft = max
+> i t
+> ft (xi)
+
+Median molecules 1   
+
+> 200 400 600
+
+Median molecules 2   
+
+> 200 400 600
+
+Composite similarity 1   
+
+> 200 400 600
+
+Composite similarity 2 
+
+Iterations t          
+
+> TALBO InvBO CoBO LOL-BO LS-BO TurBO Random
+> Best in pre-training dataset 5% best 1% best 0.1% best 0.01% best
+
+Figure S1: Performance comparison with pre-training dataset baselines. Current-objective best-so-far value for each dynamic multi-objective task, augmented with statistics derived from the pre-training dataset. Colored curves correspond to optimization baselines (mean ± 12 std over 10 random seeds). The solid black curve denotes the best achievable value within the pre-training dataset at each time step, i.e., max j ft(xj ) evaluated over all molecules in the dataset. Dashed black curves indicate top-percentile subsets of the dataset (5%, 1%, 0.1%, and 0.01% best), providing reference performance levels attainable without adaptive optimization. All trajectories are smoothed using a centered moving average for improved readability. The comparison highlights both how challenging it is to outperform strong pre-training set reference levels with only a few thousand queries, and the extent to which dynamic BO methods can nonetheless surpass best-in-dataset metrics. 
+
+14 100 200 300 400 500 600 
+
+> Iterations t
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Score
+
+Molecules 2      
+
+> 100 200 300 400 500 600
+> Iterations t
+
+Molecules 1      
+
+> 100 200 300 400 500 600
+> Iterations t
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Score
+
+Molecules 2      
+
+> 100 200 300 400 500 600
+> Iterations t
+
+Molecules 1      
+
+> 100 200 300 400 500 600
+> Iterations t
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> Score
+
+Osimertinib Sim      
+
+> 100 200 300 400 500 600
+> Iterations t
+
+Ranolazine Sim      
+
+> 100 200 300 400 500 600
+> Iterations t
+
+Sitagliptin Similarity      
+
+> 100 200 300 400 500 600
+> Iterations t
+> 0.2
+> 0.3
+> 0.4
+> Score
+
+Thiothixene Sim      
+
+> 100 200 300 400 500 600
+> Iterations t
+
+Celecoxib Sim      
+
+> 100 200 300 400 500 600
+> Iterations t
+
+Troglitazone Sim 
+
+> Median
+> molecules 1
+> Median
+> molecules 2
+> Composite
+> Similarity 1
+> Composite
+> Similariy 2
+
+Figure S2: Per-component dataset optima under drifting priorities. For each task, we evaluate each objective component on the full GuacaMol pre-training corpus (1.27M molecules) using the same time-dependent weighting schedule as in the benchmark, and plot the best attainable component value at each iteration. The resulting trajectories exhibit clear regime changes and transitions across components, confirming that the weight schedule induces meaningful time variation in the underlying objective landscape. 200 400 600 
+
+1.5 
+
+2.0 
+
+2.5 
+
+3.0 
+
+3.5 
+
+> Baseline rank
+> (cumulative regret)
+
+Median molecules 1 
+
+200 400 600 
+
+Median molecules 2 
+
+200 400 600 
+
+Composite similarity 1 
+
+200 400 600 
+
+Composite similarity 2 
+
+Iterations t
+
+TALBO 
+
+TALBO Fully time-agnostic 
+
+TALBO Time-agnostic generative model 
+
+TALBO Time-agnostic surrogate 
+
+Figure S3: Ablation on the dual temporal modeling mechanism. For each task and iteration, baselines are ranked within each seed using cumulative regret, and then averaged across 10 random seeds. Curves show the mean ± 12
+
+standard deviation over seeds. The setting is similar as Figure 2: ℓw = 0 .2. Explicitly modeling time leads to overall performance gains, though the relative contribution of temporal modeling in the generative model versus the surrogate varies across tasks. 
+
+15 200 400 600 
+
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Best per iteration
+> ft = max
+> i t
+> ft (xi)
+
+Median molecules 1   
+
+> 200 400 600
+
+Median molecules 2   
+
+> 200 400 600
+
+Composite similarity 1   
+
+> 200 400 600
+
+Composite similarity 2                               
+
+> 200 400 600
+> 40
+> 20
+> 0
+> 20
+> Cumulative regret
+> (% improve vs InvBO)
+> 200 400 600 200 400 600 200 400 600
+> 200 400 600
+> 2
+> 4
+> 6
+> Baseline ranks
+> (cumulative regret)
+> 200 400 600 200 400 600 200 400 600
+> 200 400 600
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Time-varying
+> weights  t, k
+> 200 400 600 200 400 600 200 400 600
+
+Iterations t
+
+TALBO InvBO CoBO LOL-BO LS-BO TurBO Random 200 400 600 
+
+> 0.2
+> 0.4
+> 0.6
+> Best per iteration
+> ft = max
+> i t
+> ft (xi)
+
+Median molecules 1   
+
+> 200 400 600
+
+Median molecules 2   
+
+> 200 400 600
+
+Composite similarity 1   
+
+> 200 400 600
+
+Composite similarity 2                               
+
+> 200 400 600
+> 20
+> 10
+> 0
+> 10
+> Cumulative regret
+> (% improve vs InvBO)
+> 200 400 600 200 400 600 200 400 600
+> 200 400 600
+> 2
+> 4
+> 6
+> Baseline ranks
+> (cumulative regret)
+> 200 400 600 200 400 600 200 400 600
+> 200 400 600
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> Time-varying
+> weights  t, k
+> 200 400 600 200 400 600 200 400 600
+
+Iterations t
+
+TALBO InvBO CoBO LOL-BO LS-BO TurBO Random Figure S4: Performance comparison across dynamic multi-objective tasks for different GP lengthscales ℓw = 0 .1
+
+(top figure) and ℓw = 0 .3 (bottom figure). First row: current-objective best-so-far value. Second row: cumulative regret, expressed as percentage improvement relative to InvBO. Third row: baseline rank at each iteration based on cumulative regret (lower is better). Fourth row: time-varying objective weights governing the dynamic multi-objective trade-off. Mean ± 12 std over 10 random seeds, All trajectories are smoothed using a centered moving average for improved readability. 16 0 100 200 300 400 500  
+
+> Iterations t
+> 0.48
+> 0.50
+> 0.52
+> 0.54
+> 0.56
+> 0.58
+> 0.60
+> Best value found
+
+Aripiprazole Similarity       
+
+> 0100 200 300 400 500
+> Iterations t
+
+Median molecules 2        
+
+> 0100 200 300 400 500 600
+> Iterations t
+
+Ranolazine MPO       
+
+> TALBO InvBO CoBO LOL-BO LS-BO TurBO Random
+
+Figure S5: Time-invariant objective. Best-found value as a function of oracle calls for three representative tasks when the objective remains fixed over time. Mean ± 12 std over 10 random seeds. In the absence of temporal drift, differences between methods are task-dependent, and time-awareness does not provide a systematic advantage, as expected. All trajectories are smoothed using a centered moving average for readability. TALBO remains competitive without exhibiting systematic degradation in the static setting. 200 400 600 
+
+> 0.0
+> 0.2
+> 0.4
+> Instantaneous
+> value found  ft(xt)
+
+Median molecules 1   
+
+> 200 400 600
+
+Median molecules 2   
+
+> 200 400 600
+
+Composite similarity 1   
+
+> 200 400 600
+
+Composite similarity 2                     
+
+> 200 400 600
+> 20
+> 0
+> 20
+> Cumulative regret
+> (% improve vs InvBO)
+> 200 400 600 200 400 600 200 400 600
+> 200 400 600
+> 2
+> 4
+> 6
+> Baseline ranks
+> (cumulative. regret)
+> 200 400 600 200 400 600 200 400 600
+
+Iterations t
+
+TALBO InvBO CoBO LOL-BO LS-BO TurBO Random 
+
+Figure S6: Performance comparison across dynamic multi-objective tasks (instantaneous evaluation). First row: instantaneous objective value ft(xt) evaluated at each iteration. Second row: cumulative regret, expressed as percentage improvement relative to I NV BO. Third row: baseline rank at each iteration based on cumulative regret (lower is better). Mean ± 12 std over 10 random seeds. All trajectories are smoothed using a moving average for improved readability. 
+
+TALBO consistently achieves competitive instantaneous performance and favorable regret-based ranking across tasks. 
+
+17 B Baseline and component details 
+
+B.1 Deep Generative Basis Function GP (DGBFGP) 
+
+This section provides implementation details for the GP-prior latent construction introduced in Section 4.1, including the Hilbert-space approximation used for scalable GP priors and the decoder likelihood employed in practice. Our presentation follows [Balık et al., 2025]. 
+
+Kernel approximation for continuous covariates. For a univariate continuous covariate c ∈ R, we use the squared-exponential (SE) kernel for component r (index r is suppressed from c(r) for clarity) 
+
+k(r)se 
+
+ c, c ′ | σr , ℓ r
+
+ = σ2 
+
+> r
+
+exp −
+
+ c − c′2
+
+2ℓ2
+
+> r
+
+!
+
+. (S1) Stationary kernels admit a spectral density s(ω) via the Wiener–Khintchin theorem, 
+
+s(ω) = 
+
+Z ∞−∞ 
+
+k(u) e−iωu du, (S2) 
+
+k(u) = 12π
+
+Z ∞−∞ 
+
+s(ω) eiωu dω, 
+
+and for the SE kernel the spectral density is 
+
+sse (ω | σr , ℓ r ) = σ2 
+
+> r
+
+ℓr
+
+√2π exp  − 12 ℓ2 
+
+> r
+
+ω2 . (S3) Using the Hilbert-space (eigenfunction) approximation on a bounded domain Ω = [ −J, J ] with Dirichlet boundary conditions, 
+
+k(r)se 
+
+ c, c ′ ≈ ˜k(r) c, c ′ =
+
+> M
+
+X
+
+> m=1
+
+sse (pλm | σr , ℓ r ) ϕ(r) 
+
+> m
+
+(c) ϕ(r) 
+
+> m
+
+(c′), (S4) where the Laplacian eigenpairs are 
+
+ϕm(c) = 1
+
+√J sin 
+
+ πm (c + J)2J
+
+
+
+, (S5) 
+
+λm =
+
+ πm 
+
+2J
+
+2
+
+.
+
+Note that we have dropped index r from ϕm(c) and λm for clarity because they depend on r only via the size of the domain Ω = [ −J, J ] of the rth covariate component. Defining ϕ(r)(c) = [ ϕ1(c), . . . , ϕ M (c)] ⊤, a GP draw for latent dimension l can be written in linear form as 
+
+h(r,l )(c) ≈ a(r,l )⊤ϕ(r)(c), a(r,l ) ∼ N  0, S(r)(σr , ℓ r ), (S6) with diagonal covariance 
+
+S(r)(σr , ℓ r ) = diag  sse (pλ1 | σr , ℓ r ), . . . , s se (pλM | σr , ℓ r ). (S7) In our implementation we use Hilbert features with J = 2 .55 and M = 128 .
+
+Decoder likelihood (categorical tokens). For structured discrete designs (e.g., SELFIES strings), the decoder 
+
+pθ (x | z) factorizes autoregressively over tokens. Given a token sequence x = ( x1, . . . , x L) and prefix x<ℓ , the decoder defines per-step categorical probabilities 
+
+πℓ(z, x <ℓ ) := p(xℓ | z, x <ℓ ) = softmax  logits ℓ(z, x <ℓ ), ℓ = 1 , . . . , L. (S8) The reconstruction term in Equation 20 is implemented as the length-normalized decoder log-likelihood 
+
+log pθ (x | z) = 1
+
+L
+
+> L
+
+X
+
+> ℓ=1
+
+log πℓ(z, x <ℓ )xℓ . (S9) 18 B.2 CoBO-style latent alignment regularizers 
+
+When fine-tuning the generative representation during BO (Algorithm 1), optimizing reconstruction alone does not guarantee that distances in latent space reflect changes in the black-box objective. This “geometry–objective” mismatch is a known failure mode in LSBO, and CoBO [Lee et al., 2023] proposed simple regularizers to encourage local smoothness of the objective as a function of the latent code, and a non-degenerate latent scale. TALBO adopts the same regularizers and weighting schemes, which we now describe briefly. 
+
+Objective-based importance weights. To focus regularization on promising designs, we assign each example a soft importance weight wi ∈ (0 , 1] derived from its objective value. Following Lee et al. [2023], let yq be the q-quantile of the objective values in the current minibatch (and σw > 0 a smoothing parameter). Define 
+
+wi := λ(yi) = Pr( Y > y q ), Y ∼ N (yi, σ 2
+
+> w
+
+), (S10) equivalently wi = 1 − Φ (yq − yi)/σ w
+
+ where Φ is the standard Gaussian CDF. 
+
+Weighted Lipschitz regularizer. CoBO motivates smoothness by encouraging the composite objective in latent space to behave as a Lipschitz function. Concretely, for a minibatch {(zi, y i, w i)}Ni=1 , define pairwise slopes 
+
+sij := |yi − yj |∥zi − zj ∥2
+
+, L := median  {sij }i,j 
+
+, (S11) and penalize only slopes that exceed the typical (median) value: 
+
+L(w)Lip := 1
+
+N 2
+
+> N
+
+X
+
+> i=1
+> N
+
+X
+
+> j=1
+
+√wiwj max  0, s ij − L. (S12) The geometric-mean weighting √wiwj emphasizes smoothness in high-value regions, as proposed in CoBO. 
+
+Latent-space scale regularizer. A caveat is that L(w)Lip alone admits degenerate solutions (e.g., inflating all pairwise distances ∥zi − zj ∥2 shrinks sij ). CoBO therefore constrains the average latent scale. Let 
+
+¯dz := 1
+
+N 2
+
+> N
+
+X
+
+> i=1
+> N
+
+X
+
+> j=1
+
+∥zi − zj ∥2, cd := E∥U − V ∥2
+
+ = 2 Γ  d+1 2
+
+
+
+Γ  d
+
+> 2
+
+ , (S13) where U, V ∼ N (0 , I d) and d is the latent dimension. We then define 
+
+LZ := ¯dz − cd . (S14) This anchors the latent geometry to the scale implied by a standard normal prior, preventing trivial rescalings. 
+
+Full objective during representation updates. We update the generative model during BO steps by augmenting the DGBFGP objective with these alignment terms, and (when jointly training with the surrogate) also include the surrogate loss LSVGP (Appendix B.4): 
+
+LTALBO = −L DGBFGP + L(w)Lip + LZ + LSVGP . (S15) 
+
+B.3 INVBO-Style Latent inversion 
+
+A recurring failure mode in LSBO is misalignment between the latent codes used to train the surrogate and the discrete designs actually evaluated by the oracle. Concretely, if a latent code z associated with an evaluated design x does not decode back to x under the current decoder (i.e., ˆx = Dec θ (z)̸ = x), then the training pair (z, y ) with y = ft(x) no longer corresponds to the surrogate target ft(Dec θ (z)) . This mismatch can be exacerbated after representation/decoder updates. Following the plug-and-play inversion module of InvBO [Chu et al., 2024], we optionally refine latent codes by explicitly inverting the decoder to recover a code that reconstructs the evaluated design, without requiring additional oracle calls. Given a design x ∈ X , we solve 
+
+zinv (x) ∈ arg min 
+
+> z∈Rd
+
+Linv (z; x), (S16) 
+
+Linv (z; x) := − log pθ (x | z), (S17) 19 where − log pθ (x | z) measures how well the decoder reconstructs x from z. In our SELFIES setting, Linv (z; x) is implemented as the (length-normalized) token negative log-likelihood under the decoder [Maus et al., 2022]. We initialize from the current encoder/embedding output (e.g., z(0) ∼ qϕ(z | x), or z(0) = Eq [z(c(x, t ); A)] ) and update only z while keeping decoder parameters fixed: 
+
+z(k+1) ← z(k) − η ∇z Linv (z(k); x), k = 0 , . . . , T inv − 1. (S18) As in InvBO, we may stop early once the decoded molecule ˆx = Γ( z(k+1) ) is sufficiently close to x under an input-space distance dX (·, ·) (e.g., normalized Levenshtein distance on SELFIES strings), 
+
+dX (x, ˆx) ≤ ϵ. (S19) The refined latent zinv (x) can then replace stored latent codes for newly added points and/or the current top-k set, maintaining an aligned dataset for surrogate learning under decoder updates. 
+
+B.4 SVGP surrogate objective with deep kernel 
+
+At iteration t, the surrogate models the latent objective 
+
+g(z, t ) := ft(Γ( z)) ,
+
+using the dataset Dt = {(zi, t i, y i)}nt
+
+> i=1
+
+. We place a GP prior on g,
+
+g ∼ GP  0, k (( z, t ), (z′, t ′)) , k(( z, t ), (z′, t ′)) = kz (z, z′) kt(t, t ′),
+
+and use the Gaussian likelihood 
+
+p(yi | g(zi, t i)) = N yi | g(zi, t i), σ 2
+
+> y
+
+.
+
+To scale beyond nt ≫ 10 3, we use a sparse variational GP (SVGP) [Hensman et al., 2015] with inducing inputs 
+
+U = {um}Mm=1 in the joint input space (e.g. um = ( zm, t m)), and variational distribution 
+
+q(gU) = N (m, S),
+
+where gU :=  g(u1), . . . , g (uM ). Let p(gU) = N (0, KUU ) denote the GP prior at inducing inputs. The SVGP ELBO is 
+
+LSVGP =
+
+> nt
+
+X
+
+> i=1
+
+Eq(g(zi,t i)) 
+
+ log p(yi | g(zi, t i))  − KL  q(gU) ∥ p(gU), (S20) and is optimized w.r.t. variational parameters (m, S) and kernel hyperparameters (typically with minibatching over i). 
+
+Deep kernel learning. When using a deep kernel [Wilson et al., 2016], we replace z by a learned feature map ϕψ (z)
+
+and define 
+
+kz (z, z′) := kRBF 
+
+ ϕψ (z), ϕ ψ (z′),
+
+so that the surrogate input becomes (ϕψ (z), t ). We then optimize ψ jointly with the SVGP objective in Equation S20. 
+
+B.5 Trust region Bayesian Optimization configuration 
+
+TurBO-M [Eriksson et al., 2019] is a widely adopted strategy for high-dimensional BO that operates by maintaining 
+
+M independent local searches, each confined within its own hyper-rectangular trust region. TurBO-1 was shown to outperform other variants in most settings and was subsequently adopted for LSBO in Maus et al. [2022]. Although LSBO maps the original input space X to a compressed latent space Z, the resulting search space remains high-dimensional, posing challenges for traditional BO approaches. TurBO is used to improve search efficiency by centering the optimization process at the current incumbent and creating a trust region around it, as described below: A trust region centered at κ ∈ Rd with length L > 0 and weight ω ∈ Rd is 
+
+T (κ; L, ω) = z ∈ Rd : κ − 12 ωL ≤ z ≤ κ + 12 ωL . (S21) State update for a new batch Ynext (with best value y⋆ so far): Success if max( Ynext ) > y ⋆ + 10 −3|y⋆|, failure otherwise ,y⋆ ← max 
+
+
+
+y⋆, max( Ynext )
+
+
+
+. (S22) 20 Let nsucc and nfail denote the success and failure counters. On success: 
+
+nsucc ← nsucc + 1 , nfail ← 0.
+
+On failure: 
+
+nsucc ← 0, nfail ← nfail + 1 .
+
+If nsucc reaches the tolerance Nsucc , expand L ← min(2 L, L max ), if nfail reaches the tolerance Nfail , shrink L ← L 
+
+> 2
+
+.
+
+A restart is triggered if L < L min .
+
+B.6 Comprehensive TALBO loop Algorithm 2 TALBO, comprehensive version with CoBO-style alignment, and InvBO-style inversion 
+
+Require: Failure tolerance Nfail ; improvement threshold δ; initial evaluated set D0 = {(xi, t i, y i)}n0
+
+> i=1
+
+.
+
+1: Pre-train DGBFGP to obtain q0(A, σ, ℓ ) and decoder parameters θ0.
+
+2: Drich 0 ← ∅ .
+
+3: for each (xi, t i, y i) ∈ D 0 do 
+
+4: zi ← EMBED AND ALIGN (xi, t i; q0, θ 0)
+
+5: Drich 0 ← D rich 0 ∪ { (xi, zi, t i, y i)}
+
+6: end for 
+
+7: y⋆ ← max {y : ( x, z, t, y ) ∈ D rich 0 }; nfail ← 0.
+
+8: for t = 1 to T or until criterion satisfied do 
+
+9: Fit spatio-temporal surrogate gt on D(z) 
+
+> t−1
+
+:= {(z, t, y ) : ( x, z, t, y ) ∈ D rich 
+
+> t−1
+
+} (Equation S20) 
+
+10: Select ˆzt ∈ arg max z∈T t α z; p(gt(·, t ) | D (z)
+
+> t−1
+
+), where Tt is the current TuRBO trust region centered at the incumbent in latent space (Appendix B.5). 
+
+11: Decode and evaluate xt ∼ pθt−1 (· | ˆzt).
+
+12: yt = ft(xt) + εt.
+
+13: zt ← EMBED AND ALIGN (xt, t ; qt−1, θ t−1)
+
+14: Drich  
+
+> t
+
+← D rich  
+
+> t−1
+
+∪ { (xt, zt, t, y t)}
+
+15: if yt > y ⋆ + δ |y⋆| then 
+
+16: y⋆ ← yt; nfail ← 0.
+
+17: else 
+
+18: nfail ← nfail + 1 .
+
+19: end if 
+
+20: if nfail ≥ Nfail then 
+
+21: Update DGBFGP posterior to qt(A, σ, ℓ ) and decoder to θt by optimizing Equation S15. 
+
+22: Drich  
+
+> t, new
+
+← ∅ .
+
+23: for each (xi, zi, t i, y i) ∈ D rich  
+
+> t
+
+do 
+
+24: zi ← EMBED AND ALIGN (xi, t i; qt, θ t)
+
+25: Drich  
+
+> t, new
+
+← D rich  
+
+> t, new
+
+∪ { (xi, zi, t i, y i)}
+
+26: end for 
+
+27: Drich  
+
+> t
+
+← D rich 
+
+> t, new
+
+; nfail ← 0.
+
+28: else 
+
+29: qt ← qt−1; θt ← θt−1.
+
+30: end if 
+
+31: end for 
+
+32: Procedure EMBED AND ALIGN (x, t ; q, θ ):
+
+33: c ← c(x, t ) // covariates may include pre-computed descriptors or metadata 
+
+34: z ← Eq
+
+z(c; A)
+
+35: // Inversion step: refine z to decode back to x (Section B.3) 
+
+36: z(0) ← z
+
+37: for k = 1 to Tinv do 
+
+38: z(k) ← z(k−1) − η∇z Linv (z(k−1) ; x)
+
+39: if dX (x, Γ( z(k))) ≤ ϵ then 
+
+40: break 
+
+41: end if 
+
+42: end for 
+
+43: return z(k)
+
+21 B.7 Background on VAEs and GP-prior VAEs Motivation. Latent-space Bayesian optimization typically relies on a pretrained generative model to map structured designs x ∈ X to a continuous latent space z ∈ Rd and decode candidate latents back to designs. The most common backbone is a VAE [Kingma and Welling, 2013], whose latent prior encourages a well-behaved embedding. Our method is closely related in spirit, but differs in the prior : instead of a simple independent prior (e.g., N (0, I)), we endow the latent representation with a covariate-dependent GP prior to obtain a temporally coherent latent geometry. Here, we briefly review VAEs, conditional VAEs, and GP-prior VAEs as background. 
+
+Variational autoencoders. A VAE is a latent-variable generative model for an observation x ∈ X of the form 
+
+pω (x, z) = pθ (x | z) p(z), ω = {θ}, (S23) where z ∈ Rd is an unobserved latent code and p(z) is typically a simple prior such as N (0, I). The posterior pω (z | x)
+
+is generally intractable, so VAEs use amortized variational inference with an encoder qϕ(z | x) to approximate it [Kingma and Welling, 2013, Murphy, 2023]. Learning proceeds by maximizing the evidence lower bound (ELBO): 
+
+log pω (x) ≥ Eqϕ(z|x)[log pθ (x | z)] − KL( qϕ(z | x) ∥ p(z)) , (S24) with respect to encoder and decoder parameters (ϕ, θ ).
+
+Conditional VAEs. A conditional VAE (cVAE) incorporates auxiliary covariates c ∈ RR by conditioning both encoder and decoder, 
+
+pω (x, z | c) = pθ (x | z, c) p(z | c), qϕ(z | x, c), (S25) leading to an ELBO of the same form with c treated as observed input [Sohn et al., 2015]. In our setting, covariates are denoted c(x, t ) and can include time. Alternative parametrization of the generative model assumes dependency on the covariates c only in the prior, but not in the decoder, resulting in pω (x, z | c) = pθ (x | z) p(z | c).
+
+Gaussian process prior VAEs. A limitation of standard VAEs (and cVAEs) in LSBO is that the latent space is learned primarily to reconstruct x under an unsupervised objective, and the resulting geometry may be poorly aligned with downstream optimization objectives. GP-prior VAEs replace the simple latent prior with a Gaussian process prior that ties latent codes across examples through shared covariates. Concretely, letting cn denote covariates for xn, GP-prior VAEs posit latent functions h(j)(·) for each latent dimension j = 1 , . . . , d ,
+
+h(j)(·) ∼ GP (0 , k (·, ·)) , z(j) 
+
+> n
+
+:= h(j)(cn), (S26) so that the collection {zn}Nn=1 is no longer independent a priori but varies smoothly with c. This induces a covariate-aware latent geometry (e.g., longitudinal structure when c includes time), and has been explored for improving BO in latent spaces by conditioning the GP prior on auxiliary variables [Ramchandran et al., 2025]. Our TALBO model that utilizes DGBFGP as its generative model can be viewed as a scalable and time-varying variant of this idea: it uses a basis-function approximation with global variational parameters to make GP-prior latent representations practical at scale. 22 C Experiment setup and implementation details 
+
+C.1 Global hyperparameters Optimization setup 
+
+Optimization horizon T 600 Initial dataset size Ninit 100 Batch size B 10 Number of seeds 10 
+
+Time-varying objective generation 
+
+Temporal kernel (Equation 22) Squared-exponential kw
+
+Relative lengthscale ℓw 0.2 (unless otherwise stated) Effective drift scale ℓwT
+
+Temperature β (Equation 23) 1.0 Noise σ2 0.0 
+
+Bayesian optimization configuration 
+
+Acquisition function q-Batch Thompson Sampling Surrogate kernel over z Deep kernel RBF Table S1: Main optimization, objective-generation, and modeling settings used in the experiments. 
+
+C.2 DGBFGP configuration 
+
+DGBFGP Latent dimension d = 256 
+
+Max token length Lmax = 128 
+
+Dataset GuacaMol Basis / features Hilbert-space features ( basis_func=hs ), basis size M = 128 
+
+GP KL scale gpB =0.001 ( gp_kl_scale_B )Hyperparameters batch size 1024 , learning rate 5 × 10 −4
+
+Decoder InfoTransformerVAE decoder Dropout pdrop = 0 .2
+
+Table S2: DGBFGP configuration and training hyperparameters used in the experiments. Index Covariate name 1 molecular weight 2 number of H-bond donors 3 number of H-bond acceptors 4 number of rotatable bonds 5 Quantitative Estimation of Drug-likeness (QED) 6 Synthetic Accessibility Score (SAS) 7 number of long cycles 8 time covariate t (optional for time version) Table S3: Covariates used by TALBO for Multi-property optimization tasks. 23 Figure S7: Histograms of molecular covariates used during pretraining (Table S3). 
+
+C.3 InfoTransformerVAE configuration 
+
+InfoTransformerVAE Latent dimension d = 256 (bottleneck_size =2, d_model =128) Max decode length Lmax = 128 
+
+KL weight βKL = 0 .1 (kl_factor )Table S4: InfoTransformerVAE architecture and training hyperparameters used in the experiments 
+
+C.4 Computational resources 
+
+We run all the experiments on an Nvidia Tesla V100 GPU. 24

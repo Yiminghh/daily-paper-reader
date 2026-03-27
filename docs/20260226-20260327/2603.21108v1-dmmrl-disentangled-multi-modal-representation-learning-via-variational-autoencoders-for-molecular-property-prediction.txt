@@ -1,0 +1,366 @@
+Title: DMMRL: Disentangled Multi-Modal Representation Learning via Variational Autoencoders for Molecular Property Prediction
+
+URL Source: https://arxiv.org/pdf/2603.21108v1
+
+Published Time: Tue, 24 Mar 2026 01:08:59 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# DMMRL: Disentangled Multi-Modal Representation Learning via Variational Autoencoders for Molecular Property Prediction 
+
+Long Xu 1, Junping Guo 1, Jianbo Zhao 1, Jianbo Lu 1, and Yuzhong Peng 2* 
+
+1. Guangxi Key Lab of Human-machine Interaction and Intelligent Decision, Nanning Normal University, Nanning, China 2. College of Big Data and Software Engineering, Zhejiang Wanli University, Ningbo, China 
+
+Abstract —Molecular property prediction constitutes a cor-nerstone of drug discovery and materials science, necessi-tating models capable of disentangling complex structure-property relationships across diverse molecular modalities. Existing approaches frequently exhibit entangled repre-sentations—conflating structural, chemical, and functional factors—thereby limiting interpretability and transferabil-ity. Furthermore, conventional methods inadequately exploit complementary information from graphs, sequences, and geometries, often relying on naive concatenation that ne-glects inter-modal dependencies. In this work, we propose DMMRL, which employs variational autoencoders to dis-entangle molecular representations into shared (structure-relevant) and private (modality-specific) latent spaces, en-hancing both interpretability and predictive performance. The proposed variational disentanglement mechanism effec-tively isolates the most informative features for property prediction, while orthogonality and alignment regularizations promote statistical independence and cross-modal consis-tency. Additionally, a gated attention fusion module adap-tively integrates shared representations, capturing complex inter-modal relationships. Experimental validation across seven benchmark datasets demonstrates DMMRL’s superior performance relative to state-of-the-art approaches. The code and data underlying this article are freely available at https://github.com/xulong0826/DMMRL. 
+
+Index Terms —molecular property prediction; disentangle-ment; multi-modal; variational autoencoder; representation learning 
+
+I. INTRODUCTION 
+
+Molecular property prediction is vital for drug discov-ery, enabling efficient identification of promising com-pounds before synthesis [1]–[4]. Accurate predictions of solubility, toxicity, and bioactivity accelerate development while reducing costs. With expanding chemical databases and computational resources, data-driven methods have become essential for understanding structure-property re-lationships [5]. As the chemical space continues to grow exponentially, computational models are increasingly re-lied upon to prioritize candidates, reduce experimental workload, and guide rational molecular design. These models not only facilitate virtual screening and lead opti-mization but also enable the exploration of novel chemical scaffolds that may be inaccessible through traditional experimental approaches. In addition, predictive model-ing empowers researchers to systematically explore vast chemical spaces, identify structure-activity relationships, and optimize molecular properties with unprecedented efficiency, thereby accelerating the pace of innovation in both pharmaceutical and materials science domains. Despite these advances, current approaches face two key limitations that hinder their practical utility and scientific insight [6]. First, representation entanglement occurs when structural, chemical, and functional factors become inter-twined within learned representations, obscuring which molecular aspects drive specific properties. This entangle-ment fundamentally constrains model interpretability by conflating distinct causal factors that influence molecular behavior. When multiple structural and electronic prop-erties are encoded in overlapping embedding dimensions, the resulting representations cannot effectively isolate the independent contributions of specific molecular substruc-tures, functional groups, or electronic properties. This not only obscures the mechanistic basis of predictions but also restricts transferability to new tasks where different molec-ular factors may become relevant. The inability to attribute predictions to specific molecular features ultimately limits the trustworthiness and scientific insight provided by the models, particularly in safety-critical domains like drug discovery where mechanistic understanding is essential for rational design and regulatory approval. Second, inadequate multi-modal integration persists de-spite the complementary nature of different molecular rep-resentations [7], [8]. Graph structures capture topological connectivity but lack spatial information; sequence nota-tions encode chemical composition but overlook geometric relationships; conformational representations provide spa-tial context but may not efficiently encode functional group patterns. Most existing methods either focus exclusively on single modalities, discarding complementary information sources, or employ simplistic concatenation strategies that fail to capture complex inter-modal dependencies and conditional relationships. This deficiency is particularly problematic for properties that emerge from the interplay of multiple structural factors—for instance, molecular 
+
+> arXiv:2603.21108v1 [cs.LG] 22 Mar 2026
+
+binding affinity depends simultaneously on spatial con-formation, electronic charge distribution, and functional group arrangement. Effective integration must adaptively weight different modalities according to their task-specific relevance while preserving their complementary nature. Previous methods exhibit specific shortcomings in ad-dressing these challenges. Traditional descriptor-based ap-proaches offer interpretability but perform poorly with complex patterns and require extensive domain expertise [9], [10]. These handcrafted features may not generalize well to novel chemical spaces or capture subtle structure-property relationships, limiting their applicability in mod-ern drug discovery pipelines. In contrast, graph neural networks encode molecular topology effectively but often produce entangled representations that obscure the contri-butions of individual factors [11]–[13]. While GNNs have advanced the field by modeling molecular connectivity, they frequently lack mechanisms to separate property-relevant features from modality-specific noise, resulting in black-box models with limited interpretability. Similarly, standard deep learning approaches create compact repre-sentations without addressing disentanglement or multi-modal integration, further exacerbating the challenges of interpretability and adaptability to new tasks. Building on these limitations, recent advances in vari-ational autoencoders (VAEs) have demonstrated that ex-plicit factor separation can significantly enhance inter-pretability, generalization, and transferability [14]. By enforcing structured latent spaces, VAEs can disentangle shared and private factors, allowing models to focus on the most informative features for property prediction while systematically discarding irrelevant or confounding infor-mation. This disentanglement not only improves predictive performance but also provides clearer insights into the molecular determinants of specific properties. Concurrently, multi-modal learning has emerged as a powerful paradigm for leveraging diverse information sources. Graphs encode connectivity, sequences capture chemical syntax, and geometric representations provide spatial context [15], [16]. Integrating these modalities can yield richer and more robust molecular representations, enabling models to capture complex structure-property relationships that are inaccessible to single-modality ap-proaches. However, significant challenges remain in dis-entangling molecular graphs and fusing modalities while maintaining interpretability. Effective multi-modal fusion must not only combine information but also preserve the independence and complementarity of each modality, ensuring that the resulting representations are both infor-mative and interpretable for downstream tasks. Achieving this balance is critical for advancing molecular property prediction and unlocking new opportunities in drug dis-covery and materials science. To address these fundamental limitations, we pro-pose DMMRL (Disentangled Multi-Modal Representation Learning), a framework integrating variational autoen-coders with multi-modal fusion mechanisms. All in all, the main contributions of DMMRL are as follows.  
+
+> •
+
+We develop a feature disentanglement mechanism using VAE modules that separates shared (common structural) from private (modality-specific) factors within each modality.  
+
+> •
+
+We design a gated attention fusion mechanism that adaptively combines shared factors from all modali-ties, capturing complex inter-modal relationships.  
+
+> •
+
+Extensive evaluation on seven benchmark datasets demonstrating DMMRL’s superior performance com-pared to state-of-the-art methods. Ablation studies also demonstrated the effectiveness of the proposed techniques. II. MATERIALS AND METHODS 
+
+A. Problem formulation 
+
+The molecular property prediction problem in a multi-modal context can be formally defined as follows [3]. Given a collection of molecules M = {mi}Ni=1 , each molecule mi is represented through multiple complemen-tary modalities: a molecular graph Gi that captures atom-bond connectivity patterns and topological structures, a sequence representation Si (typically SMILES notation) that encodes linear chemical syntax and composition rules, and a geometric conformation Ci that reflects three-dimensional spatial arrangements including bond lengths, angles, and torsional relationships. The objective is to derive a predictive function f (·) that effectively maps these multi-modal inputs to molecular property labels yi,represented as f (Gi, S i, C i) → yi. The central method-ological challenge lies in the effective integration of these complementary information sources while ensuring that the learned representations exhibit both interpretability through factor separation and appropriate disentanglement of property-relevant features from modality-specific arti-facts. Figure 1 illustrates the overall architecture of our proposed DMMRL framework. 
+
+B. Molecular Encoder Module 
+
+To process molecular data from different perspectives, we employ three established encoders following method-ologies in [16]: 
+
+Sequence Encoder. For SMILES sequences, a bidirec-tional LSTM followed by a transformer encoder archi-tecture is implemented. The LSTM effectively captures local chemical contexts from tokenized SMILES strings, extracting sequential dependencies and substructure motifs that are important for chemical interpretation. Subse-quently, the transformer encoder leverages self-attention mechanisms to model long-range dependencies and global context, which are essential for comprehending the overall molecular structure and capturing interactions between distant atoms or functional groups within the sequence. This hybrid architecture enables the model to learn both local and global features from SMILES representations, providing a comprehensive encoding of chemical syntax and semantics. 
+
+hseq  
+
+> i
+
+= concat 
+
+−−−−→
+
+LSTM (xi), ←−−−−
+
+LSTM (xi)
+
+
+
+(1) 
+
+Hs = Transformer ({hseq  
+
+> i
+
+}Ti=1 ) (2) 
+
+Graph Encoder. For molecular graphs, a Commu-nicative Message Passing Neural Network (CMPNN) is implemented that systematically updates atom and bond representations through structured information exchange protocols. CMPNN enables each atom and bond to itera-tively aggregate information from their neighbors, allow-ing the encoder to capture complex topological structures, chemical connectivity patterns, and local environments. By facilitating communication between nodes and edges, CMPNN effectively models the intricate relationships present in molecular graphs, such as aromaticity, ring structures, and branching, which are critical for accurate property prediction. 
+
+m(k) 
+
+> v
+
+= AGGREGATE ({h(k−1)  
+
+> uv
+
+: u ∈ N (v)}) (3) 
+
+h(k) 
+
+> v
+
+= COMMUNICATE (h(k−1)  
+
+> v
+
+, m (k) 
+
+> v
+
+) (4) 
+
+Geometry Encoder. For three-dimensional conforma-tions, a geometric graph neural network is utilized that incorporates spatial information including distances and angles between atoms. This encoder not only considers the connectivity of atoms but also explicitly models geometric features such as bond lengths, bond angles, and torsional angles, which are crucial for understanding molecular shape and spatial arrangement. By integrating these ge-ometric descriptors, the encoder captures essential three-dimensional arrangement information that complements the topological and chemical features derived from other modalities, enabling the model to better predict properties that are sensitive to molecular conformation. 
+
+m(k) 
+
+> v
+
+= AGG 
+
+
+
+{h(k−1)  
+
+> u
+
+, h (k−1)  
+
+> uv
+
+: u ∈ N (v)}
+
+
+
+(5) 
+
+h(k) 
+
+> v
+
+= COMBINE (h(k−1)  
+
+> v
+
+, m (k) 
+
+> v
+
+) (6) 
+
+C. Disentangled Representation VAE Module 
+
+With these specialized encoders extracting modality-specific representations, we introduce a novel disentan-gled representation learning module based on variational autoencoders (VAEs) to address the fundamental chal-lenge of representation entanglement. Unlike conven-tional autoencoders or standard disentanglement frame-works—which typically separate latent factors without explicit consideration of modality relevance or predic-tive utility—our approach systematically decomposes each modality’s features into two complementary latent spaces: shared (structure-relevant) and private (modality-specific). This design is grounded in the insight that molecular in-formation comprises both generalizable, property-relevant structural patterns and modality-specific artifacts that may introduce noise. The key innovation of our method lies in the principled information bottleneck and targeted regularization strat-egy [17]. Rather than simply reconstructing input data or enforcing generic factor separation, our VAE module constrains latent capacity and imposes statistical indepen-dence between shared and private spaces, ensuring that only the most predictive molecular features are encoded in the shared space. Orthogonality and alignment losses further enforce that shared representations capture cross-modal consistency while private spaces retain modality-specific details. This is in contrast to ordinary AE-based approaches, which often fail to disentangle predictive and non-predictive factors or allow leakage of irrelevant information into the prediction pathway. Specifically, for each modality m ∈ { s, g, h } (corre-sponding to sequence, graph, and geometry representa-tions), the encoder transforms input representations Hm
+
+through a pathway that includes normalization, non-linearity, and dimensionality reduction: 
+
+hm = Dropout (LayerNorm (ReLU (Linear (Hm)))) (7) The encoder then generates parameters (mean and log-variance) for the shared latent distribution, with the private space following an analogous process: 
+
+μshared m , log σshared m = Linear shared (hm) (8) Rather than deterministically mapping to fixed points, the reparameterization technique facilitates stochastic sam-pling from the parameterized distribution. This proba-bilistic encoding enhances regularization effectiveness and prevents posterior collapse by maintaining gradient flow during backpropagation: 
+
+zshared m = μshared m + σshared m ⊙ ϵshared (9) where σm = exp(0 .5 · log σm) and ϵ ∼ N (0 , I ) represents Gaussian noise. Log-variances are constrained to [−10 , 10] 
+
+for numerical stability while preserving expressivity. The resulting complementary latent spaces serve distinct functional purposes within the framework:  
+
+> •
+
+Shared latent space zshared m ∈ Rds : Encapsulates structural information that remains consistent across modalities and is directly relevant for property predic-tion. This space captures fundamental molecular char-acteristics that determine physicochemical properties regardless of representation format, such as electron distribution patterns, stereochemical configurations, and functional group arrangements.  
+
+> •
+
+Private latent space zprivate m ∈ Rdp : Encodes modality-specific details that are not directly pertinent Fig. 1. Overview of the DMMRL framework. 
+
+to the target property, including representation arti-facts, encoding biases, and modality-dependent con-textual information. For example, the graph modal-ity’s private space may encode specific node ordering schemes, while the sequence modality’s private space might capture SMILES syntax conventions that lack direct relevance to physical properties. Moreover, only the shared latent representations are propagated to the downstream prediction head, establish-ing a strict information bottleneck that compels the model to discard irrelevant modality-specific details. This mecha-nism not only enhances interpretability and robustness but also ensures that the learned representations are optimally aligned with the property prediction task. By integrating these innovations, our framework achieves superior disen-tanglement and predictive performance compared to tradi-tional autoencoder-based and factor separation methods. 
+
+D. Gated Attention Fusion 
+
+Building upon the disentangled representations obtained from the VAE module, we introduce a gated attention fusion mechanism that represents a significant innovation over conventional multi-modal fusion strategies [18], [19]. Unlike fixed-weight concatenation or averaging, which assign static and often suboptimal importance to each modality, our approach employs a dynamic, context-aware gating system. This mechanism adaptively modulates the flow of information from each modality based on the specific molecular context and structural characteristics, allowing the model to learn optimal modality contributions for each prediction task. The core innovation lies in the use of learnable attention gates, which are generated through a multi-layer percep-tron (MLP) and normalized via softmax [20]. This enables the model to capture complex inter-modal dependencies and assign probabilistic weights to each modality, ensuring that the sum of contributions equals one. As a result, the fusion process is highly flexible and molecule-specific, reflecting the fact that different molecular properties may be best predicted by different types of information. The computational pathway of this mechanism consists of three critical stages, each corresponding to the following equations: 
+
+Context-aware weight generation: 
+
+gate weights = Softmax (MLP ({zshared m }Mm=1 )) (10) The shared latent vectors from all modalities are first passed through a multi-layer perceptron (MLP), which captures inter-modal dependencies and relative informa-tion content. The softmax operation normalizes these outputs into probabilistic weights, ensuring that the sum of contributions from all modalities equals one. This enables the model to dynamically adjust the importance of each modality for every molecule, reflecting the fact that different molecular properties may be best predicted by different types of information. 
+
+Weighted aggregation of shared representations: 
+
+fused =
+
+> M
+
+X
+
+> i=1
+
+gate weights i · zshared i (11) The shared representations are then combined according to the learned gate weights, amplifying the signal from the most relevant modalities while suppressing less infor-mative ones. This selective fusion is crucial for handling cases where, for example, geometric features dominate in predicting binding affinity, while graph features are more informative for solubility or toxicity. Residual connection integration: 
+
+output = FFN fused + 1
+
+M
+
+> M
+
+X
+
+> i=1
+
+zshared i
+
+!
+
+(12) A residual connection adds the average of all shared rep-resentations to the fused output before passing it through a feedforward neural network (FFN). This design ensures that baseline information from all modalities is preserved, preventing the loss of potentially useful features due to overly aggressive gating. The residual pathway also stabi-lizes training by maintaining gradient flow and mitigating vanishing gradient issues. This architecture specifically addresses the heterogene-ity of molecular data, where certain modalities may con-tain more relevant information for specific properties or molecular classes than others. For instance, geometric representations may provide superior information for prop-erties dependent on spatial arrangements (such as protein binding), while graph representations might better capture properties related to functional groups and connectivity patterns. By exclusively utilizing shared representations and excluding private representations from the predic-tion pathway, this mechanism reinforces the fundamental disentanglement principle while enabling adaptive multi-modal information integration. 
+
+E. Prediction Head Architecture 
+
+Once multi-modal features are integrated through the gated attention fusion mechanism, a prediction head is employed to map these integrated features to molecular property outputs. The prediction head is implemented as a feedforward neural network with the following structure: 
+
+ˆy = Linear (ReLU (Linear (output ))) (13) For classification tasks, the output undergoes sigmoid activation to generate probability scores, whereas for re-gression tasks, raw output values are utilized directly. The prediction head architecture remains deliberately straight-forward, thereby focusing the model’s capacity on learning meaningful disentangled representations rather than com-plex prediction mappings. Task-specific loss functions are applied for prediction: 
+
+Llabel =
+
+
+
+> 1
+> |V|
+
+P
+
+> i∈V
+
+BCE (yi, σ (ˆ yi)) classification 
+
+> 1
+> |V|
+
+P
+
+> i∈V
+
+(yi − ˆyi)2 regression (14) where V denotes valid samples, addressing the missing labels issue in molecular datasets. 
+
+F. Training and Loss Function 
+
+To ensure effective learning of both disentangled repre-sentations and accurate property predictions, our objective combines property prediction with principled constraints designed to promote interpretable, disentangled repre-sentations [21], [22]. The total loss function integrates prediction with multiple specialized regularization terms, each targeting a specific aspect of disentanglement and multi-modal consistency: 
+
+Ltotal = Llabel + βLshared KL + λLprivate M M D 
+
++ γLalign + δLortho + ηLrecon (15) where weights ( β, λ, γ, δ, η) are hyperparameters or learnable coefficients that balance the influence of each loss component during optimization. 
+
+Variational Disentanglement Losses. Three comple-mentary regularization terms are employed to ensure the latent spaces are both informative and disentangled: 
+
+Lshared KL = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+KL (q(zshared m |Hm)∥p(zshared m )) 
+
+(16) 
+
+Lprivate M M D = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+MMD (zprivate m , N (0 , I )) (17) 
+
+Lrecon = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+∥Hm − ˆHm∥22 (18) - Lshared KL is the Kullback-Leibler (KL) divergence be-tween the approximate posterior q(zshared m |Hm) and the prior p(zshared m ) (typically standard normal). This term acts as an information bottleneck, regularizing the shared latent space to prevent overfitting and encouraging the model to encode only the most salient, property-relevant features in zshared m . - Lprivate M M D is the Maximum Mean Discrepancy (MMD) between the private latent variables 
+
+zprivate m and a standard normal distribution. This encour-ages the private latent space to match a target distribution, promoting diversity and flexibility in capturing modality-specific variations while discouraging leakage of shared information into private spaces. - Lrecon is the recon-struction loss, measuring the mean squared error between the original encoder output Hm and its reconstruction 
+
+ˆHm from the latent variables. This ensures that the latent representations retain sufficient information for accurate reconstruction, counterbalancing the compression imposed by the KL and MMD terms. 
+
+Representation Relationship Losses. Two additional terms enforce structural constraints on the relationships between latent spaces: 
+
+Lalign = 1
+
+Npairs 
+
+X
+
+> i<j
+
+InfoNCE (zshared i , z shared j ) (19) 
+
+Lortho = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+|⟨ ˆzshared m , ˆzprivate m ⟩| (20) - Lalign is an alignment loss based on the InfoNCE contrastive objective, computed over all pairs of shared latent representations from different modalities. By max-imizing agreement between zshared i and zshared j , this term encourages the shared spaces to capture consistent, modality-invariant information, thus facilitating effective multi-modal fusion. - Lortho is an orthogonality constraint, penalizing the inner product between normalized shared and private representations within each modality. This enforces statistical independence between zshared m and 
+
+zprivate m , ensuring that property-relevant and modality-specific information are disentangled. Together, these loss components guide the model to learn representations that are not only predictive but also interpretable, disentangled, and robust across modalities. The careful design and integration of these terms are crucial for achieving the dual goals of high predictive accuracy and meaningful latent structure in multi-modal molecular property prediction. III. EXPERIMENTAL SETTINGS 
+
+A. Datasets and Parameter Setting 
+
+Dataset. To rigorously evaluate the DMMRL frame-work, comprehensive experiments were conducted on seven benchmark datasets from the MoleculeNet collection [23]. These datasets were specifically selected to represent diverse molecular properties and prediction challenges. The experimental corpus spans various chemical domains including pharmaceuticals, environmental compounds, and small drug-like molecules, thereby providing a robust testbed for assessing model generalizability across diverse chemical spaces. Table I summarizes the key statistics of the datasets used in our experiments, including the number of tasks, sample sizes, task types, and evaluation metrics. The selected datasets cover both classification (e.g., BACE, BBBP, ClinTox, Tox21) and regression tasks (e.g., ESOL, FreeSolv, Lipo), ensuring a comprehensive assessment of model performance across different molecular property prediction scenarios. The diversity in dataset size and property type allows us to systematically analyze the robustness and adaptability of DMMRL under various real-world conditions.                                 
+
+> TABLE I TABLE I. S UMMARY OF DATASETS .
+> Dataset Tasks samples Type Metric
+> BACE 11513 Classification ROC-AUC BBBP 12040 Classification ROC-AUC ClinTox 21478 Classification ROC-AUC Tox21 12 7831 Classification ROC-AUC ESOL 11127 Regression RMSE FreeSolv 1639 Regression RMSE Lipo 14200 Regression RMSE
+
+Parameter Setting. To ensure methodological con-sistency and fair comparison with existing approaches, datasets were partitioned using random splitting accord-ing to established MoleculeNet protocols, with an 8:1:1 ratio for training, validation, and test sets, respectively. Each experiment was replicated 10 times with different random seeds to ensure statistical robustness, with results reported as mean and standard deviation of area under the receiver operating characteristic curve (ROC-AUC) for classification tasks and root mean squared error (RMSE) for regression tasks. For DMMRL, we set the number of training epochs to 200 and use a batch size of 64 unless otherwise specified. The Noam learning rate scheduler is adopted, with an initial and final learning rate of 1 × 10 −3 or 1 × 10 −4,and a maximum learning rate of 2 × 10 −3 or 2 × 10 −4,selected based on validation performance. All regulariza-tion weights, including β for the KL divergence term, λ
+
+for the MMD term, γ for the alignment loss, δ for the orthogonality constraint, and η for the reconstruction loss, are learnable parameters with initial values set to 0.1. All coefficients are selected based on validation performance and grid search to ensure optimal model training. All hidden dimensions are set to 256. The dimensions of shared and private latent features are selected according to the specific task and dataset, and these settings can be found in detail in our released code. All activation functions are ReLU, and Layer Normalization is applied throughout the network [24], [25]. Residual connections and feedforward neural networks are incorporated for feature enhancement and stabilization [26]. The Adam optimizer is used for training, and gradient clipping is applied to ensure stability [27]. All experiments were conducted on a workstation equipped with an Intel Core i7-14700KF processor (20 cores, 28 threads), 64GB of system memory, and an NVIDIA GeForce RTX 4060 Ti GPU with 16GB VRAM. Under these settings, training the full DMMRL model on all datasets required approximately 2 days to complete. 
+
+B. Method Comparison 
+
+For comprehensive evaluation, DMMRL was sys-tematically compared with twelve established base-line approaches spanning sequence-based, graph-based, geometry-based, and multi-modal molecular representa-tion methodologies. Specifically, Transformer [9] and RNN [10] represent SMILES sequence-based models. TrimNet [11], FP-GNN [12], GCN [28], Weave [29], MPNN [30], and N-Gram [13] constitute graph neu-ral network methods of varying architectural complex-ity. Additionally, GROVER [31] implements sophisticated message-passing operations on directed graphs. GraSeq [32] combines molecular SMILES and graph representa-tions in a dual-modality approach. Finally, MvMRL [15] and SGGRL [16] represent state-of-the-art multi-modal approaches that integrate graph and three-dimensional geometry information. TABLE II MOLECULAR PROPERTY PREDICTION RESULTS ON CLASSIFICATION AND REGRESSION DATASETS WITH BASELINES AND DMMRL. 
+
+Methods ROC-AUC ↑ (Higher is better) RMSE ↓ (Lower is better) 
+
+BACE BBBP ClinTox Tox21 ESOL FreeSolv Lipophilicity 
+
+RNN - 0.902 ±0.015 0.915 ±0.009 0.806 ±0.007 0.743 ±0.020 1.108 ±0.146 0.770 ±0.025 Transformer - 0.944 ±0.011 0.954 ±0.003 0.813 ±0.013 0.767 ±0.079 1.021 ±0.102 0.900 ±0.023 GCN - 0.690 ±0.036 0.807 ±0.051 0.829 ±0.041 0.970 ±0.050 1.400 ±0.135 -Weave - 0.671 ±0.065 0.832 ±0.023 0.820 ±0.024 0.610 ±0.055 1.220 ±0.250 -MPNN - 0.910 ±0.032 0.881 ±0.037 0.844 ±0.014 0.702 ±0.042 1.242 ±0.249 0.645 ±0.075 N-Gram - 0.912 ±0.013 0.855 ±0.037 0.842 ±0.027 1.100 ±0.160 2.512 ±0.190 0.876 ±0.033 GROVER - 0.955 ±0.003 0.929 ±0.178 0.842 ±0.009 0.911 ±0.116 1.987 ±0.072 0.643 ±0.030 TrimNet 0.841 ±0.043 0.889 ±0.020 0.948 ±0.030 - 0.770 ±0.071 1.639 ±0.406 1.202 ±0.032 FP-GNN 0.881 ±0.028 0.935 ±0.027 0.840 ±0.038 0.815 ±0.024 0.675 ±0.332 0.905 ±0.649 0.625 ±0.152 GraSeq - 0.942 ±0.012 0.918 ±0.005 0.810 ±0.004 0.652 ±0.039 0.865 ±0.032 0.648 ±0.041 MvMRL 0.891 ±0.019 0.962 ±0.011 0.975 ±0.019 0.845 ±0.011 0.601 ±0.055 0.832 ±0.128 0.634 ±0.018 SGGRL 0.917 ±0.020 0.967 ±0.010 0.956 ±0.016 0.837 ±0.013 0.575 ±0.057 0.847 ±0.116 0.617 ±0.025 DMMRL(Ours) 0.925 ±0.012 0.968 ±0.013 0.935 ±0.021 0.842 ±0.013 0.535 ±0.068 0.825 ±0.089 0.599 ±0.033 
+
+C. Results and Analysis 
+
+Our comprehensive evaluation demonstrates that DMMRL achieved superior performance on five of the seven benchmark datasets (BACE, BBBP, ESOL, FreeSolv, and Lipophilicity), as shown in Table II. For bioactivity classification tasks, DMMRL reached 92.5% and 96.8% ROC-AUC on BACE and BBBP respectively, representing improvements of 0.8 and 0.1 percentage points over the next best methods. For physicochemical property regression tasks, RMSE reductions of 6.9%, 0.8%, and 2.9% were observed on ESOL, FreeSolv, and Lipophilicity respectively compared to state-of-the-art alternatives. Notably, performance advantages were most pro-nounced on structurally diverse datasets with sparse an-notations (BACE, FreeSolv), where effective feature dis-entanglement becomes particularly critical. On the BACE dataset, which consists of binding affinity data for β-secretase inhibitors spanning diverse chemical scaffolds, DMMRL demonstrated a substantial 0.8 percentage point improvement in ROC-AUC over the previously best-performing model. Similarly, for the challenging FreeSolv dataset (hydration free energy predictions with only 639 samples), DMMRL reduced RMSE by 0.8% compared to the next best method. This empirical finding confirms our theoretical proposition that disentanglement mechanisms are especially valuable when training data is limited or exhibits high structural variability, as they enable the model to more effectively identify and isolate gener-alizable structure-property relationships from modality-specific noise. The performance improvement pattern across datasets correlates strongly with chemical diversity and data spar-sity metrics, suggesting that DMMRL’s disentanglement approach specifically addresses the challenges of learning from heterogeneous molecular data. By forcing the model to encode only the most relevant molecular features in the shared latent space, DMMRL effectively implements an inductive bias that favors generalizable patterns over dataset-specific correlations or artifacts. Interestingly, DMMRL exhibited consistently low stan-dard deviations across multiple evaluation runs, particu-larly for BBBP (±0.013) and Tox21 (±0.013), indicating that the model produces reliable predictions across dif-ferent data subsets—a critical advantage for early-stage drug discovery applications where predictive reliability across diverse chemical scaffolds is essential for effective compound prioritization. The combined improvements in both accuracy and consistency demonstrate that disentan-gled representations enable more robust structure-property modeling, particularly for the complex, multi-factorial molecular properties that characterize pharmaceutical and materials science applications.   
+
+> TABLE III ABLATION STUDY OF DMMRL COMPONENTS ACROSS CLASSIFICATION AND REGRESSION TASKS .
+
+Dataset LBL BOT ALL (DMMRL) 
+
+Classification Tasks (ROC-AUC ↑)
+
+BACE 0.906 ±0.117 0.911 ±0.012 0.925 ±0.012 
+
+BBBP 0.931 ±0.011 0.966 ±0.048 0.968 ±0.013 
+
+ClinTox 0.917 ±0.036 0.918 ±0.018 0.935 ±0.021 
+
+Tox21 0.822 ±0.032 0.840 ±0.022 0.842 ±0.013 
+
+Regression Tasks (RMSE ↓)
+
+ESOL 0.614 ±0.066 0.563 ±0.027 0.535 ±0.068 
+
+FreeSolv 0.878 ±0.175 0.855 ±0.085 0.825 ±0.089 
+
+Lipophilicity 0.615 ±0.030 0.612 ±0.016 0.599 ±0.033 
+
+D. Ablation Studies 
+
+To systematically validate the contribution of each ar-chitectural component motivated by our theoretical frame-work, we conducted detailed ablation experiments with three progressively more complete model configurations: LBL (prediction pathway only, without disentanglement or regularization), BOT (adding variational bottleneck with KL and MMD regularization), and ALL (complete DMMRL with alignment and orthogonality constraints). Table III summarizes these results across all datasets. The ablation analysis revealed consistent and incre-mental performance improvements with each additional component. The transition from LBL to BOT yielded particularly substantial gains across multiple datasets (3.5 percentage point ROC-AUC improvement for BBBP; 8.3% RMSE reduction for ESOL), demonstrating that the vari-ational constraints effectively function as an information bottleneck that filters representation noise. By imposing distributional regularization on the latent spaces, the BOT configuration forces the model to prioritize encoding the most statistically relevant features while discarding irrele-vant details. This filtering effect is particularly pronounced for the ESOL dataset, where solubility prediction depends primarily on specific functional groups and electronic properties rather than complete molecular structure, mak-ing effective feature selection crucial for accurate predic-tion. The transition from BOT to ALL (complete DMMRL) provided further performance improvements, particularly for datasets with complex structure-property relationships such as BACE (1.4 percentage point ROC-AUC increase) and ClinTox (1.7 percentage point increase). This demon-strates that the alignment and orthogonality constraints contribute meaningfully to representation quality by en-forcing statistical independence between shared and pri-vate factors while ensuring consistency across modalities. For datasets like BACE, where binding affinity depends on precise spatial arrangements and electronic comple-mentarity with the target protein, the additional constraints help isolate the most pharmacologically relevant molecular features by aligning consistent structural patterns across modalities while separating them from modality-specific artifacts. Notably, the complete DMMRL configuration also demonstrated substantially lower prediction variance com-pared to the partial configurations, particularly for the BBBP and Tox21 datasets. This variance reduction indi-cates that the full set of constraints not only improves average performance but also enhances model robustness and reliability—a critical consideration for applications in drug discovery where consistent predictions across diverse chemical scaffolds are essential for effective compound prioritization and development decision-making. 
+
+E. Discussion 
+
+Our experimental results clearly demonstrate that even without employing more sophisticated feature encoders, the feature disentanglement strategy alone yields substan-tial performance improvements. Specifically, while SG-GRL employs contrastive learning to align multi-modal features after feature extraction(i.e., sequence, graph, and geometry encoders), our work utilizes the same multi-modal encoders as SGGRL but incorporates a shared-private feature disentanglement strategy, enabling more precise extraction of property-relevant features. This is further confirmed by our ablation experiments, which systematically validate the effectiveness of the disentan-glement approach. DMMRL achieves the best performance on five out of seven benchmark datasets, clearly outperforming existing methods in the majority of property prediction tasks. The consistent performance improvements across diverse datasets strongly suggest that molecular features are in-herently entangled, and conventional alignment and fusion strategies are insufficient compared to our disentanglement approach. Notably, the advantage of DMMRL is most pronounced on datasets with high structural diversity and limited training samples, indicating that disentanglement provides a particularly strong inductive bias when learning from heterogeneous or sparse data. By focusing on the most generalizable structural features in the shared space while isolating modality-specific artifacts in private spaces, DMMRL effectively filters out noise that would otherwise contaminate the prediction pathway. In summary, our work provides compelling evidence that representation disentanglement is a highly effective strategy for advancing molecular property prediction, and may be even more impactful than simply developing increasingly complex encoder architectures. The ability to systematically separate shared property-relevant features from private modality-specific information establishes a new paradigm for interpretable and robust multi-modal molecular representation learning. IV. CONCLUSION 
+
+In this paper, we propose DMMRL, directly addressing the dual challenges of representation entanglement and inadequate multi-modal integration identified in molecu-lar property prediction. By combining feature disentan-glement through variational autoencoders with adaptive fusion mechanisms, our approach enhances both predic-tive performance and interpretability. Extensive experi-ments across diverse benchmark datasets demonstrate that DMMRL not only achieves state-of-the-art results but also produces more stable and generalizable predictions, especially on structurally diverse and data-sparse tasks. The ablation studies further validate the necessity of each module, showing that variational regularization, alignment, and orthogonality constraints collectively contribute to robust and interpretable molecular representations. Future work includes incorporating domain knowledge into regularization terms to further guide the disentangle-ment process and improve model interpretability. Enhanc-ing fusion mechanisms to capture higher-order and non-linear interactions among modalities may unlock deeper insights into complex structure-property relationships. Adapting the framework for multi-task learning could en-able simultaneous prediction of multiple molecular prop-erties, increasing practical utility in drug discovery and materials science. Additionally, while this work focuses on random splitting for evaluation, exploring scaffold-based splitting could further assess the model’s ability to generalize to novel molecular scaffolds and unseen chem-ical spaces, providing a more rigorous test of real-world applicability. Overall, DMMRL lays a solid foundation for future research in interpretable and generalizable multi-modal molecular representation learning. REFERENCES [1] P. Schneider, W. P. Walters, A. T. Plowright, N. Sieroka, J. List-garten, R. A. Goodnow Jr, J. Fisher, J. M. Jansen, J. S. Duca, T. S. Rush et al. , “Rethinking drug design in the artificial intelligence era,” Nature reviews drug discovery , vol. 19, no. 5, pp. 353–364, 2020. [2] W. P. Walters and R. Barzilay, “Applications of deep learning in molecule generation and molecular property prediction,” Accounts of chemical research , vol. 54, no. 2, pp. 263–270, 2020. [3] Z. Li, M. Jiang, S. Wang, and S. Zhang, “Deep learning methods for molecular representation and property prediction,” Drug Discovery Today , vol. 27, no. 12, p. 103373, 2022. [4] Y. Peng, Z. Zhang, Q. Jiang, J. Guan, and S. Zhou, “Top: Towards better toxicity prediction by deep molecular representation learn-ing,” in 2019 IEEE International Conference on Bioinformatics and Biomedicine (BIBM) . IEEE, 2019, pp. 318–325. [5] S. Yang, Z. Li, G. Song, and L. Cai, “Deep molecular representation learning via fusing physical and chemical information,” Advances in neural information processing systems , vol. 34, pp. 16 346–16 357, 2021. [6] J. Xia, L. Zhang, X. Zhu, Y. Liu, Z. Gao, B. Hu, C. Tan, J. Zheng, S. Li, and S. Z. Li, “Understanding the limitations of deep models for molecular property prediction: Insights and solutions,” Advances in Neural Information Processing Systems , vol. 36, pp. 64 774– 64 792, 2023. [7] T. Wu, Y. Tang, Q. Sun, and L. Xiong, “Molecular joint rep-resentation learning via multi-modal information of smiles and graphs,” IEEE/ACM transactions on computational biology and bioinformatics , vol. 20, no. 5, pp. 3044–3055, 2023. [8] J. Wu, Y. Su, A. Yang, J. Ren, and Y. Xiang, “An improved multi-modal representation-learning model based on fusion networks for property prediction in drug discovery,” Computers in biology and medicine , vol. 165, p. 107452, 2023. [9] A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, “Attention is all you need,” 
+
+Advances in neural information processing systems , vol. 30, 2017. [10] J. Chung, C. Gulcehre, K. Cho, and Y. Bengio, “Empirical eval-uation of gated recurrent neural networks on sequence modeling,” 
+
+arXiv preprint arXiv:1412.3555 , 2014. [11] P. Li, Y. Li, C.-Y. Hsieh, S. Zhang, X. Liu, H. Liu, S. Song, and X. Yao, “Trimnet: learning molecular representation from triplet messages for biomedicine,” Briefings in Bioinformatics , vol. 22, no. 4, 2021. [12] H. Cai, H. ZMolecular property predictionhang, D. Zhao, J. Wu, and L. Wang, “Fp-gnn: a versatile deep learning architecture for en-hanced molecular property prediction,” Briefings in bioinformatics ,vol. 23, no. 6, 2022. [13] S. Liu, M. F. Demirel, and Y. Liang, “N-gram graph: Simple unsu-pervised representation for graphs, with applications to molecules,” 
+
+Advances in neural information processing systems , vol. 32, 2019. [14] Z. Liao, L. Xie, H. Mamitsuka, and S. Zhu, “Sc2mol: a scaffold-based two-step molecule generator with variational autoencoder and transformer,” Bioinformatics , vol. 39, no. 1, p. btac814, 2023. [15] R. Zhang, Y. Lin, Y. Wu, L. Deng, H. Zhang, M. Liao, and Y. Peng, “Mvmrl: a multi-view molecular representation learning method for molecular property prediction,” Briefings in Bioinformatics , vol. 25, no. 4, p. bbae298, 2024. [16] Z. Wang, T. Jiang, J. Wang, and Q. Xuan, “Multi-modal represen-tation learning for molecular property prediction: sequence, graph, geometry,” arXiv preprint arXiv:2401.03369 , 2024. [17] S. Hu, Z. Lou, X. Yan, and Y. Ye, “A survey on information bottleneck,” IEEE Transactions on Pattern Analysis and Machine Intelligence , vol. 46, no. 8, pp. 5325–5344, 2024. [18] R. Dey and F. M. Salem, “Gate-variants of gated recurrent unit (gru) neural networks,” in 2017 IEEE 60th international midwest symposium on circuits and systems (MWSCAS) . IEEE, 2017, pp. 1597–1600. [19] Z. Niu, G. Zhong, and H. Yu, “A review on the attention mechanism of deep learning,” Neurocomputing , vol. 452, pp. 48–62, 2021. [20] P. B. Weerakody, K. W. Wong, G. Wang, and W. Ela, “A review of irregular time series data handling with gated recurrent neural networks,” Neurocomputing , vol. 441, pp. 161–178, 2021. [21] M. Lee and V. Pavlovic, “Private-shared disentangled multimodal vae for learning of latent representations,” in Proceedings of the ieee/cvf conference on computer vision and pattern recognition ,2021, pp. 1692–1700. [22] J. Xu, Y. Ren, H. Tang, X. Pu, X. Zhu, M. Zeng, and L. He, “Multi-vae: Learning disentangled view-common and view-peculiar visual representations for multi-view clustering,” in Proceedings of the IEEE/CVF international conference on computer vision , 2021, pp. 9234–9243. [23] Z. Wu, B. Ramsundar, E. N. Feinberg, J. Gomes, C. Geniesse, A. S. Pappu, K. Leswing, and V. Pande, “Moleculenet: A benchmark for molecular machine learning,” 2018. [24] Y. Chen, X. Dai, M. Liu, D. Chen, L. Yuan, and Z. Liu, “Dynamic relu,” in European conference on computer vision . Springer, 2020, pp. 351–367. [25] J. L. Ba, J. R. Kiros, and G. E. Hinton, “Layer normalization,” 2016. [Online]. Available: https://arxiv.org/abs/1607.06450 [26] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in Proceedings of the IEEE conference on computer vision and pattern recognition , 2016, pp. 770–778. [27] D. P. Kingma, “Adam: A method for stochastic optimization,” arXiv preprint arXiv:1412.6980 , 2014. [28] T. Kipf, “Semi-supervised classification with graph convolutional networks,” arXiv preprint arXiv:1609.02907 , 2016. [29] S. Kearnes, K. McCloskey, M. Berndl, V. Pande, and P. Riley, “Molecular graph convolutions: moving beyond fingerprints,” Jour-nal of computer-aided molecular design , vol. 30, no. 8, pp. 595– 608, 2016. [30] J. Gilmer, S. S. Schoenholz, P. F. Riley, O. Vinyals, and G. E. Dahl, “Neural message passing for quantum chemistry,” in International conference on machine learning . Pmlr, 2017, pp. 1263–1272. [31] Y. Rong, Y. Bian, T. Xu, W. Xie, Y. Wei, W. Huang, and J. Huang, “Self-supervised graph transformer on large-scale molecular data,” 
+
+Advances in neural information processing systems , vol. 33, pp. 12 559–12 571, 2020. [32] Z. Guo, W. Yu, C. Zhang, M. Jiang, and N. V. Chawla, “Graseq: graph and sequence fusion learning for molecular property predic-tion,” in Proceedings of the 29th ACM international conference on information & knowledge management , 2020, pp. 435–443.

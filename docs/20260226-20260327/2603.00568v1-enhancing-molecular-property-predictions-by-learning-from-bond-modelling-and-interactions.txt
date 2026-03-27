@@ -1,0 +1,990 @@
+Title: Enhancing Molecular Property Predictions by Learning from Bond Modelling and Interactions
+
+URL Source: https://arxiv.org/pdf/2603.00568v1
+
+Published Time: Tue, 03 Mar 2026 01:57:50 GMT
+
+Number of Pages: 29
+
+Markdown Content:
+Published as a conference paper at ICLR 2026 
+
+# ENHANCING MOLECULAR PROPERTY PREDICTIONS BY 
+
+# LEARNING FROM BOND MODELLING AND INTERAC -
+
+# TIONS 
+
+Yunqing Liu 1 Yi Zhou 1 Wenqi Fan 1,2 ∗
+
+> 1
+
+Department of Computing (COMP), The Hong Kong Polytechnic University 
+
+> 2
+
+Department of Management and Marketing (MM), The Hong Kong Polytechnic University 
+
+{yunqing617.liu, echo-yi.zhou}@connect.polyu.hk wenqifan03@gmail.com 
+
+## ABSTRACT 
+
+Molecule representation learning is crucial for understanding and predicting molec-ular properties. However, conventional atom-centric models, which treat chem-ical bonds merely as pairwise interactions, often overlook complex bond-level phenomena like resonance and stereoselectivity. This oversight limits their pre-dictive accuracy for nuanced chemical behaviors. To address this limitation, we introduce DeMol , a dual-graph framework whose architecture is motivated by a rigorous information-theoretic analysis demonstrating the information gain from a bond-centric perspective. DeMol explicitly models molecules through paral-lel atom-centric and bond-centric channels. These are synergistically fused by multi-scale Double-Helix Blocks designed to learn intricate atom-atom, atom-bond, and bond-bond interactions. The framework’s geometric consistency is further enhanced by a regularization term based on covalent radii to enforce chemically plausible structures. Comprehensive evaluations on diverse benchmarks, including PCQM4Mv2, OC20 IS2RE, QM9, and MoleculeNet, show that DeMol establishes a new state-of-the-art, outperforming existing methods. These results confirm the superiority of explicitly modelling bond information and interactions, paving the way for more robust and accurate molecular machine learning. 
+
+## 1 INTRODUCTION Benzene (C H )
+
+> Isolated Bond
+> Conjugated Bond
+
+Figure 1: An example of the different bonds within benzene (C 6H6). Formed by p-orbital over-lap, the delocalized π system creates electron den-sity above/below the ring plane, providing stability and unique reactivity. 
+
+Molecules, the fundamental building blocks of matter, govern the properties and behaviours of everything from simple compounds to complex biological sys-tems (Fan et al., 2025; Liu et al., 2025b; Zhou et al., 2025). Their intricate three-dimensional architectures and chemical interactions determine the functionality of drugs, materials, catalysts, and biomolecules, mak-ing molecular understanding indispensable in fields such as medicine (Li et al., 2024b; Zhao et al., 2024), energy (Wang et al., 2025a; Hu et al., 2023), and environmental science (Liu et al., 2025a; 2023). De-ciphering these relationships requires not only experimental techniques but also computational approaches that can model and predict molecular behaviour at scale, which is a challenge that has driven the rise of molecular representation learning. Traditional methods for molecular analysis rely on handcrafted descriptors (e.g., molecular fin-gerprints) or physics-based simulations, which are labour-intensive and often limited in capturing complex structural dependencies (Duvenaud et al., 2015; Collins & Bettens, 2015; Li et al., 2024a;c). With the advent of graph neural networks (GNNs) in AI techniques (Fan et al., 2022; Zhang et al., 
+
+> ∗
+
+Corresponding author: Wenqi Fan, Department of Computing & Department of Management and Marketing (MM), The Hong Kong Polytechnic University 
+
+1
+
+> arXiv:2603.00568v1 [cs.LG] 28 Feb 2026
+
+Published as a conference paper at ICLR 2026 2024; Ma et al., 2026), molecules are now widely described as graphs, where atoms (i.e., nodes ) and bonds (i.e., edges ) form interconnected networks, enabling end-to-end learning of task-specific em-beddings (Luo et al., 2022; Lu et al., 2023). Recent methods have shifted toward modelling molecules as 3D geometric graphs, leveraging spatial coordinates of atoms to capture directional bonding patterns, steric effects, and non-covalent interactions critical for accurate property prediction (Liao & Smidt, 2022; Lu et al., 2023; Hussain et al., 2024). However, most existing methods treat atoms as primary entities, neglecting the rich information embedded in chemical bonds themselves (Ying et al., 2021; Xia et al., 2023; Luo et al., 2022). Bonds are not only pairwise interactions, but also carry attributes like bond order, length, and hybridisation states that directly influence molecular reactivity and stability (Evans, 2001). For instance, as Figure 1 shown, the alternating single and double bonds on the benzene ring are not isolated but form a delocalized π-electron system through inter-bond resonance. This collective behaviour cannot be described by pairwise atomic interactions alone. Another critical yet underexplored aspect of molecular modelling is the explicit capture of interactions between chemical bonds. While bonds are typically treated as independent edges in graph-based models, real-world molecules exhibit non-additive bond interactions that govern phenomena such as stereoselectivity and spatial cooperativity (Ding et al., 2019; Weng et al., 2021). For example, as illustrated in Figure 2, cisplatin is an anticancer drug that belongs to the group of cell cycle non-specific drugs. It is therapeutically effective against sarcomas, malignant epithelial tumours, lymphomas, and germ cell tumours. To be specific, cisplatin is a platinum-containing compound in which two ammonia ligands and two chloride ions bind to a central platinum atom in a cis configuration. This spatial arrangement enables cisplatin to crosslink DNA strands, disrupting replication and inducing apoptosis in cancer cells (Dong et al., 2019). In contrast, transplatin , the stereoisomer of cisplatin, possesses the same atomic composition but features ligands in a trans configuration, rendering it pharmacologically ineffective. Therefore, these striking differences arise not from changes in individual bond attributes (e.g., bond length or hybridisation) but from the collective orientation of bonds relative to one another. transplatin cisplatin        
+
+> Figure 2: An example of bond-bond in-teractions in molecules that affect prop-erties. Left is the anticancer drug cis-platin, where two ammonia ligands and two chloride ions bind to a central plat-inum atom in a cis configuration. Right
+> is transplatin, which possesses the same atomic composition but features ligands in a trans configuration, rendering it pharmacologically ineffective.
+
+To eliminate these limitations, we propose to model the molecule bond interactions into the molecule representation learning, thereby integrating the bond and interaction infor-mation for molecular property prediction. We first establish the theoretical necessity of bond-centric graph in capturing bond-centric attributes and interactions in molecule represen-tation learning, as shown in Section 3.1. We propose a novel 
+
+Dual-graph enhanced Multi-scale interaction framework for 
+
+Mol ecule representation learning, DeMol , which is a hierarchi-cal multi-scale framework that explicitly models both atoms and bonds through dual-graph representations and geometric constraints, including atom-centric channel and bond-centric channel and double-helix blocks. As shown in Figure 3, two channels encode a molecule into the atom-centric graph and bond-centric graph, respectively. The double-helix blocks then facilitate information exchange and fusion between these two channels at multiple scales, enabling the model to capture intri-cate atom-atom, atom-bond, and bond-bond interactions for a comprehensive understanding of the molecule. To ensure geometric consistency, we also introduce bond prediction based on covalent radii as the regularisation term, as shown in Algorithm 1, which enforces chemically plausible structures by penalising deviations from expected bonding distances. Finally, we evaluate model performance on various molecular property prediction tasks. DeMol outperforms the state-of-the-art methods on PCQM4Mv2, OC20 IS2RE, QM9, and MoleculeNet datasets, which verifies the performance superiority of DeMol. 
+
+## 2 RELATED WORK 
+
+Graph-based Molecule Representation Learning. Molecule representation learning aims to encode molecular structures into continuous vector spaces, capturing their chemical knowledge to facilitate downstream tasks (Guo et al., 2022). As one of the most representative AI techniques (Xu et al., 2025; Ning et al., 2025; Qu et al., 2025; 2026; Wang et al., 2025b; Fan et al., 2024; Ning et al., 2024), 2Published as a conference paper at ICLR 2026 
+
+> Figure 3: DeMol integrates atom-centric and bond-centric channels via dual-graph representations. Cross-level (atom-bond) interactions are enforced through double-helix blocks, ensuring geometric consistency.
+
+GNNs and graph transformers encode atomic topological information into molecule representations via message-passing (Gasteiger et al., 2020; 2021; Ying et al., 2021; Rampášek et al., 2022; Wang et al., 2020; Fan et al., 2019; 2020). Various geometry-aware GNNs and equivariant neural networks additionally learns molecular spatial geometry knowledge (Liu et al., 2022b; Liao & Smidt, 2022; Zhou et al., 2023; Wang et al., 2023b). Furthermore, some unified 2D/3D molecular representation learning frameworks have also been proposed to make the best of topological and geometric features integrally (Liu et al., 2021; Luo et al., 2022; Lu et al., 2023; Stärk et al., 2022). 
+
+Molecular Bond Modelling. In recent years, advances in 3D molecular representation learn-ing have implicitly incorporated bond-related information to enhance atomic representations. DimeNet (Gasteiger et al., 2020) models interatomic distances and angles as structural constraints. GemNet (Gasteiger et al., 2021) involves dihedral angles in the geometric representation and message-passing. Transformer-M (Luo et al., 2022) integrates 3D distance encoding with the attention mechanism. Meanwhile, there are individual pioneering studies that attempt to focus more on chemical bonds. LEMON (Chen et al., 2025) employs line graphs as a contrast to molecule graphs, and GEM (Fang et al., 2022) encodes molecular geometries by modelling on bond-angle graphs. ALIGNN (Choudhary & DeCost, 2021) uses a line graph, treating it as a route for message passing. ESA (Buterez et al., 2025) introduces an end-to-end attention architecture that treats graphs as sets of edges to explicitly learn edge representations. These approaches have demonstrated the value of bond features, whether as auxiliary information or independent modeling elements. However, despite the achieved success, existing molecule modelling methods still suffer from unbalanced atom/bond modeling and geometric simplification. A coordinated framework explicitly learning dynamic atom-atom, atom-bond, and bond-bond interactions remains required for understanding more complete molecular semantics. 
+
+## 3 METHODOLOGY 
+
+We first establish the theoretical necessity of a bond-centric graph in capturing bond-centric attributes and interactions in molecular representation learning. This theoretical foundation motivates our DeMol framework, which explicitly models atom–atom, atom–bond, and bond–bond interactions to achieve a more comprehensive understanding of molecular structures. 
+
+Problem Formulation and Notations. As shown in Figure 3, a molecule M is represented by two graphs. For the atom-centric graph G = ( V, E), node vi ∈ V represents atoms with feature xi ∈ Rda ,and edge eij ∈ E encode bond attributes eij ∈ Rdb . For bond-centric graph L(G) = ( V′, E′), node 
+
+v′ 
+
+> ij
+
+∈ V′ represents bonds from G, with features derived from eij , and edge e′ 
+
+> (ij )( jk )
+
+∈ E′ connect bonds sharing a common atom j, encoding angular relationships θijk and torsional angles ϕijkl .We define the dual graph representation learning objective as mapping (G, L(G)) → (H(a), H(b)),where H(a) ∈ RN ×da is the atom-level embeddings derived from G and H(b) ∈ RM ×db is the 3Published as a conference paper at ICLR 2026 bond-level embeddings derived from L(G). Our goal is to maximise mutual information between representations and molecular properties while preserving geometric consistency. 3.1 THEORETICAL MOTIVATION AND RATIONALE 
+
+Proposition 1 (Information Gain from Edge Adjacency Patterns). For non-trivial graphs G, the entropy of L(G) satisfies: 
+
+H(L(G)) = H(G) + H(E′|E)
+
+| {z }
+
+> ∆Iedge-structure
+
+with ∆Iedge-structure > 0. (1) This demonstrates that while the bond-centric graph is derived from the original graph, it encodes unique structural information absent in the original. The justification can be found in Appendix A.1. To leverage this distinct source of information, we designed DeMol with two parallel processing streams. Instead of treating bonds merely as edges in an atom-centric graph, we create a dedicated bond-centric channel that processes L(G) as a first-class entity. This dual-channel design ensures that the unique structural information inherent to both atoms and bonds is independently captured and refined from the outset. 
+
+Proposition 2 (Mutual Information Decomposition). For any molecular graph G and its dual-graph representation (H(a), H(b)), the mutual information satisfies: 
+
+I(G, L(G); H(a), H(b)) = I(G; H(a))
+
+| {z }
+
+> Atom-Centric Information
+
++ I(L(G); H(b)|H(a))
+
+| {z }
+
+> Bond-Centric Information
+
++ I(G; H(b)|L(G), H(a))
+
+| {z }
+
+> Residual Atomic Dependency
+
+.
+
+(2) This decomposition demonstrates that dual-graph learning retains strictly more information than single-graph approaches when I(L(G); H(b)|H(a)) > 0 and I(G; H(b)|L(G), H(a)) > 0. The justification can be found in Appendix A.2. Proposition 2 decomposes the total mutual information, revealing that a dual-graph representation can capture strictly more information than either graph alone by combining atom-centric information, bond-centric information, and their residual dependencies. This highlights that the ultimate predictive power lies not in the separate representations, but in their effective fusion. A simple concatenation of features would fail to capture the complex cross-dependencies between atoms and bonds. To achieve a true synergistic fusion, we introduce the Double-Helix Blocks. This mechanism employs a bidirectional cross-attention module that facilitates a dynamic interaction between the atom and bond representations at multiple scales. This allows the model to explicitly learn and integrate complex atom-atom, bond-bond, and atom-bond interactions, directly optimising the information fusion highlighted as essential by our analysis. 
+
+Proposition 3 (Geometric Information Gain). Let θijk denote bond angles and φijkl denote dihedral angles. If L(G) encodes angular relationships through E′, the bond modelling gain satisfies: 
+
+∆I = I(L(G); H(b)|G; H(a)) ∝ Ei,j,k,l 
+
+"
+
+log p(θijk , φ ijkl |hi(a), hj(a), hk(a), hl(a))
+
+p(θijk , φ ijkl )
+
+#
+
+. (3) Proposition 3 reveals that the bond-centric graph is the natural domain for representing complex geometric relationships like bond angles ( θijk ) and dihedral angles ( φijkl ), which are only implicitly captured in an atom-centric view. The structure of L(G), where bonds are nodes, makes relationships between adjacent bonds (angles) and pairs of bonds (dihedrals) explicit. The justification can be found in Appendix A.3. To directly harness this geometric advantage, we introduce a torsion encoding matrix ( Φtors b ) specifically within the bond-centric channel. By incorporating bond angles and inter-bond dihedral angles as an attention bias in this channel, we inject critical 3D information where it is most naturally represented. This targeted design choice, guided by our theoretical insight, ensures that the model can more effectively learn from the molecule’s full geometric conformation. 
+
+Proposition 4 (Dual-Graph Information Bottleneck). For molecular property prediction Y, the optimal encoder Φ minimizes: 
+
+min 
+
+> Φ
+
+h
+
+I(G, L(G); H(a), H(b)) − βI (H(a), H(b); Y)
+
+i
+
+. (4) 4Published as a conference paper at ICLR 2026 Proposition 4 applies the Information Bottleneck principle to our dual-graph setup. It suggests that the optimal model must learn to compress the rich information from both graphs into a minimal representation that is maximally predictive of the target property. The richer input from a dual-graph system provides a tighter bound on this optimisation, but also increases the risk of learning from spurious or non-physical correlations. This motivates our end-to-end learning approach, which culminates in a final Prediction Head that leverages the fused atom-bond representations. Furthermore, to ensure the model achieves an effective information-bottleneck trade-off, we introduce two key regularisation and efficiency mechanisms: Bond Prediction based on Covalent Radii and Structure-aware Mask .Our theoretical analysis establishes that dual-graph representations (atom-centric graph and bond-centric graph) retain strictly more information than single-graph approaches (Proposition 1 and 2) and improve geometric consistency by explicitly encoding angular relationships (Proposition 3). The optimal encoder balances information compression with task-relevant prediction (Proposition 4). 3.2 PROPOSED FRAMEWORK 
+
+The previous theoretical foundation motivates our proposed dual-graph enhanced multi-scale interac-tion framework (DeMol), as shown in Figure 3. To model both G and L(G), DeMol employs dual encoding channels that activate atom-centric and bond-centric representations in parallel. 
+
+Atom-centric Channel on G. This channel processes the atom-centric graph G to learn atom embeddings {hi(a)}. Firstly, raw atom feature xi are embedded into hi(a, 0) ∈ Rda . Similar to previous works, we use structure encoding to encode the 3D spatial and 2D graph positional information (Zhou et al., 2023; Luo et al., 2022). As for 3D structure encodings, we encode the Euclidean distance to reflect the spatial relation between any pair of atoms in the 3D space. For each atom pair (i, j ), we first process their Euclidean distance with Gaussian Basis Kernel function (Scholkopf et al., 1997) 
+
+ϕk 
+
+> (i,j )
+
+= − 1
+
+√2π|σk | exp( − 12 ( α(i,j )|| ri − rj|| + β(i,j ) − μk
+
+|σk | )2), k = {1, 2, . . . , K }, (5) 
+
+where K is the number of Gaussian Basis kernels. The input 3D coordinate of the i-th atom is represented by ri ∈ R3. α(i,j ) and β(i,j ) are learnable scalars indexed by the pair of atom types, and μk, σ k are predefined constants. Specifically, μk = w × (k − 1) /K and σk = w/K , where the width w is a hyper-parameter. Then, the 3D distance encoding can be calculated as Φdist  
+
+> (i,j )
+
+=
+
+GELU (ϕ(i,j )W 1 
+
+> D
+
+)W 2 
+
+> D
+
+, where ϕ(i,j ) = [ ϕ1(i,j ); . . . ; ϕK
+
+> (i,j )
+
+]⊤; W 1 
+
+> D
+
+∈ RK×K , W 2 
+
+> D
+
+∈ RK×1 are learnable parameters. Denote Φdist as the matrix form of the 3D distance encoding, whose shape is 
+
+N × N . As for 2D graph structure encodings, we encode the shortest path distance (SPD) between two atoms to reflect their spatial relation. Let ΦSP D ij denotes the SPD encoding between atom i and j.For most molecules, there exists only one distinct shortest path between any two atoms. Denote the edges in the shortest path from i to j as SP ij = ( s1, s 2, . . . , e N ) and ΦSP D ∈ RN ×N as the matrix from the SPD encoding. Combined above, the structure encoding is denoted as Φ = Φ dist + Φ SP D .For each atom i, the update process contains a self-attention and a feed-forward network (FFN) layer. The attention weights and the atom representations are updated as 
+
+α(l) 
+
+> ij
+
+= Softmax j ( (W(l) 
+
+> q
+
+h(a,l ) 
+
+> i
+
+)⊤(W(l) 
+
+> k
+
+h(a,l ) 
+
+> j
+
+)
+
+√dk
+
++Φ (l)), h(a,l +1)  
+
+> i
+
+= FFN (h(a,l ) 
+
+> i
+
++ X
+
+> j∈V(i)
+
+α(l) 
+
+> ij
+
+W(l) 
+
+> v
+
+h(a,l ) 
+
+> j
+
+), (6) 
+
+where Wq , Wk, Wv ∈ Rda×dh are learnable parameters. 
+
+Bond-centric Channel on L(G). Similar to G, we process the bond-centric graph L(G) to learn bond embeddings {h(b) 
+
+> ij
+
+}. We first encode bond feature eij as h(b, 0)  
+
+> i,j
+
+∈ Rdb . Similarly, we use 3D spatial and 2D graph positional information to obtain structure encodings. Denote ΦSP D b and 
+
+Φdistance b as the SPD encoding and 3D distance encoding between bond eij and ejk respectively, which are shape M × M . Specifically, we use the coordinates of the midpoint of two atoms as 5Published as a conference paper at ICLR 2026 the coordinate of the bond rij = 12 (ri + rj ). In addition to this, we propose a new 3D structure positional encoding for bond-centric, named torsion encoding Φtors b , which denoted as the shape 
+
+M × M matrix of bond angles θijk and dihedral angles φijkl . If two bonds share one atom, the bond angle can be computed as cos( θijk ) = rij ·rjk    
+
+> ∥rij ∥∥ rjk ∥
+
+. Otherwise, the dihedral angles can be computed as cos( φijkl ) = rij ·rkl   
+
+> ∥rij ∥∥ rkl ∥
+
+. Similar to the atom-centric channel, we process torsion encoding with a Gaussian Basis Kernel function. Combined above, the structure encoding is denoted as Φb = Φ dist b + Φ SP D b + Φ tors b . For each bond ij , the attention weights and the bond representations are updated as 
+
+β(l)(ij )( jk ) = Softmax (jk )( (W(l) 
+
+> q
+
+h(b,l ) 
+
+> ij
+
+)⊤(W(l) 
+
+> k
+
+h(b,l ) 
+
+> jk
+
+)
+
+√dk
+
++ Φ (l) 
+
+> b
+
+), (7) 
+
+h(b,l +1)  
+
+> ij
+
+= FFN (h(b,l ) 
+
+> ij
+
++ X
+
+> k∈V′(ij )
+
+β(l)(ij )( jk )W(l) 
+
+> v
+
+h(b,l ) 
+
+> jk
+
+), (8) 
+
+where Wq , Wk, Wv ∈ Rdb×dh are learnable parameters. 
+
+Cross-Graph Interaction via Double-Helix Blocks. To align atom and bond representations, we introduce Double-Helix Blocks that enforce multi-scale consistency through cross-attention. For atom i, cross-attention over its incident bonds {ij }:
+
+γ(l) 
+
+> i,ij
+
+= Softmax ij ( (W(l) 
+
+> q
+
+h(a,l ) 
+
+> i
+
+)⊤(W(l) 
+
+> k
+
+h(b,l ) 
+
+> ij
+
+)
+
+√dk
+
++ Φ (l)), h(a,l +1)  
+
+> i
+
+= FFN (h(a,l ) 
+
+> i
+
++ X
+
+> k∈V(i)
+
+γ(l) 
+
+> i,ij
+
+W(l) 
+
+> v
+
+h(b,l ) 
+
+> ij
+
+).
+
+(9) 
+
+For bond ij , cross-attention over its atoms i, j:
+
+δ(l) 
+
+> ij,i
+
+= Softmax i( (W(l) 
+
+> q
+
+h(b,l ) 
+
+> ij
+
+)⊤(W(l) 
+
+> k
+
+h(a,l ) 
+
+> i
+
+)
+
+√dk
+
++ Φ (l) 
+
+> b
+
+), h(b,l +1)  
+
+> ij
+
+= FFN (h(b,l ) 
+
+> ij
+
++ X
+
+> k∈{ i,j }
+
+δ(l) 
+
+> ij,k
+
+W(l) 
+
+> v
+
+h(a,l ) 
+
+> k
+
+).
+
+(10) 
+
+Bond Prediction based on Covalent Radii. To ensure geometric consistency in molecular repre-sentation learning, DeMol explicitly models atom and bond interactions through a bond prediction module grounded in covalent radii constraints. Given a molecule M with atoms {ai}Ni=1 , their 3D coordinates {⃗p i = ( xi, y i, z i)}Ni=1 , and a dictionary of covalent radii Rcov , our algorithm (Appendix B Algorithm 1) predicts bonds by comparing interatomic distance to a threshold derived from covalent radii. According to (Lu & Chen, 2012), we set the bond threshold factor α to 1.15. The Bond Prediction based on Covalent Radii module acts as a regularisation term, penalising the model for generating geometrically inconsistent structures and ensuring the learned representations adhere to fundamental chemical principles. 
+
+Structure-aware Mask. Due to the introduction of bond-centric channel on L(G) and cross-graph interaction blocks, the time complexity of the model could increase, see the Appendix C for a detailed time complexity analysis. Whereupon, we introduce a structure-aware mask to mitigate this through sparse attention masks derived from a chemical valency rule, where bond lengths between atoms of covalent molecules are generally less than 3 Å (Nikolaienko et al., 2019). Considering that there are still some weak interaction forces between the atoms, we take the interatomic distance less than 
+
+5 Å as the basis for masking or not. Unlike using the adjacency matrix as a mask, the structure-aware mask both preserves the adjacent interconnectivity of the atoms and captures the potential long-range forces between the atoms. As for the bond structure-aware mask, we only consider the adjacency and conjugacy relations to enhance the ability of capturing the conjugacy relations between edges (Nikolaienko et al., 2019). 
+
+## 4 EXPERIMENTS 
+
+In this section, we empirically study the performance of DeMol. First, we pre-train our model on the training set of PCQM4Mv2, which is derived from OGB Large-Scale Challenge (Hu et al., 6Published as a conference paper at ICLR 2026 2021). Then, we evaluate our model in various downstream tasks through fine-tuning, including the PCQM4Mv2, Open Catalyst 2020 IS2RE, QM9, and MoleculeNet. Finally, we conduct a series of experiments to investigate the key designs of our model for ablation studies. 
+
+Pretraining Dataset. The pertaining dataset PCQM4Mv2 (Hu et al., 2021) is designed to facilitate the development and evaluation of machine learning models for predicting quantum chemical (QC) properties of molecules, specifically the target property known as the HOMO-LUMO gap. This property represents the difference between the energies of the highest occupied molecular orbital (HOMO) and the lowest unoccupied molecular orbital (LUMO). The dataset, consisting of 3.37 million molecules represented by SMILES notations, offers HOMO-LUMO gap labels for the training and validation sets. Furthermore, the training set encompasses the DFT equilibrium conformation, which is not included in the validation sets. On this benchmark, models are required to utilize SMILES notation, without DFT equilibrium conformation, to predict the HOMO-LUMO gap during inference. 
+
+PCQM4Mv2. After pre-training, we evaluate DeMol on the PCQM4Mv2 validation set. The task involves predicting the HOMO-LUMO energy gap, with Mean Absolute Error (MAE) as the evaluation metric. Since our pre-training objectives already include the HOMO-LUMO gap prediction, we evaluate the model without additional fine-tuning. For comparison, we select diverse baselines including both graph neural networks (GNNs) and Transformer variants. Detailed descriptions of settings and baselines are presented in Appendix D.2.                                             
+
+> Table 1: Performance on PCQM4MV2 val-idation set (Hu et al., 2021). Bold values indicate the best performance. Model # param. MAE ( ↓)MLP-Fingerprint 16.1M 0.1735 GCN 2.0M 0.1379 GIN 3.8M 0.1195 GINE-VN 13.2M 0.1167 GCN-VN 4.9M 0.1153 GIN-VN 6.7M 0.1083 DeeperGCN-VN 25.5M 0.1021 GraphGPS SMALL 6.2M 0.0938 TokenGT 48.5M 0.0910 GRPE BASE 46.2M 0.0890 EGT 89.3M 0.0869 GRPE LARGE 46.2M 0.0867 Graphormer 47.1M 0.0864 GraphGPS BASE 19.4M 0.0858 GraphGPS DEEP 13.8M 0.0852 GEM-2 32.1M 0.0793 GPS++ 44.3M 0.0778 Transformer-M 69M 0.0772 Unimol+ 77M 0.0693 TGT-At 203M 0.0671 DeMol 186M 0.0603
+
+Table 1 presents the comparative results, where DeMol es-tablishes a new state-of-the-art with an MAE of 0.0603 eV, reflecting a substantial leap in capturing molecular graph information with higher precision. Concretely, DeMol rep-resents a 0.0068 eV (10.1%) improvement over the pre-vious best model (TGT-At, 0.0671 eV) and significantly outperforms other approaches like Transformer-M (0.0772 eV) and GraphGPS DEEP (0.0852 eV). Notably, while prior top-performing models relied on extensive ensembles (e.g., GPS++’s 112-model ensemble), DeMol achieves superior performance using only a single model, demonstrating its inherent robustness and generalisation ability. 
+
+Open Catalyst 2020 IS2RE. In the Open Catalyst 2020 Challenge (Chanussot et al., 2021), machine learning ap-proaches are required to predict molecular adsorption en-ergies on catalyst surfaces. Specifically, we focus on the IS2RE (Initial Structure to Relaxed Energy) task, which comprises approximately 460K samples. In this task, the model is given an initial DFT structure of both the crystal and the adsorbate. These components interact during relax-ation, and the model’s goal is to predict the system’s final relaxed energy. Moreover, while DFT equilibrium confirmations are provided for training, they cannot be used during inference. Appendix D.3 contains detailed descriptions of settings and baselines. Table 2 compares model performance on the OC20 IS2RE validation set using two key metrics: Energy Mean Absolute Error (MAE) in electron volts (eV) and the percentage of Energies within a Threshold (EwT), where lower MAE and higher EwT indicate better performance. DeMol achieves state-of-the-art results, surpassing all baselines in both metrics. Specifically, DeMol obtains the lowest average energy MAE (0.3879 eV), representing 5.1% and 3.7% improvements over Unimol+ (0.4088 eV) and TGT-At (0.4030 eV), respectively. In terms of EwT, DeMol demonstrates a significant lead with an average 9.23%, compared to 8.61% for Unimol+ and 8.82% for TGT-At. Notably, DeMol consistently achieves the highest EwT values across all categories, including In-Domain (ID), Out-of-Domain Adsorption (OOD Ads.), Out-of-Domain Catalysis (OOD Cat.), and Out-of-Domain Both (OOD Both). This consistent superiority highlights DeMol’s robustness in handling both in-domain and diverse out-of-domain scenarios. 
+
+QM9. We use the QM9 dataset (Ramakrishnan et al., 2014) to evaluate our model on molecular tasks in the 3D format. QM9 is a quantum chemistry benchmark consisting of 134k stable small organic 7Published as a conference paper at ICLR 2026 
+
+Table 2: Performance on OC20 IS2RE validation set. NN refers to "Noisy Nodes" (Godwin et al., 2021). Bold values indicate the best performance. Energy MAE (eV) ↓ EwT (%) ↑
+
+Model ID OOD Ads. OOD Cat. OOD Both AVG. ID OOD Ads. OOD Cat. OOD Both AVG. 
+
+SchNet 0.6465 0.7074 0.6475 0.6626 0.6660 2.96 2.22 3.03 2.38 2.65 DimeNet++ 0.5636 0.7127 0.5612 0.6492 0.6217 4.25 2.48 4.40 2.56 3.42 GemNet-T 0.5561 0.7342 0.5659 0.6964 0.6382 4.51 2.24 4.37 2.38 3.38 SphereNet 0.5632 0.6682 0.5590 0.6190 0.6024 4.56 2.70 4.59 2.70 3.64 Graphormer-3D 0.4329 0.5850 0.4441 0.5299 0.4980 - - - - -GNS 0.54 0.65 0.55 0.59 0.5825 - - - - -GNS+NN 0.47 0.51 0.48 0.46 0.4800 - - - - -DRFormer 0.4222 0.5420 0.4231 0.4754 0.4657 7.23 3.77 7.13 4.10 5.56 EquiFormer+NN 0.4156 0.4976 0.4165 0.4344 0.4410 7.47 4.64 7.19 4.84 6.04 DRFormer 0.4187 0.4863 0.4321 0.4332 0.4425 8.39 5.42 8.12 5.44 6.84 Unimol+ 0.3795 0.4526 0.4011 0.4021 0.4088 11.15 6.71 9.90 6.68 8.61 TGT-At 0.3813 0.4454 0.3917 0.3936 0.4030 11.15 6.87 10.47 6.80 8.82 DeMol 0.3663 0.4302 0.3746 0.3804 0.3879 12.04 6.98 10.86 7.01 9.23 
+
+molecules. These molecules correspond to the subset of all 133,885 species out of the GDB-17 chemical universe of 166 billion organic molecules. Each molecule is associated with 12 prediction targets covering its energetic, electronic, and thermodynamic properties. The 3D geometric structure of the molecule is used as the model’s input. Following (Thölke & De Fabritiis, 2022), we randomly choose 10,000 and 10,831 molecules for validation and test evaluation, respectively. The remaining molecules are used to fine-tune our DeMol model. The details of baselines and experiment settings are presented in Appendix D.4. 
+
+Table 3: Results on QM9. The evaluation metric is the Mean Absolute Error (MAE). We report the official results of baselines from Appendix D.4. Bold values indicate the best performance.                                                                                                                                                                                                                                                                                                                          
+
+> Model μαϵHOM O ϵLU M O ∆ϵR2ZPVE U0UHGCvAvg. Rank #
+> EdgePred 0.039 0.086 37.4 31.9 58.2 0.112 1.81 14.7 14.2 14.8 14.5 0.038 18.92 AttrMask 0.020 0.072 31.3 37.8 50.0 0.423 1.90 10.7 10.8 11.4 11.2 0.062 15.25 InfoGraph 0.041 0.099 48.1 38.1 72.2 0.114 1.69 16.4 14.9 14.5 16.5 0.030 19.08 GraphCL 0.027 0.066 26.8 22.9 45.5 0.095 1.42 9.6 9.7 9.6 10.2 0.028 10.0 GPT-GNN 0.039 0.103 35.7 28.8 54.1 0.158 1.75 12.0 24.8 14.8 12.2 0.032 18.17 GraphMVP 0.031 0.070 28.5 26.3 46.9 0.082 1.63 10.2 10.3 10.4 11.2 0.033 12.00 GEM 0.034 0.081 33.8 27.7 52.1 0.089 1.73 13.4 12.6 13.3 13.2 0.035 16.00 3D Infomax 0.034 0.075 29.8 25.7 48.8 0.122 1.67 12.7 12.5 12.4 13.0 0.033 14.92 PosPred 0.024 0.067 25.1 20.9 40.6 0.115 1.46 10.2 10.3 10.2 10.9 0.035 11.08 3D-MGP 0.020 0.057 21.3 18.2 37.1 0.092 1.38 8.6 8.6 8.7 9.3 0.026 6.83 SchNet 0.033 0.235 41 34 63 0.073 1.7 14 19 14 14 0.033 17.33 PhysNet 0.0529 0.0615 32.9 24.7 42.5 0.765 1.39 8.15 8.34 8.42 9.4 0.028 11.67 Cormorant 0.038 0.085 34 38 61 0.961 2.027 22 21 21 20 0.026 20.08 DimeNet++ 0.0297 0.0435 24.6 19.5 32.6 0.331 1.21 6.32 6.28 6.53 7.56 0.023 6.33 PaiNN 0.012 0.045 27.6 20.4 45.7 0.066 1.28 5.85 5.83 5.98 7.35 0.024 4.67 ALIGNN 0.0146 0.0561 21.4 19.5 38.1 0.543 3.1 15.3 14.4 14.7 14.4 0.033 13.83 LieTF 0.041 0.082 33 27 51 0.448 2.10 17 16 17 19 0.035 19.58 TorchMD-Net 0.011 0.059 20.3 17.5 36.1 0.033 1.84 6.15 6.38 6.16 7.62 0.026 5.25 EGNN 0.029 0.071 29 25 48 0.106 1.55 11 12 12 12 0.031 13.00 NoisyNode 0.025 0.052 20.4 18.6 28.6 0.70 1.16 7.30 7.57 7.43 8.30 0.025 6.75 Transformer-M 0.037 0.041 17.5 16.2 27.4 0.075 1.18 9.37 9.41 9.39 9.63 0.022 6.00 ESA 0.024 0.041 17.4 16.0 27.1 0.101 1.20 6.42 6.62 6.45 8.39 0.024 4.17 DeMol 0.024 0.042 16.4 15.7 26.8 0.101 1.16 6.24 6.1 6.35 6.29 0.021 2.67
+
+Evaluation results are presented in Table 3, demonstrating that our DeMol achieves competitive performance against strong baselines. In particular, DeMol achieves state-of-the-art performance on HOMO, LUMO, HOMO-LUMO gap, ZPVE, G, and Cv predictions. DeMol also demonstrates comparable performance across other metrics. Our insight is that this result stems from the nature of the QM9 dataset itself, relative to DeMol’s specific strengths. The QM9 dataset consists of 134k very small, simple organic molecules, limited to 9 heavy atoms (C, O, N, F). DeMol is explicitly designed to capture complex, non-local bond-level phenomena like resonance and nuanced 3D bond-bond interactions that determine properties like stereoselectivity. These complex phenomena are far less prevalent or impactful in the small, structurally simple molecules of QM9 compared to the larger, more diverse molecules in PCQM4Mv2 or the complex multi-component systems in OC20. These findings suggest that DeMol successfully captures essential quantum mechanical information through its modelling of atomic and bond interactions, leading to accurate predictions across diverse molecular properties. It highlights the effectiveness of DeMol’s architecture in learning transferable representations for multiple quantum chemistry tasks. 
+
+MoleculeNet. After the model is pre-trained, we evaluate our DeMol on the MoleculeNet bench-mark (Wu et al., 2018), which involves eight widely-used binary classification datasets. These datasets 8Published as a conference paper at ICLR 2026 
+
+Figure 4: Results on molecular property classification tasks. The table version is Appendix Table 6. 
+
+span diverse domains, including quantum chemistry, physical chemistry, biophysics, and physiology, providing a comprehensive resource for cheminformatics modelling. Following established practice, we employ scaffold splitting (Ramsundar et al., 2019) to split the molecules according to their structures, ensuring the evaluation that better reflects real-world use cases. The details of baselines and experiment settings are presented in Appendix D.5. Figure 4 and Appendix Table 6 compares the performance of molecular representation learning methods across eight MoleculeNet benchmark datasets, evaluated using ROC-AUC scores under scaffold splitting with 10 random seeds. Our DeMol achieves state-of-the-art performance with an average ROC-AUC score of 79.96, surpassing all existing baselines. The model demonstrates superior performance on 7 out of 8 benchmark datasets (BBBP, Tox21, SIDER, ClinTox, MUV, HIV, and BACE). Meanwhile, DeMol maintains competitive performance on the ToxCast datasets compared to GEM (Fang et al., 2022) and Uni-Mol (Zhou et al., 2023). Specifically, compared to Galformer (Bai et al., 2023), LEMON (Chen et al., 2025), and GEM (Fang et al., 2022), which employ bond-centric graphs as well, DeMol achieves superior performance across all molecular property prediction benchmarks. These results demonstrate DeMol’s superiority and robustness across diverse chemical and biological properties. Moreover, its advantages are gained not only from its bond-centric graph representation but also from its explicit modelling of bond-bond and atom-bond interactions, which collectively enhance molecular property prediction accuracy. 4.1 ABLATION STUDY 
+
+Table 4: Ablation study on the impact of every component. Experiments are conducted on the PCQM4Mv2 dataset.                                                                                  
+
+> Atom-Bond-Coval. Tors. Struc. Bond- Bond-Val. centric centric Radii Angle aware bond atom MAE( ↓)Graph Graph Pred. Posit. Mask Att. Att. (meV) -✓-✓-✓-89.9
+> ✓------77.2
+> ✓-✓-✓--76.4
+> ✓--✓---75.5
+> ✓✓✓✓-✓-65.4
+> ✓✓✓✓✓✓-64.8
+> ✓✓-✓✓✓✓61.1
+> ✓✓✓✓-✓✓61.7
+> ✓✓✓✓✓✓✓60.3
+
+We conduct a systematic ablation study to evaluate the key components of DeMol using the PCQM4Mv2 dataset, with MAE (meV) as the evaluation metric (Table 4). For a fair comparison, all hyperparameters are kept the same as the setting in the Appendix D.2. The results demonstrate that: (1) Using only the bond-centric graph achieves an MAE of 89.9 meV, while using only the atom-centric graph reduces to 77.2 meV. (2) Combining atom-centric graph and torsional an-gle position encoding further improves to 75.5 meV, whereas incorporating a preliminary combination of the atom-centric and bond-centric graphs significantly reduces the MAE to 65.4 meV. This highlights the com-plementary nature of the two graph representations. 9Published as a conference paper at ICLR 2026 (3) Incorporating covalent radii prediction, torsional angle encoding and structure-aware masks enables explicit modelling of angular relationships and prunes non-physical interactions, leading to enhanced geometric consistency. (4) The bond-bond and bond-atom attention mechanisms pro-vide additional gains by capturing explicit chemical bond interactions and cross-level atom-bond relationships. These findings collectively validate that each component contributes uniquely to the model’s performance. The dual-graph architecture provides fundamental atom/bond representations, while geometric constraints and attention mechanisms refine these through physical plausibility enforcement and interaction modelling. 
+
+## 5 CONCLUSION 
+
+In this paper, we propose DeMol, a dual-graph enhanced multi-scale interaction framework for molecular representation learning, to address the critical gap in explicitly modelling chemical bonds and their interactions. Extensive experiments demonstrate that DeMol achieves state-of-the-art performance on diverse molecular property prediction tasks across PCQM4Mv2, OC20 IS2RE, QM9, and MoleculeNet datasets. 
+
+## ACKNOWLEDGMENTS 
+
+The research described in this paper has been partially supported by the General Research Funds from the Hong Kong Research Grants Council (project no. PolyU 15200023, 15206024, and 15224524), internal research funds from Hong Kong Polytechnic University (project no. P0042693, P0048625, and P0051361,P0059586), and Sheertek International (HK) Limited. This work was supported by computational resources provided by The Centre for Large AI Models (CLAIM) of The Hong Kong Polytechnic University. 
+
+## ETHICS STATEMENT 
+
+This work adheres to the ICLR Code of Ethics. In this study, no human subjects or animal exper-imentation were involved. All datasets used, including PCQM4Mv2, OC2020 IS2RE, QM9 and MoleculeNet, were sourced in compliance with relevant usage guidelines, ensuring no violation of privacy. We have taken care to avoid any biases or discriminatory outcomes in our research process. No personally identifiable information was used, and no experiments were conducted that could raise privacy or security concerns. We are committed to maintaining transparency and integrity throughout the research process. 
+
+## REFERENCES 
+
+Brandon Anderson, Truong Son Hy, and Risi Kondor. Cormorant: Covariant molecular neural networks. Advances in neural information processing systems , 32, 2019. Peizhen Bai, Xianyuan Liu, and Haiping Lu. Geometry-aware line graph transformer pre-training for molecular property prediction. arXiv preprint arXiv:2309.00483 , 2023. Rémy Brossard, Oriel Frigo, and David Dehaene. Graph convolutions that can finally model local structure. arXiv preprint arXiv:2011.15069 , 2020. Kieron Burke. Perspective on density functional theory. The Journal of chemical physics , 136(15), 2012. David Buterez, Jon Paul Janet, Dino Oglic, and Pietro Liò. An end-to-end attention-based approach for learning on graphs. Nature Communications , 16(1):5244, 2025. Lowik Chanussot, Abhishek Das, Siddharth Goyal, Thibaut Lavril, Muhammed Shuaibi, Morgane Riviere, Kevin Tran, Javier Heras-Domingo, Caleb Ho, Weihua Hu, et al. Open catalyst 2020 (oc20) dataset and community challenges. Acs Catalysis , 11(10):6059–6072, 2021. Xueyuan Chen, Shangzhe Li, Ruomei Liu, Bowen Shi, Jiaheng Liu, Junran Wu, and Ke Xu. Molecular graph contrastive learning with line graph. Pattern Recognition , pp. 111380, 2025. 10 Published as a conference paper at ICLR 2026 Kamal Choudhary and Brian DeCost. Atomistic line graph neural network for improved materials property predictions. npj Computational Materials , 7(1):185, 2021. Michael A Collins and Ryan PA Bettens. Energy-based molecular fragmentation methods. Chemical reviews , 115(12):5607–5642, 2015. Thomas M Cover, Joy A Thomas, et al. Entropy, relative entropy and mutual information. Elements of information theory , 2(1):12–13, 1991. Kingma Diederik. Adam: A method for stochastic optimization. (No Title) , 2014. Bo Ding, Yue Weng, Yunqing Liu, Chunlan Song, Le Yin, Jiafan Yuan, Yanrui Ren, Aiwen Lei, and Chien-Wei Chiang. Selective photoredox trifluoromethylation of tryptophan-containing peptides. 
+
+European Journal of Organic Chemistry , 2019(46):7596–7605, 2019. Yu Dong, Tao Xu, Shouping Zhong, Bo Wang, Huimin Zhang, Xin Wang, Peng Wang, Guangshun Li, and Shuanying Yang. Circ_0076305 regulates cisplatin resistance of non-small cell lung cancer via positively modulating stat3 by sponging mir-296–5p. Life sciences , 239:116984, 2019. David K Duvenaud, Dougal Maclaurin, Jorge Iparraguirre, Rafael Bombarell, Timothy Hirzel, Alán Aspuru-Guzik, and Ryan P Adams. Convolutional networks on graphs for learning molecular fingerprints. Advances in neural information processing systems , 28, 2015. Evan Evans. Probing the relation between force—lifetime—and chemistry in single molecular bonds. 
+
+Annual review of biophysics and biomolecular structure , 30(1):105–128, 2001. Wenqi Fan, Yao Ma, Qing Li, Yuan He, Eric Zhao, Jiliang Tang, and Dawei Yin. Graph neural networks for social recommendation. In The world wide web conference , pp. 417–426, 2019. Wenqi Fan, Yao Ma, Qing Li, Jianping Wang, Guoyong Cai, Jiliang Tang, and Dawei Yin. A graph neural network framework for social recommendations. IEEE Transactions on Knowledge and Data Engineering , 2020. Wenqi Fan, Xiaorui Liu, Wei Jin, Xiangyu Zhao, Jiliang Tang, and Qing Li. Graph trend filtering networks for recommendation. In Proceedings of the 45th International ACM SIGIR Conference on Research and Development in Information Retrieval , pp. 112–121, 2022. Wenqi Fan, Yujuan Ding, Liangbo Ning, Shijie Wang, Hengyun Li, Dawei Yin, Tat-Seng Chua, and Qing Li. A survey on rag meeting llms: Towards retrieval-augmented large language models. In 
+
+Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 6491–6501, 2024. Wenqi Fan, Yi Zhou, Shijie Wang, Yuyao Yan, Hui Liu, Qian Zhao, Le Song, and Qing Li. Computa-tional protein science in the era of large language models (llms). arXiv preprint arXiv:2501.10282 ,2025. Xiaomin Fang, Lihang Liu, Jieqiong Lei, Donglong He, Shanzhuo Zhang, Jingbo Zhou, Fan Wang, Hua Wu, and Haifeng Wang. Geometry-enhanced molecular representation learning for property prediction. Nature Machine Intelligence , 4(2):127–134, 2022. Johannes Gasteiger, Janek Groß, and Stephan Günnemann. Directional message passing for molecular graphs. arXiv preprint arXiv:2003.03123 , 2020. Johannes Gasteiger, Florian Becker, and Stephan Günnemann. Gemnet: Universal directional graph neural networks for molecules. Advances in Neural Information Processing Systems , 34: 6790–6802, 2021. Justin Gilmer, Samuel S Schoenholz, Patrick F Riley, Oriol Vinyals, and George E Dahl. Neural message passing for quantum chemistry. In International conference on machine learning , pp. 1263–1272. PMLR, 2017. Jonathan Godwin, Michael Schaarschmidt, Alexander Gaunt, Alvaro Sanchez-Gonzalez, Yulia Rubanova, Petar Veliˇ ckovi´ c, James Kirkpatrick, and Peter Battaglia. Simple gnn regularisation for 3d molecular property prediction & beyond. arXiv preprint arXiv:2106.07971 , 2021. 11 Published as a conference paper at ICLR 2026 Zhichun Guo, Kehan Guo, Bozhao Nan, Yijun Tian, Roshni G Iyer, Yihong Ma, Olaf Wiest, Xian-gliang Zhang, Wei Wang, Chuxu Zhang, et al. Graph-based molecular representation learning. 
+
+arXiv preprint arXiv:2207.04869 , 2022. Hanxu Hu, Yunqing Liu, Zhongyi Yu, and Laura Perez-Beltrachini. Improving user controlled table-to-text generation robustness. In Andreas Vlachos and Isabelle Augenstein (eds.), Findings of the Association for Computational Linguistics: EACL 2023 , pp. 2317–2324, Dubrovnik, Croatia, May 2023. Association for Computational Linguistics. doi: 10.18653/v1/2023.findings-eacl.175. URL https://aclanthology.org/2023.findings-eacl.175/ .Weihua Hu, Bowen Liu, Joseph Gomes, Marinka Zitnik, Percy Liang, Vijay Pande, and Jure Leskovec. Strategies for pre-training graph neural networks. arXiv preprint arXiv:1905.12265 , 2019. Weihua Hu, Matthias Fey, Hongyu Ren, Maho Nakata, Yuxiao Dong, and Jure Leskovec. Ogb-lsc: A large-scale challenge for machine learning on graphs. arXiv preprint arXiv:2103.09430 , 2021. Md Shamim Hussain, Mohammed J Zaki, and Dharmashankar Subramanian. Global self-attention as a replacement for graph convolution. In Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 655–665, 2022. Md Shamim Hussain, Mohammed J Zaki, and Dharmashankar Subramanian. Triplet interaction improves graph transformers: Accurate molecular graph learning with triplet graph transformers. 
+
+arXiv preprint arXiv:2402.04538 , 2024. Michael J Hutchinson, Charline Le Lan, Sheheryar Zaidi, Emilien Dupont, Yee Whye Teh, and Hyunjik Kim. Lietransformer: Equivariant self-attention for lie groups. In International Conference on Machine Learning , pp. 4533–4543. PMLR, 2021. Bo Jiang, Ziyan Zhang, Doudou Lin, Jin Tang, and Bin Luo. Semi-supervised learning with graph learning-convolutional networks. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 11313–11320, 2019. Rui Jiao, Jiaqi Han, Wenbing Huang, Yu Rong, and Yang Liu. Energy-motivated equivariant pre-training for 3d molecular graphs. In Proceedings of the AAAI Conference on Artificial Intelligence ,volume 37, pp. 8096–8104, 2023. Jinwoo Kim, Dat Nguyen, Seonwoo Min, Sungjun Cho, Moontae Lee, Honglak Lee, and Seunghoon Hong. Pure transformers are powerful graph learners. Advances in Neural Information Processing Systems , 35:14582–14595, 2022. Guohao Li, Chenxin Xiong, Ali Thabet, and Bernard Ghanem. Deepergcn: All you need to train deeper gcns. arXiv preprint arXiv:2006.07739 , 2020. Jiatong Li, Junxian Li, Weida Wang, Yunqing Liu, Changmeng Zheng, Dongzhan Zhou, Xiao-yong Wei, and Qing Li. Speak-to-structure: Evaluating llms in open-domain natural language-driven molecule generation. arXiv preprint arXiv:2412.14642 , 2024a. Jiatong Li, Yunqing Liu, Wenqi Fan, Xiao-Yong Wei, Hui Liu, Jiliang Tang, and Qing Li. Empowering molecule discovery for molecule-caption translation with large language models: A chatgpt perspective. IEEE transactions on knowledge and data engineering , 2024b. Jiatong Li, Yunqing Liu, Wei Liu, Jingdi Le, Di Zhang, Wenqi Fan, Dongzhan Zhou, Yuqiang Li, and Qing Li. Molreflect: Towards in-context fine-grained alignments between molecules and texts. 
+
+arXiv preprint arXiv:2411.14721 , 2024c. Yi-Lun Liao and Tess Smidt. Equiformer: Equivariant graph attention transformer for 3d atomistic graphs. arXiv preprint arXiv:2206.11990 , 2022. Chengyi Liu, Wenqi Fan, Yunqing Liu, Jiatong Li, Hang Li, Hui Liu, Jiliang Tang, and Qing Li. Generative diffusion models on graphs: methods and applications. In Proceedings of the Thirty-Second International Joint Conference on Artificial Intelligence , IJCAI ’23, 2023. ISBN 978-1-956792-03-4. doi: 10.24963/ijcai.2023/751. URL https://doi.org/10.24963/ ijcai.2023/751 .12 Published as a conference paper at ICLR 2026 Lihang Liu, Donglong He, Xiaomin Fang, Shanzhuo Zhang, Fan Wang, Jingzhou He, and Hua Wu. Gem-2: next generation molecular property prediction network by modeling full-range many-body interactions. arXiv preprint arXiv:2208.05863 , 2022a. Shengchao Liu, Hanchen Wang, Weiyang Liu, Joan Lasenby, Hongyu Guo, and Jian Tang. Pre-training molecular graph representation with 3d geometry. arXiv preprint arXiv:2110.07728 ,2021. Xin Liu, Arindam Sau, Alexander R Green, Mihai V Popescu, Nicholas F Pompetti, Yingzi Li, Yucheng Zhao, Robert S Paton, Niels H Damrauer, and Garret M Miyake. Photocatalytic c–f bond activation in small molecules and polyfluoroalkyl substances. Nature , 637(8046):601–607, 2025a. Yi Liu, Limei Wang, Meng Liu, Yuchao Lin, Xuan Zhang, Bora Oztekin, and Shuiwang Ji. Spherical message passing for 3d molecular graphs. In International Conference on Learning Representations (ICLR) , 2022b. Yunqing Liu, Wenqi Fan, Xiaoyong Wei, and Li Qing. GLProtein: Global-and-local structure aware protein representation learning. In Christos Christodoulopoulos, Tanmoy Chakraborty, Carolyn Rose, and Violet Peng (eds.), Findings of the Association for Computational Linguistics: EMNLP 2025 , pp. 4355–4372, Suzhou, China, November 2025b. Association for Computational Linguistics. ISBN 979-8-89176-335-7. doi: 10.18653/v1/2025.findings-emnlp.233. URL https: //aclanthology.org/2025.findings-emnlp.233/ .Shuqi Lu, Zhifeng Gao, Di He, Linfeng Zhang, and Guolin Ke. Highly accurate quantum chemical property prediction with uni-mol+. arXiv preprint arXiv:2303.16982 , 2023. Tian Lu and Feiwu Chen. Multiwfn: A multifunctional wavefunction analyzer. Journal of computa-tional chemistry , 33(5):580–592, 2012. Shengjie Luo, Tianlang Chen, Yixian Xu, Shuxin Zheng, Tie-Yan Liu, Liwei Wang, and Di He. One transformer can understand both 2d & 3d molecular data. arXiv preprint arXiv:2210.01765 , 2022. Hongxu Ma, Han Zhou, Kai Tian, Xuefeng Zhang, Chunjie Chen, Han Li, Jihong Guan, and Shuigeng Zhou. Gor: A unified and extensible generative framework for ordinal regression. In The Fourteenth International Conference on Learning Representations , 2026. URL https: //openreview.net/forum?id=ys80cc2N5M .Nakata Maho. The pubchemqc project: A large chemical database from the first principle calculations. In AIP conference proceedings , volume 1702. AIP Publishing, 2015. Dominic Masters, Josef Dean, Kerstin Klaser, Zhiyi Li, Sam Maddrell-Mander, Adam Sanders, Hatem Helal, Deniz Beker, Ladislav Rampášek, and Dominique Beaini. Gps++: An optimised hybrid mpnn/transformer for molecular property prediction. arXiv preprint arXiv:2212.02229 ,2022. Maho Nakata and Tomomi Shimazaki. Pubchemqc project: a large-scale first-principles electronic structure database for data-driven chemistry. Journal of chemical information and modeling , 57(6): 1300–1308, 2017. Tymofii Yu Nikolaienko, Valerii S Chuiko, and Leonid A Bulavin. The dataset of covalent bond lengths resulting from the first-principle calculations. Computational and Theoretical Chemistry ,1163:112508, 2019. Liang-bo Ning, Shijie Wang, Wenqi Fan, Qing Li, Xin Xu, Hao Chen, and Feiran Huang. Cheatagent: Attacking llm-empowered recommender systems via llm agent. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 2284–2295, 2024. Liangbo Ning, Ziran Liang, Zhuohang Jiang, Haohao Qu, Yujuan Ding, Wenqi Fan, Xiao-yong Wei, Shanru Lin, Hui Liu, Philip S Yu, et al. A survey of webagents: Towards next-generation ai agents for web automation with large foundation models. In Proceedings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining V. 2 , pp. 6140–6150, 2025. Wonpyo Park, Woonggi Chang, Donggeon Lee, Juntae Kim, and Seung-won Hwang. Grpe: Relative positional encoding for graph transformer. arXiv preprint arXiv:2201.12787 , 2022. 13 Published as a conference paper at ICLR 2026 Haohao Qu, Wenqi Fan, Zihuai Zhao, and Qing Li. Tokenrec: Learning to tokenize id for llm-based generative recommendations. IEEE Transactions on Knowledge and Data Engineering , 2025. Haohao Qu, Shanru Lin, Yujuan Ding, Yiqi Wang, and Wenqi Fan. Diffusion generative recommen-dation with continuous tokens. 2026. Raghunathan Ramakrishnan, Pavlo O Dral, Matthias Rupp, and O Anatole Von Lilienfeld. Quantum chemistry structures and properties of 134 kilo molecules. Scientific data , 1(1):1–7, 2014. Ladislav Rampášek, Michael Galkin, Vijay Prakash Dwivedi, Anh Tuan Luu, Guy Wolf, and Do-minique Beaini. Recipe for a general, powerful, scalable graph transformer. Advances in Neural Information Processing Systems , 35:14501–14515, 2022. Bharath Ramsundar, Peter Eastman, Pat Walters, and Vijay Pande. Deep learning for the life sciences: applying deep learning to genomics, microscopy, drug discovery, and more . O’Reilly Media, 2019. Vıctor Garcia Satorras, Emiel Hoogeboom, and Max Welling. E (n) equivariant graph neural networks. In International conference on machine learning , pp. 9323–9332. PMLR, 2021. Bernhard Scholkopf, Kah-Kay Sung, Christopher JC Burges, Federico Girosi, Partha Niyogi, Tomaso Poggio, and Vladimir Vapnik. Comparing support vector machines with gaussian kernels to radial basis function classifiers. IEEE transactions on Signal Processing , 45(11):2758–2765, 1997. Kristof Schütt, Pieter-Jan Kindermans, Huziel Enoc Sauceda Felix, Stefan Chmiela, Alexandre Tkatchenko, and Klaus-Robert Müller. Schnet: A continuous-filter convolutional neural network for modeling quantum interactions. Advances in neural information processing systems , 30, 2017. Kristof Schütt, Oliver Unke, and Michael Gastegger. Equivariant message passing for the prediction of tensorial properties and molecular spectra. In International Conference on Machine Learning ,pp. 9377–9388. PMLR, 2021. Yu Shi, Shuxin Zheng, Guolin Ke, Yifei Shen, Jiacheng You, Jiyan He, Shengjie Luo, Chang Liu, Di He, and Tie-Yan Liu. Benchmarking graphormer on large-scale molecular modeling datasets. 
+
+arXiv preprint arXiv:2203.04810 , 2022. Anuroop Sriram, Abhishek Das, Brandon M Wood, Siddharth Goyal, and C Lawrence Zitnick. Towards training billion parameter graph neural networks for atomic simulations. arXiv preprint arXiv:2203.09697 , 2022. Hannes Stärk, Dominique Beaini, Gabriele Corso, Prudencio Tossou, Christian Dallago, Stephan Günnemann, and Pietro Liò. 3d infomax improves gnns for molecular property prediction. In 
+
+International Conference on Machine Learning , pp. 20479–20502. PMLR, 2022. Fan-Yun Sun, Jordan Hoffmann, Vikas Verma, and Jian Tang. Infograph: Unsupervised and semi-supervised graph-level representation learning via mutual information maximization. arXiv preprint arXiv:1908.01000 , 2019. Philipp Thölke and Gianni De Fabritiis. Torchmd-net: equivariant transformers for neural network based molecular potentials. arXiv preprint arXiv:2202.02541 , 2022. Bowen Wang, Chen Liang, Jiaze Wang, Furui Liu, Shaogang Hao, Dong Li, Jianye Hao, Guangyong Chen, Xiaolong Zou, and Pheng-Ann Heng. Dr-label: Improving gnn models for catalysis systems by label deconstruction and reconstruction. arXiv preprint arXiv:2303.02875 , 2023a. Peng-Lai Wang, Stefan Borsley, Martin J Power, Alessandro Cavasso, Nicolas Giuseppone, and David A Leigh. Transducing chemical energy through catalysis by an artificial molecular motor. 
+
+Nature , 637(8046):594–600, 2025a. Shijie Wang, Wenqi Fan, Yue Feng, Lin Shanru, Xinyu Ma, Shuaiqiang Wang, and Dawei Yin. Knowledge graph retrieval-augmented generation for llm-based recommendation. In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 27152–27168, 2025b. 14 Published as a conference paper at ICLR 2026 Xiaoyang Wang, Yao Ma, Yiqi Wang, Wei Jin, Xin Wang, Jiliang Tang, Caiyan Jia, and Jian Yu. Traffic flow prediction via spatial temporal graph neural network. In Proceedings of the web conference 2020 , pp. 1082–1092, 2020. Xu Wang, Huan Zhao, Wei-wei Tu, and Quanming Yao. Automated 3d pre-training for molecular property prediction. In Proceedings of the 29th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 2419–2430, 2023b. Yue Weng, Bo Ding, Yunqing Liu, Chunlan Song, Lo-Ying Chan, and Chien-Wei Chiang. Late-stage photoredox c–h amidation of n-unprotected indole derivatives: Access to n-(indol-2-yl) amides. 
+
+Organic Letters , 23(7):2710–2714, 2021. Zhenqin Wu, Bharath Ramsundar, Evan N Feinberg, Joseph Gomes, Caleb Geniesse, Aneesh S Pappu, Karl Leswing, and Vijay Pande. Moleculenet: a benchmark for molecular machine learning. 
+
+Chemical science , 9(2):513–530, 2018. Jun Xia, Chengshuai Zhao, Bozhen Hu, Zhangyang Gao, Cheng Tan, Yue Liu, Siyuan Li, and Stan Z Li. Mole-bert: Rethinking pre-training graph neural networks for molecules. 2023. Gelei Xu, Xueyang Li, Yixiong Chen, Yuying Duan, Shuqing Wu, Alexander Yu, Ching-Hao Chiu, Juntong Ni, Ningzhi Tang, Toby Jia-Jun Li, et al. A comprehensive survey of agentic ai in healthcare. Authorea Preprints , 2025. Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. How powerful are graph neural networks? arXiv preprint arXiv:1810.00826 , 2018. Chengxuan Ying, Tianle Cai, Shengjie Luo, Shuxin Zheng, Guolin Ke, Di He, Yanming Shen, and Tie-Yan Liu. Do transformers really perform badly for graph representation? Advances in neural information processing systems , 34:28877–28888, 2021. Yuning You, Tianlong Chen, Yongduo Sui, Ting Chen, Zhangyang Wang, and Yang Shen. Graph contrastive learning with augmentations. Advances in neural information processing systems , 33: 5812–5823, 2020. Jiahao Zhang, Rui Xue, Wenqi Fan, Xin Xu, Qing Li, Jian Pei, and Xiaorui Liu. Linear-time graph neural networks for scalable recommendations. In Proceedings of the ACM on Web Conference 2024 , pp. 3533–3544, 2024. Zihuai Zhao, Wenqi Fan, Jiatong Li, Yunqing Liu, Xiaowei Mei, Yiqi Wang, Zhen Wen, Fei Wang, Xiangyu Zhao, Jiliang Tang, and Qing Li. Recommender systems in the era of large language models (llms). IEEE Transactions on Knowledge and Data Engineering , 36(11):6889–6907, 2024. doi: 10.1109/TKDE.2024.3392335. Gengmo Zhou, Zhifeng Gao, Qiankun Ding, Hang Zheng, Hongteng Xu, Zhewei Wei, Linfeng Zhang, and Guolin Ke. Uni-mol: A universal 3d molecular representation learning framework. 2023. Yi Zhou, Haohao Qu, Yunqing Liu, Shanru Lin, Le Song, and Wenqi Fan. Hd-prot: A protein language model for joint sequence-structure modeling with continuous structure tokens. arXiv preprint arXiv:2512.15133 , 2025. 15 Published as a conference paper at ICLR 2026 
+
+Table of Appendix: 
+
+• A. Justification 
+
+– A.1. Justification of Proposition 1 
+
+– A.2. Justification of Proposition 2 
+
+– A.3. Justification of Proposition 3 
+
+– A.4. Justification of Proposition 4 • B. Bond Prediction based on Covalent Radii Algorithm • C. Time Complexity Analysis 
+
+– C.1. Inference Time Analysis • D. Experiment Details 
+
+– D.1 Large-Scale Pre-training 
+
+– D.2 PCQM4Mv2 
+
+– D.3 Open Catalyst 2020 IS2RE 
+
+– D.4 QM9 
+
+– D.5 MoleculeNet • E. Visualisation for Self-Attention Map • F. Qualitative Analysis of Bond-Level Interactions • G. Limitations and Future Work • H The Impact of Pre-training on PCQM4Mv2 • I. An Example of the Two Graph Representations • J. LLM Usage Disclosure 
+
+## A JUSTIFICATION 
+
+A.1 JUSTIFICATION OF PROPOSITION 1
+
+Proposition 1 (Information Gain from Edge Adjacency Patterns) For non-trivial graphs G, the entropy of L(G) satisfies: 
+
+H(L(G)) = H(G) + H(E′|E)
+
+| {z }
+
+> ∆Iedge-structure
+
+with ∆Iedge-structure > 0.
+
+Justification: In information theory, the information content of a graph G can be quantified via its structural entropy. For the atom-centric graph G = ( V, E), its entropy is decomposed as: 
+
+H(G) = H(V) + H(E|V ), (11) where H(V) is the entropy of the node distribution (e.g., entropy of degree distribution). H(E|V ) is the conditional entropy of edge connections given the vertex distribution, reflecting the randomness of edge placements. The bond-centric graph L(G) elevated edges E of G to nodes and encodes adjacency relations between edges. Its entropy is: 
+
+H(L(G)) = H(E) + H(E′|E ), (12) where H(E) is the entropy of the original edge distribution (e.g., diversity of edge weights), H(E′|E )
+
+is the conditional entropy of edge adjacency patterns in L(G), reflecting the complexity of edge-to-edge connections. Mutual information I(G; L(G)), which measures shared information between G and L(G), is defined as: 
+
+I(G; L(G)) = H(G) + H(L(G)) − H(G; L(G)). (13) Since L(G) is fully constructed from G, H(G; L(G)) = H(L(G)), leading to: 
+
+I(G; L(G)) = H(L(G)). (14) 16 Published as a conference paper at ICLR 2026 This indicates that the entropy of L(G) originates entirely from G. However, the unique information in L(G) lies in its conditional entropy H(E′|E ), which captures edge adjacency patterns not explicitly encoded in G. Thus, for non-trivial graphs G, the entropy of L(G) satisfies: 
+
+H(L(G)) = H(G) + H(E′|E)
+
+| {z }
+
+> ∆Iedge-structure
+
+with ∆Iedge-structure > 0.
+
+H(E′|E ) quantifies the randomness of edge adjacency patterns in G, introducing higher-order structural information absent in G. This guarantees ∆Iedge-structure > 0.A.2 JUSTIFICATION OF PROPOSITION 2
+
+Proposition 2 (Mutual Information Decomposition) For any molecular graph G and its dual-graph representation (H(a), H(b)), the mutual information satisfies: 
+
+I(G, L(G); H(a), H(b)) = I(G; H(a))
+
+| {z }
+
+> Atomic Information
+
++ I(L(G); H(b)|H(a))
+
+| {z }
+
+> Bond-centric graph Information
+
++ I(G; H(b)|L(G), H(a))
+
+| {z }
+
+> Residual Atomic Dependency
+
+.
+
+Justification: Lemma 1 (Chain rule of mutual information) (Cover et al., 1991) 
+
+I(X, Z ; Y ) = I(X; Y ) + I(Z; Y |X)
+
+I(X, Z ; Y ) = Ep(x,z,y )
+
+ log p(z, y, x )
+
+p(y)p(z, x )
+
+
+
+= Ep(x,z,y )
+
+ log p(x, y )p(z, y, x )
+
+p(y)p(z, x )p(y, x )
+
+
+
+= Ep(x,z,y )
+
+ log p(x, y )
+
+p(x)p(y)
+
+p(z, y |x)
+
+p(z|x)p(y|x)
+
+
+
+= Ep(x,y )
+
+ log p(x, y )
+
+p(x)p(y)
+
+ + Ep(x,z,y )
+
+ log p(z, y |x)
+
+p(z|x)p(y|x)
+
+
+
+= I(X; Y ) + I(Z; Y |X)
+
+(15) We start with the total mutual information I(G, L(G); H(a), H(b)) and apply the chain rule for mutual information: 
+
+I(G, L(G); H(a), H(b)) = I(G, L(G); H(a)) + I(G, L(G); H(b)|H(a)).
+
+Since L(G) is a deterministic function of G, knowing G provides no additional information about 
+
+L(G). Therefore, I(L(G); H(a)|G) = 0 . This simplifies the first term: 
+
+I(G, L(G); H(a)) = I(G; H(a)) + I(L(G); H(a)|G ) = I(G; H(a)).
+
+The second term, I(G, L(G); H(b)|H(a)), can be expanded as: 
+
+I(G, L(G); H(b)|H(a)) = I(L(G); H(b)|H(a)) + I(G; H(b)|L(G), H(a)).
+
+Combining these gives the full decomposition: 
+
+I(G, L(G); H(a), H(b)) = I(G; H(a)) + I(L(G); H(b)|H(a)) + I(G; H(b)|L(G), H(a)).
+
+This decomposition demonstrates that dual-graph learning retains strictly more information than single-graph approaches when I(L(G); H(b)|H(a)) > 0 and I(G; H(b)|L(G), H(a)) > 0.A.3 JUSTIFICATION OF PROPOSITION 3
+
+Proposition 3 (Geometric Information Gain) Let θijk denote bond angles and φijkl denote dihedral angles. If L(G) encodes angular relationships through E′, the bond modelling gain satisfies: 
+
+∆I = I(L(G); H(b)|G; H(a)) ∝ Ei,j,k,l 
+
+"
+
+log p(θijk , φ ijkl |hi(a), hj(a), hk(a), hl(a))
+
+p(θijk , φ ijkl )
+
+#
+
+. (16) 17 Published as a conference paper at ICLR 2026 
+
+Justification: This proposition provides a rationale for why incorporating a bond-centric graph 
+
+L(G) enhances the geometric richness of the learned molecular representations. The core of this justification lies in connecting the structural properties of L(G) to its capacity for encoding higher-order geometric information, which is then quantified using an information-theoretic framework. 1. Defining the Geometric Information Gain ( ∆I): The term of interest, ∆I =
+
+I(L(G); H(b)|G; H(a)), is a conditional mutual information. It quantifies the amount of additional information that the bond-centric graph L(G) provides about the bond represen-tations H(b), given that the atom-centric graph G and its corresponding atom representations 
+
+H(a) are already known. In the context of our framework, this term represents the marginal information gain specifically attributable to the bond-centric perspective, which we posit is predominantly geometric in nature. 2. Structural Suitability of L(G) for Geometric Encoding : The atom-centric graph G
+
+explicitly models atomic connectivity (0-hop and 1-hop relationships). In contrast, the bond-centric graph L(G) elevates bonds to nodes, thereby making relationships between bonds explicit. • A bond angle ( θijk ) is fundamentally a property defined by two adjacent bonds sharing a common atom. In L(G), this corresponds to a direct edge between two nodes. • A dihedral angle ( φijkl ) describes the relationship across three consecutive bonds. In 
+
+L(G), this corresponds to a 2-hop path. Therefore, the topology of L(G) is inherently better suited to explicitly represent these higher-order geometric features than G, where such information is only implicit and must be inferred. 3. Quantifying Information Gain via Predictive Power : A central tenet of representation learning is that a high-quality embedding should capture the salient properties of the input data. For molecules, 3D geometry is a fundamental property. Consequently, the quality of the learned representations (H(a), H(b)) can be measured by their ability to reconstruct or predict these geometric properties. The expression on the right-hand side of the proposition is the Kullback-Leibler (KL) divergence, DKL (p(θ, φ |H)|| p(θ, φ )) , averaged over the data distribution. This KL divergence measures the reduction in uncertainty about the geometric variables (θ, φ ) after observing the learned representation H.The structural nature of L(G) enables the model to learn a bond representation H(b) that is more richly infused with geometric information. The degree to which these representations have captured geometric information is directly measured by their power to predict the true geometric parameters 
+
+(θijk , φ ijkl ). A more informative representation will lead to a posterior distribution p(θ, φ |H) that is sharply peaked around the true values, resulting in a larger KL divergence from the uninformative prior p(θ, φ ). Thus, the geometric information gain, ∆I, derived from the bond-centric channel is directly proportional to the model’s enhanced ability to predict these geometric quantities. This justifies our architectural choice to integrate geometric features like torsional angles specifically within the bond-centric channel of our framework. A.4 JUSTIFICATION OF PROPOSITION 4
+
+Proposition 4 (Dual-Graph Information Bottleneck) For molecular property prediction Y, the optimal encoder Φ minimizes: 
+
+min 
+
+> Φ
+
+h
+
+I(G, L(G); H(a), H(b)) − βI (H(a), H(b); Y)
+
+i
+
+. (17) 
+
+Justification: This proposition frames the task of learning molecular representations within the 
+
+Information Bottleneck (IB) principle . The objective is to demonstrate that a dual-graph input provides a more advantageous starting point for solving the IB optimisation problem compared to a single, atom-centric graph. 1. The Information Bottleneck Principle : The IB principle posits that an optimal representa-tion (or encoding) of an input variable X for predicting a target variable Y should satisfy two competing objectives: 18 Published as a conference paper at ICLR 2026 • Compression : It should compress the input X as much as possible, discarding non-essential information. This is achieved by minimizing the mutual information I(X; Z)
+
+between the input X and the representation Z.• Prediction : It should retain as much information as possible about the target Y. This is achieved by maximizing the mutual information I(Z; Y).The Lagrangian multiplier β controls the trade-off between these two objectives. 2. Mapping the IB Principle to the DeMol Framework : In our context, the variables are mapped as follows: • The input X corresponds to the complete dual-graph description of the molecule: 
+
+(G, L(G)).• The learned representation Z corresponds to the set of atom and bond embeddings: 
+
+(H(a), H(b)).• The target variable Y is the molecular property to be predicted. Thus, the objective function in Proposition 4 is a direct application of the IB principle to our framework, where the encoder Φ learns the mapping from the dual-graph input to the latent embeddings. 3. The Advantage of a Dual-Graph Input : The central argument for the superiority of the dual-graph approach within the IB framework is that it provides a richer, more structured input to the encoder. • Richer Information Content : As established in Proposition 1 , the dual-graph input 
+
+(G, L(G)) contains strictly more information than the atom-centric graph G alone, particularly regarding explicit geometric and relational bond information. • Improved Compression-Prediction Trade-off : By starting with a more informative and structured input, the encoder Φ s better positioned to find a more optimal solution to the IB trade-off. The model can more effectively disentangle which aspects of the molecular structure are predictive of the target property Y (e.g., a specific torsional angle critical for bioactivity) from those that are merely structural artifacts. An encoder operating only on G might be forced to retain more ambiguous structural information because the critical geometric cues are only implicitly represented. The dual-graph input allows the encoder to be more selective, potentially achieving a representation that is simultaneously more compressive (by discarding redundant atomic information) and more predictive (by focusing on the explicit bond-level features that matter). This leads to a better trade-off, or a tighter bound, in the optimization process. 4. Connection to Architectural Choices : This theoretical motivation directly informs our model’s design. The IB principle rationalizes not only the end-to-end learning objective but also the necessity of regularization to achieve effective compression. The Structure-aware Mask and the Bond Prediction based on Covalent Radii module can be interpreted as forms of inductive bias that aid the compression objective. By enforcing chemical and physical plausibility, these components guide the encoder to ignore vast regions of the potential representation space that correspond to unrealistic molecular conformations, thereby helping it find a more compact and meaningful representation. In summary, Proposition 4 justifies our dual-graph framework by positioning it within the established Information Bottleneck principle. The richer input provided by the dual-graph representation allows for a more efficient and effective optimization of the compression-prediction trade-off, ultimately leading to learned embeddings that are both concise and highly predictive of molecular properties. 
+
+## B BOND PREDICTION BASED ON COVALENT RADII ALGORITHM 
+
+## C TIME COMPLEXITY ANALYSIS 
+
+In this section, we analyse the time complexity of the DeMol framework. This analysis helps to understand the computational efficiency of our dual-graph architecture and provides insights into how the proposed design choices affect scalability. The DeMol framework operates on a dual-graph representation, consisting of: 19 Published as a conference paper at ICLR 2026 
+
+Algorithm 1: Bond Prediction based on Covalent Radii. 
+
+Input: List of N atoms of molecule M: A = {a1, a 2, ..., a N }; Each atomic type (e.g., ‘H’, ‘C’, ‘O’): T ;3D coordinates: ⃗p = ( x, y, z ) ; Covalent radii dictionary: Rcov ; Bonding threshold factor: α = 1 .15 .
+
+Output: Predited Bonds B. 
+
+> 1
+
+B ← ∅ ; ▷ Initialize an empty set for bonds  
+
+> 2
+
+for i ← 1 to N − 1 do  
+
+> 3
+
+Ti ← type (ai); ▷ Get atom type  
+
+> 4
+
+ri ← Rcov [Ti]; ▷ Look up covalent radii 
+
+> 5
+
+⃗ p i ← (xi, y i, z i); ▷ Get coordinate  
+
+> 6
+
+for j ← i + 1 to N do  
+
+> 7
+
+Tj ← type (aj ); ▷ Get atom type  
+
+> 8
+
+rj ← Rcov [Tj ]; ▷ Look up covalent radii 
+
+> 9
+
+⃗ p j ← (xj , y j , z j ); ▷ Get coordinate  
+
+> 10
+
+Rsum ← ri + rj ; ▷ Calculate the sum of covalent radii  
+
+> 11
+
+Dthreshold ← α × Rsum ; ▷ Calculate the bonding distance threshold  
+
+> 12
+
+Dij ← p(xi − xj )2 + ( yi − yj )2 + ( zi − zj )2; ▷ Calculate the Euclidean distance  
+
+> 13
+
+if Dij ≤ Dthreshold then  
+
+> 14
+
+B ← B ∪ { (i, j )}; ▷ Add the bond pair to the set  
+
+> 15
+
+end  
+
+> 16
+
+end  
+
+> 17
+
+end  
+
+> 18
+
+return B; ▷ Return the set of predicted bonds 
+
+1. An atom-centric graph G = ( V, E), where nodes represent atoms and edges represent chemical bonds. 2. A bond-centric graph L(G), derived from G, where nodes represent bonds and edges encode spatial or topological relationships between bonds. Let |V| = N denote the number of atoms in a molecule and |E| = M the number of bonds. The feature dimensions for atoms and bonds are denoted as d and db, respectively. We assume the use of multi-head attention with h heads and L layers for both the atom-centric and bond-centric channels. 
+
+Atom-Centric Graph. Each layer of the atom-centric graph processing involves a graph attention mechanism. For a sparse molecular graph, the number of edges M ∼ O(N ). Hence, the time complexity per layer is O(h · M · d). For L layers, the total complexity becomes O(L · h · N · d).
+
+Bond-Centric Graph. The bond-centric graph has M nodes (one per bond), and its edge set E′
+
+encodes adjacency between bonds. In the worst case, |E ′| ∼ O(|E| 2), especially when considering all possible spatial interactions between bonds. Therefore, each layer of the bond-centric channel has a complexity of O(h · |E ′| · db) = O(h · |E| 2 · db) = O(h · M 2 · db). With L layers, the total complexity becomes O(L · h · M 2 · db).
+
+Cross-level Attention. To align representations across graphs, DeMol employs cross-level attention between atoms and bonds. This introduces additional pairwise attention computations. Assuming full interaction between atoms and bonds, the complexity is O(h · N · M · d). This term dominates the overall complexity in large molecules due to the quadratic growth in M and the product N · M .Combining the above components, the overall time complexity of DeMol is O(Lh (N d + M 2db +
+
+N M d )) .
+
+With Structure-aware Mask. To mitigate the high computational overhead, we introduce the structure-aware mask, which restricts attention computation to only physically plausible atomic and bond interactions based on chemical valency rules and covalent radii constraints. 
+
+Updated Complexity Components. 
+
+1. Atom-Centric Graph: With the mask applied, the number of edges remains linear in N , so the complexity stays at O(LhN d ).20 Published as a conference paper at ICLR 2026 2. Bond-Centric Graph: Due to the mask, the number of edges in the bond-centric graph is reduced from O(|E| 2) → O(|E| ), yielding O(Lh |E| db).3. Cross-Level Attention. Similarly, the number of valid atom–bond interactions is now proportional to |E| instead of N · |E| , leading to O(LhKd ), where K ≪ N · |E| denotes the number of masked interactions. 
+
+Total Complexity. Under the structure-aware masking strategy, the overall time complexity of DeMol becomes O(Lh (N d + |E| db) = O(Lh (N d + M d b). In fact, most of molecule graphs satisfy the condition that the number of edges is 1.1 to 1.2 times the number of atoms, M ≈ 1.2N . Then, we get the total complexity O(Lh (N d + M d b) = O(Lh (N d + N 2db + N 2d) = O(Lh (N d + ( d +
+
+db)N 2))) .C.1 INFERENCE TIME ANALYSIS 
+
+We further provide additional results on the inference time on the PCQM4Mv2 dataset on an NVIDIA A6000 GPU. 
+
+> Table 5: Inference Time Comparison on PCQM4Mv2 dataset.
+
+Methods Inference Time Transformer-M ∼28 ms/molecule GPS++ (Ensemble) ∼100 ms/molecule DeMol ∼34 ms/molecule As shown in the Table 5, DeMol is approximately 20% slower than Transformer-M due to the additional bond-channel computations but provides a significant performance gain. It is vastly faster than ensemble-based approaches (like GPS++) while achieving superior single-model performance. 
+
+## D EXPERIMENT DETAILS 
+
+D.1 LARGE -S CALE PRE -TRAINING 
+
+Dataset. Our DeMol model is pre-trained on the training set of PCQM4Mv2 from the OGB Large-Scale Challenge (Hu et al., 2021). PCQM4Mv2 is a quantum chemistry dataset originally curated under the PubChemQC project (Maho, 2015; Nakata & Shimazaki, 2017). The total number of training samples is 3.37 million. Each molecule in the training set is associated with both 2D graph structures and 3D geometric structures. The HOMO-LUMO energy gap of each molecule is provided, which is obtained by DFT-based geometry optimization (Burke, 2012). According to the OGB-LSC (Hu et al., 2021), the HOMO-LUMO energy gap is one of the most practically-relevant quantum chemical properties of molecules since it is related to reactivity, photoexcitation, and charge transport. Being the largest publicly available dataset for molecular property prediction, PCQM4Mv2 is considered to be a challenging benchmark for molecular models. 
+
+Settings. Similar to Graphormer (Ying et al., 2021), Transformer-M (Luo et al., 2022) and Uni-mol (Zhou et al., 2023), DeMol comprises 12 layers with atom representation dimension of da = 768 
+
+and bond representation dimension of db = 768 . The model employ 128 Gaussian kernels. We also use AdamW (Diederik, 2014) as the optimizer and set its hyperparameter ϵ to 1e-8 and (β1, β 2) to (0.9,0.999). The gradient clip norm is set to 5.0. The peak learning rate is set to 2e-4. The batch size is set to 1024. The model is trained for 1.5million steps with 150K warmup steps. We also utilized exponential moving average (EMA) with a decay rate of 0.999. The training process required around 7 days, powered by 8 NVIDIA A6000 GPUs. 
+
+Pretraining strategies. As illustrated in Section 3 Figure 3, DeMol employs a Multi-Task Pretrain-ing Strategy. 21 Published as a conference paper at ICLR 2026 We follow Transformer-M (Luo et al., 2022) and Unimol (Zhou et al., 2023) settings. The primary goal is the supervised regression of the quantum property (HOMO-LUMO gap), and we also utilise auxiliary tasks to enforce geometric and structural understanding. 
+
+Property Prediction Loss ( Lprop ). This is the primary supervised task. For the PCQM4Mv2 dataset, we aim to minimize the Mean Absolute Error (MAE) between the predicted HOMO-LUMO gap ˆy
+
+and the ground truth y:
+
+Lprop = 1
+
+|B| 
+
+X
+
+> i∈B
+
+|yi − ˆyi|,
+
+where B is the batch of molecule. 
+
+Masked Atom Prediction Loss ( Lmask ). To capture topological context, we randomly mask a portion of atomic node features. The masked atom prediction head predicts the atom type ti using Cross-Entropy loss: 
+
+Lmask = − X
+
+> j∈M
+
+log P (tj |G masked ),
+
+where M is the set of masked indices. 
+
+Coordinate Recovery Loss ( Lcoord ). To enforce 3D spatial awareness, we add noise to the input coordinates. The coordinates recovery head is trained to denoise and recover the ground-truth coordinates ⃗p i, typically minimised via Mean Squared Error (MSE): 
+
+Lcoord =
+
+> N
+
+X
+
+> i=1
+
+|| ⃗p i − ˆ⃗p i|| 2
+
+.
+
+Bond Prediction based on Covalent Radii ( Lbond ). As described in Algorithm 1, we determine the ground truth chemical bonds Bgt based on covalent radii constraints ( Dij < α (ri + rj )). The bonding prediction head learns to classify valid interactions, serving as a regularisation term to penalise geometrically inconsistent structures: 
+
+Lbond = − X
+
+> (i,j )∈E all
+
+I(i,j )∈Bgt log( pij ) + (1 − I(i,j )∈Bgt ) log(1 − pij ) ,
+
+where pij is the predicted probability of a bond existing between atoms i and j.D.2 PCQM4M V2
+
+Baselines. We compare our DeMol with several competitive baselines. These models fall into two categories: message passing neural network (MPNN) variants and Graph Transformers. For MPNN variants, we include two widely used models, GCN (Jiang et al., 2019) and GIN (Xu et al., 2018), and their variants with virtual node (VN) (Gilmer et al., 2017; Jiang et al., 2019). Additianlly, we compare GINE -VN (Brossard et al., 2020; Gilmer et al., 2017; Luo et al., 2022) and DeeperGCN - 
+
+> VN
+
+(Li et al., 2020; Luo et al., 2022). GINE is the multi-hop version of GIN. DeeperGCN is a 12-layer GNN model with carefully designed aggregators. The results of MLP-Fingerprint (Hu et al., 2021) is also reported. We also compare several Graph Transformer models. Graphormer (Ying et al., 2021) developed graph structural encodings and integrated them into a standard Transformer model. TokenGT (Kim et al., 2022) adopted the standard Transformer architecture without graph-specific modifications. GraphGPS (Rampášek et al., 2022) proposed a framework to integrate the positional and structural encodings, local message-passing mechanism, and global attention mechanism into the Transformer model. GPS++ (Masters et al., 2022) optimsed hybrid MPNN/Transformer for molecular property prediciton. GRPE (Park et al., 2022) proposed a graph-specific relative positional encoding and considered both node-spatial and node-edge relations. EGT (Hussain et al., 2022) exclusively used global self-attention as an aggregation mechanism rather than static localized convolutional aggregation, and utilized edge channels to capture structural information. GEM-2Liu et al. (2022a) models full-range many-body interactions in molecules, leveraging an axial attention mechanism to efficiently capture complex quantum interactions.Transformer-M (Luo et al., 2022) integrated 2D 22 Published as a conference paper at ICLR 2026 and 3D spatial encodings as the attention bias to enhance molecule representation. Unimol+ (Lu et al., 2023) proposed a molecule conformer update mechanism to accurately predict quantum chemical properties. TGT (Hussain et al., 2024) integrated triplet interactions to improve the graph transformers. D.3 OPEN CATALYST 2020 IS2RE The Open Catalyst 2020 Challenge (Chanussot et al., 2021) is aimed at predicting the adsorption energy of molecules on catalyst surfaces using machine learning. We focus on the IS2RE (Initial Structure to Relaxed Energy) task, where the model is provided with an initial DFT structure of the crystal and adsorbate, which interact with each other to reach the relaxed structure when the relaxed energy of the system is measured. It comprises approximately 460K training data points. While DFT equilibrium confirmations are provided for training, they are not permitted for use during inference. 
+
+Settings. We use the default 12-layer setting for OC20 experiments. Firstly, since OC20 lacks graph information, graph-related features are excluded from the model. We adopt the solution proposed in (Shi et al., 2022) to consider the periodic boundary condition, which pre-expands the neighbor cells and then applies a radius cutoff to reduce the number of atoms. The AdamW optimizer was employed during the training process, which lasted for 1.5 million steps, including 150K warmup steps. The optimizer was configured with a learning rate of 2e-4, a batch size of 64, (β1, β 2) values of (0.9,0.999), and a gradient clipping parameter of 5.0. The training process spanned approximately 14 days and make use of 8 NVIDIA A600 GPUs. 
+
+Baselines. We compare our DeMol with several competitive baselines. The baselines are categorised into two groups: 3d-based models and graph-based models. SchNet (Schütt et al., 2017) proposed a pioneering 3D convolutional neural network that uses continuous-filter convolutions to model atomic interactions based on interatomic distances. DimeNet++ (Sriram et al., 2022) incorporates directional message passing to better capture angular dependencies between atoms. GemNet-T (Gasteiger et al., 2021) introduces a graph neural network designed to handle both geometric and electronic properties of molecules, focusing on translational equivariance. SphereNet (Liu et al., 2022b) represents molecules as spherical harmonics, enabling efficient computation of rotational equivariant features. For grpah-based models, Graphormer-3D (Shi et al., 2022) combines transformer architectures with 3D graph representations to capture long-range dependencies in molecular structures. GNS (Godwin et al., 2021) uses a generative neural simulator that learns to predict molecular dynamics by modeling interactions between atoms. DRFormer (Wang et al., 2023a) captures relational information in molecular graphs for drug discovery. EquiFormer (Liao & Smidt, 2022) proposes an equivariant transformer architecture that preserves symmetries in molecular data while incorporating neural network layers for enhanced performance. DRFormer (Wang et al., 2023a) is optimised for robustness and efficiency in molecular property prediction. UniMol+ (Lu et al., 2023) combines multiple modalities (e.g., 3D coordinates and graph representations) to improve generalization across diverse molecular datasets. TGT (Hussain et al., 2024) integrated triplet interactions to improve the graph transformers. D.4 QM9 We use the QM9 dataset (Ramakrishnan et al., 2014) to evaluate our model on molecular tasks in the 3D data format. QM9 is a quantum chemistry benchmark consisting of 134k stable small organic molecules. These molecules correspond to the subset of all 133,885 species out of the GDB-17 chemical universe of 166 billion organic molecules. Each molecule is associated with 12 targets covering its energetic, electronic, and thermodynamic properties. The 3D geometric structure of the molecule is used as input. Following (Thölke & De Fabritiis, 2022), we randomly choose 10,000 and 10,831 molecules for validation and test evaluation, respectively. The remaining molecules are used to fine-tune our DeMol model. We observed that several previous works used different data splitting ratios or did not describe the evaluation details. For a fair comparison, we choose baselines that use similar splitting ratios in the original papers. 
+
+Settings. We fine-tune the pre-trained DeMol on the QM9 dataset. Following Transformer-M (Luo et al., 2022), we adopt the Mean Squared Error (MSE) loss during training and use the Mean Absolute 23 Published as a conference paper at ICLR 2026 Error (MAE) loss function during evaluation. We also adopt label standardisation for stable training. We use AdamW as the optimiser, and set the hyperparameter ϵ to 1e-8 and (β1, β 2) to (0.9,0.999). The gradient clip norm is set to 5.0. The peak learning rate is set to 7e-5. The batch size is set to 128. The dropout ratios for the input embeddings, attention matrices, and hidden representations are set to 0.0,0.1, and 0.0, respectively. The weight decay is set to 0.0. The model is fine-tuned for 600k steps with a 60K-step warmup stage. After the warmup stage, the learning rate decays linearly to zero. All model are trained on 8 NVIDIA A6000 GPUs. 
+
+Baselines. We comprehensively compare our DeMol with both pre-training methods and 3D molecular models. First, we follow (Luo et al., 2022) to compare several pre-training methods. AttrMask (Hu et al., 2019) proposed a strategy to pre-train GNNs via both node-level and graph-level tasks. InfoGraph (Sun et al., 2019) maximized the mutual information between graph-level representations and substructure representations as the pre-training tasks. GraphCL (You et al., 2020) instead used contrastive learning to pre-train GNNs. There are also several works that utilise 3D geometric structures during pre-training. GraphMVP (Jiang et al., 2019) maximized the mutual information between 2D and 3D representations. GEM (Fang et al., 2022) proposed a strategy to learning spatial information by utilizing both local and global 3D structure. 3D Infomax (Stärk et al., 2022) used two encoder to capture 2D and 3D structural information separately while maximizing the mutual information between 2D and 3D representations. PosPred (Jiao et al., 2023) adopted an equivariant energy-based model and developed a node-level pertaining loss for force prediction. We also follow (Thölke & De Fabritiis, 2022) to compare 3D molecular models. SchNet (Schütt et al., 2017) used continuous-filter convolution layers to model quantum interactions in molecule. Cormorant (Anderson et al., 2019) developed a GNN model equipped with activation functions being covariant to rotations. DimeNet++ (Gasteiger et al., 2020) proposed directional message passing, which uses atom-pair embeddings and utilizes directional information between atoms. PaiNN (Schütt et al., 2021) proposed the polarizable atom interaction neural network that uses an equivariant message passing mechanism. LieTF (Hutchinson et al., 2021) built upon the Transformer model consisting of attention layers that are equivariant to arbitrary Lie groups and other discrete subgroups. TorchMD-Net (Thölke & De Fabritiis, 2022) also developed a Transformer variant with layers designed by prior physical and chemical knowledge. EGNN (Satorras et al., 2021) proposed a model which does not require computationally expensive high-order representations in immediate layers to keep equivariance, and can be easily scaled to higher-dimensional spaces. NoisyNode (Godwin et al., 2021) proposed the 3D position denoising task and verified it on the Graph Network-based Simulator (GPS) model (Masters et al., 2022). Transformer-M (Luo et al., 2022) integrated 2D and 3D spatial encodings as the attention bias to enhance molecule representation. ALIGNN (Choudhary & DeCost, 2021) uses a line graph, treating it as a route for message passing. ESA (Buterez et al., 2025) introduces an end-to-end attention architecture that treats graphs as sets of edges to explicitly learn edge representations. D.5 MOLECULE NET 
+
+MoleculeNet (Wu et al., 2018) is a popular benchmark for molecular property prediction, including datasets focusing on different molecular properties, from quantum mechanics and physical chemistry to biophysics and physiology. The details of the datasets we used are described below. 
+
+BBBP. The BBBP dataset is designed to predict whether a molecule can cross the blood-brain barrier (BBB), a critical factor in drug delivery and efficacy. This dataset consists of 2,039 molecules, where each molecule is labelled as either permeable or non-permeable based on experimental data. The task involves binary classification, requiring models to identify structural features that influence BBB permeability. The dataset is widely used to evaluate the ability of machine learning models to capture subtle molecular properties that affect BBB penetration, making it a benchmark for tasks related to drug discovery and pharmacokinetics. 
+
+Tox21. The Tox21 dataset focuses on predicting the toxicity of chemical compounds. It contains over 8,000 molecules, each associated with 12 different toxicity endpoints, such as nuclear receptor activation and stress response pathways. The dataset is derived from high-throughput screening experiments conducted by the U.S. Environmental Protection Agency (EPA) and the National Institutes of Health (NIH). Tox21 challenges models to accurately classify molecules based on their 24 Published as a conference paper at ICLR 2026 
+
+Table 6: Results on molecular property classification tasks. We report the (mean ± standard deviation) ROC-AUC score (higher is better) of 10 random seeds under scaffold splitting. The best results are highlighted in bold.                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+
+> Methods BBBP ↑Tox21 ↑ToxCast ↑SIDER ↑ClinTox ↑MUV ↑HIV ↑BACE ↑Avg ↑
+> AttrMask 65 .0±2.374 .8±0.262 .9±0.161 .2±0.187 .7±1.173 .4±2.076 .8±0.579 .7±0.372.68 ContextPred 65 .7±0.674 .2±0.062 .5±0.362 .2±0.577 .2±0.875 .3±1.577 .1±0.876 .0±2.071.28 GraphCL 69 .7±0.673 .9±0.662 .4±0.560 .5±0.876 .0±2.669 .8±2.678 .5±1.275 .4±1.470.78 InfoGraph 67 .5±0.173 .2±0.463 .7±0.559 .9±0.376 .5±1.074 .1±0.775 .1±0.977 .8±0.870.98 GROVER 70 .0±0.174 .3±0.165 .4±0.464 .8±0.681 .2±3.067 .3±1.862 .5±0.982 .6±0.771.01 MolCLR 66 .6±1.873 .0±0.162 .9±0.357 .5±1.786 .1±0.972 .5±2.376 .2±1.571 .5±3.170.79 GraphMAE 72 .0±0.675 .5±0.664 .1±0.360 .3±1.182 .3±1.276 .3±2.477 .2±1.083 .1±0.973.85 Mole-BERT 71 .9±1.676 .8±0.564 .3±0.262 .8±1.178 .9±3.078 .6±1.878 .2±0.880 .8±1.474.04 MoleculeSDE 71 .8±0.776 .8±0.365 .0±0.260 .8±0.387 .0±0.580 .9±0.378 .8±0.979 .5±2.175.07 3D InfoMax 70 .4±1.075 .5±0.563 .1±0.764 .1±0.189 .8±1.272 .8±1.074 .9±0.380 .7±0.673.91 Galformer 71 .6±0.975 .7±0.864 .0±0.464 .3±0.584 .7±0.973 .4±1.175 .6±0.480 .9±1.074.02 GraphMVP 71 .5±1.376 .1±0.964 .3±0.664 .7±0.785 .4±0.874 .9±1.276 .0±0.681 .5±1.274.86 MoleBlend 73 .0±0.877 .8±0.866 .1±0.064 .9±0.387 .6±0.777 .2±2.379 .0±0.883 .7±1.476.16 LEMON 73 .7±1.177 .5±0.665 .1±0.564 .3±0.985 .9±3.279 .4±4.379 .3±1.187 .8±1.476.62 GEM 72 .4±0.478 .1±0.169 .2±0.467 .2±0.490 .1±1.381 .7±0.580 .6±0.985 .6±1.178.18 Uni-Mol 72 .9±0.679 .6±0.569 .6±0.165 .9±1.391 .9±1.882 .1±1.380 .8±0.385 .7±0.278.63 DeMol 75 .1±0.680 .9±0.469 .3±0.568 .4±0.392 .6±0.782 .5±1.481 .2±0.989 .0±1.179.96
+
+potential toxic effects, emphasising the importance of understanding molecular interactions at a biochemical level. Its diverse set of endpoints makes it a comprehensive resource for evaluating toxicity prediction models. 
+
+ToxCast. The ToxCast dataset is an extension of Tox21, providing a broader range of toxicity predictions. It includes over 10,000 molecules and covers more than 600 different toxicity assays, spanning various biological pathways and mechanisms. The dataset is designed to assess the potential adverse effects of chemicals on human health and the environment. ToxCast is particularly useful for evaluating models’ ability to generalise across multiple toxicity endpoints, given its extensive coverage of biochemical interactions and diverse molecular structures. 
+
+SIDER. The ClinTox dataset is designed to predict clinical trial outcomes for drugs, specifically focusing on toxicity and efficacy. It contains 1,478 drugs, each labelled with two binary classifications: "toxic" or "non-toxic" during clinical trials, and "effective" or "ineffective" based on clinical results. ClinTox is derived from publicly available sources, including the DrugBank database and clinical trial records. The dataset is valuable for assessing models’ ability to predict both safety and efficacy, which are critical factors in drug development. 
+
+MUV. The MUV dataset is a benchmark for virtual screening tasks, containing 150,000 molecules across 17 different biological targets. Each molecule is labelled as active or inactive for a specific tar-get, representing a binary classification problem. MUV is designed to evaluate models’ performance in identifying potential drug candidates by distinguishing active compounds from inactive ones. The dataset is particularly challenging due to its large size and the need to balance false positives and false negatives, making it a standard for benchmarking molecular property prediction models. 
+
+HIV. The HIV dataset is focused on predicting the activity of compounds against HIV (Human Immunodeficiency Virus). It contains 41,127 molecules, each labelled as active or inactive based on its ability to inhibit HIV replication. The dataset is derived from high-throughput screening experiments conducted by the Developmental Therapeutics Program (DTP) AIDS Antiviral Screen. HIV is a binary classification task that requires models to identify structural features associated with antiviral activity, making it essential for research in anti-HIV drug discovery. 
+
+BACE. The BACE (Beta-Secretase Cleavage Site) dataset is designed to predict the inhibition of the Beta-secretase enzyme, which plays a key role in Alzheimer’s disease. It contains 1,513 molecules, each labeled as active or inactive based on their ability to inhibit the enzyme. BACE is a binary 25 Published as a conference paper at ICLR 2026 classification task that evaluates models’ ability to identify molecules with therapeutic potential for treating neurodegenerative diseases. The dataset is derived from experimental screens and is widely used to benchmark models in the context of enzyme inhibition and drug discovery. 
+
+Settings. In our experiments, referring to previous work Uni-Mol (Zhou et al., 2023), we use scaffold splitting to divide the dataset into training, validation, and test sets in the ratio of 8:1:1. Scaffold splitting is more challenging than random splitting as the scaffold sets of molecules in different subsets do not intersect. This splitting tests the model’s generalization ability and reflects the realistic cases (Wu et al., 2018). In all experiments, we choose the checkpoint with the best validation loss, and report the results on the test-set run by that checkpoint. Referring to previous work, we use a grid search to find the best combination of hyperparameters for the molecular property tasks. To reduce the time cost, we set a smaller search space for the large datasets. The specific search space is shown in Table 7. For small dataset, we run them on a single NVIDIA A6000 GPU; for large datasets and HIV, we run them on 4 NVIDIA A6000 GPUs. 
+
+> Table 7: Search space for small datasets: BBBP, BACE, ClinTox, Tox21, Toxcast, SIDER, for large datasets: MUV and HIV.
+
+Hyperparameter Small Large HIV Learning rate [5e-5, 8e-5, 1e-4, 4e-4, 5e-4] [2e-5, 1e-4] [2e-5, 5e-5] Batch size [32, 64, 128, 256] [128, 256] [128, 256] Epochs [40 ,60, 80, 100] [20, 40] [2, 5, 10] Pooler dropout [0.0, 0.1, 0.2, 0.5] [0.0, 0.1] [0.0, 0.2] Warmup ratio [0.0, 0.06, 0.1] [0.0, 0.06] [0.0, 0.1] 
+
+## E VISUALISATION FOR SELF -ATTENTION MAP 
+
+For better interpretability, we conduct a visualisation on the self-attention map on atom-centric graph atom-atom attention and bond-centric graph bond-bond attention, respectively, as shown in Figure 5. The top section of Figure 5 illustrates the self-attention weights for the atom-centric graph representation. Each subfigure corresponds to one attention head, showing the pairwise attention weights between atoms in the molecule. The bottom section of Figure 5 depicts the self-attention weights for the bond-centric graph representation. Similar to the atom-centric case, each subfigure corresponds to one attention head, showing the pairwise attention weights between bonds in the molecule. By comparing the two sections of the figure, we observe that atom-centric attention tends to exhibit more varied and complex patterns, reflecting the rich diversity of atomic interactions and functional groups. Bond-centric attention, on the other hand, shows more structured and localised patterns, emphasising the importance of bond-specific features in capturing molecular properties. The model appears to effectively leverage both local and global structural information, as evidenced by the combination of diagonal and off-diagonal attention patterns. The complementary nature of these two representations suggests that combining atom-level and bond-level information can lead to a more comprehensive understanding of molecular structures. 
+
+## F QUALITATIVE ANALYSIS OF BOND -L EVEL INTERACTIONS 
+
+We further conduct an experiment visualising the representation spaces of DeMol, GEM, and LEMON using a curated dataset of 100 molecules designed to test specific bond-level capabilities. We first curated a dataset containing four distinct classes of molecules to test two specific bond-level phenomena: • Stereochemistry (3D Geometry): 25 cis-isomers (e.g., Cisplatin) and 25 trans-isomers (e.g., Transplatin). These differ only in 3D bond orientation (dihedral/bond angles). • Resonance (2D Electronic Structure): 25 aromatic rings (e.g., Benzene) and 25 non-aromatic rings (e.g., Cyclohexadiene). These differ in bond order and delocalisation. We projected the final graph-level embeddings of these molecules using t-SNE. As shown in Figure 6, DeMol, GEM and LEMON successfully separate Aromatic (Green) from Non-Aromatic (Red) 26 Published as a conference paper at ICLR 2026 attn weight of head 0 attn weight of head 1 attn weight of head 2 attn weight of head 3 attn weight of head 4 attn weight of head 5 attn weight of head 6 attn weight of head 7 attn weight of head 0 attn weight of head 1 attn weight of head 2 attn weight of head 3 attn weight of head 4 attn weight of head 5 attn weight of head 6 attn weight of head 7 Atom-centric graph atom-atom attention weights Bond-centric graph bond-bond attention weights 
+
+Figure 5: Visualisation on self-attention map of multi-heads independently. 
+
+clusters, proving it captures 2D topological features well. However, the Cis- (Blue) and Trans-(Orange) isomers are completely mixed into a single cluster by LEMON. Although GEM explicitly models bond-angle graphs, its GNN-based message passing appears to "smooth" these features, leading to entangled representations where 3D geometric distinctions are not strictly enforced in the final embedding space. DeMol produces four distinct, well-separated clusters. It clearly distinguishes Cis- from Trans- isomers (capturing 3D geometry) and aromatic from non-aromatic rings (capturing bond resonance). This provides direct qualitative proof that DeMol’s unique architecture successfully learns to "disentangle" complex bond-level phenomena that other bond-aware models either miss or conflate. 
+
+## G LIMITATIONS AND FUTURE WORK 
+
+Limitations. While DeMol explicitly models atom-bond and bond-bond interactions through dual-graph representations, the introduction of bond-centric channels and cross-level attention blocks increases computational overhead. We mitigate this problem by structure-aware masks derived from chemical valency rules, but further optimization is still required for real-time applications. Besides, the current framework is primarily validated on organic molecules and simple inorganic complexes. Its applicability to systems with unconventional bonding (e.g., metal-organic frameworks, organometallic compounds) or dynamic covalent interactions (e.g., reversible bonds in supramolecular assemblies) awaits further investigation. 
+
+Future Work. In the future, we can explore lightweight cross-attention designs (e.g., sparse attention via learnable graph sparsification or kernelized approximations) to reduce computational costs while preserving geometric consistency. Moreover, it’s promising to incorporate explicit electronic descriptors (e.g., partial charges, orbital hybridization) and quantum mechanical constraints (e.g., HOMO-LUMO gaps) into the bond-centric channel and explore hybrid models combining DeMol with physics-informed neural networks to bridge classical and quantum representations. 27 Published as a conference paper at ICLR 2026 
+
+> Figure 6: Visualisation on qualitative analysis of bond-level interactions.
+
+## H THE IMPACT OF PRE -TRAINING ON PCQM4M V2
+
+We conduct an additional experiment on the QM9 dataset. We train the DeMol without pretraining on the PCQM4Mv2 dataset. We selected five QM9 targets for comparison. All the hyperparameters of pre-training and fine-tuning are kept the same. 
+
+> Table 8: The impact of pre-training on PCQM4Mv2.
+
+Methods ϵHOM O ϵLU M O ∆ϵ G Cv
+
+No Pre-training 21.2 19.3 30.4 10.97 0.029 Pre-training on PCQM4Mv2 16.4 15.7 26.8 6.29 0.021 As shown in the Table 8, pretraining on the PCQM4Mv2 dataset does indeed improve performance on downstream tasks, consistent with the performance gains observed in Graphormer (Ying et al., 2021), Transformer-M (Luo et al., 2022) and Uni-mol (Zhou et al., 2023). 
+
+## I AN EXAMPLE OF THE TWO GRAPH REPRESENTATIONS 
+
+Figure 7 illustrates two distinct graph representations of the methane molecule ( CH 4), highlighting the complementary nature of atom-centric and bond-centric graph formulations. The figure is structured to provide a comprehensive view of how these representations encode structural information, including interatomic distances and inter-bond angles. The leftmost panel shows the chemical formula ( CH 4)and its 2D and 3D structures, providing a visual reference for the methane molecule. In the atom-centric graph, atoms are represented as nodes (v1, v 2, v 3, v 4, v 5), with edges 
+
+(e1, e 2, e 3, e 4) connecting them to reflect the molecular connectivity. This representation explic-itly encodes structural information such as interatomic distances. The structure encoding includes adjacency matrix, shortest path distance encodings, 3D distance encodings and so on. The adjacency matrix provides a numerical representation of the graph’s connectivity. For example, the entry "1" indicates a direct connection between two atoms, while "0" signifies no direct connection. A 2D graph visualisation depicts the shortest path distances between atoms, emphasising the spatial relationships within the molecule. Nodes are connected by edges whose lengths reflect the shortest paths between them. On the far right, a 3D molecular model of methane is shown, with bonds highlighted in red. 28 Published as a conference paper at ICLR 2026   
+
+> Figure 7: An example of the two graph representations of the methane molecule. Atom-Centric Graph :Graph representation with atoms as nodes, which can explicitly encode structural information such as interatomic distances. Bond-Centric Graph : Graph representation with bonds as nodes, which can explicitly encode structural information such as inter-bond angles.
+
+This visualisation integrates geometric information, illustrating how the atom-centric graph can capture three-dimensional spatial relationships. The bond-centric graph shifts the focus from atoms to bonds, where bonds are treated as nodes 
+
+(e1, e 2, e 3, e 4). Edges between these nodes represent the relationships between adjacent bonds, enabling the explicit encoding of structural features such as inter-bond angles. Similar to the atom-centric graph, a colour-coded matrix (Structure Encodings) is provided to visualise the adjacency relationships between bonds. The matrix captures the connectivity patterns among bonds, reflecting their spatial arrangement. The adjacency matrix for the bond-centric graph is presented. This matrix numerically encodes the connectivity between bonds, with "1" indicating a direct relationship and "0" indicating no direct relationship. A 2D graph visualisation shows the shortest path distances between bonds, emphasising the topological relationships within the bond-centric graph. On the far right, a 3D molecular model of methane is again depicted, but this time with a focus on the angles between bonds. Bonds are highlighted in red, and the visualisation emphasises how the bond-centric graph can capture angular relationships in three-dimensional space. 
+
+## J LLM U SAGE DISCLOSURE 
+
+The authors utilized a large language model (LLM) solely as a tool to assist with the polishing and refinement of the writing in this paper. The model was used exclusively for improving grammatical fluency, sentence structure, and overall clarity of the manuscript. All ideation, theoretical development, empirical research, and technical conclusions remain entirely the work of the authors. The authors take full responsibility for all content generated by the LLM and presented in this work. 29

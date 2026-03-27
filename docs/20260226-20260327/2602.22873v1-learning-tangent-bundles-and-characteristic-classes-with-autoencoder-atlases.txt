@@ -1,0 +1,1958 @@
+Title: Learning Tangent Bundles and Characteristic Classes with Autoencoder Atlases
+
+URL Source: https://arxiv.org/pdf/2602.22873v1
+
+Published Time: Fri, 27 Feb 2026 01:56:10 GMT
+
+Number of Pages: 38
+
+Markdown Content:
+Keywords Manifold learning, vector bundle, characteristic classes, autoencoders 
+
+# Learning Tangent Bundles and Characteristic Classes with Autoencoder Atlases 
+
+Eduardo Paluzo-Hidalgo 
+
+Department of Applied Mathematics I Universidad de Sevilla epaluzo@us.es 
+
+Yuichi Ike 
+
+Graduate School of Mathematical Sciences The University of Tokyo ike@ms.u-tokyo.ac.jp 
+
+# ABSTRACT 
+
+We introduce a theoretical framework that connects multi-chart autoencoders in manifold learning with the classical theory of vector bundles and characteristic classes. Rather than viewing autoencoders as producing a single global Euclidean embedding, we treat a collection of locally trained encoder–decoder pairs as a learned atlas on a manifold. We show that any reconstruction-consistent autoen-coder atlas canonically defines transition maps satisfying the cocycle condition, and that linearising these transition maps yields a vector bundle coinciding with the tangent bundle when the latent dimension matches the intrinsic dimension of the manifold. This construction provides direct access to differential-topological invariants of the data. In particular, we show that the first Stiefel–Whitney class can be computed from the signs of the Jacobians of learned transition maps, yielding an algorithmic criterion for detecting orientability. We also show that non-trivial characteristic classes provide obstructions to single-chart represen-tations, and that the minimum number of autoencoder charts is determined by the good cover structure of the manifold. Finally, we apply our methodology to low-dimensional orientable and non-orientable manifolds, as well as to a non-orientable high-dimensional image dataset. 
+
+# 1 Introduction 
+
+A central challenge in topological data analysis (TDA) is bridging the gap between abstract topo-logical invariants computed from data and concrete geometric representations. Given a point cloud X sampled from an underlying space X, how can one construct explicit coordinate systems and classifying maps that faithfully reflect the topology of X? Persistent homology and cohomol-ogy provide powerful tools for detecting topological features across scales, yet translating these invariants into actionable geometric structures, such as coordinate charts, vector bundles, or characteristic classes, remains an open problem. Classical manifold learning methods, including Isomap, locally linear embedding (LLE), and dif-fusion maps, aim to embed high-dimensional data into low-dimensional Euclidean spaces. While effective for approximately flat manifolds, these methods encounter intrinsic limitations when the underlying space has nontrivial topology. For instance, RP 2 cannot be embedded in R3, and the Klein bottle admits no embedding in R3 without self-intersection. More subtly, even when embed-dings exist, Euclidean coordinates obscure essential geometric and topological structure: they provide no direct access to tangent bundles, transition functions, or characteristic classes. Re-cent advances in intrinsic dimension and tangent space estimation [10] address the problem of identifying the correct latent dimension d, but do not resolve how to represent manifolds whose topology fundamentally obstructs global Euclidean coordinates. 
+
+> arXiv:2602.22873v1 [math.AT] 26 Feb 2026
+
+Preprint 
+
+These challenges motivate the search for representations that are intrinsically topological and geometric, rather than purely Euclidean. In particular, one seeks data-driven constructions of coordinate systems and maps that naturally take values in classifying spaces, thereby encoding global topological information directly. 
+
+Our contributions 
+
+In this paper, we present a unified framework connecting neural network autoencoders to the classical theory of vector bundles and characteristic classes. Our main contributions are: 1. Autoencoder atlases. We formalize the notion of an autoencoder atlas A = {(Ui, E i, D i)}
+
+where each chart consists of an open set Ui ⊂ M , an encoder Ei : Ui → Zi ⊂ Rd, and a decoder Di : Zi → M satisfying Di ◦ Ei ≈ Id Ui .2. Linearization to vector bundles. For smooth autoencoder atlases, we construct a vector bundle TA by taking Jacobians of the transition maps: gji (x) = d(Tji )Ei(x) ∈ GL d(R). When 
+
+d = dim M and the encoders form a smooth atlas compatible with the manifold structure, we have TA ∼= T M . This provides access to the full tangent bundle structure, not merely local coordinates. 3. Characteristic class computation from learned representations. We show how to compute the first Stiefel-Whitney class w1(TA) ∈ H1(M ; Z/2) directly from the Jacobian sign cocycle ωji (x) = sign(det gji (x)) of the learned autoencoder transitions. The manifold is orientable if and only if this cocycle is a coboundary, a condition that can be checked algorithmically. We also prove the stability of the sign cocycle under specific assumptions. 4. Number of charts. We show that non-trivial characteristic classes obstruct single-chart representations, and that the minimum number of autoencoder charts (over good covers) equals the minimum good cover cardinality of M , a topological invariant of the space, not of the bundle. 
+
+Approaches from computational topology 
+
+Several lines of work have sought to extract geometric structure from topological features de-tected in the data. Here we describe some of them. In [24], the authors aim to identify represen-tative cycles corresponding to homological features, providing geometric realisations of persistent generators. Homological coordinates and related constructions, such as the hom-complex frame-work [5], interpret topological features as organising principles for assembling local geometric data into global structure. However, both methods suffer from NP-complexity [3, 5], making them inappropriate for high-dimensional data. Finally, [12, 18, 16], use persistent cohomology to con-struct explicit classifying maps from data into real or complex projective spaces. By computing ˇCech cocycles from overlapping local coordinate charts (obtained, for example, via multidimen-sional scaling) and resolving transition functions through orthogonal Procrustes alignment, this approach produces multiscale projective coordinates. Crucially, it detects obstructions such as non-orientability via sign cocycles ωrt = det(Ω rt ) ∈ {± 1}, yielding explicit coordinates on spaces like RP d.Computing characteristic classes directly from data has also been explored in discrete geometric settings. [22] develop methods for computing persistent Stiefel–Whitney classes using discrete differential geometry on triangulated manifolds. While theoretically powerful, such approaches require explicit triangulations and access to combinatorial manifold structure. In contrast, our approach operates directly on learned representations, such as those produced by autoencoders, extracting characteristic classes from estimated coordinate transitions without requiring an ex-plicit triangulation. Theoretical foundations for bundle structures in discrete and approximate settings have been established in [17]. Their work on approximate and discrete Euclidean vector bundles provides stability guarantees for bundle invariants computed from finite samples, while related work on fibered and fiberwise dimensionality reduction [19] addresses representation learning when data naturally decomposes into fibers. 
+
+2Preprint 
+
+Neural network approaches to manifold learning 
+
+Recent work on chart autoencoders has introduced neural network approaches to learning local coordinate charts on data manifolds. The foundational work [13] introduced the Chart Auto-Encoder (CAE), proving that multi-chart latent spaces are necessary for faithfully representing manifolds with non-trivial topology. This line of work was significantly extended in [14], which introduced complexity-decoupled architectures that separate the learning of local geometry from global topology. A key insight is that encoders can be remarkably simple, even linear projections suffice under a finite distortion condition requiring that chart maps be bi-Lipschitz. A parallel development is the topological autoencoder [4], which explicitly incorporates topological constraints into the autoencoder objective through persistent homology-based loss terms. This approach seeks to preserve topological features (as measured by persistence diagrams) in the latent representation, complementing reconstruction-based objectives with topological fidelity. However, all of these approaches are fundamentally designed to produce a global reconstruc-tion embedding of the manifold into Euclidean space, which inherits the same topological ob-structions as classical manifold learning: non-embeddable manifolds cannot be faithfully recon-structed in this framework. The advantage of the autoencoder approach over MDS-based methods [12] is that neural net-works can learn nonlinear coordinate transformations that better capture local geometry. Com-pared to prior chart autoencoder approaches [13, 14], our framework does not provide an em-bedding on a low-dimensional space but keeps the charts, as well as the information from the transition maps which allow to approximate the tangent bundle of the inferred manifold. Com-pared to topological autoencoders [4], we avoid the computational expense of persistent homology in the training loop, instead accessing topological information post-hoc through characteristic classes. More importantly, by treating the atlas structure, rather than a global embedding, as the fundamental learned object, our approach applies to manifolds that cannot be embedded in Euclidean space and provides access to the tangent bundle structure, enabling computation of characteristic classes. The paper is organised as follows. Section 2 recalls the necessary background on ˇ Cech cohomol-ogy, vector bundles, and characteristic classes. Section 3 introduces autoencoder atlases and establishes that reconstruction consistency implies the cocycle condition (Section 3.1); then, constructs the learned tangent bundle and proves the orientability detection proposition (Sec-tion 3.2); and Section 4 develops the stability theory for approximate reconstruction. Section 5 analyses the topological constraints on the number of required charts. Section 6 describes the loss functions used in practice. Section 7 presents experimental validation on orientable and non-orientable manifolds. 
+
+# 2 Background 
+
+In this section, we establish the mathematical foundations necessary for our main results. We begin with essential topological concepts, then introduce vector bundles and their characteristic classes, focusing on the first Stiefel–Whitney class, which detects orientability. 
+
+2.1 Topological preliminaries 
+
+We recall basic notions from algebraic topology that underlie our construction of characteristic classes from autoencoder atlases. We relax the classic definition of a good cover, allowing multiple connected components at inter-sections. 
+
+Definition 2.1 (Good cover) . An open cover U = {Uα}α∈A of a topological space X with A a finite index set is called a good cover if: 1. Each Uα is contractible (homotopy equivalent to a point). 2. Every connected component of every nonempty finite intersection Uα0 ∩ · · · ∩ Uαp is con-tractible, with p ∈ { 1, . . . , |A| − 1}.
+
+3Preprint 
+
+Remark 2.2 (Nerve theorem for relaxed good covers) . Definition 2.1 allows intersections to have multiple connected components, each required to be contractible. The classical Nerve Theorem still applies via refinement. Given a cover U = {Uα} satisfying Definition 2.1, construct a refined cover U′ by splitting each intersection Uα0 ∩ · · · ∩ Uαp into its connected components. Each component of U′ is contractible by assumption, and U′ is therefore a standard good cover in the sense of [2, Sec. II.15] or [21, pp. 334–340]. The refinement map U′ → U induces an isomorphism on Čech cohomology. Hence, characteristic classes computed using the relaxed cover agree with those obtained from a standard good cover. In practice, cocycle computations treat each connected component of each overlap as a separate element. 
+
+Good covers are fundamental in reflecting the topology faithfully via the ˇCech complex of the cover, as stated in the well-known Nerve theorem [7]. The minimum cardinality of a good cover is itself a topological invariant, studied by Karoubi and Weibel [9] under the name covering type ; we return to this quantity in Section 5, where it determines the minimum number of autoencoder charts. When the cover is not given a priori, it must be learned from the data. Recent work [15] identifies and addresses the cover problem, as well as studying state-of-the-art methods such as Mapper [20, 1]. 
+
+Figure 1: Two different Möbius covers are shown. On the left, we have a good cover such that the intersections are contractible. However, on the right, we have that the intersection is another Möbius band and hence, not contractible. 
+
+Čech cohomology 
+
+ˇCech cohomology provides a combinatorial approach to computing cohomology groups using data from an open cover. The key idea is that local information on overlaps of chart domains assembles into global topological invariants. 
+
+Definition 2.3 (Čech cochain groups) . Let U = {Uα}α∈A be an open cover of a topological space 
+
+X, where A is an index set equipped with a total order <. Let G be an abelian group (written additively). For each integer p ≥ 0, the group of Čech p-cochains is defined as 
+
+ˇCp(U; G) := Y
+
+> α0<α 1<··· <α p
+
+Map( Uα0 ∩ Uα1 ∩ · · · ∩ Uαp , G ),
+
+where the product ranges over all ordered (p + 1) -tuples of indices from A such that α0 < α 1 <
+
+· · · < α p, and Map( V, G ) denotes the abelian group of functions from the set V to G (with pointwise addition). Concretely: 
+
+• A 0-cochain f ∈ ˇC0(U; G) is a collection {fα}α∈A where each fα : Uα → G is a function. 
+
+• A 1-cochain g ∈ ˇC1(U; G) is a collection {gαβ }α<β where each gαβ : Uα ∩ Uβ → G is a function defined on a pairwise intersection. 
+
+• A 2-cochain h ∈ ˇC2(U; G) is a collection {hαβγ }α<β<γ where each hαβγ : Uα ∩ Uβ ∩ Uγ → G is a function defined on a triple intersection. 
+
+4Preprint 
+
+When the coefficient group G is finite or discrete (as in G = Z/2), it is common to consider only locally constant functions; equivalently, when each intersection is connected, the functions are constant, and one may identify Map( V, G ) ∼= G.
+
+Definition 2.4 (Coboundary operator) . The coboundary operator δp : ˇCp(U; G) → ˇCp+1 (U; G) is defined by the alternating sum formula. For a p-cochain {fα0··· αp }, its coboundary δpf =
+
+{(δpf )β0··· βp+1 } is defined by 
+
+(δpf )β0··· βp+1 (x) := 
+
+> p+1
+
+X
+
+> j=0
+
+(−1) j fβ0··· cβj ··· βp+1 (x),
+
+where bβj denotes omission of the index βj , and x ∈ Uβ0 ∩ · · · ∩ Uβp+1 .Explicitly for low degrees: 
+
+• For p = 0 : Given a 0-cochain f = {fα}, its coboundary δ0f is the 1-cochain defined by 
+
+(δ0f )αβ (x) = fβ (x) − fα(x) for x ∈ Uα ∩ Uβ .
+
+• For p = 1 : Given a 1-cochain g = {gαβ }, its coboundary δ1g is the 2-cochain defined by 
+
+(δ1g)αβγ (x) = gβγ (x) − gαγ (x) + gαβ (x) for x ∈ Uα ∩ Uβ ∩ Uγ .
+
+A fundamental property is that δp+1 ◦ δp = 0 for all p ≥ 0, so that the image of δp−1 is contained in the kernel of δp.
+
+Definition 2.5 (Cocycles, coboundaries, and Čech cohomology) . A p-cochain f ∈ ˇCp(U; G) is called: 
+
+• A p-cocycle if δpf = 0 , i.e., f ∈ ker( δp). We write ˇZp(U; G) = ker( δp).
+
+• A p-coboundary if f = δp−1g for some (p−1) -cochain g, i.e., f ∈ im( δp−1). We write ˇBp(U; G) = im( δp−1).Since δp ◦ δp−1 = 0 , every coboundary is a cocycle: ˇBp(U; G) ⊆ ˇZp(U; G).The p-th Čech cohomology group of X with respect to the cover U and coefficients in G is the quotient 
+
+ˇHp(U; G) = ˇZp(U; G)ˇBp(U; G) = ker( δp)im( δp−1) .
+
+Two cocycles represent the same cohomology class if and only if their difference is a coboundary. 
+
+Theorem 2.6 (Isomorphism for good covers [21, pp. 334-340]) . If U is a good cover of a paracom-pact Hausdorff space X, then there is a canonical isomorphism 
+
+ˇHp(U; G) ∼= Hp(X; G),
+
+where Hp(X; G) denotes the singular cohomology of X with coefficients in G.
+
+The case G = Z/2
+
+For detecting orientability via the first Stiefel–Whitney class, we work with coefficients in Z/2.Since each connected component of an overlap in a good cover is contractible, the functions 
+
+Uα ∩ Uβ → Z/2 are locally constant (constant on each connected component), and a 1-cochain can be identified with the assignment of an element of Z/2 to each connected component of each nonempty intersection. 
+
+Definition 2.7 (1-cocycles and 1-coboundaries in Z/2). A 1-cocycle with coefficients in Z/2 is a collection {ωαβ }α<β of elements ωαβ ∈ Z/2, one for each nonempty intersection Uα ∩ Uβ , satisfying the cocycle condition : for every triple intersection Uα ∩ Uβ ∩ Uγ̸ = ∅ with α < β < γ ,
+
+ωαβ − ωαγ + ωβγ = 0 in Z/2,
+
+or equivalently, 
+
+ωαγ = ωαβ + ωβγ in Z/2.
+
+5Preprint 
+
+A 1-cocycle {ωαβ } is a coboundary if there exists a 0-cochain {να}α∈A with να ∈ Z/2 such that 
+
+ωαβ = νβ − να = να + νβ in Z/2
+
+for all α < β with Uα ∩ Uβ̸ = ∅.The first Čech cohomology group is 
+
+ˇH1(U; Z/2) = {1-cocycles }{1-coboundaries } .
+
+Remark 2.8 (Multiplicative notation) . It is often convenient to work with the isomorphic group 
+
+{± 1} under multiplication instead of {0, 1} under addition, via the isomorphism 0 7 → +1 , 1 7 → − 1.Under this identification: 
+
+• The cocycle condition becomes: ωαγ = ωαβ · ωβγ .
+
+• The coboundary condition becomes: ωαβ = νβ · ν−1 
+
+> α
+
+= νβ · να (since ν−1 
+
+> α
+
+= να in {± 1}). This multiplicative formulation is natural when ωαβ arises as the sign of a determinant, as will be the case for transition maps of vector bundles. We use the multiplicative notation throughout the remainder of this paper. 
+
+2.2 Vector bundles 
+
+We briefly recall standard definitions;for a more extended exposition we refer to [11] and [23]. Vector bundles provide a way to attach vector spaces to each point of a topological space in a continuous manner. While locally these look like products, globally they may have nontrivial topology. 
+
+Definition 2.9 (Real vector bundle [11, Chapter 2]) . A real vector bundle of rank kor rank-k vector bundle over a topological space B (the base space ) consists of: 1. A topological space E (the total space )2. A continuous surjection π : E → B (the projection )3. For each b ∈ B, a k-dimensional real vector space structure on the fiber Fb := π−1(b)
+
+These structures must satisfy the local triviality condition : for each b ∈ B, there exists an open neighborhood U ⊆ B and a homeomorphism 
+
+ϕU : π−1(U ) → U × Rk
+
+such that the following diagram commutes: 
+
+π−1(U ) U × Rk
+
+U 
+
+> ϕU
+> πpr 1
+
+and for each b ∈ U , the restricted map ϕU |Fb : Fb → { b} × Rk ∼= Rk is a linear isomorphism of vector spaces. The pair (U, ϕ U ) is called a local trivialization .
+
+Remark 2.10. Following the notation in [6], a rank-k real vector bundle is a fiber bundle with fiber Rk and structural group GL k(R), the general linear group of invertible k × k real matrices. 
+
+Example 2.11 (Trivial bundle) . The trivial bundle of rank k over B is εkB = B × Rk with projection 
+
+π(b, v ) = b and the obvious vector space structure on each fiber {b} × Rk ∼= Rk. This corresponds to the case where the bundle is globally a product. 
+
+Example 2.12 (Tangent bundle [23, Example 2.20]) . The tangent bundle T M of a smooth n-manifold M is a rank-n vector bundle. The total space is T M = F 
+
+> x∈M
+
+TxM (the disjoint union of all tangent spaces), the projection π : T M → M sends each tangent vector v ∈ TxM to its basepoint x, and local trivializations are induced by coordinate charts on M : if (U, φ ) is a chart with φ : U → Rn, then 
+
+ϕU : π−1(U ) → U × Rn, (x, v ) 7 → (x, dφ x(v)) 
+
+provides the required local trivialization. 
+
+6Preprint 
+
+Figure 2: Diagram of the Möbius band as a line bundle. The base space is B that equals S1, and given b ∈ B, the fiber Fb is an interval coloured in dark blue. 
+
+When two local trivializations overlap, they differ by a linear transformation of the fiber. These 
+
+transition functions encode how the local pieces glue together to form the global bundle structure. 
+
+Definition 2.13 (Transition functions [23, Definition 2.2]) . Given two local trivializations (Uα, ϕ α)
+
+and (Uβ , ϕ β ) with Uα ∩ Uβ̸ = ∅, the transition function is the continuous map 
+
+gαβ : Uα ∩ Uβ → GL( k, R)
+
+defined by requiring that for all b ∈ Uα ∩ Uβ and v ∈ Rk,
+
+ϕα ◦ ϕ−1 
+
+> β
+
+(b, v ) = ( b, g αβ (b) · v).
+
+These transition functions satisfy the cocycle condition : on triple overlaps Uα ∩ Uβ ∩ Uγ ,
+
+gαγ (b) = gαβ (b) · gβγ (b).
+
+The cocycle condition expresses the compatibility of the transition functions and is a conse-quence of the associativity of composition. 
+
+Example 2.14 (Tangent bundle transitions) . For the tangent bundle T M , if {(Uα, φ α)} is a smooth atlas on M , the transition functions are the Jacobians of the coordinate changes: 
+
+gαβ (x) = D(φα ◦ φ−1 
+
+> β
+
+)|φβ (x) ∈ GL( n, R).
+
+The cocycle condition gαγ = gαβ · gβγ follows from the chain rule for differentiation. 
+
+Example 2.15 (Möbius band [23, Example 2.19]) . The Möbius band is a line bundle (rank-1 vector bundle) over S1 (see Figure 2). Cover S1 by two overlapping arcs U1 and U2 whose intersection consists of two disjoint intervals I+ and I− (as shown in Figure 1). The transition function is given by 
+
+g12 (x) = 
+
+−1 if x ∈ I−
+
++1 if x ∈ I+
+
+This single sign flip (the “twist”) on one component distinguishes the Möbius band from the cylin-der S1 × R. The sign change encodes the fact that as one travels around the circle, the fiber undergoes a reflection. 
+
+Conversely, transition functions satisfying the cocycle condition completely determine a vector bundle up to isomorphism. 
+
+Theorem 2.16 (Construction from transition functions [23, Example 2.19]) . Given an open cover 
+
+{Uα}α∈A of B and continuous maps 
+
+gαβ : Uα ∩ Uβ → GL( k, R)
+
+satisfying conditions: 1. gαα (b) = Id for all b ∈ Uα,2. gαβ (b) = gβα (b)−1 for all b ∈ Uα ∩ Uβ ,3. and the cocycle condition gαγ (b) = gαβ (b) · gβγ (b) for all b ∈ Uα ∩ Uβ ∩ Uγ .
+
+7Preprint 
+
+Then, there exists a rank-k vector bundle π : E → B with these transition functions. The total space is constructed as 
+
+E = G
+
+> α∈A
+
+Uα × Rk
+
+! .
+
+∼
+
+where (b, v )α ∼ (b, g βα (b) · v)β for b ∈ Uα ∩ Uβ .
+
+This theorem shows that vector bundles are completely determined by their transition functions. In our autoencoder framework (Section 3.2), we construct vector bundles by first obtaining tran-sition functions from learned coordinate charts, then applying this theorem. 
+
+2.3 Characteristic classes and orientability 
+
+Characteristic classes provide cohomological invariants of vector bundles that detect global topo-logical obstructions. For real vector bundles, the most basic of these are the Stiefel–Whitney classes. In this section, we focus on the first Stiefel–Whitney class, which controls orientability and admits a concrete description in terms of transition functions. 
+
+2.3.1 The first Stiefel–Whitney class 
+
+Let ξ be a real vector bundle of rank k over a base space B. The Stiefel–Whitney classes of ξ are cohomology classes 
+
+wi(ξ) ∈ Hi(B; Z/2) , i = 0 , . . . , k, 
+
+which depend only on the isomorphism class of the bundle and are natural under pullbacks. These classes satisfy several axioms (naturality, Whitney product formula, normalisation) that characterise them uniquely [11]. Among these, the first Stiefel–Whitney class w1(ξ) plays a distinguished role: it is the obstruction to orientability. 
+
+Definition 2.17 (Orientability) . A real vector bundle ξ is orientable if there exists a consistent choice of orientation on each fiber that varies continuously over the base space. More precisely, ξ
+
+is orientable if the structural group can be reduced from GL k(R) to GL + 
+
+> k
+
+(R), the group of matrices with positive determinant. 
+
+Theorem 2.18 (Orientability criterion [11, Proposition 4.2]) . A real vector bundle ξ is orientable if and only if 
+
+w1(ξ) = 0 ∈ H1(B; Z/2) .
+
+This theorem reduces the topological question of orientability to a computable cohomological invariant. 
+
+2.3.2 Computing w1 from transition functions 
+
+Let ξ be a rank-k vector bundle over B with transition functions 
+
+gαβ : Uα ∩ Uβ → GL( k, R)
+
+relative to an open cover {Uα} of B.
+
+Definition 2.19 (Sign cocycle) . For each nonempty overlap Uα ∩ Uβ , define 
+
+ωαβ (x) := sign  det gαβ (x) ∈ {± 1} ∼= Z/2.
+
+Since the transition functions {gαβ } satisfy the cocycle condition gαγ = gαβ · gβγ , applying the determinant to both sides and using multiplicativity det( AB ) = det( A) det( B) shows that {ωαβ }
+
+satisfies the ˇ Cech cocycle condition on triple overlaps: 
+
+ωαγ (x) = ωαβ (x) · ωβγ (x).
+
+Theorem 2.20 (Computation of w1 [11, p. 148]) . The cohomology class represented by the sign cocycle, 
+
+[ωαβ ] ∈ ˇH1({Uα}; Z/2) ,
+
+coincides with the first Stiefel–Whitney class w1(ξ) ∈ H1(B; Z/2) when the cover is good. 
+
+8Preprint 
+
+This theorem provides a concrete computational method: to compute w1(ξ), extract the signs of determinants from the transition functions and check whether the resulting sign cocycle is a coboundary. 
+
+2.3.3 Orientability via the sign cocycle 
+
+Combining Theorems 2.18 and 2.20, we obtain a practical criterion for orientability. 
+
+Corollary 2.21 (Orientability via the sign cocycle) . Let ξ be a real vector bundle over B with tran-sition functions {gαβ } and associated sign cocycle {ωαβ }. Assume the cover is good. Then ξ is orientable if and only if {ωαβ } is a Čech coboundary. Equivalently, there exist locally constant func-tions 
+
+να : Uα → {± 1}
+
+such that 
+
+ωαβ (x) = να(x) · νβ (x) for all x ∈ Uα ∩ Uβ .
+
+Proof. Combine Theorems 2.18 and 2.20. The bundle is orientable if and only if w1(ξ) = 0 , which holds if and only if the sign cocycle {ωαβ } represents the zero class in cohomology, i.e., is a coboundary. 
+
+This corollary provides an algorithmic test for orientability: check whether consistent signs {να}
+
+can be assigned to the charts such that the transition signs factor as products. 
+
+Example 2.22 (Möbius band is non-orientable) . Continuing Example 2.15, the Möbius band is a rank-1 vector bundle over S1. Cover S1 by two open arcs U1 and U2 whose intersection consists of two disjoint intervals. The transition function is g112 (x) = +1 on one component and g212 (x) = −1
+
+on the other, giving sign cocycle ω112 (x) = +1 and ω212 (x) = −1.For ω12 to be a coboundary, we would need ν1, ν 2 ∈ {± 1} constant on each Ui such that ω12 (x) = 
+
+ν1 · ν2 for all x. But this is impossible: on one component we need ν1 · ν2 = −1, while on the other we need ν1 · ν2 = +1 . Since ν1 and ν2 must be constant on the connected sets U1 and U2, no such assignment exists. Therefore, the cocycle is not a coboundary, w1̸ = 0 , and the Möbius band is non-orientable. 
+
+This example illustrates the essential mechanism: non-orientability manifests as an obstruction to finding a consistent global sign assignment, detected by a nontrivial cohomology class. 
+
+Remark 2.23 (Connection to the autoencoder framework) . In our autoencoder construction (Sec-tion 3.2), we will obtain transition functions gji (x) as Jacobians of learned coordinate transforma-tions. The sign cocycle ωji (x) = sign(det gji (x)) then provides a computable invariant for detecting the orientability of the underlying manifold directly from the neural network representations, without requiring explicit triangulation or differential forms. 
+
+# 3 Atlas-Based Formulation of the Orientability Obstruction 
+
+3.1 Autoencoder atlases 
+
+We work throughout with a smooth compact d-dimensional manifold M without boundary, em-bedded in RN . This is the natural setting for manifold learning, where data points lie in a high-dimensional ambient space and the manifold structure is to be discovered. The embed-ding provides a concrete ambient space in which encoders and decoders operate; in particular, tangent spaces and norms are inherited from RN .In their exact form (Definitions 3.1 and 3.2 below), autoencoder atlases are equivalent to classical smooth atlases: a smooth autoencoder chart is simply a coordinate chart together with its inverse playing the role of decoder. We introduce this reformulation because it admits a natural approx-imate generalization (Section 4.1): replacing the exact reconstruction condition Di ◦ Ei = Id Ui by an ε-approximate one yields the approximate autoencoder atlas, which is the object that arises from neural network training and for which the stability theory of Section 4 applies. 
+
+9Preprint 
+
+As motivated in [13], multi-chart latent spaces are necessary for representing manifolds with non-trivial topology. A single global coordinate system cannot exist for manifolds such as the sphere or projective plane; instead, one must work with a collection of local coordinate charts. This will be extended in Section 5. 
+
+Definition 3.1 (Autoencoder chart) . An autoencoder chart on a smooth manifold M ⊂ RN is a triple (U, E, D ) where: 1. U ⊂ M is open; 2. E : U → Z ⊂ Rd is a continuous injective map (the encoder ); 3. D : Z → M is continuous (the decoder ); 4. D ◦ E = Id U (the reconstruction condition ). 
+
+In practice, the reconstruction condition is approximated through optimisation (see Remark 3.4). 
+
+Definition 3.2 (Smooth autoencoder chart) . A smooth autoencoder chart is an autoencoder chart 
+
+(U, E, D ) (Definition 3.1) in which E and D are smooth ( C∞) and E : U → Z is a diffeomorphism onto its image. In particular, D|Z = E−1, so a smooth autoencoder chart is precisely a smooth coordinate chart (U, E ) in the classical sense, equipped with its inverse as a decoder. 
+
+Definition 3.3 (Autoencoder atlas) . An autoencoder atlas on M is a collection 
+
+A = {(Ui, E i, D i)}i∈I
+
+of autoencoder charts such that U = {Ui}i∈I is a cover of M .
+
+Ei
+
+Di Dj
+
+Ej
+
+M
+
+Ui Uj
+
+Zi := Ei(Ui)
+
+Rd
+
+Tji := Ej ◦ Di
+
+Zj := Ej (Uj )
+
+Rd
+
+Figure 3: Diagram of an atlas autoencoder. 
+
+Remark 3.4. The definitions above describe the ideal mathematical structure: exact reconstruc-tion Di ◦ Ei = Id Ui , smooth maps, and precise chart domains. In practice, these conditions are approximated through optimisation. The reconstruction condition becomes a loss function to minimise, and the theoretical guarantees hold in the limit of perfect training. 
+
+3.1.1 Transition maps and cocycle condition 
+
+The fundamental insight is that autoencoder atlases naturally give rise to transition maps defined from the encoding and decoding functions [13]. 
+
+Definition 3.5 (Transition maps) . For an autoencoder atlas A = {(Ui, E i, D i)} with Ui ∩ Uj̸ = ∅,the transition map from chart i to chart j is 
+
+Tji = Ej ◦ Di : Ei(Ui ∩ Uj ) → Ej (Ui ∩ Uj ).
+
+10 Preprint 
+
+The transition map Tji converts a latent representation in chart i to the corresponding represen-tation in chart j: it decodes from chart i’s latent space back to the manifold, then encodes into chart j’s latent space (see Figure 3). 
+
+Remark 3.6 (Well-definedness of transition maps) . The composition Ej ◦ Di is well defined on 
+
+Ei(Ui ∩ Uj ). If z = Ei(x) with x ∈ Ui ∩ Uj , then Di(z) = Di(Ei(x)) = x ∈ Uj , so Ej (Di(z)) is defined. 
+
+Proposition 3.7. The transition maps satisfy: 1. Tij ◦ Tji = Id on Ei(Ui ∩ Uj )
+
+2. If A consists of smooth autoencoder charts, then each Tji is a diffeomorphism Proof. Let x ∈ Ui ∩ Uj and z = Ei(x). We compute: 
+
+Tij (Tji (Ei(x))) = Ei(Dj (Ej (Di(Ei(x))))) = Ei(Dj (Ej (x))) = Ei(x).
+
+Hence Tij ◦ Tji = Id on Ei(Ui ∩ Uj ). Similarly Tji ◦ Tij = Id on Ej (Ui ∩ Uj ), so Tji is a bijection with inverse Tij .For smoothness: if Ei, D i, E j , D j are all smooth, then Tji = Ej ◦ Di is smooth as a composition of smooth maps. Since Tji is a smooth bijection with smooth inverse Tij , it is a diffeomorphism. 
+
+Lemma 3.8 (Cocycle condition from reconstruction) . The transition maps of an autoencoder atlas satisfy the cocycle condition: for all i, j, k with Ui ∩ Uj ∩ Uk̸ = ∅,
+
+Tki = Tkj ◦ Tji on Ei(Ui ∩ Uj ∩ Uk).
+
+Proof. Let x ∈ Ui ∩ Uj ∩ Uk. Both sides agree when evaluated at Ei(x):
+
+Tki (Ei(x)) = Ek(Di(Ei(x))) = Ek(x),Tkj (Tji (Ei(x))) = Tkj (Ej (Di(Ei(x)))) = Tkj (Ej (x)) = Ek(Dj (Ej (x))) = Ek(x).
+
+3.2 The tangent bundle of an autoencoder atlas 
+
+To access the theory of characteristic classes, we must construct a vector bundle from our au-toencoder atlas. We do this by linearising the nonlinear transition maps. 
+
+3.2.1 Linearization Definition 3.9 (linearised transition functions) . Let A = {(Ui, E i, D i)} be a smooth autoencoder atlas. For x ∈ Ui ∩ Uj , define the linearised transition function 
+
+gji (x) := d(Tji )Ei(x) = ∂(Ej ◦ Di)
+
+∂z z=Ei(x)
+
+∈ GL d(R),
+
+the Jacobian matrix of the transition map Tji evaluated at the latent code Ei(x).
+
+The linearised transition function describes how infinitesimal perturbations in chart i’s latent space transform to chart j’s latent space. 
+
+Lemma 3.10. The linearised transition functions {gji } satisfy: 1. gii (x) = Id for all x ∈ Ui,2. gij (x) = gji (x)−1 for all x ∈ Ui ∩ Uj ,3. and the cocycle condition gki (x) = gkj (x) · gji (x) for all x ∈ Ui ∩ Uj ∩ Uk.
+
+11 Preprint 
+
+Proof. Apply the chain rule to the corresponding identities for the nonlinear transition maps from Proposition 3.7 and Lemma 3.8: (1) gii (x) = d(Tii )Ei(x) = d(Id) Ei(x) = Id .(2) Since Tij ◦ Tji = Id on Ei(Ui ∩ Uj ), by the chain rule: 
+
+Id = d(Id) Ei(x) = d(Tij ◦ Tji )Ei(x) = d(Tij )Tji (Ei(x)) · d(Tji )Ei(x) = gij (x) · gji (x),
+
+where the last equality uses Tji (Ei(x)) = Ej (x).(3) Since Tki = Tkj ◦ Tji , by the chain rule: 
+
+gki (x) = d(Tki )Ei(x) = d(Tkj ◦ Tji )Ei(x) = d(Tkj )Tji (Ei(x)) · d(Tji )Ei(x).
+
+But Tji (Ei(x)) = Ej (Di(Ei(x))) = Ej (x), so: 
+
+gki (x) = d(Tkj )Ej (x) · d(Tji )Ei(x) = gkj (x) · gji (x).
+
+3.2.2 Vector bundle construction 
+
+The linearised transition functions satisfy the hypotheses of Theorem 2.16, allowing us to con-struct a vector bundle. 
+
+Definition 3.11 (Tangent bundle of an autoencoder atlas) . Let A = {(Ui, E i, D i)} be a smooth autoencoder atlas. The tangent bundle TA is the vector bundle constructed from the linearised transition functions: 
+
+TA := G
+
+> i∈I
+
+Ui × Rd
+
+! .
+
+∼
+
+where (x, v )i ∼ (x, g ji (x)v)j for x ∈ Ui ∩ Uj and v ∈ Rd.
+
+Corollary 3.12. The tangent bundle TA is a rank-d vector bundle over M with transition functions 
+
+{gji }.Proof. Immediate from Theorem 2.16 and Lemma 3.10, which shows that the linearised transition functions take values in GL d(R) and satisfy the cocycle condition. 
+
+Proposition 3.13 (Relationship to the Tangent Bundle) . Let M be a smooth d-manifold and A =
+
+{(Ui, E i, D i)} a smooth autoencoder atlas with latent dimension d. If {(Ui, E i)} forms a smooth atlas compatible with the smooth structure of M , then TA ∼= T M .Proof. The transition functions of T M with respect to the smooth atlas {(Ui, E i)} are given by the Jacobians of the coordinate changes Ej ◦ E−1 
+
+> i
+
+. By the chain rule: 
+
+d(Ej ◦ E−1 
+
+> i
+
+)Ei(x) = d(Ej ◦ Di)Ei(x) = gji (x),
+
+where we used Di = E−1 
+
+> i
+
+on Zi (note that by the reconstruction condition Di ◦ Ei = Id Ui and the injectivity of Ei in a smooth autoencoder chart, the decoder Di restricted to Zi = Ei(Ui) is the inverse of Ei). Thus, the transition functions of TA coincide with those of T M , giving an isomorphism of vector bundles. 
+
+The learned bundle TA approximates T M when reconstruction quality is high. The robustness of the Z/2 sign cocycle is formalized in Section 4. Theorem 4.7 establishes cocycle validity under quantitative reconstruction bounds, and Theorem 4.10 shows agreement with w1(T M ) when the approximate atlas is sufficiently close to a compatible exact atlas. 
+
+3.2.3 Detecting orientability 
+
+We now apply the theory of Stiefel-Whitney classes to detect orientability of TA.
+
+Definition 3.14 (Jacobian sign cocycle) . Let A = {(Ui, E i, D i)} be a smooth autoencoder atlas with linearised transition functions gji (x). The Jacobian sign cocycle is 
+
+ωji : Ui ∩ Uj → {− 1, +1 }, ωji (x) = sign(det gji (x)) .
+
+12 Preprint 
+
+By Lemma 3.10 and the multiplicativity of the determinant, {ωji } satisfies the cocycle condition and thus represents a class in ˇH1({Ui}; Z/2) .
+
+Proposition 3.15 (Orientability detection) . Let M be a connected smooth manifold and let A =
+
+{(Ui, E i, D i)}i∈I be a smooth autoencoder atlas. Assume {Ui} forms a good cover. Then the following are equivalent: 1. The tangent bundle TA is orientable. 2. The first Stiefel–Whitney class vanishes: w1(TA) = 0 ∈ H1(M ; Z/2) .3. The Jacobian sign cocycle {ωji } is a Čech coboundary. 4. There exist signs νi ∈ {− 1, +1 } for each chart such that 
+
+sign(det gji (x)) = νj · νi
+
+for all x ∈ Ui ∩ Uj .Moreover, if TA ∼= T M , then these conditions are equivalent to orientability of M .Proof. We consider a good cover in the sense of Definition 2.1. When intersections have multiple connected components, apply the refinement argument of Remark 2.2 and treat each connected component of each overlap as a separate element in the Čech complex; since gji (x) ∈ GL d(R) the map x 7 → det gji (x) is continuous and never zero, so ωji is constant on each connected component by the intermediate value theorem. 
+
+(1) ⇔ (2) : Theorem 2.18. 
+
+(2) ⇔ (3) : Since {Ui} is a good cover, Čech cohomology computes singular cohomology. By The-orem 2.20, the sign cocycle {ωji } represents w1(TA). Thus w1(TA) = 0 if and only if {ωji } is a coboundary. 
+
+(3) ⇔ (4) : By definition, a Čech 1-cocycle with values in Z/2 ∼= {− 1, +1 } is a coboundary if and only if there exist νi ∈ {− 1, +1 } with ωji = νj · νi.The final statement follows since bundle isomorphism preserves orientability. 
+
+Remark 3.16 (Connected components of overlaps) . For the sign ωji (x) to be well-defined as a sin-gle value, each overlap Ui ∩Uj should be connected. If Ui ∩Uj has multiple connected components, the sign may differ across components. In this case, one must treat each connected component separately as a distinct overlap in the cocycle computation, or verify that the sign is constant on each component (which holds if the transition map varies continuously). 
+
+Remark 3.17 (Index convention compatibility) . In the multiplicative group {± 1}, we have 
+
+ωji = ωij ,
+
+since det( gji ) = (det gij )−1 and (±1) −1 = ±1. Thus the target-first indexing ωji (x) = sign(det gji (x)) 
+
+is compatible with the ordered coboundary convention ωαβ = νανβ used in Corollary 2.21. 
+
+# 4 Stability of the sign cocycle under approximate reconstruction 
+
+The theoretical framework developed in Sections 3.1–3.2 assumes exact reconstruction: Di ◦ Ei =Id Ui . In practice, autoencoder training only achieves approximate reconstruction via loss min-imisation. In this section, we bridge this gap by proving that the Z/2-valued sign cocycle is stable under sufficiently small reconstruction error, provided the transition map Jacobians remain non-degenerate. This justifies the use of the orientability detection algorithm (Proposition 3.15) in practical settings where reconstruction is inexact. 
+
+Notation. Since the manifold M is embedded in RN , all norms ∥ · ∥ on vectors in RN and Rd
+
+denote the Euclidean norm. For a linear map A : Rm → Rn (or its matrix representation), ∥A∥op := sup ∥v∥=1 ∥Av ∥ denotes the operator norm (equivalently, the largest singular value σmax (A)), and 
+
+σmin (A) denotes the smallest singular value. We write IN for the N × N identity matrix and Id TxM
+
+13 Preprint 
+
+for the identity map on the tangent space TxM . The orthogonal projection from RN onto the normal space (TxM )⊥ is denoted Π⊥ 
+
+> TxM
+
+. For a C1 map f : U ⊂ Rm → Rn defined on an open set U ,the C1 norm is 
+
+∥f ∥C1(U ) := sup 
+
+> x∈U
+
+∥f (x)∥ + sup 
+
+> x∈U
+
+∥df x∥op .
+
+4.1 Approximate autoencoder atlases Definition 4.1 (Approximate autoencoder atlas) . Let M be a smooth d-manifold embedded in RN .An (ε, η )-approximate autoencoder atlas on M is a collection A = {(Ui, E i, D i)}i∈I where: 1. {Ui} is an open cover of M ;2. each encoder Ei is a C1 map defined on an open neighborhood Oi ⊃ Ui in RN , with values in Rd, and each decoder Di : Zi → RN is a C1 map, where Zi := Ei(Ui) ⊂ Rd;3. the pointwise reconstruction error satisfies 
+
+sup 
+
+> x∈Ui
+
+∥Di(Ei(x)) − x∥ ≤ ε;
+
+4. the differential reconstruction error satisfies 
+
+sup 
+
+> x∈Ui
+
+∥d(Di ◦ Ei)x − Id TxM ∥op ≤ η, 
+
+where d(Di ◦ Ei)x : TxM → TDi(Ei(x)) RN is the differential of the reconstruction map re-stricted to TxM ;5. the open neighborhoods Oi contain the closed ε-neighborhood BRN (Ui, ε ) := {p ∈
+
+RN : dist( p, U i) ≤ ε}.We call Φi := Di ◦ Ei : Ui → RN the reconstruction map of chart i. Conditions (3) and (4) state that 
+
+Φi ≈ Id in C0 and dΦi ≈ Id in C0, respectively. 
+
+Ei
+
+Di
+
+M
+
+Oi
+
+Ui
+
+Zi := Ei(Ui)
+
+Rd
+
+•
+
+•• x
+
+y
+
+Figure 4: Diagram of an approximate atlas autoencoder. We take into account that given a point 
+
+x ∈ Ui, we need to extend the domain to Oi because y = Di(Ei(x)) may not lie on Ui. Also, Oi may not be fully in M , taking into account off-manifold points. 
+
+Let us note that condition (2) requires each encoder Ei to be defined on an open set Oi ⊃ Ui
+
+in RN , rather than only on Ui ⊂ M . This extension is essential in the approximate setting because the decoder output y = Di(Ei(x)) satisfies ∥y − x∥ ≤ ε but generically y / ∈ M ; subsequent encoders must be evaluable at such off-manifold points (see Figure 4). In practice, this condition is automatically satisfied: neural network encoders are defined on all of RN (or a large open subset thereof). Condition (5) ensures that all points within distance ε of the chart domains remain in the encoder’s domain. In practice, condition (3) is controlled by the reconstruction loss 
+
+Lrecon . Condition (4) is an additional regularity requirement on the derivatives; it is encouraged by the Jacobian regularity loss Ljac and by the use of smooth activations (e.g., tanh ). When ε
+
+and η are both zero, we recover an exact autoencoder atlas (Definition 3.3). See Section 6 for the definitions of the different loss functions. In condition (4), both d(Di ◦ Ei)x and Id TxM are viewed as maps TxM → RN via the embedding M ⊂ RN .We also require a uniform non-degeneracy condition on the transition map Jacobians. 
+
+14 Preprint 
+
+Definition 4.2 (Non-degeneracy gap) . Let A = {(Ui, E i, D i)} be an approximate autoencoder atlas with transition maps Tji = Ej ◦ Di. The non-degeneracy gap of A is 
+
+δ(A) := min  
+
+> (i,j )
+> Ui∩Uj̸=∅
+
+inf 
+
+> x∈Ui∩Uj
+
+| det gji (x)|.
+
+We say A has positive non-degeneracy gap if δ(A) > 0.
+
+The non-degeneracy gap δ > 0 ensures that the sign function sign(det gji (x)) is well-defined (the determinant never passes through zero) and locally constant. 
+
+Proposition 4.3 (Sign constancy) . Let A be a δ-non-degenerate C1 autoencoder atlas. Then on each connected component of each nonempty overlap Ui ∩ Uj , the sign ωji (x) is constant. Proof. The map x 7 → det gji (x) = det  d(Ej ◦Di)Ei(x)
+
+ is continuous on Ui ∩Uj (since Ei, Di, and Ej are 
+
+C1, the Jacobian depends continuously on the base point). By the δ-non-degeneracy assumption, 
+
+| det gji (x)| ≥ δ > 0 for all x ∈ Ui ∩ Uj . The continuous function det gji therefore never vanishes, so by the intermediate value theorem it has constant sign on each connected component. 
+
+4.2 The approximate cocycle condition for signs 
+
+The main subtlety in the approximate setting is that the nonlinear cocycle condition Tki = Tkj ◦Tji 
+
+fails (by Theorem 6.3, the error depends on the reconstruction quality of the middle chart). Consequently, the matrix-valued cocycle condition gki (x) = gkj (x) · gji (x) also fails. However, we now show that the sign cocycle condition holds exactly, provided the reconstruction error is small relative to the non-degeneracy gap. The key observation is a factorisation of the Jacobians through the reconstruction map. 
+
+Lemma 4.4 (Jacobian factorisation) . Let A = {(Ui, E i, D i)} be a C1 approximate autoencoder atlas with reconstruction maps Φj = Dj ◦ Ej . For x ∈ Ui ∩ Uj ∩ Uk, set y := Di(Ei(x)) . Assume y ∈ Oj ∩ Ok
+
+(see Remark 4.5 below). Then: 1. The direct transition Jacobian satisfies 
+
+gki (x) = d(Ek)y · d(Di)Ei(x).
+
+2. The composed transition Jacobian satisfies 
+
+gkj (y) · gji (x) = d(Ek)Φj (y) · d(Φ j )y · d(Di)Ei(x),
+
+where gkj (y) := d(Tkj )Ej (y) denotes the Jacobian of Tkj evaluated at the point y as represented in chart j.Proof. (1) By definition, Tki = Ek ◦ Di, so by the chain rule: 
+
+gki (x) = d(Ek ◦ Di)Ei(x) = d(Ek)Di(Ei(x)) · d(Di)Ei(x) = d(Ek)y · d(Di)Ei(x).
+
+Here Ek is evaluated at y = Di(Ei(x)) ∈ Ok, where it is C1 by Definition 4.1(2). (2) The composition Tkj ◦ Tji = ( Ek ◦ Dj ) ◦ (Ej ◦ Di) = Ek ◦ (Dj ◦ Ej ) ◦ Di = Ek ◦ Φj ◦ Di. By the chain rule: 
+
+d(Tkj ◦ Tji )Ei(x) = d(Ek ◦ Φj ◦ Di)Ei(x)
+
+= d(Ek)Φj (Di(Ei(x))) · d(Φ j )Di(Ei(x)) · d(Di)Ei(x)
+
+= d(Ek)Φj (y) · d(Φ j )y · d(Di)Ei(x).
+
+Note that Ej is evaluated at y ∈ Oj , so Φj (y) = Dj (Ej (y)) is well-defined. Subsequently, Ek is evaluated at Φj (y) ∈ RN ; we verify that Φj (y) ∈ Ok in Remark 4.5. The left-hand side equals 
+
+gkj (y) · gji (x) by the chain rule applied to Tkj ◦ Tji at Ei(x).
+
+The factorisation in Lemma 4.4 reveals that the direct Jacobian gki (x) and the composed Jacobian 
+
+gkj (y) · gji (x) differ by the insertion of the reconstruction map Φj = Dj ◦ Ej in place of the identity: the direct path passes through Ek ◦ Di, while the composed path passes through Ek ◦ Φj ◦ Di. The discrepancy depends on how far Φj is from the identity, both in value (controlled by ε) and in derivative (controlled by η). 
+
+15 Preprint 
+
+Remark 4.5 (Domain verification for Lemma 4.4) . In Lemma 4.4, the evaluation points must lie in the extended encoder domains. We check this: 1. y = Di(Ei(x)) ∈ RN satisfies ∥y − x∥ ≤ ε by condition (3) of Definition 4.1. Since x ∈ Uj ∩ Uk,we have dist( y, U j ) ≤ ε and dist( y, U k) ≤ ε, so y ∈ Oj ∩ Ok by condition (5). 2. Φj (y) = Dj (Ej (y)) satisfies ∥Φj (y) − y∥ ≤ Cε for a constant C depending on the Lipschitz constants of Ej and Dj (see Lemma 4.6 below). Since ∥y − x∥ ≤ ε and x ∈ Uk, the triangle inequality gives dist(Φ j (y), U k) ≤ (1 + C)ε, which is within Ok for ε sufficiently small. 
+
+Lemma 4.6 (Off-manifold reconstruction bound) . Let A = {(Ui, E i, D i)} be an (ε, η )-approximate autoencoder atlas (Definition 4.1), and let Φj := Dj ◦ Ej denote the reconstruction map of chart j. If 
+
+x ∈ Uj and y ∈ Oj satisfy ∥y − x∥ ≤ ε, then 
+
+∥Φj (y) − y∥ ≤ (LEj LDj + 2) ε, 
+
+where LEj and LDj are Lipschitz constants of Ej and Dj , respectively. Proof. Apply the triangle inequality twice, inserting the intermediate points Φj (x) and x:
+
+∥Φj (y) − y∥ ≤ ∥ Φj (y) − Φj (x)∥ + ∥Φj (x) − x∥ + ∥x − y∥.
+
+Since Φj = Dj ◦ Ej has Lipschitz constant at most LEj LDj , the first term satisfies ∥Φj (y) − Φj (x)∥ ≤ 
+
+LEj LDj ∥y −x∥ ≤ LEj LDj ε. The second term is at most ε by the on-manifold reconstruction bound (Definition 4.1(3)), and the third is at most ε by hypothesis. Combining yields the claim. 
+
+In the bounds below, we absorb the factor of Lemma 4.6 into the constant Γ.We now state the main stability result. 
+
+Theorem 4.7 (Stability of the sign cocycle) . Let M be a smooth d-manifold embedded in RN and A =
+
+{(Ui, E i, D i)}i∈I an (ε, η )-approximate autoencoder atlas with positive non-degeneracy gap δ(A) > 0.Writing δ := δ(A) for brevity, assume the following regularity bounds hold uniformly over all charts and on the extended encoder domains Oi:(i) Encoder Lipschitz regularity: ∥d(Ek)p∥op ≤ LE for all k and all p ∈ Ok.(ii) Encoder derivative Lipschitz continuity: ∥d(Ek)p − d(Ek)q ∥op ≤ L′ 
+
+> E
+
+∥p − q∥ for all k and all p, q ∈ Ok.(iii) Decoder regularity: ∥d(Di)z ∥op ≤ LD for all i and z ∈ Ei(Oi).(iv) Decoder derivative Lipschitz continuity: ∥d(Di)z − d(Di)z′ ∥op ≤ L′ 
+
+> D
+
+∥z − z′∥ for all i and 
+
+z, z ′ ∈ Ei(Oi).Define the sign cocycle by ωji (x) := sign(det gji (x)) on each connected component of each nonempty overlap. Define the effective differential error 
+
+ηeff := (LE LD + 2) η
+
+1 − η + L′ 
+
+> Φ
+
+ε, L′ 
+
+> Φ
+
+:= L′ 
+
+> D
+
+L2 
+
+> E
+
++ LD L′ 
+
+> E
+
+, (1) 
+
+which accounts for the normal-direction amplification of the reconstruction map differential (see Step 1 of the proof below). Define the perturbation magnitude 
+
+Γ := LE ηeff LD + L′ 
+
+> E
+
+eε (1 + ηeff ) LD , (2) 
+
+where eε := (LE LD + 2) ε accounts for off-manifold evaluation of the reconstruction map (see Lemma 4.6; when working on M itself, one may take eε = ε). Define the Lipschitz constant for the determinant map p 7 → det gji (p) on Oi ∩ Oj :
+
+Ldet := d (LE LD )d−1 LE (LE L′ 
+
+> D
+
++ L′ 
+
+> E
+
+L2 
+
+> D
+
+). (3) 
+
+If 
+
+η < 1 and max 
+
+
+
+d Γ ( LE LD + Γ) d−1, L det ε
+
+
+
+< δ, (4) 
+
+16 Preprint 
+
+then {ωji } satisfies the Čech cocycle condition: for all x ∈ Ui ∩ Uj ∩ Uk,
+
+ωki (x) = ωkj (x) · ωji (x),
+
+In particular, {ωji } defines a class [ω] ∈ ˇH1(U; Z/2) .Proof sketch (full proof in Appendix A). Fix x ∈ Ui ∩ Uj ∩ Uk and set y := Di(Ei(x)) . By Lemma 4.4, the direct and composed transition Jacobians factor as gki (x) = QP and gkj (y) · gji (x) = Q′RP ,where R = d(Φ j )y is the differential of the reconstruction map. This gives gkj (y) · gji (x) = gki (x) + ∆ 
+
+for an explicit perturbation ∆.The main difficulty is that ∥R − IN ∥op ≥ 1 since Φj factors through Rd and annihilates normal di-rections. However, only the restricted action of R − IN on the nearly tangential subspace range( P )
+
+enters the bound on ∥∆∥op . A tangent–normal decomposition exploiting the approximate recon-struction condition yields ∥∆∥op ≤ Γ, where Γ = O(η + ε) with explicit constants. A determinant perturbation bound then gives | det( gki (x) + ∆) − det gki (x)| < δ ≤ | det gki (x)|, forcing sign agreement. A Lipschitz continuity argument corrects the evaluation point from y back to x.
+
+Remark 4.8 (Simplified sufficient condition) . In the regime of small perturbations ( ε, η ≪ 1), we have ηeff ≈ (LE LD + 2) η + L′
+
+> Φ
+
+ε, eε ≈ ε, and the leading-order terms in Equation (4) are 
+
+d · Ld−1 
+
+> E
+
+LdD · (LE LD + 2) LE η + ( L′
+
+> Φ
+
+LE + L′ 
+
+> E
+
+) ε < δ. 
+
+Remark 4.9 (Lipschitz constant for the reconstruction differential) . Conditions (i)–(iv) yield a Lipschitz constant for p 7 → d(Φ j )p = d(Dj )Ej (p) · d(Ej )p via the product rule: 
+
+L′ 
+
+> Φ
+
+:= L′ 
+
+> D
+
+L2 
+
+> E
+
++ LD L′ 
+
+> E
+
+.
+
+Indeed, for p, q ∈ Oj :
+
+∥d(Φ j )p − d(Φ j )q ∥op ≤ ∥ d(Dj )Ej (p) − d(Dj )Ej (q)∥op ∥d(Ej )p∥op + ∥d(Dj )Ej (q)∥op ∥d(Ej )p − d(Ej )q ∥op 
+
+≤ L′ 
+
+> D
+
+∥Ej (p) − Ej (q)∥ LE + LD L′ 
+
+> E
+
+∥p − q∥ ≤ (L′ 
+
+> D
+
+L2 
+
+> E
+
++ LD L′ 
+
+> E
+
+) ∥p − q∥.
+
+For neural networks with smooth activations, L′ 
+
+> D
+
+is bounded by an expression involving the spec-tral norms of the weight matrices and the second derivatives of the activation functions, analo-gously to the bounds on L′ 
+
+> E
+
+.
+
+The assumptions in Theorem 4.7 may seem restrictive. However, neural networks with smooth activations (e.g., tanh ) are C∞ on RN , hence automatically satisfy the Lipschitz and derivative-Lipschitz conditions (i)–(iv) on any bounded domain. 
+
+4.3 Agreement with the true first Stiefel–Whitney class 
+
+Having established that the sign cocycle is a valid ˇ Cech cocycle under approximate reconstruc-tion, we now show that its cohomology class agrees with w1(T M ).
+
+Theorem 4.10 (Agreement with w1(T M )). Let M be a compact smooth d-manifold and {Ui} a good cover of M . Suppose there exists an exact smooth autoencoder atlas A0 = {(Ui, E 0 
+
+> i
+
+, D 0 
+
+> i
+
+)} compatible with the smooth structure of M (i.e., {(Ui, E 0 
+
+> i
+
+)} is a smooth atlas for M ), with non-degeneracy gap 
+
+δ0 := δ(A0) > 0.Let A = {(Ui, E i, D i)} be a C1 approximate atlas over the same cover satisfying: (i) ∥Ei − E0 
+
+> i
+
+∥C1(Ui) ≤ μ and ∥Di − D0 
+
+> i
+
+∥C1(Z0  
+
+> i)
+
+≤ μ for all i;(ii) A is δ-non-degenerate with δ > 0.If 
+
+μ < δ0
+
+2C0
+
+, (5) 
+
+where C0 depends on the number of charts |I|, the C2 norms of the exact atlas A0, and the geometry of M (specifically, the supremum of ∥d2(T 0
+
+> ji
+
+)∥ over all overlaps), then the sign cocycles of A and A0
+
+define the same cohomology class: 
+
+[ωA] = [ ωA0 ] = w1(T M ) ∈ ˇH1(U; Z/2) .
+
+17 Preprint 
+
+Proof sketch (full proof in Appendix A). Define a one-parameter family of atlases by linear interpo-lation: Eti := (1 − t)E0 
+
+> i
+
++ tE i, Dti := (1 − t)D0 
+
+> i
+
++ tD i for t ∈ [0 , 1] , connecting the exact compatible atlas A0 at t = 0 to the learned atlas A at t = 1 . The transition Jacobians gtji (x) vary continuously with t.By compactness of M and uniform continuity of (t, x ) 7 → det gtji (x) on [0 , 1] × Ui ∩ Uj , the condition 
+
+μ ≤ C0 · δ0 ensures | det gtji (x)| ≥ δ0/2 > 0 for all t ∈ [0 , 1] . Since the determinant is continuous in t and never vanishes, the intermediate value theorem forces sign(det gtji (x)) to be constant in t,giving ωA 
+
+> ji
+
+= ωA0 
+
+> ji
+
+pointwise. Since A0 is compatible with the smooth structure, [ωA0 ] = w1(T M ) by Theorem 2.20, and the conclusion follows. 
+
+Remark 4.11 (On the constant C0 in Equation (5)) . The constant C0 in the sufficient condition Equation (5) can be made explicit. By the uniform continuity of (t, x ) 7 → det gtji (x) on [0 , 1] × Ui ∩ Uj ,one can show C0 ≤ | I|2 · sup i,j sup x ∥d(det gtji )/dμ ∥, which depends on the C2 norms of the encoders and decoders. In practice, Equation (4) of Theorem 4.7 (which is fully explicit) is typically the binding constraint. 
+
+Remark 4.12 (Role of compactness) . Compactness of M is used to obtain uniform bounds. For non-compact manifolds, the same result holds if the regularity bounds and non-degeneracy gap are assumed to hold uniformly on a compact subset containing all the overlaps, which is the case when the cover has finitely many charts with bounded domains. 
+
+Remark 4.13 (Existence of a compatible exact atlas) . Theorem 4.10 assumes the existence of an exact compatible atlas A0 over the same cover. This is guaranteed by Theorem 5.7 for any good cover of a smooth manifold, since good covers automatically trivialise T M (Lemma 5.5). The diffeomorphism Ui ∼= Rd used in the proof is standard for Riemannian good covers. 
+
+Corollary 4.14 (Orientability detection from learned approximate atlases) . Let M be a compact smooth d-manifold embedded in RN , and let {Ui}i∈I be a good cover of M . Let A = {(Ui, E i, D i)}i∈I
+
+be an (ε, η )-approximate autoencoder atlas (Definition 4.1) satisfying: (i) Cocycle validity: the regularity and non-degeneracy bounds of Theorem 4.7 holds, so that the sign cocycle ωji (x) = sign(det gji (x)) is a valid Čech 1-cocycle; (ii) Proximity to an exact atlas: there exists an exact smooth autoencoder atlas A0 compatible with the smooth structure of M over the same cover, and ∥Ei − E0 
+
+> i
+
+∥C1 ≤ μ, ∥Di − D0 
+
+> i
+
+∥C1 ≤ μ
+
+with μ satisfying Equation (5) of Theorem 4.10. Then M is orientable if and only if there exist signs νi ∈ {− 1, +1 } such that 
+
+ωji (x) = νj · νi for all x ∈ Ui ∩ Uj .
+
+Proof. By condition (i) and Theorem 4.7, the sign cocycle {ωji } defines a class [ωA] ∈ ˇH1(U; Z/2) .By condition (ii) and Theorem 4.10, this class satisfies [ωA] = w1(T M ). By Theorem 2.18, M is orientable if and only if w1(T M ) = 0 , which holds if and only if {ωji } is a Čech coboundary, i.e., 
+
+ωji = νj · νi for some {νi} ⊂ {− 1, +1 }.
+
+4.4 The non-degeneracy condition in practice 
+
+The non-degeneracy gap δ > 0 is the crucial assumption underlying stability. We now discuss its practical significance and verifiability. 
+
+Remark 4.15 (Monitoring non-degeneracy) . In practice, the condition δ(A) > 0 can be verified post-training by computing | det gji (x)| at each sample point x in each overlap and checking that the minimum value is bounded away from zero. A small minimum indicates that the sign cocycle may be unreliable at those points, suggesting the need for finer charts or additional training. 
+
+Remark 4.16 (Relationship to the Jacobian regularity loss) . The Jacobian regularity loss Ljac 
+
+encourages σmin (dE i) ≥ ϵ > 0. Since gji (x) = d(Ej )Di(Ei(x)) · d(Di)Ei(x) and the decoder Jacobian 
+
+d(Di) is related to the pseudoinverse of d(Ei) (when reconstruction is exact), the Jacobian reg-ularity loss indirectly promotes non-degeneracy of the transition map Jacobians. The following proposition makes this connection precise for exact atlases. 
+
+18 Preprint 
+
+Proposition 4.17 (Non-degeneracy from encoder-decoder regularity) . Let A be a C1 exact autoen-coder atlas on a smooth d-manifold M ⊂ RN . Suppose that for all i and all x ∈ Ui:
+
+σmin 
+
+ d(Ei)x|TxM
+
+ ≥ sE > 0, σmin 
+
+ d(Di)Ei(x)
+
+ ≥ sD > 0,
+
+where d(Ei)x|TxM : TxM → Rd is the restriction to the tangent space (a square d × d linear map), and 
+
+d(Di)Ei(x) ∈ RN ×d has d singular values. Then for all overlapping pairs (i, j ) and all x ∈ Ui ∩ Uj :
+
+| det gji (x)| = | det  d(Ej )Di(Ei(x)) · d(Di)Ei(x)
+
+| ≥ sdE · sdD .
+
+In particular, δ(A) ≥ (sE · sD )d > 0.Proof. Set y := Di(Ei(x)) and let A := d(Ej )y ∈ Rd×N , B := d(Di)Ei(x) ∈ RN ×d, so that gji (x) = AB ∈
+
+Rd×d.
+
+Key geometric observation: Since A is an exact atlas, Di(Zi) ⊂ M , and therefore the image of the decoder differential lies in the tangent space: range( B) ⊆ Ty M . (For approximate atlases, Di maps only approximately onto M , so this inclusion holds only up to an O(ε) perturbation.) Now, Ej : Uj → Rd is defined on M , and its differential d(Ej )y restricts to a linear map Ty M → Rd.Since dim Ty M = d, choosing an orthonormal basis for Ty M identifies this restriction with a d × d matrix whose singular values are the nonzero singular values of A. The hypothesis 
+
+σmin (d(Ej )y |Ty M ) ≥ sE means that this restricted map satisfies 
+
+∥Aw ∥ ≥ sE ∥w∥ for all w ∈ Ty M. 
+
+Since Bv ∈ Ty M for every v ∈ Rd, we obtain for any unit vector v ∈ Rd:
+
+∥gji (x)v∥ = ∥A(Bv )∥ ≥ sE ∥Bv ∥ ≥ sE · sD ∥v∥,
+
+where the second inequality uses ∥Bv ∥ ≥ σmin (B)∥v∥ ≥ sD ∥v∥ (valid for B ∈ RN ×d, since the d
+
+singular values of B are all ≥ sD ). Taking the infimum over unit vectors gives σmin (gji (x)) ≥ sE · sD .Since | det gji (x)| = Qdl=1 σl(gji (x)) ≥ σmin (gji (x)) d ≥ (sE · sD )d.
+
+Remark 4.18 (Extension to approximate atlases) . For approximate atlases with reconstruction error ε > 0, the decoder image Di(Zi) deviates from M by O(ε), so the range of B = d(Di)Ei(x)
+
+deviates from Ty M by O(ε). A perturbation argument shows that | det gji (x)| ≥ (sE · sD )d − O(ε), so the bound of Proposition 4.17 is stable under small reconstruction errors. 
+
+Remark 4.19 (Summary of the stability framework) . Combining the results of this section, the practical pipeline for orientability detection is justified as follows: 1. Train an autoencoder atlas with reconstruction loss, achieving small ε.2. Verify non-degeneracy : check that | det gji (x)| ≥ δ > 0 on all overlaps. 3. Compute the sign cocycle ωji (x) = sign(det gji (x)) .4. Test the coboundary condition : search for {νi} with ωji = νj · νi.Theorem 4.7 guarantees that the sign cocycle is a valid Čech cocycle (Step 3 produces a well-defined cohomology class), and Theorem 4.10 guarantees that this class equals w1(T M ) when the atlas is sufficiently close to an exact compatible atlas. Corollary 4.14 then ensures that the coboundary test (Step 4) correctly detects orientability. 
+
+# 5 Topological Constraints on the Number of Charts 
+
+We analyse how many autoencoder charts are required to represent a manifold. The main con-clusion is that the minimum number of charts is determined by the topology of M as a space, specifically, by the minimum cardinality of a good cover, rather than by the structure of the tangent bundle T M . Non-trivial characteristic classes provide useful obstructions to single-chart representations, but the converse does not hold: a trivial tangent bundle does not guarantee that a single chart suffices. 
+
+19 Preprint 
+
+5.1 Single-chart autoencoders imply trivial tangent bundle Definition 5.1 (Single-chart autoencoder) . A single-chart autoencoder on a smooth d-manifold M
+
+consists of maps E : M → Z ⊂ Rd and D : Z → M such that E is a diffeomorphism onto its image and D ◦ E = Id M .
+
+Proposition 5.2 (Single chart implies trivial bundle) . If M admits a single-chart autoencoder with latent dimension d = dim M , then the tangent bundle T M is trivializable, and consequently all Stiefel–Whitney classes vanish: wi(T M ) = 0 for all i ≥ 1.Proof. The encoder E : M → Z ⊂ Rd is a diffeomorphism onto an open subset Z. The standard frame {∂/∂x 1, . . . , ∂/∂x d} on Rd restricts to a global frame on Z, which pulls back via E−1 to a global frame on M . Hence T M ∼= M × Rd is trivial, and all characteristic classes of a trivial bundle vanish [23, Lemma 6.8]. 
+
+Corollary 5.3 (Non-trivial bundle requires multiple charts) . If wi(T M )̸ = 0 for some i ≥ 1, then any autoencoder atlas on M with latent dimension d = dim M requires at least two charts. 
+
+Remark 5.4 (The converse fails) . A trivial tangent bundle does not imply that a single chart suffices. Every compact manifold requires at least two charts, since a compact d-manifold cannot be diffeomorphic to an open subset of Rd. This includes compact parallelizable manifolds such as 
+
+S1, T 2, S3, and S7, all of which have T M ∼= M ×Rd yet require multiple charts for purely topological reasons. 
+
+5.2 Chart count is determined by good cover structure 
+
+We now show that the minimum number of autoencoder charts equals the minimum cardinality of a good cover of M , independently of the bundle structure. The key observation is that every good cover automatically trivialises any vector bundle: 
+
+Lemma 5.5 (Good covers trivialize all bundles) . Let U = {Ui} be a good cover of a smooth manifold 
+
+M , and let ξ be any vector bundle over M . Then ξ|Ui is trivial for every i.Proof. Each Ui is contractible. By homotopy invariance of vector bundles [11, §3], any bundle over a contractible paracompact space is trivial: if h : Ui × [0 , 1] → Ui contracts Ui to a point p, then 
+
+ξ|Ui
+
+∼= h∗
+
+> 1
+
+ξ = Ui × ξp.
+
+In particular, the notion of a “trivialising good cover of T M ” is redundant: every good cover of M
+
+trivialises T M .
+
+Proposition 5.6 (Autoencoder charts are local trivializations) . Let (U, E, D ) be a smooth autoen-coder chart with latent dimension d = dim M . Then E provides a local trivialization of T M |U : the frame {(dE )−1(∂/∂z 1), . . . , (dE )−1(∂/∂z d)} trivializes T M over U .Proof. The encoder E : U → Z ⊂ Rd is a diffeomorphism onto its image (Definition 3.1). Its differ-ential dE x : TxM → TE(x)Rd ∼= Rd is an isomorphism at each x ∈ U . The inverse (dE x)−1 applied to the standard basis of Rd gives a frame on U .
+
+Theorem 5.7 (Charts from good covers) . Let U = {Ui}ni=1 be a Riemannian good cover of M . Then there exists an autoencoder atlas A = {(Ui, E i, D i)}ni=1 with n charts such that TA ∼= T M .Conversely, any autoencoder atlas A = {(Ui, E i, D i)}ni=1 with TA ∼= T M provides a trivializing cover of T M with n open sets. Proof. (⇒) Since U is a Riemannian good cover, each Ui is a geodesically convex ball and hence diffeomorphic to Rd via the exponential map. In particular, there exists a diffeomorphism Ei : Ui →
+
+Ei(Ui) ⊂ Rd. Setting Di = E−1 
+
+> i
+
+gives an autoencoder chart. The transition functions of TA agree with those of T M by construction (the encoders form a smooth atlas compatible with the manifold structure). 
+
+(⇐) By Proposition 5.6, each chart (Ui, E i, D i) trivializes TA over Ui. If TA ∼= T M , this is also a trivialization of T M .
+
+20 Preprint 
+
+Corollary 5.8 (Minimum number of charts) . The minimum number of charts in an autoencoder atlas whose underlying cover is good equals the minimum cardinality of a good cover of M .Proof. By Lemma 5.5, every good cover trivializes T M , so Theorem 5.7 applies to any good cover. The forward direction shows that n good-cover sets yield n autoencoder charts with TA ∼= T M ,and the converse shows that n autoencoder charts yield a trivialising cover of size n.
+
+Condition Min. charts Reason 
+
+Non-compact, contractible 1 M ∼= Rd
+
+Non-compact, not contractible ≥ 2 Good cover requires ≥ 2 sets Compact ≥ 2 No open subset of Rd is compact 
+
+wi(T M )̸ = 0 for some i ≥ 2 Proposition 5.2 The minimum cardinality of a good cover of a space has been studied systematically by Karoubi and Weibel [9], who define the covering type ct( X) as the minimum size of a good cover of any space homotopy equivalent to X. For a fixed smooth manifold M , Corollary 5.8 identifies the minimum number of autoencoder charts (over good covers) with the strict covering type of M ,i.e., the minimum cardinality of a good cover of M itself. The covering type is bounded below by the homological dimension via ct( M ) ≥ hd( M ) + 2 [9, Proposition 3.1], and bounded below by the non-vanishing of the cohomology cup product [9, Proposition 5.2]. The latter yields ct( M ) ≥
+
+6 whenever the cup product on H1(M ; Z/2) is non-trivial, which applies to all non-orientable surfaces of genus q ≥ 2 and all oriented surfaces of genus g ≥ 1.
+
+# 6 Loss functions 
+
+We now describe the loss functions used to train autoencoder atlases in practice. As discussed in Remark 3.4, the mathematical definitions represent idealised conditions approximated through optimisation. Throughout this section, we assume the cover {Ui} is given, and we define ρi(x) = 1Ui (x) (indicator function). 
+
+Reconstruction loss 
+
+The reconstruction loss enforces the condition Di ◦ Ei ≈ Id Ui from Definition 3.1. 
+
+Definition 6.1 (Reconstruction loss) .
+
+Lrecon = Ex∼M
+
+" nX
+
+> i=1
+
+ρi(x)∥x − Di(Ei(x)) ∥2
+
+#
+
+.
+
+Cocycle loss and its relation to reconstruction loss 
+
+In practice we only achieve approximate reconstruction. By Lemma 3.8, minimising Lrecon to zero automatically enforces the cocycle condition for transition maps. We now show that the cocycle error in the sequence i → j → k depends only on the reconstruction error of the middle chart j.
+
+Definition 6.2 (Cocycle loss) . For an autoencoder atlas A = {(Ui, E i, D i)}ni=1 , the cocycle loss is 
+
+Lcocycle = Ex∼M
+
+X  
+
+> i,j,k Ui∩Uj∩Uk̸=∅
+
+ρijk (x) ∥Tki (Ei(x)) − Tkj (Tji (Ei(x))) ∥2
+
+ .
+
+Theorem 6.3 (Cocycle error depends only on chart j). Let x ∈ Ui ∩ Uj ∩ Uk and set y := Di(Ei(x)) .Assume that y ∈ Uj ∩ Uk (this holds automatically for exact reconstruction, i.e. Di ◦ Ei = Id Ui ; for approximate atlases, it holds when the pointwise reconstruction error ε is smaller than the Lebesgue number of the cover restricted to the triple overlap). Then the cocycle error satisfies: 
+
+Tki (Ei(x)) − Tkj (Tji (Ei(x))) = Ek(y) − Ek(Dj (Ej (y))) . (6) 
+
+21 Preprint 
+
+In particular, the cocycle error vanishes if and only if Dj (Ej (y)) = y, i.e., chart j reconstructs the point y exactly. Proof. We compute each side of the cocycle condition. For the left-hand side: 
+
+Tki (Ei(x)) = Ek(Di(Ei(x))) = Ek(y).
+
+For the right-hand side: 
+
+Tkj (Tji (Ei(x))) = Tkj (Ej (Di(Ei(x)))) = Tkj (Ej (y)) = Ek(Dj (Ej (y))) .
+
+The difference gives (6). 
+
+Remark 6.4 (Interpretation) . The reconstruction error of chart i determines only where chart j’s reconstruction is evaluated: at y = Di(Ei(x)) rather than at x. The cocycle error itself is entirely determined by chart j’s failure to satisfy Dj ◦ Ej = Id at the point y.Similarly, chart k contributes only through the encoder Ek, which merely “observes” the recon-struction error of chart j. The error ∥y − Dj (Ej (y)) ∥ in the ambient space is transformed by Ek
+
+into the cocycle error in the latent space. This justifies the absence of an explicit cocycle loss term in training: minimising reconstruction loss in each chart automatically ensures cocycle consistency. 
+
+Jacobian regularity loss 
+
+For the linearised transition maps gji (x) = d(Tji )Ei(x) to be well-defined elements of GL d(R), the encoders must be local diffeomorphisms, requiring the encoder Jacobian to have full rank. 
+
+Remark 6.5. Using smooth activations with non-vanishing derivatives (e.g. tanh ) and enforcing full-rank Jacobians ensures that encoder maps are local diffeomorphisms on their domains. 
+
+Definition 6.6 (Jacobian regularity loss) . Let JEi (x) = ∂E i 
+
+> ∂x
+
+(x) ∈ Rd×N be the encoder Jacobian, and let σmin (A) denote the smallest singular value of A. For a threshold ϵ > 0:
+
+Ljac = Ex∼M
+
+" nX
+
+> i=1
+
+ρi(x) · max (0 , ϵ − σmin (JEi (x))) 
+
+#
+
+.
+
+This loss is zero when σmin (JEi (x)) ≥ ϵ for all x ∈ Ui, ensuring the encoder Jacobian has full row rank. 
+
+Total loss 
+
+The total loss is: 
+
+Ltotal = Lrecon + λjac Ljac ,
+
+where λjac ≥ 0 is a hyperparameter. 
+
+# 7 Experiments 
+
+We validate our theoretical framework on synthetic manifolds with known orientability proper-ties. The experiments demonstrate that (i) reconstruction loss alone enforces cocycle consistency without explicit regularisation (Lemma 3.8), (ii) the sign cocycle correctly classifies orientability via the coboundary test (Corollary 4.14), and (iii) the computed invariants are stable under the conditions of Theorem 4.7. 
+
+7.1 Experimental setup Architecture. Each chart autoencoder consists of an encoder Ei : RN → Rd and decoder 
+
+Di : Rd → RN , each with two hidden layers (32 and 16 units for encoder, 16 and 32 for de-coder) with tanh activations. The latent dimension d = 2 matches the intrinsic dimension of the test manifolds, ensuring the linearised transition maps gji (x) ∈ GL 2(R).
+
+22 Preprint 
+
+Training. We optimise using Adam with learning rate 10 −3 for 1000–5000 epochs with batch size 64. Each chart autoencoder is trained only on points assigned to its domain Ui. We use reconstruction loss only, with no explicit cocycle regularisation. This tests our theoretical pre-diction (Lemma 3.8) that cocycle consistency emerges automatically from reconstruction. 
+
+Metrics. For each experiment, we report metrics corresponding to the theoretical quantities in our stability theorems: 
+
+• Reconstruction error ε = sup x ∥Di(Ei(x)) − x∥: measures atlas validity (Definition 4.1). 
+
+• Differential error ηlat = sup x ∥d(Ei ◦ Di)Ei(x) − Id∥op : measures how close the latent-space round-trip Ei ◦ Di ◦ Ei is to the identity in Rd. This is a practical proxy for the tangent-restricted quantity η appearing in Definition 4.1; see Remark 7.1. 
+
+• Non-degeneracy gap δ = min i,j,x | det gji (x)|: the crucial quantity in Theorem 4.7 that ensures sign stability. 
+
+• Cocycle error ∥Tki (Ei(x)) − Tkj (Tji (Ei(x))) ∥: should vanish when reconstruction is exact (Lemma 3.8). 
+
+• Encoder immersion σmin (dE ) = min i σmin (dE i): ensures encoders are local diffeomor-phisms; σmin (dE ) > 0 is necessary for the transition maps to be well-defined. 
+
+Remark 7.1 (Practical vs. theoretical η). The differential error reported in our experiments is the latent-space operator norm ηlat ,i = sup x∈Ui ∥d(Ei ◦ Di)Ei(x) − Id∥op , which measures how well the composition Ei ◦Di acts as the identity on Rd. This is related to, but distinct from, the theoretically relevant tangent-restricted quantity ηi = sup x∈Ui ∥d(Φ i)x|TxM − Id TxM ∥op from Definition 4.1(4). Writing Ax = d(Ei)x|TxM : TxM → Rd and Bz = d(Di)z : Rd → RN , one has d(Φ i)x|TxM = Bz Ax and 
+
+d(Ei ◦ Di)z = AxBz (where z = Ei(x), and we identify Ax with d(Ei)x|TxM via the embedding). The products AxBz and Bz Ax share the same nonzero eigenvalues, so ηlat ,i and ηi encode the same spectral information up to the conditioning of Ax. In particular, ηlat ,i = 0 if and only if ηi = 0 .
+
+All experiments are repeated over 5 random seeds, and we report the mean ± standard deviation. 
+
+7.2 The 2-sphere: orientable manifold with good cover 
+
+We apply our framework to the 2-sphere S2 ⊂ R3, a fundamental example of an orientable man-ifold. This experiment demonstrates that our theoretical pipeline correctly detects orientability using a well-designed cover. 
+
+Data generation. We sample n = 1000 points uniformly from the unit sphere S2 ⊂ R3 using the standard method: draw x ∼ N (0 , I 3) and normalize x 7 → x/ ∥x∥.
+
+Cover construction. We construct the minimal good cover of S2 using the vertices of a regular tetrahedron inscribed in the sphere: 
+
+v0 = 1√3 (1 , 1, 1) , v1 = 1√3 (1 , −1, −1) , v2 = 1√3 (−1, 1, −1) , v3 = 1√3 (−1, −1, 1) .
+
+Each open set is defined as a slightly enlarged hemisphere: 
+
+Ui = {x ∈ S2 : ⟨x, v i⟩ > −ϵ}, ϵ = 0 .3.
+
+This construction guarantees that {U0, U 1, U 2, U 3} forms a good cover (Definition 2.1). The nerve of this cover is the boundary of a 3-simplex ∂∆3 ≃ S2, so by the Nerve Theorem (Theorem 2.6), the ˇ Cech cohomology computed from this cover equals H∗(S2; Z/2) .
+
+Results. The necessary conditions δ > 0 and small ε from Theorem 4.7 are satisfied. Verifica-tion of the full quantitative stability bound would additionally require estimating the Lipschitz constants. 1. The reconstruction error ε ≈ 0.032 is small, validating the atlas (Definition 4.1). 
+
+23 Preprint 
+
+Table 1: Theoretical metrics for S2 (mean ± std over 5 trials) Metric Value Theoretical Role 
+
+ε 0.032 ± 0.008 sup x ∥Di(Ei(x)) − x∥
+
+ηlat 0.54 ± 0.19 sup x ∥d(Ei ◦ Di)Ei(x) − Id∥op 
+
+δ 0.10 ± 0.02 min i,j,x | det gji (x)|
+
+Cocycle error 0.008 ± 0.001 ∥Tki − Tkj ◦ Tji ∥
+
+σmin (dE ) 0.66 ± 0.05 min σmin (dE i)
+
+Orientability detection: 100% (5/5 trials) 
+
+2. The local diffeomorphism deviation ηlat < 1 ensures the latent-space round-trip Ei ◦ Di is close to the identity on Rd, confirming that the learned charts faithfully represent local coordinates. 3. The non-degeneracy gap δ ≈ 0.1 > 0 satisfies the crucial condition of Theorem 4.7, ensur-ing the sign cocycle is well-defined. 4. The cocycle error is O(10 −3), consistent with Lemma 3.8 which predicts vanishing cocycle error when reconstruction is exact. 5. The encoder singular values σmin (dE ) ≈ 0.66 confirm the encoders are immersions (local diffeomorphisms onto their images). 
+
+Orientability verification. The sign cocycle ωji = sign(det gji ) was computed on all six pair-wise overlaps. The cocycle condition (Lemma 3.8) was verified on all four triple overlaps. The coboundary test found a consistent orientation assignment (ν0, ν 1, ν 2, ν 3) = (+1 , −1, +1 , −1) satis-fying ωji = νj · νi for all pairs, confirming [ω] = 0 ∈ ˇH1(S2; Z/2) .
+
+Conclusion. By Corollary 4.14, since the sign cocycle is a coboundary, we conclude w1(TA) = 0 ,correctly detecting the orientability of S2. The 100% success rate across trials demonstrates the robustness of the method. 
+
+7.3 The Möbius band: non-orientable manifold with disconnected overlap 
+
+We apply our framework to the Möbius band, a fundamental example of a non-orientable sur-face. This experiment demonstrates that the sign cocycle detects non-orientability through the mechanism described in Remark 2.2: mixed signs on disconnected components of an overlap. 
+
+Data generation. We sample n = 1500 points from the Möbius band embedded in R3 using the standard parameterization (see Figure 5a).: 
+
+x(u, v ) = 
+
+
+
+1 + v
+
+2 cos u
+
+2
+
+
+
+cos u, y(u, v ) = 
+
+
+
+1 + v
+
+2 cos u
+
+2
+
+
+
+sin u, z(u, v ) = v
+
+2 sin u
+
+2 ,
+
+where u ∈ [0 , 2π) and v ∈ [−1, 1] . The half-angle terms create the characteristic twist: traversing the band once ( u : 0 → 2π) reverses the width direction ( v 7 → − v). 
+
+Cover construction. We construct a simple two-chart cover by partitioning along the y-coordinate (see Figure 5b): 
+
+U0 = {x ∈ M : y(x) > −0.3}, U1 = {x ∈ M : y(x) < 0.3}.
+
+Each chart domain is connected and contractible (a thickened arc along the band). The overlap 
+
+U0 ∩ U1 = {x : −0.3 < y (x) < 0.3} consists of two disconnected components : one on each side of the band where y ≈ 0. These two components are related by the Möbius twist, traversing the band from one component to the other reverses orientation. This topological structure is essential for detecting non-orientability. By Remark 2.2, we treat each connected component of the overlap separately when computing the ˇ Cech cochains. 
+
+24 Preprint 
+
+Table 2: Theoretical metrics for Möbius band (mean ± std over 5 trials) Metric Value Theoretical Role 
+
+ε 0.098 ± 0.018 sup x ∥Di(Ei(x)) − x∥
+
+ηlat 0.47 ± 0.12 sup x ∥d(Ei ◦ Di)Ei(x) − Id∥op 
+
+δ 0.36 ± 0.18 min i,j,x | det gji (x)|
+
+σmin (dE ) 0.55 ± 0.09 min σmin (dE i)
+
+Non-orientability detection: 100% (5/5 trials) 
+
+Detected via: opposite signs in disconnected overlap components 
+
+Results. In Figures 5c and 5d, the learned charts and the transition maps are shown. The necessary conditions δ > 0 and small ε from Theorem 4.7 are satisfied. Verification of the full quantitative stability bound would additionally require estimating the Lipschitz constants. 1. The reconstruction error ε ≈ 0.098 and deviation ηlat < 1 validate the atlas. 2. The non-degeneracy gap δ ≈ 0.36 is bounded well away from zero, satisfying Theorem 4.7. 
+
+Detection mechanism: opposite signs in disconnected components. The key to detecting non-orientability lies in the structure of the overlap U0∩U1. This overlap consists of two connected components (the two regions where y ≈ 0), related by the Möbius twist. We observe: 
+
+ω10 |Component 0 = −1, ω10 |Component 1 = +1 .
+
+For the sign cocycle to be a coboundary, we require orientations ν0, ν 1 ∈ {± 1}, each constant on the connected charts U0 and U1, such that ω10 (x) = ν1 · ν0 for all x ∈ U0 ∩ U1. This is impossible: Component 0 requires ν1 · ν0 = −1, while Component 1 requires ν1 · ν0 = +1 , a contradiction since 
+
+ν0 and ν1 must each be constant. This is precisely the topological obstruction to orientability: the Möbius twist reverses orientation when traversing the band, and this is detected by the sign cocycle taking opposite values on the two sides of the twist. 
+
+Theoretical interpretation. The coboundary condition in ˇH1(U; Z/2) requires finding a 0-cochain {νi} with δ0ν = ω, i.e., ωji = νj · νi. When an overlap has multiple components with different signs, no such 0-cochain exists. By Proposition 3.15 and Corollary 4.14, this confirms w1(TA)̸ = 0 , correctly detecting the non-orientability of the Möbius band. 
+
+Conclusion. The 100% detection rate across trials demonstrates that our framework reliably identifies non-orientability through the mathematically correct mechanism: the failure of the coboundary condition due to mixed signs on disconnected overlap components. 
+
+7.4 Preliminary validation for the low-dimensional datasets 
+
+Table 3: Summary of experimental results Manifold ε δ Ground Truth Detection Accuracy 
+
+S2 0.033 0.10 Orientable Orientable 100% Möbius 0.098 0.36 Non-orientable Non-orientable 100% 
+
+The experiments validate the theoretical framework: 1. Cocycle consistency from reconstruction (Lemma 3.8): Both experiments achieved cocycle errors < 0.03 using reconstruction loss alone, confirming that explicit cocycle regularisation is unnecessary. 
+
+25 Preprint                              
+
+> (a) Sampled Möbius band in R3with two-chart cover. Points are colored by chart assignment ( U0,U1), with the overlap region U0∩U1highlighted.
+> (b) Chart domains and overlap decomposition. The overlap U0∩U1splits into two disconnected compo-nents, related by the Möbius twist.
+> (c) Latent representations E0(U0)and
+> E1(U1)in R2.
+> (d) Transition map T10 =E1◦D0
+> on the two overlap components, with
+> sign(det g10 )indicated. Opposite signs confirm [ω]̸= 0 ∈ˇH1(U;Z/2) .
+
+Figure 5: Autoencoder atlas for the Möbius band (Section 7.3). The two-chart cover produces an overlap with two disconnected components on which the sign cocycle takes opposite values (ω10 = −1 and ω10 = +1 ), detecting non-orientability via the failure of the coboundary condition. 
+
+2. Sign stability (Theorem 4.7): The non-degeneracy gaps δ ∈ [0 .10 , 0.36] ensured stable sign determination across all trials, with 100% consistency. 3. Correct classification (Corollary 4.14): The coboundary test correctly distinguished ori-entable ( S2) from non-orientable (Möbius) manifolds in all trials. 4. Disconnected overlap handling (Remark 2.2): The Möbius band experiment demon-strates correct treatment of disconnected overlap components, detecting non-orientability through opposite signs rather than a failing coboundary test on a connected overlap. 
+
+7.5 Higher-dimensional experiments: Klein bottle and RP 2
+
+We extend our experiments to more topologically complex manifolds: the Klein bottle (non-orientable, embedded in R4) and the real projective plane RP 2 represented as a high-dimensional image dataset. These experiments test the framework on manifolds where covers must be learned from data, training convergence is not guaranteed, and the hypotheses of the stability theorems may not be fully satisfied. 
+
+26 Preprint 
+
+On the importance of good covers. The theoretical results of Sections 3.2 and 4 require the cover {Ui} to be a good cover (Definition 2.1): each chart domain and every connected component of every finite intersection must be contractible. For S2 and the Möbius band, we constructed covers with analytically verified contractibility. For the Klein bottle and RP 2, the covers are learned from data via landmark-based geodesic balls, and we cannot analytically guarantee the good cover property. Verifying contractibility of subsets from finite samples is a well-known difficult problem in com-putational topology; the recent work of Scoccola, Lim, and Harrington [15] identifies and studies this cover learning problem as an important challenge in its own right. In our experiments, we ap-ply DBSCAN clustering (with threshold parameter εcluster ) to decompose each overlap region into connected components, and compute signs separately on each component. This decomposition provides a practical heuristic: small, connected, metrically concentrated subsets of a smooth manifold are generically contractible. However, we cannot formally guarantee the good cover property for these data-driven charts. We regard this as acceptable for two reasons: first, the theoretical framework degrades gracefully when the good cover condition is only approximately satisfied (Remark 2.2); second, the development of principled methods for learning covers with provable topological guarantees lies outside the scope of this paper. 
+
+Training convergence diagnostics. A key practical insight from these experiments is that not all training runs produce valid atlases . We identify diagnostic criteria that reliably distinguish successful from unsuccessful training: 1. High reconstruction loss : High reconstruction loss indicates non-convergence of the training algorithm. Most of the times, this will also imply that the cocycle condition is not satisfied, and orientability detection is undefined. 2. Bounded differential error : The per-chart differential error is approximated by ηi =sup x ∥d(Di ◦ Ei)x − I∥op and should remain moderate across all charts. As the Klein bottle experiments below demonstrate, even a single chart with ηi ≫ 1 can corrupt the global sign cocycle and produce incorrect results, even when sign consistency is satisfied. These diagnostics allow us to identify, before examining orientability results, whether a given training run has produced a valid atlas structure. 
+
+7.5.1 Klein bottle 
+
+The Klein bottle is a compact, non-orientable 2-manifold that cannot be embedded in R3 without self-intersection. We sample n = 1000 points from the standard immersion in R4 given by 
+
+ι(u, v ) =  (m + cos v) cos u, (m + cos v) sin u, sin v cos( u/ 2) , sin v sin( u/ 2) ,
+
+with m = 4 , u ∈ [0 , 2π), v ∈ [0 , 2π), and the identification (u, v ) ∼ (u + 2 π, 2π − v) encoding the non-orientable twist. Since m > 1, ι descends to an injective immersion of the Klein bottle in R4.
+
+Cover construction. We construct an 8-chart cover using landmark-based geodesic balls. Geodesic distances are approximated via a k-nearest-neighbour graph ( k = 100 ), and 8 land-mark points are selected by farthest-point sampling. Each chart Ui consists of all sample points whose geodesic distance to landmark i is below the 20th percentile of the landmark distance matrix. This yields chart sizes ranging from 139 to 327 points, with 17 pairwise overlaps and 11 triple overlaps. 
+
+Architecture and training. Each chart autoencoder has an encoder and a decoder with hidden layers of widths [32 , 16] , latent dimension 2, and tanh activations throughout. Training uses Adam with learning rate 10 −3 for 4000 epochs, batch size 64, and Jacobian regularisation λjac =0.01 . No cocycle regularisation is applied ( λcocycle = 0 ). We employ a retry mechanism: if the maximum per-chart reconstruction error exceeds the threshold εthresh = 0 .15 after initial training, the run is extended by 2000 additional epochs or restarted with a new seed, for up to 3 retries. Connected components of overlap regions are identified via DBSCAN with threshold εcluster = 1 .0
+
+and minimum cluster size 20. 
+
+27 Preprint 
+
+Results. We run 5 independent trials (seeds 42–46). Table 4 reports per-trial theoretical metrics and orientability detection results. 
+
+Table 4: Klein bottle: per-trial results over 5 independent runs. Metrics: ε = max i sup x ∥Di(Ei(x)) −
+
+x∥, ¯ε = mean reconstruction error (averaged over charts), η = max i sup x ∥d(Di ◦ Ei)x − I∥op , δ =min i,j,x | det gji (x)|, σmin (dE ) = min i σmin (∇Ei).Trial Seed ε ¯ε ηlat δ σmin (dE ) Detected Correct 0 42 0.182 0.018 31.11 0.008 0.236 Orientable ✗
+
+1 43 0.109 0.025 1.51 0.083 0.207 Non-orientable ✓
+
+2 44 0.141 0.018 6.04 0.016 0.240 Orientable ✗
+
+3 45 0.131 0.025 0.62 0.090 0.212 Non-orientable ✓
+
+4 46 0.104 0.022 1.23 0.053 0.258 Non-orientable ✓
+
+Overall accuracy is 60% (3/5 trials). Notably, all five trials achieve sign consistency within each overlap component (zero inconsistent pairs across all 13 overlap components), and the cocycle condition (Lemma 3.8) is verified across all 11 triple overlaps with cocycle error ≈ 0.012 ± 0.002 .This confirms that the Z/2-valued sign cocycle ωji = sign(det gji ) is well-defined in every trial, regardless of detection outcome. The sign consistency diagnostic alone is therefore insufficient; the high values of the differential error η and the small values of δ play a critical discriminating role. 
+
+Diagnostic analysis: the role of ηlat . The two incorrect trials (seeds 42 and 44) share a dis-tinctive pathology: a single chart, chart 4, the largest with 327 points, exhibits anomalously high differential error ηlat , while all other charts maintain ηlat < 1:Trial η (chart 4) max i̸=4 ηi
+
+0 (seed 42, ✗) 31.11 0.62 2 (seed 44, ✗) 6.04 0.67 1 (seed 43, ✓) 0.71 1.51 3 (seed 45, ✓) 0.60 0.62 4 (seed 46, ✓) 1.23 0.91 When ηlat,i is large on a chart, the reconstruction map Di ◦ Ei deviates substantially from the identity on tangent spaces, so the linearised transition maps gji (x) = d(Ej ◦ Di)Ei(x) no longer approximate the true differential of the coordinate change. In particular, sign(det gji ) may fail to reflect the true orientation relationship. The resulting sign cocycle, while well-defined and consistent, represents a different cohomology class from the true w1, in these failed cases, a trivial class, causing the coboundary test to incorrectly pass. The two incorrect trials also exhibit small non-degeneracy gaps ( δ = 0 .008 and δ = 0 .016 ), an order of magnitude below the correct trials ( δ ≈ 0.076 ± 0.016 ). The small δ arises because the outlier chart contributes transition maps whose Jacobian determinants pass near zero. While the signs remain individually consistent, the global sign pattern is distorted on all overlaps involving chart 4, destroying the non-trivial cohomology class. This analysis identifies the per-chart differential error ηlat,i and the non-degeneracy gap δ as the critical diagnostics for atlas validity, consistent with the theoretical framework of Theorem 4.7. 
+
+Converged trials. Restricting to the three correct trials (seeds 43, 45, 46), we obtain: In all three converged trials, the coboundary test correctly fails: the sign cocycle ω admits no Z/2-valued 0-cochain {νi} satisfying ωji = νj · νi, confirming [ω]̸ = 0 ∈ ˇH1(U; Z/2) and hence w1(TA)̸ = 0 .The sign distributions across the 13 overlap components are: 
+
+• Trial 1 (seed 43): 5 positive, 8 negative; 
+
+• Trial 3 (seed 45): 8 positive, 5 negative; 
+
+28 Preprint 
+
+Table 5: Klein bottle: summary metrics for converged trials (mean ± std over 3 trials). Metric Value 
+
+ε (sup reconstruction error) 0.115 ± 0.012 ¯ε (mean reconstruction error) 0.024 ± 0.001 
+
+ηlat (differential error) 1.12 ± 0.46 
+
+δ (non-degeneracy gap) 0.076 ± 0.016 
+
+Cocycle error 0.013 ± 0.001 
+
+σmin (dE ) (encoder regularity) 0.226 ± 0.023 
+
+• Trial 4 (seed 46): 7 positive, 6 negative. The balanced sign distributions, with no consistent 2-colouring of the overlap graph, correctly identify the Klein bottle as non-orientable. 
+
+Relationship to the stability theorem. The converged trials have ηlat ≈ 1.12 . The non-degeneracy gap δ ≈ 0.076 > 0 does satisfy the positivity requirement, and the cocycle errors are small ( ≈ 0.013 ), indicating good transition map consistency. The sign cocycle correctly detects non-orientability with ηlat ≈ 1.12 which indicates that the prac-tical diagnostic need not satisfy the formal bound η < 1 of Theorem 4.7 for detection to succeed. The condition η < 1 in the theorem serves two purposes: it ensures δ > 0 a priori (Proposi-tion 3.15), and it contributes to the perturbation bound Γ < δ needed for sign agreement (The-orem 4.10). When δ > 0 is verified directly from the data, the first purpose is unnecessary. For the second, the bound Γ < δ can still hold even when the η-dependent terms are large, provided 
+
+δ is sufficiently large to absorb them. In our converged Klein bottle trials, δ ≈ 0.21 remains well-separated from zero despite ηlat ≈ 1.12 , consistent with this interpretation. 
+
+7.5.2 RP 2 via line patches 
+
+This experiment tests our framework on genuinely high-dimensional data. We generate 5625 line patch images (ambient dimension 100) following the construction in [12]: each image is a 
+
+10 × 10 grayscale patch containing a blurred line segment. Since a line at angle θ is identical to a line at angle θ + π, and the persistent cohomology of this space has been shown to be consistent with RP 2 [12], this provides a natural high-dimensional test case for orientability detection of non-orientable manifolds. We use a 10-chart cover derived from projective landmarks with no Jacobian regularisation (λjac = 0 ), tanh activations, and 1000 training epochs, testing whether the framework succeeds on high-dimensional data without explicit regularisation. 
+
+Results. Of five training runs, four satisfied the convergence criteria (trials with seeds 43, 44, 45, 46). In all four cases, the coboundary test correctly failed, detecting non-orientability: 
+
+• Trial 1 (seed 43): 11 positive signs, 14 negative signs across 25 overlaps; 
+
+• Trial 2 (seed 44): 16 positive signs, 9 negative signs across 25 overlaps; 
+
+• Trial 3 (seed 45): 12 positive signs, 13 negative signs across 25 overlaps; 
+
+• Trial 4 (seed 46): 15 positive signs, 10 negative signs across 25 overlaps. In each of these trials, δ > 0, no overlap component exhibited mixed signs, and the ˇC1 sign assignment was verified as a cocycle while failing to be a coboundary. The balanced (though not perfectly symmetric) sign distributions confirm that the nerve graph admits no consistent 2-colouring, correctly detecting w1(TA)̸ = 0 .Figure 6 visualises the learned transition maps across all pairwise overlaps; the mix of orientation-preserving and orientation-reversing transitions confirms the non-trivial sign cocycle. 
+
+29 Preprint 
+
+Table 6: RP 2 line patches: summary metrics for converged trials (mean ± std over 4 trials). Metric Value 
+
+ε (sup reconstruction error) 0.309 ± 0.081 ¯ε (mean reconstruction error) 0.060 ± 0.003 
+
+η (differential error) 12 .90 ± 6.91 
+
+δ (non-degeneracy gap) 0.027 ± 0.010 
+
+Cocycle error 0.042 ± 0.008 
+
+σmin (dE ) (encoder regularity) 0.541 ± 0.064 
+
+Relationship to the stability theorem. The RP 2 experiments exhibit ηlat ≫ 1 in all trials (with maxima ranging from approximately 4.07 up to 24 .75 ), placing them well outside the regime of Theorem 4.7. As with the Klein bottle, the correct detection is therefore an empirical observation: the sign cocycle correctly captures the non-trivial w1 even when the formal hypotheses of the stability theorem are not satisfied, provided that δ > 0 and sign consistency hold. 
+
+The role of Jacobian regularisation. Ablation experiments without Jacobian regularisation (λjac = 0 ) on the Klein bottle resulted in 0% accuracy: all five trials did not satisfy the convergence criteria. In contrast, RP 2 achieved convergence on 4 out of 5 trials. This confirms that the regularisation term is beneficial but not universally necessary; its importance depends on the cover structure and data geometry. 
+
+7.6 Summary and discussion 
+
+Table 7 summarises the results across all manifolds, reporting accuracy only for trials that satisfy the convergence diagnostics (sign consistency within overlaps, moderate per-chart η, and 
+
+δ > 0). 
+
+Table 7: Summary of experimental results (converged trials only). Here ¯ε denotes the mean reconstruction error (averaged over charts and converged trials), and δ denotes the mean non-degeneracy gap over converged trials. Manifold Dim Ambient Ground Truth ¯ε δ Converged Accuracy 
+
+S2 2 R3 Orientable 0.032 0.10 5/5 100% Möbius band 2 R3 Non-orientable 0.098 0.36 5/5 100% Klein bottle 2 R4 Non-orientable 0.024 0.076 3/5 100% 
+
+RP 2 (patches) 2 R100 Non-orientable 0.060 0.042 4/5 100% 
+
+The experimental validation demonstrates four key findings: 1. Theoretical correctness : When the atlas diagnostics are satisfied, orientability detection achieves 100% accuracy across all tested manifolds, including high-dimensional image data. This confirms the mathematical soundness of computing w1(TA) via the sign cocycle coboundary test (Corollary 4.14). 2. Cocycle consistency from reconstruction : All converged trials achieved cocycle er-rors below 0.08 using reconstruction loss alone, with no explicit cocycle regularisa-tion term ( λcocycle = 0 ). This validates Lemma 3.8: the encoding consistency condition 
+
+Ej (Di(Ei(x))) ≈ Ej (x) emerges automatically from minimizing reconstruction error. 3. Practical diagnostics : The diagnostic criteria, moderate per-chart differential error ηi,and positive non-degeneracy gap δ, provide a reliable method for determining whether a given training run has produced a valid atlas, without requiring knowledge of the ground truth orientability. The Klein bottle experiment demonstrates that sign consistency alone is insufficient: η and δ are essential complementary diagnostics. This enables practical deployment: one first verifies atlas validity, then applies the coboundary test only to valid atlases. 
+
+30 Preprint 
+
+4. Scalability to high dimensions : The RP 2 experiment demonstrates that the framework scales to genuinely high-dimensional ambient spaces ( R100 ) while correctly detecting topo-logical properties of the underlying 2-dimensional manifold. This validates the approach for real-world image and signal data where the ambient dimension far exceeds the intrin-sic dimension. The varying convergence rates across manifolds reflect differences in optimisation difficulty rather than theoretical limitations. The simpler manifolds ( S2, Möbius band) with carefully con-structed covers achieve 100% convergence, while more complex manifolds with automatically generated covers show lower rates. This suggests that cover construction and training method-ology are important practical considerations for future work. 
+
+On the hypotheses of the stability theorem. The Klein bottle and RP 2 experiments reveal a gap between the sufficient conditions of Theorem 4.7 and practical detection. The theorem requires η < 1, yet the Klein bottle converged trials achieve correct detection with ηlat ≈ 1.12 , and the RP 2 trials succeed with ηlat ≫ 1. Meanwhile, Klein bottle trials with ηlat ≫ 1 (driven by a single outlier chart) fail. This suggests that the operationally relevant condition is not a uniform bound 
+
+ηlat < 1 across all charts, but rather that ηlat remains moderate on charts participating in the overlap graph cycles that carry the non-trivial cohomology class. A single chart with extreme ηlat 
+
+can corrupt the sign cocycle on all its incident overlaps, potentially trivialising a non-trivial class. Formalising this local condition and tightening the stability bounds accordingly is an important direction for future work; the experiments suggest that the sufficient conditions of Theorem 4.7 can be substantially relaxed when δ > 0 is verified directly. 
+
+Computational considerations. The Jacobian computation gji (x) = d(Tji )Ei(x) requires au-tomatic differentiation through the encoder-decoder composition. For neural networks with smooth activations (tanh ), this is well-conditioned even in high ambient dimensions. The coboundary test reduces to checking whether the nerve graph admits a consistent 2-colouring, solvable in linear time. The overall computational cost is dominated by autoencoder training, which scales with the number of charts, dataset size, and ambient dimension. 
+
+# 8 Conclusions and future work 
+
+We have introduced a framework that treats collections of locally trained autoencoders as learned atlases on data manifolds, connecting neural network representations to the classical theory of vector bundles and characteristic classes. The key theoretical insight is that reconstruction consistency alone enforces the cocycle condition on transition maps, and that linearising these transitions yields a vector bundle whose first Stiefel–Whitney class can be read off from the signs of Jacobian determinants. We proved stability of this sign cocycle under approximate reconstruction (Theorem 4.7) and its agreement with w1(T M ) when the learned atlas is close to an exact compatible atlas (Theorem 4.10). We also showed that the minimum number of autoencoder charts over good covers equals the covering type of the manifold (Corollary 5.8). Experiments on the 2-sphere, Möbius band, Klein bottle, and RP 2 line patches in R100 validate the framework: converged trials achieve 100% orientability detection accuracy using reconstruction loss alone, with no explicit cocycle regularisation. The experiments also reveal that the sufficient conditions of the stability theorem are not tight, and correct detection occurs even when the formal bound η < 1 is violated, provided the non-degeneracy gap δ remains positive, and the per-chart differential error remains moderate. Several directions for future work arise naturally. The linearised transition functions gji (x) ∈
+
+GL( d, R) carry more information than their Z/2 sign cocycle; extracting higher Stiefel–Whitney classes, or Chern classes in the complex setting, would detect finer topological obstructions. The stability theory could be tightened by replacing the global bound on η with local conditions on charts participating in cohomology-carrying cycles. Integrating principled cover learning meth-ods [15] with our framework would close the gap between the theoretical requirement of a good cover and the data-driven covers used in practice. Finally, scaling the approach to higher in-trinsic dimensions and applying it to domains where characteristic classes carry practical sig-
+
+31 Preprint 
+
+nificance, such as robotics, computer vision, or materials science, remains an important open direction. 
+
+# Acknowledgements 
+
+Eduardo Paluzo-Hidalgo acknowledges funding from the European Union’s Horizon 2020 re-search and innovation programme under the Marie Skłodowska-Curie grant agreement No. 101153039 (CHALKS), and from the IMUS–María de Maeztu grant CEX2024-001517-M (Apoyo a Unidades de Excelencia María de Maeztu), funded by MICIU/AEI/10.13039/501100011033. Eduardo Paluzo-Hidalgo thanks Prof. Gunnar Carlsson for introducing the initial problem that inspired this paper during his research stay at Stanford University, and Dr Chunyin Siu for insightful conversations during the early stages of this research. Yuichi Ike is supported by JSPS Grant-in-Aid for Transformative Research Areas (A) Grand Number JP22H05107 and JST, CREST Grant Number JPMJCR24Q1, Japan. 
+
+# Code availability 
+
+The code is available at https://github.com/EduPH/learningtangentbundle .
+
+# References 
+
+[1] E. Alvarado, R. Belton, E. Fischer, K.-J. Lee, S. Palande, S. Percival, and E. Purvine. G-mapper: Learning a cover in the mapper construction. SIAM Journal on Mathematics of Data Science , 7(2):572–596, 2025. [2] R. Bott and L. W. Tu. Differential Forms in Algebraic Topology . Number 82 in Graduate Texts in Mathematics. Springer-Verlag, 1982. [3] C. Chen and D. Freedman. Hardness results for homology localization. Discrete & Compu-tational Geometry , 45(3):425–448, Jan. 2011. [4] M. Clémot, J. Digne, and J. Tierny. Topological autoencoders++: Fast and accurate cycle-aware dimensionality reduction. IEEE Transactions on Visualization and Computer Graphics ,pages 1–17, 2025. [5] Y. Ding. Topological algorithms mapping point cloud data . PhD thesis, Stanford University. Institute for Computational and Mathematical Engineering, 2009. [6] S. Eilenberg and N. Steenrod. Foundations of Algebraic Topology . Princeton University Press, 1952. [7] A. Hatcher. Algebraic topology . Cambridge University Press, Cambridge, 2002. [8] R. A. Horn and C. R. Johnson. Matrix Analysis . Cambridge University Press, 2nd edition, 2012. [9] M. Karoubi and C. A. Weibel. On the covering type of a space. L’Enseignement Mathématique ,62(3):457–474, Aug. 2017. [10] U. Lim, H. Oberhauser, and V. Nanda. Tangent space and dimension estimation with the wasserstein distance. SIAM Journal on Applied Algebra and Geometry , 8(3):650–685, 2024. [11] J. W. Milnor and J. D. Stasheff. Characteristic Classes . Number 76 in Annals of Mathematics Studies. Princeton University Press, 1974. [12] J. A. Perea. Multiscale projective coordinates via persistent cohomology of sparse filtrations. 
+
+Discrete Comput. Geom. , 59(1):175–225, Jan. 2018. [13] S. Schonsheck, J. Chen, and R. Lai. Chart auto-encoders for manifold structured data, 2020. [14] S. C. Schonsheck, S. Mahan, T. Klock, A. Cloninger, and R. Lai. Semi-supervised manifold learning with complexity decoupled chart autoencoders, 2024. [15] L. Scoccola, U. Lim, and H. A. Harrington. Cover learning for large-scale topology represen-tation. In Forty-second International Conference on Machine Learning , 2025. 
+
+32 Preprint 
+
+[16] L. Scoccola and J. A. Perea. Approximate and discrete euclidean vector bundles. Forum of Mathematics, Sigma , 11:e20, 2023. [17] L. Scoccola and J. A. Perea. Approximate and discrete euclidean vector bundles. Forum of Mathematics, Sigma , 11, 2023. [18] L. Scoccola and J. A. Perea. Fibered: Fiberwise dimensionality reduction of topologically complex data with vector bundles. In E. W. Chambers and J. Gudmundsson, editors, 39th International Symposium on Computational Geometry, SoCG 2023, Dallas, Texas, USA, June 12-15, 2023 , volume 258 of LIPIcs , pages 56:1–56:18. Schloss Dagstuhl - Leibniz-Zentrum für Informatik, 2023. [19] L. Scoccola and J. A. Perea. Fibered: Fiberwise dimensionality reduction of topologically complex data with vector bundles, 2023. [20] G. Singh, F. Mémoli, and G. E. Carlsson. Topological methods for the analysis of high dimensional data sets and 3d object recognition. In M. Botsch, R. Pajarola, B. Chen, and M. Zwicker, editors, PBG@Eurographics , pages 91–100. Eurographics Association, 2007. [21] E. H. Spanier. Algebraic Topology . Springer New York, 1981. [22] R. Tinarrage. Computing persistent stiefel–whitney classes of line bundles. Journal of Ap-plied and Computational Topology , 6(1):65–125, Nov. 2021. [23] I. Zakharevich. Topological k-theory and characteristic classes: A homotopical perspective. 
+
+https://pi.math.cornell.edu/~zakh .[24] A. Zomorodian and G. Carlsson. Localized homology. In Proceedings of the IEEE International Conference on Shape Modeling and Applications 2007 , SMI ’07, page 189–198, USA, 2007. IEEE Computer Society. 
+
+33 Preprint 
+
+# Appendices 
+
+# A Proofs of Section 4 
+
+Proof of Theorem 4.7 . Fix x ∈ Ui ∩ Uj ∩ Uk and set y := Di(Ei(x)) . By Proposition 4.3, the sign 
+
+ωji is constant on each connected component of each overlap. It suffices to show that 
+
+sign(det gki (x)) = sign(det( gkj (y) · gji (x))) .
+
+We establish this by showing that | det gki (x) − det( gkj (y) · gji (x)) | is strictly less than | det gki (x)|,which forces both determinants to have the same sign. 
+
+Step 0: Domain verification. Since x ∈ Ui ∩ Uj ∩ Uk and ∥y − x∥ = ∥Di(Ei(x)) − x∥ ≤ ε, the point y lies in Oj ∩ Ok by Definition 4.1(5). In particular, the encoders Ej and Ek are C1 at y,so the Jacobians gkj (y) = d(Tkj )Ej (y) and gji (x) = d(Tji )Ei(x) are both well-defined. Moreover, the reconstruction map Φj = Dj ◦ Ej is C1 at y since y ∈ Oj , and Φj (y) lies in Ok by Remark 4.5. 
+
+Step 1: Bounding the Jacobian perturbation. By Lemma 4.4, we can write 
+
+gki (x) = Q · P, gkj (y) · gji (x) = Q′RP, 
+
+where 
+
+P := d(Di)Ei(x) ∈ RN ×d, Q := d(Ek)y ∈ Rd×N , Q′ := d(Ek)Φj (y) ∈ Rd×N , R := d(Φ j )y ∈ RN ×N .
+
+That is, the direct transition Jacobian gki (x) factors as encoder-times-decoder through the am-bient space RN , while the composed transition Jacobian additionally inserts the reconstruction map Φj = Dj ◦ Ej and evaluates the encoder Ek at the shifted point Φj (y) instead of y.We write Q′ = Q + ∆ Q and ∆R := R − IN , so that 
+
+Q′RP = QP + Q ∆R P + ∆ Q (IN + ∆ R) P
+
+| {z }
+
+> =: ∆
+
+. (7) Thus gkj (y) · gji (x) = gki (x) + ∆ , and it remains to bound ∥∆∥op .
+
+Step 1a: The restricted action of ∆R on range( P ). A naïve bound on ∥Q ∆R P ∥op using the full operator norm ∥∆R∥op fails: since Φj = Dj ◦ Ej factors through Rd, the differential R = d(Φ j )y has rank at most d < N and therefore annihilates a subspace of dimension at least N − d. This forces 
+
+∥∆R∥op = ∥R − IN ∥op ≥ 1 regardless of the quality of the reconstruction. The key observation is that only the restricted action of ∆R on range( P ) enters the product Q ∆R P .We now show that vectors in range( P ) are nearly tangent to M , which allows us to exploit the approximate reconstruction condition on tangent directions. Fix a unit vector v ∈ Rd and set w := P v = d(Di)Ei(x) v. The differential reconstruction condi-tion (Definition 4.1(4)) for chart i states that d(Φ i)x|TxM is within operator-norm distance η of 
+
+Id TxM . Since η < 1, the restricted map d(Φ i)x|TxM = P ◦ d(Ei)x|TxM is invertible. In particular, 
+
+d(Ei)x|TxM : TxM → Rd is a bijection, so there exists a unique u ∈ TxM satisfying d(Ei)x u = v.Then 
+
+w = P v = d(Di)Ei(x) d(Ei)x u = d(Φ i)x u, 
+
+and condition (4) gives ∥w − u∥ ≤ η ∥u∥.Since u ∈ TxM , we can decompose w = wT + w⊥ with wT ∈ TxM and w⊥ ⊥ TxM . The normal component is controlled by: 
+
+∥w⊥∥ = ∥Π⊥ 
+
+> TxM
+
+(w − u)∥ ≤ ∥ w − u∥ ≤ η ∥u∥ ≤ η
+
+1 − η ∥w∥, (8) where the last step uses ∥w∥ ≥ ∥ u∥ − ∥ w − u∥ ≥ (1 − η)∥u∥.
+
+Step 1b: Bounding ∥∆R w∥ via the tangent–normal decomposition. We bound ∥∆R w∥ =
+
+∥[d(Φ j )y − IN ] w∥ by treating the tangential and normal parts of w separately. 
+
+34 Preprint 
+
+Tangential component. Since x ∈ Uj and wT ∈ TxM , condition (4) for chart j gives ∥[d(Φ j )x −
+
+IN ] wT ∥ ≤ η ∥wT ∥. To pass from the on-manifold point x to the off-manifold point y, we use the derivative Lipschitz constant L′ 
+
+> Φ
+
+:= L′ 
+
+> D
+
+L2 
+
+> E
+
++ LD L′ 
+
+> E
+
+of p 7 → d(Φ j )p on Oj (see Remark 4.9). Since 
+
+∥y − x∥ ≤ ε:
+
+∥[d(Φ j )y − IN ] wT ∥ ≤ ∥ [d(Φ j )x − IN ] wT ∥ + ∥d(Φ j )y − d(Φ j )x∥op ∥wT ∥ ≤ (η + L′ 
+
+> Φ
+
+ε) ∥wT ∥ ≤ (η + L′ 
+
+> Φ
+
+ε) ∥w∥.
+
+Normal component. For the normal part, no reconstruction guarantee is available—the recon-struction map Φj has no reason to act as the identity on directions normal to M . We therefore use the crude bound ∥d(Φ j )y ∥op ≤ LE LD :
+
+∥[d(Φ j )y − IN ] w⊥∥ ≤ (∥d(Φ j )y ∥op + 1) ∥w⊥∥ ≤ (LE LD + 1) ∥w⊥∥ ≤ (LE LD + 1) η
+
+1 − η ∥w∥,
+
+where the last step uses (8). This is the normal-direction amplification : the factor (LE LD + 1) 
+
+multiplies the normal component, which is itself of relative size η/ (1 − η).
+
+Combining. Adding the two contributions and simplifying, 
+
+∥∆R w∥ ≤ 
+
+
+
+η + L′
+
+> Φ
+
+ε + (LE LD + 1) η
+
+1 − η
+
+
+
+∥w∥ ≤ 
+
+ (LE LD + 2) η
+
+1 − η + L′
+
+> Φ
+
+ε
+
+| {z } 
+
+> =: ηeff
+
+∥w∥, (9) where the simplification uses η + (LE LD +1) η 
+
+> 1−η
+
+≤ (LE LD +2) η 
+
+> 1−η
+
+. Since w = P v and ∥w∥ ≤ LD ∥v∥, we obtain 
+
+∥∆R P v ∥ ≤ ηeff LD ∥v∥ for every v ∈ Rd. (10) 
+
+Step 1c: Bounding ∥∆Q∥op . The matrices Q = d(Ek)y and Q′ = d(Ek)Φj (y) differ because the encoder Ek is evaluated at the shifted point Φj (y) rather than y. By the encoder derivative Lipschitz condition (ii) and Lemma 4.6: 
+
+∥∆Q∥op = ∥d(Ek)Φj (y) − d(Ek)y ∥op ≤ L′ 
+
+> E
+
+∥Φj (y) − y∥ ≤ L′ 
+
+> E
+
+eε, (11) where eε := ( LE LD + 2) ε is the off-manifold reconstruction bound. 
+
+Step 1d: Assembling the bound on ∥∆∥op . Returning to the decomposition ∆ = Q ∆R P +∆ Q (IN +∆R) P from (7), we bound each term separately. For the first term, using (10): 
+
+∥Q ∆R P ∥op ≤ ∥ Q∥op · ηeff LD ≤ LE ηeff LD .
+
+For the second term, note that ∥(IN + ∆ R) P v ∥ ≤ ∥ P v ∥ + ∥∆R P v ∥ ≤ (1 + ηeff ) LD ∥v∥ by (10). Combined with (11): 
+
+∥∆Q (IN + ∆ R) P ∥op ≤ L′ 
+
+> E
+
+eε (1 + ηeff ) LD .
+
+Therefore: 
+
+∥∆∥op ≤ LE ηeff LD
+
+| {z }
+
+> reconstruction map derivative error
+
++ L′ 
+
+> E
+
+eε (1 + ηeff ) LD
+
+| {z }
+
+> encoder evaluation point shift
+
+= Γ . (12) 
+
+Step 2: Bounding the determinant perturbation. We have gkj (y) · gji (x) = gki (x) + ∆ where 
+
+∆ ∈ Rd×d. By the multilinearity of the determinant in columns, for any A, B ∈ Rd×d, the telescoping identity 
+
+det( A + B) − det( A) = 
+
+> d
+
+X
+
+> l=1
+
+det a1 | · · · | al−1 | bl | (al+1 + bl+1 ) | · · · | (ad + bd)
+
+(where al, bl denote the l-th columns of A, B) together with Hadamard’s inequality [8, Theo-rem 3.3.16] yields: 
+
+| det( A + B) − det( A)| ≤ d · ∥ B∥op · (∥A∥op + ∥B∥op )d−1. (13) 
+
+35 Preprint 
+
+Applying Equation (13) with A = gki (x) and B = ∆ , and noting ∥A∥op ≤ LE LD and ∥B∥op ≤ Γ:
+
+| det( gkj (y) · gji (x)) − det gki (x)| ≤ d · Γ · (LE LD + Γ) d−1. (14) 
+
+Step 3: Sign agreement. By the non-degeneracy hypothesis, | det gki (x)| ≥ δ. Equation (4) states that d · Γ · (LE LD + Γ) d−1 < δ , so the right-hand side of (14) is strictly less than | det gki (x)|. This forces det( gkj (y) · gji (x)) to have the same sign as det gki (x):
+
+sign(det gki (x)) = sign(det( gkj (y) · gji (x))) = sign(det gkj (y)) · sign(det gji (x)) .
+
+Step 4: Evaluation point correction. It remains to show that sign(det gkj (y)) = ωkj (x). By Step 0, both x and y lie in Oj ∩Ok, and ∥y −x∥ ≤ ε. Consider the line segment γ(t) := (1 −t)x+ty for t ∈ [0 , 1] .Since ∥γ(t) − x∥ ≤ ε for all t ∈ [0 , 1] , and ε is less than the tubular radius of M ⊂ RN (guaranteed for ε sufficiently small relative to the geometry of M ), each γ(t) ∈ Oj ∩ Ok. The function 
+
+t 7 → det gkj (γ(t)) = det  d(Ek)Dj (Ej (γ(t))) · d(Dj )Ej (γ(t)) 
+
+
+
+is continuous in t (since all maps involved are C1 on the relevant domains). The map p 7 → det gkj (p)
+
+has Lipschitz constant bounded by Ldet := d (LE LD )d−1 LE (LE L′ 
+
+> D
+
++ L′ 
+
+> E
+
+L2 
+
+> D
+
+) on Oj ∩ Ok (by differen-tiating the determinant of the product d(Ek)Dj (Ej (p)) · d(Dj )Ej (p) via the chain rule and Hadamard’s inequality). Since | det gkj (x)| ≥ δ and ∥γ(t) − x∥ ≤ ε:
+
+| det gkj (γ(t)) | ≥ δ − Ldet ε > 0,
+
+which holds since Ldet ε < δ by Equation (4). Since the determinant is continuous and never vanishes along γ, the sign is constant: 
+
+sign(det gkj (y)) = sign(det gkj (x)) = ωkj (x).
+
+Hence ωki (x) = ωkj (x) · ωji (x), as required. 
+
+Remark A.1. On the Step 4, the non-degeneracy of det gkj (γ(t)) along the segment from x to 
+
+y follows from the continuity of p 7 → det gkj (p) and the explicit Lipschitz constant Ldet defined in Equation (3). The condition Ldet ε < δ appears as the second branch of the maximum in Equation (4), ensuring that it is verified alongside the determinant perturbation bound. Neither condition implies the other: the first branch controls the cocycle defect (mixing η and ε through 
+
+Γ), while the second controls the evaluation-point shift (depending on ε alone). 
+
+Remark A.2. In the exact setting ( ε = η = 0 ), the reconstruction map Φj is the identity on M ,and the differential d(Φ j )x acts as the identity on TxM while annihilating normal directions. The cocycle condition holds exactly because all relevant vectors lie in tangent spaces. However, in the approximate setting, the decoder differential P = d(Di)Ei(x) produces vectors w = P v that are nearly tangential but have a small normal component of size O(η/ (1 − η)) relative to ∥w∥
+
+(see Equation (8)). The reconstruction differential d(Φ j )y − IN acts well on the tangential part (controlled by η + O(ε)) but amplifies the normal part by up to (LE LD + 1) . The effective error ηeff 
+
+accounts for this amplification: it equals the tangent-restricted error η plus a correction of order 
+
+(LE LD )η/ (1 − η) from the normal component, plus an off-manifold evaluation correction of order 
+
+L′
+
+> Φ
+
+ε.
+
+Proof of Theorem 4.10 . Since ∥Ei−E0 
+
+> i
+
+∥C1(Ui) ≤ μ, the latent domains Zi = Ei(Ui) and Z0 
+
+> i
+
+= E0 
+
+> i
+
+(Ui)
+
+satisfy dH (Zi, Z 0 
+
+> i
+
+) ≤ μ (in the C0 sense), where dH denotes the Hausdorff distance. For μ sufficiently small, both D0 
+
+> i
+
+and Di (being C1 on their respective domains) extend as C1 maps to a common open set eZi ⊃ Z0 
+
+> i
+
+∪Zi in Rd. (For D0 
+
+> i
+
+= ( E0 
+
+> i
+
+)−1, this extension exists by the inverse function theorem, since E0 
+
+> i
+
+is a diffeomorphism onto Z0 
+
+> i
+
+and hence has non-degenerate Jacobian; for Di, it is defined on Zi and extends by C1 regularity.) We choose eZi to be the open μ-neighborhood of Z0 
+
+> i
+
+in Rd:
+
+eZi := {z ∈ Rd : dist( z, Z 0 
+
+> i
+
+) < μ }.
+
+Since dH (Zi, Z 0 
+
+> i
+
+) ≤ μ, this ensures Zi ⊂ eZi.We define the interpolated atlas At = {(Ui, E ti , D ti )} for t ∈ [0 , 1] by 
+
+Eti := (1 − t)E0 
+
+> i
+
++ tE i, Dti := (1 − t)D0 
+
+> i
+
++ tD i,
+
+36 Preprint 
+
+where Dti is well-defined on eZi. For any x ∈ Ui, the C0 bound gives: 
+
+∥Eti (x) − E0 
+
+> i
+
+(x)∥ = t∥Ei(x) − E0 
+
+> i
+
+(x)∥ ≤ tμ ≤ μ, 
+
+so Eti (x) ∈ B(E0 
+
+> i
+
+(x), μ ) ⊂ eZi, confirming that Eti (Ui) ⊂ eZi for all t ∈ [0 , 1] .
+
+Domain of the transition maps. The transition maps T tji = Etj ◦Dti require evaluating Etj at points of the form Dti (z) for z ∈ Eti (Ui) ⊂ eZi. In the exact atlas, D0 
+
+> i
+
+(E0 
+
+> i
+
+(x)) = x ∈ M . For the interpolated atlas, Dti (Eti (x)) is a convex combination of points within O(μ + ε) of x, and thus remains within 
+
+O(μ+ε) of M . Since the encoders Etj are defined on the extended neighborhoods Oj (which contain a tubular neighborhood of Uj of width ε ≥ O(μ) for μ sufficiently small), the composition T tji and its Jacobians gtji (x) = d(T tji )Eti (x) are well-defined and vary continuously in t.
+
+Step 1: Uniform non-degeneracy along the homotopy. At t = 0 , the exact atlas has | det g0
+
+> ji
+
+(x)| ≥ 
+
+δ0 > 0 for all relevant (i, j, x ). Since M is compact, each closure Ui ∩ Uj is compact, and the maps 
+
+Eti , Dti are C1 on neighborhoods of these closures. The function (t, x ) 7 → det gtji (x) is therefore continuous on the compact set [0 , 1] × Ui ∩ Uj for each pair (i, j ), hence uniformly continuous. Taking the minimum over the finitely many pairs (i, j ), for μ satisfying Equation (5): 
+
+| det gtji (x)| ≥ δ0
+
+2 > 0 for all t ∈ [0 , 1] , x ∈ Ui ∩ Uj .
+
+Step 2: Sign constancy along the path. Since det gtji (x) is continuous in t and never vanishes, 
+
+sign(det gtji (x)) is constant in t for each fixed (i, j ) and each connected component of Ui ∩ Uj . There-fore ωtji is independent of t:
+
+ω1 
+
+> ji
+
+= ω0 
+
+> ji
+
+on each connected component of Ui ∩ Uj .
+
+Step 3: Conclusion. Since ωA 
+
+> ji
+
+= ω1 
+
+> ji
+
+= ω0 
+
+> ji
+
+= ωA0 
+
+> ji
+
+, the two sign cocycles are identical (not merely cohomologous). By Proposition 3.13, [ωA0 ] = w1(TA0 ) = w1(T M ), so [ωA] = w1(T M ).
+
+37 Preprint 
+
+Figure 6: Transition maps z 7 → Tji (z) = Ej (Di(z)) for the RP 2 line patches experiment (Sec-tion 7.5.2). Each panel shows the learned transition map between a pair of charts (i, j ), with source points in blue and their images under Tji in red (or green for triple-overlap regions). The title of each panel reports the percentage of overlap points with det gji > 0; panels showing 0% or 
+
+100% indicate sign-consistent overlaps. The balanced distribution of positive and negative signs across the 25 overlap components confirms that the sign cocycle [ω] ∈ ˇH1(U; Z/2) is non-trivial, detecting the non-orientability of RP 2. 38

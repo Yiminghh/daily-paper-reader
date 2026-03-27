@@ -1,0 +1,1234 @@
+Title: MultiPUFFIN: A Multimodal Domain-Constrained Foundation Model for Molecular Property Prediction of Small Molecules
+
+URL Source: https://arxiv.org/pdf/2603.00857v1
+
+Published Time: Tue, 03 Mar 2026 02:19:10 GMT
+
+Number of Pages: 61
+
+Markdown Content:
+# MultiPUFFIN: A Multimodal Domain-Constrained Foundation Model for Molecular Property Prediction of Small Molecules 
+
+Idelfonso B.R. Nogueira ∗1, Carine M. Rebello 1, Mumin Enis Leblebici 2,and Erick Giovani Sperandio Nascimento 31Department of Chemical Engineering, Norwegian University of Science and Technology (NTNU), Trondheim 7034, Norway 
+
+2Faculty of Industrial Engineering, KU Leuven, Diepenbeek, Belgium 
+
+3University of Surrey, Guildford, United Kingdom 
+
+Abstract 
+
+Prediction of physicochemical properties of small molecules across diverse chem-ical space is fundamental to chemical engineering, drug discovery, and materials science. Existing molecular foundation models achieve impressive performance through large-scale pre-training but lack thermodynamic consistency in their out-puts, while domain-informed approaches have been limited to single properties and small datasets. This work introduces MultiPUFFIN (Multimodal Path-Unifying Foundation Fusion Interfaced Network), a domain-constrained multimodal founda-tion model that addresses both limitations simultaneously. MultiPUFFIN features: (i) a multimodal encoder architecture fusing SMILES sequences, molecular graphs, and three-dimensional conformer geometries through gated cross-modal attention, supplemented by auxiliary encoders for experimental conditions and molecular de-scriptors, enriching the information space available to the model; (ii) property-specific prediction heads incorporating established thermophysical correlations as inductive bias neurons (the Wagner equation for vapor pressure, the Andrade equa-tion for viscosity, the van ’t Hoff equation for solubility, group contribution methods for boiling point, the Born solvation model for hydration free energy, and the Sho-mate polynomial for heat capacity), ensuring thermodynamic consistency by con-struction; and (iii) a two-stage training strategy combining joint multi-task learning with cosine warm-restart scheduling followed by backbone-frozen head fine-tuning. Extending the PUFFIN and ExPUFFIN frameworks, MultiPUFFIN generalizes the domain-informed inductive bias paradigm to a foundation model predicting nine thermophysical properties simultaneously. The model is trained on a comprehen-sive multi-source dataset of 37 968 unique molecules (40 904 data rows) assembled from nine public databases, representing a 59% expansion in molecular coverage over the initial curation. With approximately 35 million parameters, MultiPUF-FIN achieves competitive test performance across a challenging scaffold-split test set 
+
+> ∗
+
+Corresponding author: idelfonso.nogueira@ntnu.no 
+
+1   
+
+> arXiv:2603.00857v1 [cs.LG] 1 Mar 2026 of 8877 molecules, with mean R2= 0 .716 across all nine properties. A direct com-parison against ChemBERTa-2 (a SMILES-based foundation model pre-trained on 77 million molecules) demonstrates that MultiPUFFIN outperforms the fine-tuned baseline on all nine properties despite being trained on 2000 ×fewer molecules, with particularly striking advantages for temperature-dependent properties (vapor pressure, viscosity, heat capacity), where ChemBERTa-2 lacks the architectural ca-pacity to incorporate thermodynamic conditions. These results demonstrate that domain-informed inductive biases and multimodal encoding can substantially re-duce the data and computational requirements for molecular property prediction, offering a more efficient alternative to brute-force pre-training at scale. The frame-work handles missing modalities and recovers thermodynamically meaningful equa-tion parameters without explicit supervision. Systematic ablation studies quantify the contribution of each architectural component and domain-informed head, while a comprehensive investigation of alternative thermodynamic equations as induc-tive biases reveals the property-specific nature of the benefit conferred by domain-informed prediction heads.
+
+Keywords: Foundation model, Molecular property prediction, Graph neural network, Inductive bias, Domain-informed machine learning, Multimodal learning, Multi-task learn-ing, Thermodynamic consistency, Data augmentation 
+
+# 1 Introduction 
+
+The accurate prediction of physicochemical properties of small molecules remains a cor-nerstone challenge in chemical engineering, pharmaceutical development, and materi-als science. Properties such as vapor pressure, viscosity, solubility, heat capacity, and partition coefficients govern the design and optimization of separation processes, drug formulation, environmental fate modeling, and reaction engineering Pang et al. [2023]. Traditionally, these properties have been estimated through empirical correlations (the Antoine equation for vapor pressure Thomson [1946], the Andrade equation for viscosity Andrade [1930], group contribution methods for boiling points Nannoolal et al. [2008]) or obtained through costly and labor-intensive experimental campaigns. While such cor-relations encode valuable domain knowledge about how properties depend on thermody-namic conditions, their conventional parameterization is inherently component-specific: each new molecule requires a dedicated set of fitted parameters, restricting transferability and precluding large-scale molecular screening. The emergence of machine learning, and in particular deep learning, has opened trans-formative avenues for molecular property prediction Das et al. [2024]. By learning com-plex structure–property relationships directly from data, neural network models can, in principle, generalize across chemical space without requiring manual parameter fitting for each compound. Graph neural networks (GNNs) have emerged as a natural paradigm for molecular modeling, treating atoms as nodes and chemical bonds as edges in a molecu-lar graph and updating atomic representations through iterative message passing Gilmer et al. [2017], Kipf and Welling [2017]. GNNs have demonstrated strong performance in predicting quantum mechanical properties Sch¨ utt et al. [2018], Gasteiger et al. [2020], solvation free energies Vermeire and Green [2021], fuel ignition quality Schweidtmann et al. [2020], activity coefficients Rittig et al. [2023], and numerous other molecular prop-erties. Beyond graph-based representations, chemical language models operating directly 2on SMILES strings have also shown competitive performance for molecular property pre-diction Das et al. [2024], motivating the exploration of multimodal architectures that combine structural and sequential molecular representations. 
+
+1.1 Foundation models for molecular science 
+
+A more recent paradigm shift in machine learning has been the emergence of foundation models , large-scale models pre-trained on vast quantities of data, which can subsequently be fine-tuned for diverse downstream tasks Multiple authors [2024, 2025]. The success of foundation models in natural language processing (e.g., BERT (Bidirectional Encoder Representations from Transformers) Devlin et al. [2019], GPT Brown et al. [2020]) and computer vision (e.g., ViT Dosovitskiy et al. [2021]) has inspired analogous efforts in molecular science, where the central premise is that a model pre-trained on large-scale molecular data can learn general-purpose molecular representations transferable to di-verse property prediction tasks. The earliest molecular foundation models adopted natural language processing (NLP) techniques directly on SMILES string representations. SMILES-BERT Wang et al. [2019] applied BERT-style masked token prediction to SMILES sequences drawn from the ZINC dataset (approximately 250,000 molecules), demonstrating that self-supervised represen-tations of chemical language outperform traditional fingerprint descriptors on downstream property prediction benchmarks. ChemBERTa and its successor ChemBERTa-2 Ahmad et al. [2022] adapted the RoBERTa architecture to SMILES strings, pre-training on 77 million molecules from PubChem using both masked language modeling (MLM) and multi-task regression (MTR) objectives. The authors found that MTR pre-training on computed molecular descriptors yielded superior downstream performance compared to MLM alone, an important finding for pre-training strategy design. However, SMILES-based approaches face several fundamental limitations. First, they inherently discard spatial and topological information that is critical for thermophysical property predic-tion: a SMILES string encodes molecular identity but not three-dimensional geometry or explicit bond-level features. Second, these models are typically fine-tuned for single-property prediction tasks, requiring a separate fine-tuned model for each target property, which precludes the multi-task knowledge transfer that arises from jointly learning related properties. Third, because SMILES strings encode only molecular identity, SMILES-based models cannot condition predictions on thermodynamic state variables such as temperature or pressure, rendering them fundamentally unable to predict temperature-dependent properties (e.g., vapor pressure, viscosity) where the same molecule exhibits different values at different conditions. 
+
+1.1.1 Graph-based foundation models 
+
+At the graph level, Hu et al. Hu et al. [2020] conducted a systematic investigation of pre-training strategies for GNNs on molecular data, establishing that combining node-level (atom attribute prediction) and graph-level (supervised property prediction) pre-training yields the best transfer performance. The Knowledge-guided Pre-training of Graph Transformer (KPGT) Li et al. [2022] further advanced this line by incorporating chemical knowledge into pre-training objectives for a high-capacity graph transformer model. Wang et al. Wang et al. [2022] introduced molecular contrastive learning of rep-resentations (MolCLR), employing graph augmentation strategies including atom mask-3ing, bond deletion, and subgraph removal to create contrastive views for self-supervised pre-training. MolE M´ endez-Lucio et al. [2024] proposed a transformer architecture with disentan-gled attention for molecular graphs, employing a two-step pre-training strategy: self-supervised learning on approximately 842 million molecular graphs followed by massive multi-task learning on biological assay data. This two-step paradigm (first learning chemi-cal structure, then learning biological/physical relevance) achieved best-published results on 10 of 22 Absorption, Distribution, Metabolism, Excretion, and Toxicity (ADMET) tasks. Yuan et al. Yuan et al. [2025] proposed virtual bonding enhanced graph self-supervised learning, demonstrating that augmenting molecular graphs with virtual bonds between non-bonded atoms can improve self-supervised pre-training for property predic-tion. Sangala and Raghunathan Sangala and Raghunathan [2025] introduced GNN archi-tectures that explicitly encode dihedral angles in three-dimensional molecular structures, further enriching graph-based representations with conformational information. Despite their success, graph-based foundation models share a key limitation with SMILES-based approaches: they are predominantly designed for single-property classification or regres-sion tasks on molecular activity benchmarks, and their standard MLP prediction heads impose no thermodynamic constraints on the output, a limitation that becomes critical when thermodynamic consistency across temperature and pressure conditions is required. 
+
+1.1.2 Three-dimensional conformer-based foundation models 
+
+Among the most impactful molecular foundation models, Uni-Mol Zhou et al. [2023] in-troduced an SE(3)-equivariant transformer pre-trained on 209 million three-dimensional molecular conformations, achieving state-of-the-art results on 14 of 15 molecular property prediction benchmarks spanning quantum mechanical properties (HOMO/LUMO ener-gies, dipole moment, polarizability), physical chemistry properties (solubility, lipophilic-ity), and biological activity endpoints. Its successor, Uni-Mol2 Lu et al. [2024], scaled to 1.1 billion parameters and 800 million conformations, demonstrating for the first time that molecular pre-training obeys scaling laws analogous to those observed in large lan-guage models, with validation loss decreasing as a power law with increasing model size and data volume. Uni-Mol2 achieved an average 27% improvement on the QM9 bench-mark. More recently, Uni-Mol3 Uni-Mol Team [2025] extended the framework to multi-molecular reaction modeling through a hierarchical tokenization strategy. The Uni-Mol family demonstrates that three-dimensional conformer information provides representa-tions that are strictly more informative than two-dimensional graphs for many property prediction tasks, motivating the inclusion of a 3D encoder branch in the present work. MoleculeFormer Li et al. [2025] introduced a hybrid GCN-Transformer architecture that captures both local features (through graph convolution) and global features (through self-attention), incorporating rotational equivariance constraints and prior molecular fin-gerprints, demonstrating robust performance across 28 drug discovery datasets. 
+
+1.2 Multimodal molecular representations 
+
+A molecule can be described through fundamentally different data modalities, each cor-responding to a distinct type of structured information. Drawing on the terminology es-tablished in the broader multimodal machine learning literature Baltruˇ saitis et al. [2019], where modalities refer to qualitatively different forms of data (such as text, images, and 4graphs), three primary molecular modalities can be identified. The text modality repre-sents a molecule through its SMILES string Weininger [1988], a one-dimensional character sequence analogous to a sentence in natural language. Each token carries chemical se-mantics (atom types, bond orders, ring closures, stereochemistry descriptors), and the sequential structure imposes an implicit grammar that Transformer-based models can learn to exploit, mirroring the way large language models process natural text. SMILES strings capture long-range syntactic dependencies (e.g., ring-closure digits linking dis-tant atoms) but discard explicit spatial information. The graph modality represents a molecule as a structured object with atoms as nodes and covalent bonds as edges, aug-mented by atom-level (atomic number, degree, hybridization, aromaticity) and bond-level (bond type, conjugation, stereo) feature vectors. This modality is analogous to social or knowledge graphs in the broader machine learning literature and is naturally processed by graph neural networks through message-passing operations. The graph captures topo-logical connectivity and local chemical environments but lacks three-dimensional spatial information. The spatial modality represents a molecule as a three-dimensional conformer, a spatial arrangement of atoms in Cartesian coordinates, encoding through-space inter-atomic distances, dihedral angles, and molecular shape. While this representation is not a pixel-based image in the traditional computer vision sense, it shares the key characteristic of image data: it encodes spatial structure in a continuous coordinate space, and its infor-mation content is rotationally and translationally invariant, properties that motivate the use of equivariant or invariant neural architectures (SchNet, DimeNet, PaiNN) analogous to how convolutional neural networks exploit translation invariance in images. The three-dimensional conformer captures steric effects, intramolecular non-bonded interactions, and molecular surface accessibility that are entirely absent from the two-dimensional graph. These three modalities (text, graph, and spatial) encode overlapping but non-identical aspects of molecular identity. A molecule’s thermophysical properties emerge from the interplay of all three: the two-dimensional graph determines which functional groups are present and how they are connected (governing hydrogen bonding capacity and group-contribution effects); the SMILES sequence encodes substituent patterns and long-range electronic effects through its syntax; and the three-dimensional shape governs molecular packing, solvation cavity geometry, and steric accessibility (critical for viscosity, vapor pressure, and hydration free energy). Because each modality captures complementary as-pects of molecular structure, relying on any single representation limits the model’s ability to fully characterize the structure–property relationship across all thermophysical prop-erties simultaneously. This complementarity motivates a multimodal fusion approach. A growing body of work has sought to leverage this multimodal richness through joint representation learning. MoleculeSTM Liu et al. [2023] pioneered the alignment of molecular structures (both SMILES and graph representations) with natural language descriptions through con-trastive learning, enabling zero-shot molecular retrieval and text-guided molecule edit-ing. MoMu Su et al. [2022] similarly aligned molecular graphs with biomedical text using contrastive pre-training. GIT-Mol Liu et al. [2024] extended the multimodal paradigm to include molecular images alongside graphs and text within a multi-modal large language model framework, demonstrating that visual molecular representations capture struc-tural motifs not easily encoded in SMILES or graph features. More recent works have refined the alignment granularity: FineMolTex Li et al. [2024] introduced fine-grained alignment between molecular substructures and text fragments, while MolGT Chen et al. 5[2024] developed a multiview, multimodal pre-training framework using graph transform-ers. MolPrompt Chen et al. [2025] improved multi-modal molecular pre-training through knowledge prompts that guide the alignment of molecular and textual representations. Despite these advances, existing multimodal approaches have primarily combined structural representations (SMILES, graphs, conformations) with textual descriptions for biological activity prediction. No current foundation model simultaneously integrates two-dimensional graph features, sequential SMILES features, and three-dimensional ge-ometry features within a unified framework equipped with domain-informed prediction heads for multiple thermophysical properties. 
+
+1.3 Domain-informed and hybrid approaches for property pre-diction 
+
+A parallel and equally important research direction has focused on integrating domain knowledge directly into neural network architectures. The purely data-driven paradigm, while powerful, suffers from well-documented limitations: poor extrapolation beyond the training distribution, lack of thermodynamic consistency, and inability to guarantee that predictions obey known thermodynamic constraints Schweidtmann et al. [2024]. Physics-informed neural networks (PINNs) Raissi et al. [2019] pioneered the incorpo-ration of governing equations as soft constraints in the loss function. However, in the context of molecular property prediction, a more impactful approach has been to embed domain knowledge directly into the model architecture. PhysNet Unke and Meuwly [2019] predicted physically meaningful atomic contributions (partial charges and dipoles) that sum to molecular properties, enforcing rotational covariance by construction. DimeNet Gasteiger et al. [2020] incorporated angular correlations between bonds through spheri-cal harmonic basis functions, embedding the directional nature of chemical bonding into the message-passing framework. Lansford et al. Lansford et al. [2023] demonstrated physics-informed transfer learning for out-of-sample vapor pressure predictions, showing that domain knowledge can be particularly valuable in data-scarce regimes. In the chemical engineering domain, Di Caprio et al. Di Caprio et al. [2023] proposed HybridGamma, a thermodynamically consistent framework for hybrid modeling of activ-ity coefficients, where NRTL and Wilson equations serve as structural constraints. Rittig et al. Rittig et al. [2023] developed Gibbs–Duhem-informed neural networks that enforce the Gibbs–Duhem consistency relation during training. Aouichaoui et al. Aouichaoui et al. [2023] combined the group-contribution concept with graph neural networks to create interpretable molecular property models. 
+
+1.4 The PUFFIN paradigm: inductive bias neurons for ther-mophysical properties 
+
+The present work extends the Path-Unifying Feed-Forward Interfaced Network (PUFFIN) Santana et al. [2024] and its extension ExPUFFIN Rebello et al. [2025], which introduced a distinctive approach to incorporating domain knowledge into molecular property pre-diction: replacing the standard output layer of a neural network with a domain-informed 
+
+inductive bias neuron .In PUFFIN, a GNN was first trained to predict molecular boiling points, generating learned embeddings that encode structural and chemical features relevant to intermolec-ular forces. These embeddings were then transferred to a feed-forward neural network 6(FFNN) whose output layer was replaced by the Antoine equation: log 10 P = A − BC + T (1) where P is the vapor pressure, T is the temperature, and A, B, C are substance-specific coefficients predicted by the network’s penultimate layer. Critically, the network was never provided with Antoine coefficients during training; it learned to produce them solely from the vapor pressure prediction objective. Post-hoc analysis revealed that the network-derived coefficients closely matched literature Antoine coefficients from the Dortmund Data Bank. ExPUFFIN Rebello et al. [2025] extended this paradigm to viscosity prediction, em-ploying a graph convolutional network to directly encode molecular graphs and replacing the output layer with the Andrade equation. The ExPUFFIN Andrade variant reduced root mean squared error by 37% compared to the purely data-driven baseline and pro-duced smooth, monotonic viscosity–temperature curves that the unconstrained baseline could not guarantee. The PUFFIN/ExPUFFIN paradigm thus established two key principles: (i) embed-ding established thermophysical correlations as activation functions in the output layer constrains the model to produce predictions that obey known functional forms; and (ii) during backpropagation, gradients flow through the domain-informed transforma-tion, meaning that parameter updates throughout the network are modulated by the thermodynamically-informed structure. 
+
+1.5 Limitations of the current state of the art and research gaps 
+
+Despite the rapid progress surveyed above, four critical limitations persist in the current landscape of molecular foundation models for property prediction, and these limitations define the research gaps that the present work addresses. 
+
+First, existing foundation models lack thermodynamic consistency by construction. 
+
+Models such as Uni-Mol Zhou et al. [2023], MolE M´ endez-Lucio et al. [2024], and Molecule-Former Li et al. [2025] use standard linear or MLP output layers that impose no ther-modynamic constraints on the predicted properties. As a result, a vapor pressure model may produce non-monotonic temperature dependence, a viscosity model may predict vis-cosity increasing with temperature for a liquid, and a solubility model may violate the van ’t Hoff relationship. While these models achieve impressive benchmark scores on static datasets evaluated at single conditions, their predictions cannot be reliably inter-polated or extrapolated across thermodynamic state spaces, a fundamental requirement in process simulation and engineering design. 
+
+Second, the domain-informed approaches that do guarantee thermodynamic consis-tency (PUFFIN, ExPUFFIN) have been limited to single-property, single-modality set-tings. PUFFIN Santana et al. [2024] predicts only vapor pressure from GNN embed-dings, and ExPUFFIN Rebello et al. [2025] predicts only viscosity from GCN embed-dings. Neither model leverages the complementary information available in multiple molecular representations, nor do they share learned representations across properties through multi-task learning. The generalization of the inductive bias neuron paradigm to a multi-property, multimodal foundation model has not been attempted. 
+
+Third, existing multimodal molecular models focus primarily on structure–text align-ment for biological activity prediction, not on thermophysical property prediction. MoleculeSTM 7Liu et al. [2023], MoMu Su et al. [2022], and GIT-Mol Liu et al. [2024] align molecular representations with natural language for tasks such as molecular retrieval, drug–target interaction prediction, and activity classification. No multimodal foundation model has been designed specifically for the simultaneous prediction of multiple thermophysical properties from fused graph, SMILES, and 3D conformer representations. 
+
+Fourth, no existing model combines all three structural modalities (2D molecular graphs, 1D SMILES sequences, and 3D conformer geometries) with domain-informed prediction heads in a unified multi-task framework. Table 1 provides a systematic compar-ison of representative molecular foundation models across these dimensions, illustrating that MultiPUFFIN uniquely occupies the intersection of multimodal structural encoding, domain-informed output layers, and multi-task thermophysical property prediction. Table 1: Comparison of molecular foundation models for property prediction. Modalities: S = SMILES (1D), G = 2D graph, 3D = 3D conformer, T = text, I = molecular image, Aux = auxiliary inputs (experimental conditions and molecular descriptors). Domain heads: whether the model employs physics-based or domain-informed output layers (e.g., Antoine, Andrade, group contribution equations). Thermo. consist.: whether thermody-namic consistency is enforced by construction. Multi-task thermo.: whether the model simultaneously predicts multiple thermophysical properties in a single architecture.                                                                                                        
+
+> Model Year Modalities Pre-training Domain heads Multi-task thermo. Thermo. consist. Pre-train data size
+> SMILES-BERT Wang et al. [2019] 2019 SMLM ×××ZINC subset ChemBERTa-2 Ahmad et al. [2022] 2022 SMLM + MTR ×××77M mol. KPGT Li et al. [2022] 2022 GSSL + knowledge ×××2M mol. MoMu Su et al. [2022] 2022 G, T Contrastive ×××15K pairs Uni-Mol Zhou et al. [2023] 2023 3D SSL (3D denoising) ×××209M conf. MoleculeSTM Liu et al. [2023] 2023 S, G, T Contrastive ×××281K pairs MolE M´ endez-Lucio et al. [2024] 2024 GSSL + multi-task ×××842M graphs GIT-Mol Liu et al. [2024] 2024 G, I, T Multimodal LLM ×××304K mol. MolGT Chen et al. [2024] 2024 G, T SSL multi-view ×××250K mol. Uni-Mol2 Lu et al. [2024] 2024 3D SSL (scaled) ×××800M conf. MoleculeFormer Li et al. [2025] 2025 S, G Supervised MT ×××28 datasets PUFFIN Santana et al. [2024] 2024 GTransfer learn. ✓×✓6K mol. ExPUFFIN Rebello et al. [2025] 2025 GSupervised ✓×✓3K mol.
+> MultiPUFFIN (this work) 2025 S, G, 3D, Aux Multi-task ✓✓✓38K mol.
+
+1.6 Contributions of this work 
+
+This work introduces MultiPUFFIN (Multimodal Path-Unifying Foundation Fusion Interfaced Network ), a domain-constrained multimodal foundation model for molecular property prediction of small molecules that addresses all four limitations identified above. The specific contributions are as follows: 1. Multimodal encoder architecture. MultiPUFFIN fuses three complementary structural molecular representations (character-level SMILES sequences processed by a Transformer encoder, two-dimensional molecular graphs processed by a GCN encoder, and three-dimensional conformer geometries processed by a SchNet en-coder) together with two auxiliary encoders for experimental conditions and molec-ular descriptors, through a hierarchical cross-modal attention, gated fusion, and concatenation mechanism. To the best of the authors’ knowledge, this is the first molecular foundation model to combine GCN, Transformer, and SchNet structural encoders with auxiliary condition and descriptor encoders within a single architec-ture. 82. Generalized domain-informed inductive bias. Building on the PUFFIN/ExPUFFIN paradigm, MultiPUFFIN generalizes the inductive bias neuron framework from single-property to multi-task prediction with nine simultaneous thermophysical properties. Each property is predicted through a dedicated head encoding the ap-propriate domain equation: the Antoine equation for vapor pressure, the Andrade equation for viscosity, the van ’t Hoff equation for solubility, group contribution methods for boiling point, linear free-energy relationships for log P , and a ther-modynamic decomposition for hydration free energy. This ensures thermodynamic consistency by construction across all domain-informed properties. 3. Comprehensive multi-source dataset. The model is trained on a carefully curated dataset of 37 968 unique molecules (40 904 data rows) assembled from nine public databases (OPERA, NIST ThermoML, ECHA REACH, ChEMBL, Aq-SolDB, FreeSolv, the Bradley Open Melting Point dataset, the Sun et al. flash point dataset, and the ABB-ADD heat capacity dataset) with a hybrid scaffold-based and property-balanced splitting strategy that rigorously evaluates generalization to structurally novel molecules. 4. Two-stage training strategy. A joint multi-task training phase with uncertainty-weighted loss and cosine warm-restart scheduling is followed by backbone-frozen head fine-tuning, enabling both effective shared representation learning and pre-cise property-specific calibration. SMILES enumeration augmentation triples the effective training set size. 5. Data and computational efficiency through domain-informed inductive biases. A direct comparison against ChemBERTa-2 (a SMILES-based foundation model pre-trained on 77 million molecules) demonstrates that MultiPUFFIN out-performs the fine-tuned baseline on all nine properties despite being trained on 2000 × fewer molecules, with a single multi-task model replacing nine separately fine-tuned models. The domain-informed inductive biases and multimodal encod-ing enrich the information space available to the model, substantially reducing the data and computational requirements for achieving competitive performance. For temperature-dependent properties (vapor pressure, viscosity, heat capacity), ChemBERTa-2 exhibits order-of-magnitude higher errors because it fundamentally cannot distinguish thermodynamic conditions from SMILES strings alone. The resulting model achieves competitive test RMSE values across all nine proper-ties, from 20 .62 J mol −1 K−1 (heat capacity) to 47 .82 K (boiling point) for temperature-dependent properties, and 0.704–1.182 in logarithmic units for partition and solubil-ity properties, while the domain-informed heads recover thermodynamically meaningful equation parameters without explicit supervision. The framework handles missing modal-ities and demonstrates positive multi-task transfer for data-scarce properties. The remainder of this paper is organized as follows. Section 2 presents the complete methodology, including data curation, model architecture, and training strategy. Sec-tion 3 presents the experimental results and discussion. Section 4 concludes the paper. 92 Methodology 
+
+The overall MultiPUFFIN framework encompasses three components: a data curation and preprocessing pipeline, the multimodal model architecture, and a two-stage training strategy. This section presents each in detail. MultiPUFFIN is designed as a multimodal foundation model that jointly processes three fundamentally different structural data modalities (text, graph, and spatial struc-ture) through modality-specific encoders, supplemented by two auxiliary encoders for experimental conditions and molecular descriptors, before fusing all representations into a shared molecular embedding. This design mirrors the broader paradigm of multimodal foundation models in machine learning (e.g., CLIP for vision–language, Gato for vision– language–action), where the central premise is that jointly learning from complementary data modalities produces richer representations than any single modality alone. In the molecular context, the three structural modalities correspond to: (i) the text modality ,where a SMILES string is processed by a Transformer encoder as a chemical language sequence, capturing long-range syntactic dependencies and implicit chemical grammar; (ii) the graph modality , where the 2D molecular graph is processed by a GCN encoder through message-passing operations, capturing topological connectivity, ring systems, and local functional group patterns; and (iii) the spatial modality , where a 3D conformer is processed by a SchNet encoder through continuous-filter convolutions on interatomic distances, capturing through-space geometry, molecular shape, and steric effects. In addi-tion, two auxiliary encoders process non-structural information: an experimental encoder 
+
+that embeds thermodynamic conditions (temperature, pressure) into the representation space, and a descriptor encoder that incorporates precomputed molecular descriptors (molecular weight, topological polar surface area, hydrogen bond donors/acceptors, and other constitutional features). Figure 1 provides a schematic overview of the architecture. Bidirectional cross-modal attention between the GCN and Transformer branches enables each modality to attend to the other, and a learned sigmoid gate fuses the cross-attended representations. The SchNet embedding is incorporated through a separate geometry gate that can suppress the 3D contribution when conformer data is unavailable or unreliable. The outputs of the two auxiliary encoders (experimental conditions and molecular descriptors) are then concatenated with the fused structural embedding and projected to yield the final 512-dimensional unified embedding u, which serves as the shared molecular representa-tion from which all nine property-specific prediction heads operate, each embedding the appropriate thermophysical equation as a domain-informed inductive bias neuron. An uncertainty-weighted multi-task loss automatically balances the nine prediction objec-tives during training. 
+
+2.1 Data curation and dataset construction 
+
+A key component of this work is the assembly of a comprehensive multi-property molec-ular dataset from diverse public sources. The final dataset comprises 37 968 unique molecules with measurements across nine physicochemical properties, totaling 40 904 data rows, since molecules with temperature-dependent properties contribute multiple rows at different temperatures. This dataset was assembled through a systematic multi-stage cu-ration pipeline that integrates eight public databases, as summarized in Table 2. Figure 5 illustrates the highly heterogeneous data availability across properties and splits. 10 Figure 1: Architecture overview of MultiPUFFIN. A molecule is simultaneously encoded through three structural modalities: a 2D molecular graph (GCN encoder), a SMILES string (Transformer encoder), and a 3D conformer (SchNet geometry encoder). Two auxiliary encoders process non-structural information: an experimental encoder for ther-modynamic conditions (temperature, pressure) and a descriptor encoder for precomputed molecular descriptors. Bidirectional cross-modal attention between the GCN and Trans-former branches is followed by gated fusion, with the SchNet embedding incorporated through a learned geometry gate. The auxiliary encoder outputs are concatenated with 
+
+11 2.1.1 Primary data sources 
+
+The dataset was constructed by merging an initial curated baseline with multiple external databases. The primary sources and their contributions are as follows. 
+
+AqSolDB and ESOL Sorkun et al. [2019], Wu et al. [2018]. Aqueous solubility (log S) data were aggregated from the AqSolDB database and the ESOL dataset from MoleculeNet, providing solubility values in log(mol/L) at 298 .15 K, with temperature-dependent solubility data from PubChem included where available. After deduplication by canonical SMILES (retaining the median value for duplicate entries), the solubility dataset comprises 14 085 unique molecules. 
+
+MoleculeNet Lipophilicity and ChEMBL Wu et al. [2018], Gaulton et al. [2017]. Octanol-water partition coefficients (log P ) from the Lipophilicity dataset in MoleculeNet and PubChem were merged with ChEMBL lipophilicity measurements into 11 050 unique molecules. It should be noted that the ChEMBL data reports log D at pH 7.4, which is used here as a log P proxy. For non-ionizable molecules, log D ≈ log P ; for ionizable species, log D at physiological pH can differ from log P due to the fraction of the molecule in its ionized form. This approximation is standard in the cheminformatics community Wu et al. [2018] and is justified by the fact that the majority of drug-like molecules in these datasets are predominantly un-ionized at pH 7.4. Future work could improve the treatment of ionizable molecules by explicitly modeling the ionization equilibrium or by training on curated log P -only datasets. 
+
+FreeSolv Mobley and Guthrie [2014]. Hydration free energies (∆ Ghyd ) were taken from the FreeSolv database, providing measurements in k /mol at 298 .15 K for 642 unique molecules. 
+
+OPERA 2.9 Mansouri et al. [2018]. The OPERA (OPEn structure-activity/property Relationship App) models database contributed computed and validated measurements across multiple properties: log P (4191 compounds), melting point (13 856 compounds, converted from ◦C to K), boiling point (2426 compounds), vapor pressure (3945 com-pounds, converted from log 10 (mmHg) to Pa), and water solubility (4674 compounds in log 10 (mol/L)). 
+
+NIST ThermoML Archive Frenkel et al. [2005]. The ThermoML archive, compris-ing 11 923 structured data files from the NIST/TRC source data system, was systemati-cally parsed to extract experimental thermophysical measurements. This yielded boiling point data for 220 molecules, melting point for 1363 molecules, vapor pressure for 1797 molecules (converted from kPa to Pa), viscosity for 527 molecules (converted from Pa s to mPa s), and heat capacity for 744 molecules (in J mol −1 K−1). A dedicated parsing script was developed to extract property values, temperatures, and compound identifiers from the ThermoML XML schema, with InChI-to-SMILES conversion via RDKit for compound identification. 
+
+ECHA REACH European Chemicals Agency [2024]. The European Chemicals Agency (ECHA) Registration, Evaluation, Authorisation and Restriction of Chemicals (REACH) database was parsed for experimentally registered thermophysical data, con-tributing measurements of melting point, boiling point, vapor pressure, solubility, log P ,flash point, and viscosity for industrial chemicals. 
+
+Bradley Open Melting Point Dataset Bradley et al. [2014]. Melting point data (Tm) for approximately 3041 compounds were obtained, with values converted from ◦Cto K and filtered to the physically reasonable range of 50 K to 1000 K. 
+
+Sun et al. Flash Point Dataset Sun et al. [2019]. Flash point data ( Tf ) for 12 approximately 14 696 entries with SMILES and flash points in Kelvin, filtered to 100 K to 1000 K. 
+
+ABB-ADD Heat Capacity Dataset ABB-ADD consortium [2023]. Liquid heat capacity ( Cp) data with multi-temperature measurements for approximately 968 com-pounds identified by InChI strings; InChI identifiers were converted to canonical SMILES via RDKit, and for each molecule the measurement closest to 298 .15 K was selected. 
+
+Chew et al. Viscosity Dataset Chew et al. [2024]. An additional viscosity com-pilation of approximately 1005 compounds from the supplementary material of a recent Journal of Cheminformatics publication was integrated to enrich the viscosity training data. 
+
+PubChem Kim et al. [2023]. The PubChem database served as the primary aggre-gation source for boiling point, vapor pressure, and viscosity data, with experimental measurements spanning a wide range of temperatures. Boiling point data were converted to Kelvin and filtered to 100 K to 1000 K; vapor pressure data are stored as log 10 (P/ Pa); viscosity data are stored as log 10 (η/ mPa ·s), preserving multi-temperature measurements per molecule. Table 2: Summary of data sources and per-property coverage in the final curated dataset. Unique molecules indicates the total number of distinct chemical compounds with measurements for each property across all sources. The rightmost columns show the train/validation/test split sizes (unique molecules per property per split).                                                                         
+
+> Property Primary sources Total mol. Train Val Test Units
+> Solubility (log S)AqSolDB, ESOL, OPERA, PubChem, ECHA 14 085 8606 2823 2656 log(mol/L) log PMoleculeNet, ChEMBL, OPERA, ECHA 11 050 8329 1360 1361 –Hydration free energy FreeSolv 642 542 50 50 k/mol Boiling point ( Tb)PubChem, NIST, OPERA, ThermoML, ECHA 8549 3776 2925 1848 KVapor pressure PubChem, NIST, OPERA, ThermoML, ECHA 8956 5090 2244 1622 log 10 (Pa) Viscosity PubChem, Chew et al., ThermoML, ECHA 1901 1752 78 71 log 10 (mPa ·s) Melting point ( Tm)Bradley, OPERA, ThermoML, ECHA 18 915 10 412 2491 6012 KFlash point ( Tf)Sun et al., ECHA 10 260 4508 3171 2581 KHeat capacity ( Cp)ABB-ADD, ThermoML 1527 1380 78 69 J mol −1K−1
+> Total (unique molecules) 37 968 22 015 7076 8877
+> Total (data rows) 40 904 24 513 7254 9137
+
+2.1.2 Quality control and preprocessing 
+
+All molecular structures are represented as canonical SMILES strings generated by RD-Kit RDKit community [2024]. A uniform quality control protocol was applied across all sources: each SMILES string is parsed and re-canonicalized, with entries that fail RDKit parsing discarded; multi-component molecules (salts, mixtures, identified by the presence of “.” in the SMILES) are removed; molecules are filtered to contain between 2 and 100 heavy atoms; for entries sharing the same canonical SMILES and temperature, the me-dian property value is retained; and property values outside physically reasonable ranges (e.g., boiling points below 100 K or above 1000 K, negative viscosities, hydration free en-ergies outside [ −30 , +10] k /mol) are removed. For temperature-independent properties (log P , Tb, ∆ Ghyd , Tm, Tf , Cp), values are associated with the measurement temperature or a default of 298 .15 K, while for temperature-dependent properties (solubility, vapor pressure, viscosity), each temperature–property pair constitutes an independent training sample. Several temperature-independent properties are propagated across all rows of a given molecule. For example, if a molecule has vapor pressure measurements at ten different 13 temperatures and a single boiling point value, the boiling point label is copied to all ten rows. This maximizes the multi-task learning signal per training example. An evalua-tion mask is maintained for each temperature-independent property to prevent artificial inflation of evaluation metrics: only one row per molecule (the one closest to 298 .15 K) is flagged for evaluation. 
+
+2.1.3 Dataset splitting 
+
+The dataset is split at the molecule level into training (80 %), validation (10 %), and test (10 %) sets using a hybrid strategy that balances two competing objectives: (i) evalu-ating the model’s ability to generalize to structurally novel molecules, and (ii) ensuring sufficient representation of rare properties in evaluation sets. The rationale behind this split design is that a simple random partition, while maximizing statistical power, would underestimate the generalization challenge because structurally similar molecules (e.g., members of the same homologous series) would appear in both training and test sets. Conversely, a purely scaffold-based split would provide the most rigorous generalization test but could leave data-scarce properties (hydration free energy, viscosity, heat capac-ity) with too few test samples for reliable evaluation. The hybrid strategy resolves this tension as follows. For molecules possessing only common properties (solubility, log P ,boiling point, vapor pressure, melting point, flash point), a scaffold-based split Wu et al. [2018] is employed: Murcko scaffolds (the core ring systems of each molecule) are com-puted via RDKit, and entire scaffold groups are assigned to the same partition to ensure that the test set evaluates generalization to structurally novel chemical series rather than interpolation within familiar scaffolds. For molecules possessing rare properties (hydra-tion free energy, viscosity, heat capacity), a greedy assignment strategy ensures that each property has at least 50 unique molecules in both the validation and test sets, preventing the evaluation from being dominated by statistical noise. All rows corresponding to a given molecule (i.e., measurements at different temperatures) are assigned to the same split, preventing data leakage between partitions. This hybrid approach yields the final split sizes of 22 015 training, 7076 validation, and 8877 test molecules (Table 2). 
+
+2.1.4 Three-dimensional conformer generation 
+
+Three-dimensional molecular conformers are required as input to the SchNet geometry en-coder. The inclusion of explicit three-dimensional geometry is motivated by the fact that many thermophysical properties are governed by spatial effects that cannot be inferred from two-dimensional topology alone: vapor pressure depends on molecular surface area and shape, viscosity on molecular packing and flow resistance, and hydration free energy on the three-dimensional cavity that a solute carves in the solvent. The two-dimensional graph encodes which atoms are bonded but not how far apart non-bonded atoms are in space, nor the dihedral angles that define rotational conformations. By providing the SchNet encoder with explicit Cartesian coordinates, the model gains access to through-space distances, molecular shape descriptors, and steric information that complement the topological and sequential features captured by the GCN and Transformer encoders, respectively. Conformers are precomputed for all 37 968 unique molecules and cached for efficient training. Each canonical SMILES is converted to an RDKit molecule object with ex-plicit hydrogens, and a three-dimensional embedding is generated using the ETKDGv3 algorithm Riniker and Landrum [2015] with a fixed random seed for reproducibility. If 14 ETKDGv3 fails (approximately 1 % of molecules), a fallback with random initial co-ordinates is attempted. The embedded conformer is subsequently optimized using the MMFF94 force field Halgren [1996] for up to 200 iterations, after which explicit hydro-gens are removed to yield atomic numbers and Cartesian coordinates consistent with the heavy-atom graph representation. As a final fallback for molecules where 3D embedding fails entirely, two-dimensional coordinates are computed and extended with z = 0. Full coverage (100 %) was achieved across the dataset. 
+
+2.2 Molecular featurization 
+
+Molecular featurization translates the raw chemical structure into numerical represen-tations suitable for neural network processing. The featurization scheme is designed to encode the chemical identity, local bonding environment, and electronic properties of each atom and bond in a compact, fixed-dimensional vector. These features serve as the input to the GCN encoder (atom and bond features) and the SMILES Transformer encoder (tokenized sequences), while the SchNet encoder operates directly on atomic numbers and Cartesian coordinates from the conformer generation step. The choice and granu-larity of features directly affect the information available to the model: too few features limit the model’s ability to distinguish chemically distinct environments, while excessive dimensionality can dilute the learning signal and increase computational cost. Each atom in the molecular graph is represented by a 39-dimensional feature vector. This vector encodes the atomic number as an 11-dimensional one-hot vector over the ten most common elements (C, N, O, F, P, S, Cl, Br, I, Si) plus an “other” category; the degree (number of bonded neighbors) as a 7-dimensional one-hot encoding ( d ∈{0, . . . , 6}); formal charge as a 5-dimensional one-hot encoding ( q ∈ {− 2, . . . , +2 }); the number of attached hydrogens (5 dimensions, nH ∈ { 0, . . . , 4}); hybridization state as a 5-dimensional one-hot encoding over sp, sp 2, sp 3, sp 3d, and sp 3d2; a binary aromaticity indicator; a binary ring membership indicator; and chirality as a 4-dimensional one-hot encoding over unspecified, R, S, and other. Each bond is represented by a 12-dimensional feature vector comprising a 4-dimensional one-hot encoding of bond type (single, double, triple, aromatic), a binary conjugation in-dicator, a binary ring membership indicator, and a 6-dimensional one-hot encoding of stereo configuration (none, Z, E, cis, trans, other). SMILES strings are tokenized at the character level using a vocabulary of 50 tokens, including special tokens for padding, start-of-sequence, end-of-sequence, and unknown characters, alongside 46 chemistry tokens corresponding to atoms, bonds, brackets, and ring-closure digits. Two-character tokens (Cl, Br, Si, Se, Te) are handled with priority matching. Sequences are padded or truncated to a maximum length of 256 tokens. 
+
+2.3 Dual-encoder rationale 
+
+The MultiPUFFIN encoder architecture deliberately processes each molecular modality through a separate, specialized encoder before fusing the resulting embeddings, rather than pre-aligning representations (as in contrastive approaches such as MoleculeSTM Liu et al. [2023]) or encoding a single modality (3D conformers) through a unified backbone (as in Uni-Mol Zhou et al. [2023], which processes only 3D molecular geometry). This design is motivated by two key observations. First, the three molecular representations (2D graphs, 1D SMILES strings, and 3D 15 conformers) encode fundamentally different and complementary aspects of molecular identity. The molecular graph captures topological connectivity, ring systems, and local functional group patterns through its adjacency structure; the SMILES string encodes the same molecule as a linear sequence in which long-range syntactic dependencies (e.g., ring-closure digits linking distant atoms) provide a complementary inductive bias that differs from the spatial locality inherent to message passing; and the 3D conformer cap-tures through-space distances, dihedral angles, and steric effects that are entirely absent from the 2D representation. A molecule’s thermophysical properties are governed by the interplay of all three: topology determines the presence of hydrogen-bonding groups, se-quential patterns capture substituent effects on electron density, and three-dimensional shape governs molecular packing and solvation. By processing each modality through a dedicated encoder optimized for that representation’s structure, the model preserves modality-specific features that would be lost or diluted in a shared-encoder architecture. Second, modality-specific encoders enable graceful degradation when one modality is unavailable. In practice, 3D conformers may fail to generate for certain molecules or may be unreliable for flexible macrocycles; by keeping the 3D branch separate, the model can fall back to the 2D/1D fusion without architectural modification, using the geometry gate (Section 2.8) to automatically suppress the missing modality’s contribution. 
+
+2.4 Graph convolutional network encoder 
+
+The GCN encoder processes the two-dimensional molecular graph, capturing local chem-ical environments through iterative neighborhood aggregation. Graph convolutions are a natural choice for encoding molecular topology because their message-passing mechanism mirrors how local atomic environments (functional groups, ring systems, branching pat-terns) determine bulk properties through additive or group-contribution-like effects. Amolecule is represented as an undirected graph G = ( V, E ) where nodes V correspond to atoms and edges E to covalent bonds. The node feature matrix X ∈ RN ×39 is processed through Lg = 4 graph convolutional layers Kipf and Welling [2017]: 
+
+H(l+1) = σ
+
+ ˜D−1/2 ˜A ˜D−1/2H(l)W(l)
+
+
+
+(2) where ˜A = A + IN is the adjacency matrix with added self-loops, ˜D is the corresponding degree matrix, W(l) are learnable weight matrices, and σ is the ReLU activation. The hidden dimension is dg = 256 for all layers. Each GCN layer is followed by GraphNorm Cai et al. [2021] and BatchNorm Ioffe and Szegedy [2015] for training stability, along with dropout ( p = 0 .15). Residual connections He et al. [2016] are employed at every layer: for the first layer, where the input dimension of 39 differs from the hidden dimension of 256, a linear projection aligns the dimensions; subsequent layers use direct addition. The graph-level molecular embedding is obtained through sum pooling over all node representations, followed by a two-layer projection network mapping to the shared embedding space: 
+
+zgraph = W2 · ReLU (Dropout ( W1hgraph + b1)) + b2, zgraph ∈ R512 (3) 
+
+2.5 SMILES Transformer encoder 
+
+The SMILES Transformer encoder provides a complementary representation to the GCN by treating the molecule as a linear sequence of chemical tokens. Whereas the GCN op-erates on the explicit bond topology and aggregates information locally through a fixed 16 number of message-passing hops, the Transformer’s self-attention mechanism can directly relate any pair of tokens regardless of their distance in the sequence. This is particularly valuable for capturing long-range structural dependencies (for example, the influence of a distant electron-withdrawing group on acidity, or the coupling between ring-closure digits that defines macrocyclic topology) which would require many GCN layers to prop-agate. Furthermore, SMILES strings implicitly encode stereochemistry, formal charges, and valence information in their syntax, providing features that are complementary to the atom- and bond-level descriptors used by the GCN. By learning from the sequential structure of SMILES rather than from the explicit graph, the Transformer can discover la-tent patterns in chemical notation (e.g., functional group motifs that appear as recurrent subsequences) that the GCN’s spatial inductive bias may not prioritize. Each token ti is mapped to a learned embedding vector ei ∈ R512 , scaled by √dmodel ,and augmented with sinusoidal positional encodings Vaswani et al. [2017]: PE (pos ,2i) = sin 
+
+ pos 10000 2i/d model 
+
+
+
+, PE (pos ,2i+1) = cos 
+
+ pos 10000 2i/d model 
+
+
+
+(4) The sequence is processed through Ls = 6 pre-norm Transformer encoder layers Vaswani et al. [2017], each comprising multi-head self-attention with h = 8 heads (key dimension dk = 64) and a feed-forward sublayer with GELU activation Hendrycks and Gimpel [2016], a model dimension dmodel = 512, and a feed-forward dimension dff = 2048. Pre-norm architecture (LayerNorm applied before the attention and feed-forward sublay-ers) is used for improved training stability Xiong et al. [2020], with dropout ( p = 0 .1) applied within both sublayers. The molecule-level representation is obtained by extract-ing the hidden state corresponding to the start-of-sequence token (the CLS-equivalent token at position 0), followed by a two-layer output projection with GELU activation mapping to zSMILES ∈ R512 .
+
+2.6 SchNet 3D geometry encoder 
+
+The SchNet encoder Sch¨ utt et al. [2018] introduces the third modality: three-dimensional molecular geometry. The inclusion of a dedicated 3D encoder is motivated by the fact that many thermophysical properties are fundamentally governed by spatial effects that cannot be inferred from 2D topology alone. Vapor pressure and boiling point depend on intermolecular interactions whose strength is modulated by molecular shape and surface accessibility; viscosity is governed by molecular packing and the ease of flow past neigh-boring molecules; and hydration free energy reflects the three-dimensional cavity that a solute carves in the solvent. While the 2D graph captures which atoms are bonded and the SMILES string encodes this connectivity sequentially, neither representation en-codes through-space distances between non-bonded atoms, dihedral angles that define rotational conformations, or the overall three-dimensional shape of the molecule. SchNet was selected for this branch because its continuous-filter convolution framework naturally handles the continuous and rotationally invariant nature of interatomic distances, and be-cause it has demonstrated strong performance on quantum-chemical property prediction benchmarks Sch¨ utt et al. [2018]. The encoder operates on atomic numbers and Cartesian coordinates produced by the conformer generation pipeline (Section 2.1.4). Each atom is embedded by its atomic number into a learned vector ei ∈ R256 via an embedding lookup over 101 possible atomic numbers. Interatomic distances dij = ∥ri−rj ∥
+
+are computed for all atom pairs within a cutoff radius rc = 10 ˚ A and expanded into K = 50 17 radial basis functions using Gaussian smearing: 
+
+ek(dij ) = exp 
+
+
+
+− 12σ2 (dij − μk)2
+
+
+
+, k = 1 , . . . , K (5) where {μk}Kk=1 are evenly spaced centers from 0 to rc and σ is the spacing between centers. The encoder applies Lint = 4 interaction blocks, each performing continuous-filter convolution: 
+
+x(l+1)  
+
+> i
+
+= x(l) 
+
+> i
+
++ UpdateMLP 
+
+ X 
+
+> j∈N (i)
+
+W(l) (e(dij )) ⊙ x(l)
+
+> j
+
+ (6) where N (i) = {j : dij < r c, j ̸ = i} is the neighborhood of atom i, W(l)(·) is a filter-generating network (a two-layer MLP with SiLU activation that maps the 50-dimensional Gaussian-expanded distance to 256-dimensional convolution filters), and ⊙ denotes element-wise multiplication. A residual connection preserves the input representation at each block. The molecule-level 3D embedding is obtained through global sum pooling fol-lowed by a two-layer projection with SiLU activation and dropout, yielding z3D ∈ R512 .The SchNet encoder operates entirely in float32 precision, even when mixed-precision training is employed elsewhere in the model. Distance computations and Gaussian smear-ing require full precision to avoid numerical instabilities from float16 underflow in expo-nential operations. 
+
+2.7 Auxiliary input encoders 
+
+In addition to the three structural encoders (GCN, Transformer, SchNet), MultiPUFFIN includes two auxiliary input encoders that process non-structural molecular information when available: an experimental encoder and a descriptor encoder. These auxiliary en-coders address a fundamental limitation of purely structure-based molecular models: the inability to condition predictions on thermodynamic state variables and readily avail-able molecular descriptors. This limitation is particularly consequential for temperature-dependent properties such as vapor pressure, viscosity, and heat capacity, where the same molecule exhibits vastly different values at different temperatures. A model that receives only a SMILES string or molecular graph cannot, by construction, distinguish between measurements at 300 K and 500 K for the same molecule. The auxiliary encoders resolve this by providing the model with explicit access to the thermodynamic conditions un-der which each measurement was taken, as well as precomputed descriptors that encode coarse-grained physicochemical information. The experimental encoder is a two-layer MLP (6 → 64 → 512, ReLU activation, 38 400 parameters) that processes a 6-dimensional vector of experimental conditions as-sociated with each data point. These conditions include the measurement temperature, pressure, and other property-specific auxiliary variables (e.g., solvent composition for par-tition coefficients). The temperature input is particularly critical: it is this information, combined with the domain-informed prediction heads (Section 2.9), that enables Multi-PUFFIN to produce thermodynamically meaningful temperature-dependent predictions, a capability that SMILES-based foundation models such as ChemBERTa-2 fundamen-tally lack. When experimental conditions are not available for a given data point, a learned missing-data embedding replaces the zero vector, allowing the model to distin-guish between “this condition is zero” and “this condition is unavailable.” 18 The descriptor encoder is a two-layer MLP (13 → 128 → 512, ReLU activation, 84 864 parameters) that processes a 13-dimensional vector of precomputed molecular de-scriptors, including molecular weight, topological polar surface area, number of hydrogen bond donors and acceptors, number of rotatable bonds, and additional constitutional descriptors. These descriptors provide the model with coarse-grained physicochemical information that complements the learned representations from the structural encoders. The descriptor encoder likewise includes a learned missing-data embedding for molecules with incomplete descriptor coverage. The outputs of both auxiliary encoders are projected to 512 dimensions and concate-nated with the unified structural embedding u before the final projection layer, providing additional conditioning information to the downstream prediction heads. Together, the two auxiliary encoders contribute 123 264 parameters (0 .35% of the total model), and their inclusion allows the model to leverage heterogeneous input data when available while handling missing auxiliary information through the learned missing-data embed-dings. 
+
+2.8 Cross-modal fusion 
+
+The fusion mechanism integrates the outputs of all five encoders (the three structural encoders (GCN, Transformer, SchNet) and the two auxiliary encoders (experimental conditions, molecular descriptors)) into a single unified molecular embedding through a hierarchical strategy. The central challenge in multimodal fusion is deciding how to combine representations that encode overlapping but non-identical information about the same molecule. Simple concatenation or element-wise averaging treats each modality as independent and equally important, ignoring the fact that different modalities may be more or less informative depending on the molecule’s structure. For example, a rigid pla-nar aromatic compound may be well-characterized by its 2D topology, whereas a flexible molecule with multiple rotatable bonds may require 3D geometry to capture the confor-mational effects that dominate its thermophysical behavior. This motivates a learned, molecule-adaptive fusion strategy. 
+
+2.8.1 Bidirectional cross-modal attention 
+
+The first stage of fusion employs bidirectional cross-modal attention between the two pri-mary branches (GCN and Transformer). To illustrate why cross-attention is preferable to simply concatenating the two embeddings, consider a concrete example: a substi-tuted aromatic molecule where a distant electron-withdrawing group significantly affects the ring’s electron density and, consequently, the molecule’s solvation behavior. The GCN encoder captures the local ring environment through message passing, while the Transformer encoder captures the long-range substituent effect through self-attention over the SMILES sequence. Simple concatenation would juxtapose these two indepen-dent representations and leave it to the downstream layers to discover the relationship between them. Cross-attention, by contrast, enables each encoder’s representation to be enriched by information from the other modality before the fusion step. When the GCN embedding serves as the query and the Transformer embedding as key/value, the attention mechanism highlights those aspects of the graph representation that are most relevant given the sequential context, effectively allowing the GCN to “ask” the Trans-former which sequential features are important for contextualizing its local topology. The 19 reverse direction allows the Transformer to ground its long-range syntactic features in ex-plicit bond-topology information from the GCN. This bidirectional exchange allows the model to identify and amplify complementary features across modalities: the GCN’s local functional-group patterns are contextualized by the Transformer’s global sequential de-pendencies, and vice versa. In practice, cross-attention performs a soft, learned alignment between the two representation spaces, ensuring that the subsequent fusion operates on representations that are already aware of each other’s content. Formally, two cross-attention modules enable each branch to attend to the other: 
+
+z′ 
+
+> graph
+
+= CrossAttn( Q = zgraph , K = zSMILES , V = zSMILES ) (7) 
+
+z′ 
+
+> SMILES
+
+= CrossAttn( Q = zSMILES , K = zgraph , V = zgraph ) (8) Each cross-attention module uses multi-head attention with h = 8 heads, followed by a feed-forward network with GELU activation (expansion factor 4 ×), LayerNorm, and residual connections. The use of multiple attention heads allows the model to simultane-ously attend to different aspects of the cross-modal relationship (for instance, one head might focus on aromatic features while another captures hydrogen-bonding patterns), providing a richer fusion than a single attention mechanism. 
+
+2.8.2 Gated fusion 
+
+After cross-modal attention, the enriched GCN and Transformer embeddings must be combined into a single representation. Averaging or concatenation would treat both modalities as equally important for every dimension of the embedding, ignoring the fact that different modalities may contribute more or less information depending on the molecule and the feature dimension. To address this, a learned element-wise gating mech-anism is employed: 
+
+g = σ  MLP([ z′
+
+> graph
+
+; z′
+
+> SMILES
+
+])  , zfused = g ⊙ z′ 
+
+> graph
+
++ (1 − g) ⊙ z′ 
+
+> SMILES
+
+(9) where g ∈ [0 , 1] 512 is an element-wise gate vector and the MLP maps from 2 × 512 to 512 dimensions through a hidden layer with ReLU activation. The sigmoid gate implements a soft, per-dimension selection between the two modalities: for each of the 512 embedding dimensions, the gate learns whether the graph-derived or the sequence-derived feature is more informative, and blends them accordingly. This is critical because the relative utility of each modality varies not only across molecules but also across different aspects of the representation. For instance, dimensions encoding electronegativity patterns may favor the GCN (which directly processes atomic features), while dimensions encoding long-range substituent effects may favor the Transformer. The gating mechanism (inspired by the PUFFIN fusion architecture Santana et al. [2024]) thus provides a strictly more expressive fusion than either concatenation (which preserves all information but doubles the dimensionality) or averaging (which assumes equal importance). 
+
+2.8.3 Geometry gate for 3D integration 
+
+The SchNet 3D embedding is incorporated through a separate, hierarchically subsequent geometry gate rather than being included in the bidirectional cross-attention. This asym-metric design is deliberate for two reasons. First, the 3D conformer is a derived quantity (generated computationally from the 2D structure using force-field optimization) and is 20 therefore less reliable than the 2D graph and SMILES representations, which derive di-rectly from the molecular identity as encoded in chemical databases. Treating the 3D embedding on equal footing with the primary modalities in the cross-attention stage could allow conformer artifacts (e.g., suboptimal geometries from failed force-field mini-mization, or the inherent limitation that a single static conformer cannot represent the conformational ensemble of flexible molecules) to corrupt the core representation. Second, the geometry gate provides a natural mechanism for handling missing 3D data: for certain molecules, conformer generation may fail entirely (e.g., very large or strained structures where ETKDGv3 cannot find a valid embedding) or produce unreliable geometries (e.g., flexible macrocycles with many low-energy conformations where any single conformer is unrepresentative). In such cases, a zero vector replaces z3D , and the gate naturally sup-presses the 3D contribution without requiring any architectural modification, allowing the model to fall back on the 2D/1D fusion for a robust prediction. The geometry gate is defined as α3D = σ(MLP geo ([ zfused ; z3D ])), which controls the contribution of geometric information via z′ 
+
+> fused
+
+= [ zfused ; α3D ·Proj( z3D )]. The scalar gate 
+
+α3D ∈ [0 , 1] allows the model to learn, on a per-molecule basis, how much weight to assign to 3D geometry, effectively answering the question “does the three-dimensional shape of this particular molecule provide information beyond what the 2D topology already cap-tures?” For rigid, planar molecules (e.g., benzene derivatives), the gate may learn to assign low weight since the 3D structure adds little beyond the 2D graph. For flexible molecules with multiple low-energy conformations, the gate may assign high weight to capture the steric and intramolecular interaction effects that govern properties like viscos-ity and vapor pressure. The quantitative effect of this molecule-adaptive behavior is con-firmed by the architectural ablation study (Section 3.6.1): removing the SchNet encoder disproportionately increases RMSE for geometry-sensitive properties such as hydration free energy (∆RMSE = +0 .90 kcal/mol) and heat capacity (∆RMSE = +11 .65 J/mol/K), while having minimal impact on properties primarily governed by 2D topology (boiling point: ∆RMSE = −0.18 K), confirming that the geometry gate selectively leverages 3D information where it is most informative. The concatenated embedding is projected through a two-layer network with Layer-Norm, GELU activation, and dropout to the final unified embedding u ∈ R512 , which serves as input to all downstream prediction heads. 
+
+2.9 Domain-informed prediction heads 
+
+A key architectural innovation of MultiPUFFIN is the replacement of standard linear output layers with inductive bias neurons that encode established thermophysical cor-relations. This design principle, introduced in PUFFIN Santana et al. [2024] for vapor pressure and extended in ExPUFFIN Rebello et al. [2025] for viscosity, is here general-ized to nine simultaneous properties. Each prediction head consists of a property-specific feed-forward neural network (FFNN) that maps the unified molecular embedding u to the parameters of the corresponding thermophysical equation, followed by an inductive bias output layer that evaluates the equation at the specified thermodynamic conditions. Formally, for property p with thermophysical equation ϕp(θp, T ): 
+
+θp = FFNN p(u; Wp), ˆyp = ϕp(θp, T ) (10) Gradients propagate through ϕp via automatic differentiation, ensuring that the domain-informed functional form shapes parameter updates throughout the entire network. 21 Table 3 provides a comprehensive summary of all domain-informed equations evalu-ated for each property, including the functional form, number of predicted parameters, and the thermodynamic motivation. For each property, the equation selected for the final model is shown in bold , together with all alternative equations tested during equation-level ablation (Section 3.6.3). The final equation assignments were selected based on the ablation results: six properties employ domain-informed heads (Wagner, Andrade, van ’t Hoff, group contribution, Born, Shomate), while three properties (log P , melting point, flash point) use a generic DirectHead. In total, 28 equation–property combinations were evaluated across the nine properties. Table 3: Summary of all domain-informed equations evaluated as inductive bias neurons in the property-specific prediction heads. For each property, the table lists the equation selected for the final model (shown in bold ) and all alternative equations tested during equation-level ablation (Section 3.6.3). |θ| denotes the number of equation parameters predicted by the head. Properties marked with ∗ use a DirectHead in the final model because no domain-informed equation improved over the unconstrained baseline. Equa-tions marked with † diverged during head-only training.                                                                                                                                                                                                                             
+
+> Property Equation Functional form |θ|Thermodynamic motivation
+> Vapor pressure Antoine Thomson [1946] log 10 P=A−B/ (C+T)3Clausius–Clapeyron approx. for liquid–vapor equilibrium
+> Wagner (6-param) ln( P/P c) = ( aτ +bτ 1.5+cτ 2.5+dτ 5)/T r6Extended corresponding-states vapor pressure correlation Clausius–Clapeyron ln P=A−B/T 2Two-parameter latent heat approximation DirectHead ˆy= FFNN( u)–No thermodynamic constraint (reference) Viscosity
+> Andrade Andrade [1930] log 10 η=A+B/ (T+C)3Arrhenius-type activated flow over energy barriers VFT log 10 η=A+B/ (T−T0)3Vogel–Fulcher–Tammann for glass-forming liquids DirectHead ˆy= FFNN( u)–No thermodynamic constraint (reference) Solubility
+> van ’t Hoff log S= log Sref +A(1 /T ref −1/T )2Thermodynamic dissolution enthalpy Modified Apelblat ln S=A+B/T +Cln T3Three-parameter temperature-dependent solubility DirectHead ˆy= FFNN( u)–No thermodynamic constraint (reference) Boiling point
+> Group contribution Nannoolal et al. [2008] Tb=T0+P32
+> i=1 ∆i+c34 Additive functional group contributions Nannoolal ratio Tb=T0·(1 + Pwifi)25 Multiplicative group interaction method DirectHead ˆy= FFNN( u)–No thermodynamic constraint (reference) log P∗
+> LFER ˆy=P24
+> i=1 wifi+b25 Additive fragment lipophilicity contributions Abraham LSER log P=c+eE +sS +aA +bB +vV 6Linear solvation energy relationship
+> DirectHead ˆy= FFNN( u)–No thermodynamic constraint (selected as optimal) HFE Thermodynamic decomp. ˆy= ∆ H−T·∆S2Gibbs free energy of solvation
+> Born solvation model ∆G=−(1 −1/ε )·q2/(8 πϵ 0r)2Electrostatic ion–solvent cavity model DirectHead ˆy= FFNN( u)–No thermodynamic constraint (reference) Melting point ∗DirectHead ˆy= FFNN( u)–Crystal packing effects lack closed-form correlation Yalkowsky †Tm= ∆ Hfus /∆Sfus 2Enthalpy–entropy ratio (diverged during training) Flash point ∗
+> DirectHead ˆy= FFNN( u)–Complex vapor–air ignition threshold Satyanarayana–Rao TFP =a+b·Tb+c·T2
+> b3Quadratic boiling point correlation Carroll NFP TFP =f(NFP ,MW) 2Flash point number method Heat capacity DirectHead ˆy= FFNN( u)–Molecular degrees of freedom (no universal closed form)
+> Shomate (NIST) Cp=A+Bt +Ct 2+Dt 3+E/t 25NIST polynomial temperature dependence
+
+For the domain-informed heads, the network’s penultimate layer predicts the equa-tion parameters θp, which are then evaluated through the corresponding thermophysical equation at the specified temperature. Soft sigmoid constraints enforce thermodynam-ically meaningful parameter ranges: for the Wagner equation, the six parameters are constrained to thermodynamically plausible ranges for vapor pressure curvature; for the Andrade equation, A ∈ [−5, 5], B ∈ [0 , 3000], C ∈ [−200 , 0]; and for the van ’t Hoff equa-tion, Tref = 298 .15 K. The boiling point head learns 32 virtual group contributions end-to-end, mimicking classical Joback/Lydersen methods where the GCN implicitly learns the group decomposition. The hydration free energy head implements the Born solva-tion model, parameterizing the solvation free energy through an effective cavity radius and dielectric correction. The heat capacity head implements the Shomate polynomial, encoding the NIST temperature dependence through five predicted coefficients. For log P , melting point, and flash point, the equation-level ablation (Section 3.6.3) demonstrated that a DirectHead architecture, where the FFNN directly outputs the scalar 22 prediction ˆ y = FFNN( u), provides optimal or near-optimal performance. All standard heads use two hidden layers with 256 units, ReLU activation, and dropout ( p = 0 .2), yielding approximately 197 000 parameters per head. 
+
+2.9.1 Enhanced-capacity heads 
+
+Multi-task learning across nine properties creates capacity dilution in the shared back-bone: the 512-dimensional unified embedding must encode sufficient information to serve all nine prediction objectives simultaneously, and the finite representational capacity means that adding tasks necessarily reduces the per-task capacity available. This dilution disproportionately affects properties with complex structure–property relationships that require dedicated embedding dimensions to capture their unique patterns. In practice, this manifests as performance regression for properties with complex structure–property relationships. To mitigate this effect, enhanced-capacity heads are employed for vapor pressure and boiling point, the two properties most affected by the expansion from six to nine tasks. These heads feature three hidden layers with 512 units per layer (instead of two layers with 256 units), LayerNorm and GELU activation at each layer, and two residual connections: one between layers 1 and 2, and a skip connection from the input embedding to the penultimate layer (with a linear projection to align dimensions): 
+
+h1 = GELU(LayerNorm( W1u + b1)) (11) 
+
+h2 = GELU(LayerNorm( W2h1 + b2)) + h1 (12) 
+
+h3 = GELU(LayerNorm( W3h2 + b3)) + Proj( u) (13) 
+
+θp = Wout h3 + bout (14) The domain equation applied after parameter prediction remains identical to the standard head (Wagner for vapor pressure, group contribution for boiling point). This design provides approximately 4 × more parameters per head ( ∼800 000 vs. ∼197 000) while preserving the domain-informed inductive bias. 
+
+2.10 Training strategy 
+
+The training of MultiPUFFIN follows a multi-stage protocol that addresses the challenges of multi-task learning with heterogeneous property scales, sparse multi-label data, and the need to balance shared backbone quality with property-specific head calibration. 
+
+2.10.1 Target normalization 
+
+All target property values are z-score normalized using training set statistics: ˜yp = yp − μp
+
+σp
+
+(15) where μp and σp are the mean and standard deviation of property p computed exclusively over unique molecules in the training set. When SMILES augmentation is employed, nor-malization statistics are computed on the unique (non-augmented) molecules to prevent artificial variance reduction from duplicate entries. Properties that span orders of mag-nitude (vapor pressure, viscosity) are first transformed to logarithmic scale (log 10 ) before 
+
+z-score normalization, ensuring that the loss function treats relative prediction errors uniformly across the dynamic range. 23 2.10.2 Multi-task loss with uncertainty weighting 
+
+The multi-task training objective follows the homoscedastic uncertainty weighting frame-work of Kendall et al. Kendall et al. [2018]. For each property p, a learnable scalar 
+
+sp = log σ2 
+
+> p
+
+(initialized to zero) captures the homoscedastic task uncertainty: 
+
+Ltotal = 1
+
+Ntasks 
+
+X
+
+> p∈P active
+
+12 exp( −sp) · MSE p + 12sp
+
+
+
+(16) where Pactive is the set of properties with valid (non-NaN) targets in the current batch and the division by Ntasks normalizes across the number of active tasks. This mechanism automatically down-weights noisy or difficult tasks (increasing sp reduces the effective weight exp( −sp)/2 while incurring a regularization penalty sp/2), providing a principled alternative to manual task weighting. The sp parameters are jointly optimized with the model parameters. Since the multi-label dataset is sparse (each molecule typically has labels for 2–5 of the 9 properties), the loss computation handles missing labels by masking NaN values and computing the loss only over valid targets. 
+
+2.10.3 SMILES data augmentation 
+
+To increase the effective training set size and improve the robustness of the SMILES Transformer encoder, SMILES enumeration augmentation is employed. A canonical SMILES string represents a unique, deterministic encoding of a molecule, but the same molecular structure can be represented by many distinct valid SMILES strings that differ in the starting atom, traversal order, and ring-opening positions. For example, toluene can be written as Cc1ccccc1 , c1ccc(C)cc1 , or C(c1ccccc1) , among many others. Be-cause the Transformer encoder processes SMILES as a character sequence, these alterna-tive representations present different syntactic patterns to the model, even though they correspond to the same molecule. By exposing the model to multiple valid SMILES representations during training, the encoder learns to extract molecular features that are invariant to the arbitrary choice of SMILES notation, reducing overfitting to specific syntactic patterns. Concretely, for each molecule naug = 2 additional non-canonical SMILES represen-tations are generated using RDKit’s randomized SMILES generation. This triples the effective training set size from 22 015 to approximately 66 045 samples while preserving identical graph representations and target values. Importantly, the augmentation is ap-plied only to the SMILES representation: the molecular graph and three-dimensional conformer remain unchanged for all augmented copies of a given molecule, as these rep-resentations are invariant to SMILES notation by construction. The augmentation is ap-plied only during training; validation and test evaluation use only the canonical SMILES to ensure reproducible and unbiased evaluation metrics. 
+
+2.10.4 Two-stage training protocol 
+
+Training proceeds in two stages with distinct objectives and learning rate configurations. The motivation for this two-stage strategy stems from a fundamental tension in multi-task learning: during joint training, the backbone must simultaneously learn representations useful for all nine properties, while the prediction heads must learn to map these rep-resentations to property-specific equation parameters. In early training, the backbone 24 representations are rapidly evolving, which makes it difficult for the heads to converge on stable parameter mappings. In late training, continued head gradient flow through the backbone can destabilize well-learned shared features through inter-task gradient in-terference. The two-stage approach resolves this tension by separating the objectives temporally. 
+
+Stage 1: Joint multi-task training. In the first stage, all model parameters (en-coders, fusion module, prediction heads, and uncertainty log-variance parameters) are jointly optimized using AdamW Loshchilov and Hutter [2019] with β1 = 0 .9, β2 = 0 .999, and weight decay λ = 5 × 10 −4. The initial learning rate is α0 = 1 × 10 −4 with a linear warmup over Ewarm = 10 epochs ramping from α0/10. Gradient accumulation over 2 steps yields an effective batch size of 96 (physical batch size of 48). Gradient norms are clipped to 1.0 to prevent instabilities from the heterogeneous loss landscape. The objective of Stage 1 is to learn high-quality shared molecular representations in the backbone while co-training the prediction heads. The uncertainty-weighted loss (Eq. 16) automatically balances the nine objectives, allowing the backbone to learn fea-tures relevant to all properties without any single task dominating the gradient signal. Stage 1 trains for up to 250 epochs with early stopping (patience of 50 epochs, monitoring validation loss). In the final model, Stage 1 converged at epoch 83 with a best validation loss of 0.388 achieved at epoch 33. 
+
+Stage 2: Backbone-frozen head fine-tuning. In the second stage, the shared back-bone parameters (GCN encoder, Transformer encoder, SchNet encoder, and fusion mod-ule) are frozen, and only the prediction heads and uncertainty log-variance parameters remain trainable. This reduces the trainable parameter count from 34 964 715 to 4 375 017 (12 .5% of the total). The learning rate is reduced to α2 = 2 × 10 −5 (approximately 5 ×
+
+lower than Stage 1) with a linear warmup over 5 epochs and cosine decay, early stopping patience of 25 epochs, and a maximum of 80 epochs. Gradient norms are clipped to 0.5 (tighter than Stage 1) to ensure stable fine-tuning. The objective of Stage 2 is to allow the prediction heads to calibrate their parame-ter predictions more precisely against the now-fixed backbone representations. This is particularly important for the domain-informed heads (Antoine, Andrade, van ’t Hoff), whose equation parameter landscapes are non-convex and benefit from additional opti-mization with a stable input distribution. By freezing the backbone, Stage 2 eliminates late-stage gradient interference between tasks: the head for viscosity can refine its An-drade parameters without its gradients perturbing the backbone features used by the vapor pressure head. In the final model, Stage 2 improved the validation loss from 0.388 (end of Stage 1) to 0.381 within a single epoch, demonstrating the immediate benefit of isolated head calibration, and converged at epoch 26. 
+
+2.10.5 Cosine annealing with warm restarts 
+
+The learning rate schedule during Stage 1 follows cosine annealing with warm restarts (SGDR) Loshchilov and Hutter [2017], a schedule specifically designed for non-convex optimization with multiple local optima. The learning rate at epoch t (after warmup) is given by: 
+
+α(t) = αmin + 12(α0 − αmin )
+
+
+
+1 + cos 
+
+Tcur 
+
+Ti
+
+π
+
+ 
+
+(17) 25 where Tcur is the number of epochs since the last restart, Ti is the current period length, and αmin is a minimum learning rate. The restart schedule is parameterized by an initial period T0 = 30 epochs and a multiplication factor Tmult = 2, so that successive periods grow geometrically: the first cycle spans the first 30 epochs (including warmup), with a restart at epoch 30 that resets the learning rate to α0. The second cycle spans epochs 30–90 ( T1 = 60 epochs), and the third cycle would begin at epoch 90 ( T2 = 120 epochs). The cosine warm-restart schedule provides three specific benefits for multi-task molec-ular property prediction: 1. Escape from local optima. The multi-task loss landscape (Eq. 16) involves nine coupled objectives with different curvatures, creating a complex Pareto front with many local optima. At the end of each cosine cycle, the learning rate approaches its minimum and the model settles into a local minimum. The restart then abruptly increases the learning rate back to α0, providing sufficient gradient magnitude to escape the current basin and explore alternative regions of the loss landscape that may offer better trade-offs across tasks. 2. Annealing toward increasingly refined minima. The increasing period lengths (T0, 2T0, 4T0, . . . ) allow progressively longer annealing phases in later cycles, en-abling the optimizer to settle into finer-grained minima as the overall loss land-scape becomes better conditioned through training. This is analogous to simulated annealing with a decreasing cooling rate. 3. Implicit snapshot ensembling. The cosine schedule naturally produces model states at different points on the Pareto front of task trade-offs. By retaining the checkpoint with the lowest validation loss across all cycles, the training procedure implicitly selects the best snapshot from this diverse set of solutions. In the final model, the best validation loss was achieved at epoch 33, shortly after the restart at epoch 30, demonstrating that the learning rate reset allowed the optimizer to escape the first cycle’s local minimum and find a superior solution. The early stopping patience of 50 epochs was chosen to span more than one full cosine cycle ( T0 = 30), ensuring that the model has the opportunity to recover from at least one restart before early stopping is triggered. 
+
+2.10.6 Implementation details 
+
+The model is implemented in PyTorch Paszke et al. [2019] with PyTorch Geometric Fey and Lenssen [2019] for graph neural network operations. Training is performed on a single NVIDIA RTX 5090 Laptop GPU (24 GB VRAM). All computations use float32 precision; mixed-precision training (float16) was not employed due to numerical instabilities in the SchNet encoder’s Gaussian-smeared distance computations, which are sensitive to float16 underflow in the exponential operations. The total model comprises 34 964 715 parameters, whose distribution across compo-nents is detailed in Table 4. Training required approximately 1195 minutes in total: 1065 minutes for Stage 1 (83 epochs at ∼12 .8 min per epoch) and 130 minutes for Stage 2 (26 epochs at ∼5 min per epoch), processing approximately 73 154 augmented samples per Stage 1 epoch. 26 Model performance is evaluated using three standard regression metrics computed on the held-out test set: the root mean squared error (RMSE), the mean absolute er-ror (MAE), and the coefficient of determination ( R2). All metrics are computed on the original (un-normalized) scale after inverse z-score transformation. For temperature-independent properties, only the evaluation-masked subset (one measurement per molecule) is used. 
+
+2.11 Model architecture summary 
+
+Table 4 provides a complete specification of the MultiPUFFIN architecture, including the structure, dimensions, and parameter counts for each component. The model comprises approximately 35 million parameters, with the SMILES Transformer encoder accounting for the largest share (55 .7%) due to its 6-layer, 512-dimensional architecture with 8-head self-attention and 2048-dimensional feed-forward sublayers. The cross-modal fusion mod-ule is the second largest component (30 .0%), reflecting the complexity of the bidirectional cross-attention and gated fusion mechanism. The GCN encoder, despite being architec-turally simpler, requires only 1 .8% of the total parameters. The nine prediction heads collectively account for 10 .8% of the parameters, with the two enhanced-capacity heads for vapor pressure and boiling point being approximately 4 × larger than the standard heads. Table 4: Complete architecture specification of MultiPUFFIN. The model comprises 34 964 715 parameters across five encoder branches (three structural and two auxiliary), a cross-modal fusion module, and nine property-specific prediction heads. Enhanced heads ( ⋆) use 3 hidden layers with 512 units, LayerNorm, GELU activation, and residual connections; standard heads use 2 hidden layers with 256 units and ReLU activation.                                                                                                                                                                                                        
+
+> Component Structure Key dimensions Activation Parameters
+> Encoder branches
+> GCN encoder 4 GCNConv layers + sum pool + projection 39 →256 →256 →512 ReLU 617 216 SMILES Transformer 6-layer encoder + CLS pooling + projection dmodel =512, h=8, dff =2048 GELU 19 466 240 SchNet 3D encoder 4 interaction blocks + sum pool + projection d=256, K=50 Gaussians, rc=10 ˚ ASiLU ∼1 460 000 a
+> Experimental encoder 2-layer MLP 6→64 →512 ReLU 38 400 Descriptor encoder 2-layer MLP 13 →128 →512 ReLU 84 864
+> Fusion module
+> Cross-modal attention Bidirectional (GCN ↔Transformer) h=8, d=512, expansion 4 ×GELU 10 506 242 Gated fusion + geometry gate Sigmoid gates + projection to d=512 2×512 →512 Sigmoid
+> Prediction heads
+> Vapor pressure ⋆Enhanced Wagner: ln( P/P c) = ( aτ +bτ 1.5+cτ 2.5+dτ 5)/T r512 →512 →512 →6 params GELU 794 115 Boiling point ⋆Enhanced GroupContrib: Tb=T0+P∆i+c512 →512 →512 →34 params GELU 808 482 Viscosity Andrade: log 10 η=A+B/ (T+C)512 →256 →256 →3 params ReLU 197 891 Solubility van ’t Hoff: log S= log Sref +A(1 /T ref −1/T )512 →256 →256 →2 params ReLU 197 634 log PDirectHead (FFNN) 512 →256 →256 →1ReLU 197 377 Hydration free energy Born: ∆ G=−(1 −1/ε )·q2/(8 πϵ 0r)512 →256 →256 →2 params ReLU 197 634 Melting point DirectHead (FFNN) 512 →256 →256 →1ReLU 197 377 Flash point DirectHead (FFNN) 512 →256 →256 →1ReLU 197 377 Heat capacity Shomate: Cp=A+Bt +Ct 2+Dt 3+E/t 2512 →256 →256 →5 params ReLU 198 401
+> Total 34 964 715
+> aSchNet parameters estimated; exact count varies with implementation details.
+
+Table 5 summarizes the optimized hyperparameters for both training stages. 
+
+# 3 Results and Discussion 
+
+3.1 Overall predictive performance 
+
+Table 6 summarizes the test set performance of MultiPUFFIN across all nine properties. The model achieves the lowest prediction errors for hydration free energy (RMSE = 27 Table 5: Optimized training hyperparameters for MultiPUFFIN.                                      
+
+> Hyperparameter Stage 1 Stage 2
+> Optimizer AdamW AdamW Learning rate α1×10 −42×10 −5
+> LR schedule Cosine warm restarts Cosine decay Warmup epochs 10 5Cosine T0/Tmult 30 / 2 –Weight decay λ5×10 −45×10 −4
+> Batch size (physical / effective) 48 / 96 48 / 96 Gradient clipping norm 1.0 0.5 Max epochs 250 80 Early stopping patience 50 25 Trainable parameters 34 964 715 4 375 017
+
+Table 6: Test set performance of MultiPUFFIN across nine physicochemical properties. 
+
+n denotes the number of unique test molecules evaluated for each property. RMSE and MAE are reported in the units of each property. Property (units) n RMSE MAE R2
+
+Hydration free energy (k /mol) 269 0.704 0.429 0.951 Heat capacity (J mol −1 K−1) 297 20.62 10.57 0.924 Flash point (K) 2840 30.32 18.65 0.740 log P (–) 1570 1.182 0.760 0.718 Viscosity (log 10 mPa s) 331 0.326 0.203 0.684 Melting point (K) 6206 45.09 33.47 0.667 Boiling point (K) 2106 47.82 25.66 0.632 Vapor pressure (log 10 Pa) 1651 1.789 1.180 0.587 Solubility (log mol L −1) 2700 1.180 0.831 0.539 
+
+Mean 0.716 
+
+0.704 k /mol, MAE = 0 .429 k /mol), heat capacity (RMSE = 20 .62 J mol −1 K−1, MAE = 10 .57 J mol −1 K−1), and viscosity (RMSE = 0.326, MAE = 0.203 in log 10 units). Flash point (RMSE = 30 .32 K), log P (RMSE = 1.182), and melting point (RMSE = 45 .09 K) show good accuracy. Moderate performance is obtained for boiling point (RMSE = 47 .82 K), vapor pressure (RMSE = 1.789 in log 10 units), and solubility (RMSE = 1.180 in log units). The variation in predictive accuracy across properties reflects several interacting fac-tors: the intrinsic complexity of each structure–property relationship, the amount and quality of available training data, and the suitability of the chosen domain equation as an inductive bias. Figure 2 provides a visual comparison of the RMSE and MAE across training, validation, and test splits for all nine properties, clearly illustrating the rel-ative difficulty of each prediction task. Heat capacity benefits from a relatively clean dataset (968 compounds, all liquid-phase measurements from a curated source) and from the fact that Cp varies more smoothly with molecular structure than phase-transition-related properties. Hydration free energy similarly benefits from the high-quality FreeSolv dataset, despite its modest size (642 molecules), suggesting that the multi-task backbone 28 provides effective positive transfer from larger property datasets to this data-scarce task. Cp HFE log P Tm log Tf log S Tb log Pvap              
+
+> 10 0
+> 10 1
+> 10 2
+> RMSE
+> 21.026
+> 1.045 1.190
+> 45.094
+> 0.326
+> 30.324
+> 1.180
+> 47.823
+> 1.802
+> (a) RMSE Across Properties and Splits
+> Train
+> Validation
+> Test
+> CpHFE log PTmlog Tflog STblog Pvap
+> 10 0
+> 10 1
+> MAE
+> 12.156
+> 0.728 0.769
+> 33.474
+> 0.203
+> 18.654
+> 0.831
+> 25.657
+> 1.190
+> (b) MAE Across Properties and Splits
+> Train
+> Validation
+> Test
+> Test RMSE and MAE Across Properties
+
+Figure 2: Test RMSE (left) and MAE (right) across all nine properties for training, validation, and test splits (logarithmic scale). The consistent increase from training to test error reflects the generalization challenge imposed by the scaffold-based splitting strategy. Properties are ordered by decreasing test performance. Note the logarithmic y-axis: temperature-based properties (e.g., melting point, boiling point) have RMSE in the tens of kelvins, while logarithmic-scale properties (e.g., viscosity, vapor pressure) have RMSE below 2. 
+
+3.2 Per-property analysis 
+
+Figure 3 presents predicted-versus-experimental parity plots for all nine properties on the test set. These plots reveal not only the overall accuracy captured by the R2 metric, but also the distribution of errors, the presence of systematic biases, and the behavior at the extremes of each property range. In each panel, the dashed black line represents perfect prediction ( y = x), and the fitted regression line (gray dashed) indicates whether the model exhibits systematic over- or under-prediction. The heat capacity parity plot (Figure 3a) exhibits tight clustering along the diago-nal across the entire range from approximately 50 to 1000 J mol −1 K−1, with RMSE = 20 .62 J mol −1 K−1. The model captures both low-Cp molecules (small, rigid structures) and high-Cp molecules (large, flexible chains with many rotatable bonds) without system-atic bias. This strong performance arises from the smooth dependence of heat capacity on molecular size and flexibility, the Shomate polynomial inductive bias that encodes the NIST temperature dependence, and the high quality of the ABB-ADD dataset. The hydration free energy parity plot (Figure 3b) shows excellent correlation (RMSE = 0 .704 k /mol) despite the relatively small test set (269 molecules). The Born solvation model head, which parameterizes hydration free energy through an effective cavity radius and dielectric correction, provides a physically motivated functional form that captures the electrostatic component of ion–solvent interactions. A slight scatter is observed for the most negative ∆ Ghyd values (strongly hydrophilic molecules), consistent with the difficulty of predicting strong hydrogen-bonding interactions from molecular structure alone. 29 100 200 300 400 500 600 700 
+
+Experimental (J/(mol K)) 
+
+100 
+
+200 
+
+300 
+
+400 
+
+500 
+
+600 
+
+700 
+
+> Predicted (J/(mol K))
+
+R2 = 0.921 
+
+RMSE = 21.026 
+
+MAE = 12.156 
+
+n = 297 
+
+(a) Heat Capacity ( Cp)
+
+20 15 10 5 0 5
+
+Experimental (kcal/mol) 
+
+20 
+
+15 
+
+10 
+
+5
+
+0
+
+5
+
+> Predicted (kcal/mol)
+
+R2 = 0.892 
+
+RMSE = 1.045 
+
+MAE = 0.728 
+
+n = 269 
+
+(b) HFE ( Ghyd )
+
+6 4 2 0 2 4 6 8 10 
+
+Experimental ( log P)
+
+6
+
+4
+
+2
+
+0
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Predicted ( log  P)
+
+R2 = 0.714 
+
+RMSE = 1.190 
+
+MAE = 0.769 
+
+n = 1570 
+
+(c) log P
+
+100 200 300 400 500 600 700 
+
+Experimental (K) 
+
+100 
+
+200 
+
+300 
+
+400 
+
+500 
+
+600 
+
+700 
+
+> Predicted (K)
+
+R2 = 0.667 
+
+RMSE = 45.094 
+
+MAE = 33.474 
+
+n = 6206 
+
+(d) Melting Point ( Tm)
+
+2 1 0 1 2 3
+
+Experimental ( log 10 (mPa s) )
+
+2
+
+1
+
+0
+
+1
+
+2
+
+3
+
+> Predicted ( log 10  (mPa s) )
+
+R2 = 0.684 
+
+RMSE = 0.326 
+
+MAE = 0.203 
+
+n = 331 
+
+(e) Viscosity ( log )
+
+200 300 400 500 600 700 
+
+Experimental (K) 
+
+200 
+
+300 
+
+400 
+
+500 
+
+600 
+
+700 
+
+> Predicted (K)
+
+R2 = 0.740 
+
+RMSE = 30.324 
+
+MAE = 18.654 
+
+n = 2840 
+
+(f) Flash Point ( Tf)
+
+12 10 8 6 4 2 0 2
+
+Experimental ( log (mol/L) )
+
+12 
+
+10 
+
+8
+
+6
+
+4
+
+2
+
+0
+
+2
+
+> Predicted ( log (mol/L) )
+
+R2 = 0.539 
+
+RMSE = 1.180 
+
+MAE = 0.831 
+
+n = 2700 
+
+(g) Solubility ( log S)
+
+200 400 600 800 1000 1200 
+
+Experimental (K) 
+
+200 
+
+400 
+
+600 
+
+800 
+
+1000 
+
+1200 
+
+> Predicted (K)
+
+R2 = 0.632 
+
+RMSE = 47.823 
+
+MAE = 25.657 
+
+n = 2106 
+
+(h) Boiling Point ( Tb)
+
+12.5 10.0 7.5 5.0 2.5 0.0 2.5 5.0 
+
+Experimental ( log 10 (Pa) )
+
+12.5 
+
+10.0 
+
+7.5 
+
+5.0 
+
+2.5 
+
+0.0 
+
+2.5 
+
+5.0 
+
+> Predicted ( log 10  (Pa) )
+
+R2 = 0.581 
+
+RMSE = 1.802 
+
+MAE = 1.190 
+
+n = 1651 
+
+(i) Vapor Pressure ( log Pvap )Figure 3: Test set parity plots (predicted vs. experimental) for all nine physicochemical properties. The solid diagonal line represents perfect prediction ( y = x). Each panel reports the R2, RMSE, MAE, and number of test samples. Properties are ordered by decreasing test R2.30 The performance on log P (RMSE = 1.182, MAE = 0.760, Figure 3c) reflects the capacity of the multimodal backbone embedding to encode hydrophobicity information directly. The scatter is relatively uniform across the log P range from approximately −2 to +6, indicating that the model does not exhibit systematic bias toward either hydrophilic or hydrophobic molecules. The RMSE is consistent with the inherent experimental un-certainty in log P measurements across diverse sources. Melting point prediction (RMSE = 45 .09 K, MAE = 33 .47 K, Figure 3d) is notable because melting point is widely considered one of the most difficult properties to predict from molecular structure alone, due to its sensitivity to crystal packing effects that are not captured by single-molecule representations Karthikeyan et al. [2005]. The parity plot reveals that the model performs well in the 200–500 K range (where most data resides) but shows increased scatter for high-melting compounds, likely reflecting the influence of specific intermolecular interactions (hydrogen bonding, π-stacking) on crystal stability. The observed performance suggests that the multimodal embedding captures sufficient information about molecular shape and intermolecular interaction potential to provide useful melting point estimates, even without explicit crystal structure information. Viscosity (RMSE = 0.326, MAE = 0.203 in log 10 units, Figure 3e) benefits from the Andrade equation inductive bias, which constrains predictions to follow the physically cor-rect monotonic decrease of viscosity with increasing temperature. The parity plot shows good alignment along the diagonal across approximately four orders of magnitude in vis-cosity. The RMSE of 0.326 in log 10 (η/ mPa ·s) corresponds to a factor of approximately 2.1 in absolute viscosity, which is reasonable given the wide dynamic range spanned by the training data. This result extends the ExPUFFIN single-property paradigm to the multi-task setting. Flash point (RMSE = 30 .32 K, MAE = 18 .65 K, Figure 3f) exhibits moderate perfor-mance with visible scatter, particularly for molecules with flash points above 450 K. This property is among the most challenging because flash point depends not only on molec-ular structure but also on the vapor pressure–composition relationship above the liquid surface, a macroscopic phenomenon that is only indirectly related to the molecular de-scriptors available to the model. Nevertheless, the model captures the overall trend well, and the RMSE of 30 .32 K is adequate for hazard classification and preliminary screening applications. Solubility (RMSE = 1.180, MAE = 0.831 in log units, Figure 3g) shows a broad scatter band with the largest deviation for highly insoluble compounds (log S < −6), where experimental measurements are inherently less reliable and the extrapolation from the well-populated region of moderate solubility is most challenging. The van ’t Hoff inductive bias helps constrain the temperature dependence, but the large diversity of the AqSolDB dataset and the inherent noise in solubility measurements from multiple laboratories limit the achievable accuracy. Boiling point (RMSE = 47 .82 K, Figure 3h) and vapor pressure (RMSE = 1.789 in log 10 units, Figure 3i) represent the properties with the highest relative errors, reflecting the challenge of predicting these properties across a wide chemical diversity. For vapor pressure, the parity plot shows that the model captures the overall six-order-of-magnitude range of log 10 (P/ Pa) but struggles with molecules in the intermediate vapor pressure range where many structurally diverse compounds overlap. The enhanced-capacity heads (with ∼800 000 parameters each, compared to ∼197 000 for standard heads) provide addi-tional parameter budget for these properties, but the multi-task capacity sharing remains the primary limitation. 31 Figure 4 complements the parity plots by presenting the residual distributions for all nine properties on the test set. In each panel, a Gaussian fit is overlaid on the histogram, and the mean ( μ) and standard deviation ( σ) of the residuals are reported. The residual distributions are approximately centered at zero for all properties, confirming the absence of systematic bias. The residuals for heat capacity and hydration free energy closely follow a normal distribution, indicating well-calibrated predictions with homoscedastic error. Properties such as boiling point and vapor pressure exhibit heavier tails, reflecting the presence of outlier molecules for which the model’s predictions deviate substantially, likely compounds with unusual structural features underrepresented in the training set. 200 150 100 50 0 50  
+
+> Residual (J/(mol K))
+> 0.000
+> 0.005
+> 0.010
+> 0.015
+> 0.020
+> 0.025
+> 0.030
+> 0.035
+> Density
+> = 4.889
+> = 20.450
+> n= 297
+
+(a) Heat Capacity ( Cp)      
+
+> 202468
+> Residual (kcal/mol)
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> Density
+> = 0.171
+> = 1.031
+> n= 269
+
+(b) HFE ( Ghyd )          
+
+> 86420246
+> Residual ( log P)
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> Density
+> =0.076
+> = 1.187
+> n= 1570
+
+(c) log P       
+
+> 300 200 100 0100 200
+> Residual (K)
+> 0.000
+> 0.002
+> 0.004
+> 0.006
+> 0.008
+> 0.010
+> Density
+> =3.439
+> = 44.962
+> n= 6206
+
+(d) Melting Point ( Tm)          
+
+> 1.5 1.0 0.5 0.0 0.5 1.0 1.5 2.0
+> Residual ( log 10 (mPa s) )
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> Density
+> =0.027
+> = 0.325
+> n= 331
+
+(e) Viscosity ( log )      
+
+> 200 100 0100 200 300
+> Residual (K)
+> 0.000
+> 0.005
+> 0.010
+> 0.015
+> 0.020
+> Density
+> = 0.793
+> = 30.314
+> n= 2840
+
+(f) Flash Point ( Tf)      
+
+> 420246
+> Residual ( log (mol/L) )
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Density
+> = 0.025
+> = 1.180
+> n= 2700
+
+(g) Solubility ( log S)       
+
+> 600 400 200 0200 400
+> Residual (K)
+> 0.0000
+> 0.0025
+> 0.0050
+> 0.0075
+> 0.0100
+> 0.0125
+> 0.0150
+> 0.0175
+> Density
+> =1.832
+> = 47.788
+> n= 2106
+
+(h) Boiling Point ( Tb)          
+
+> 10.0 7.5 5.0 2.5 0.0 2.5 5.0 7.5 10.0
+> Residual ( log 10 (Pa) )
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> Density
+> = 0.192
+> = 1.792
+> n= 1651
+
+(i) Vapor Pressure ( log Pvap )
+
+Figure 4: Test set residual distributions for all nine properties. Each panel shows the histogram of residuals (predicted − experimental) with a Gaussian fit (solid line) and a zero-residual reference line (dashed red). The mean ( μ) and standard deviation ( σ) of the residuals are annotated. 
+
+3.3 Training dynamics and convergence behavior 
+
+The training dynamics provide insight into the optimization landscape of the multi-task problem and the effectiveness of the two-stage training strategy. Stage 1 (joint training 32 Table 7: Validation set performance of MultiPUFFIN. The gap between validation and test RMSE for properties with scaffold-based splitting (e.g., boiling point) reflects the greater structural diversity in the test set. Property n RMSE MAE R2
+
+Heat capacity 245 24.16 13.33 0.956 Hydration free energy 221 1.208 0.974 0.852 log P 382 0.702 0.506 0.847 Melting point 1277 35.66 26.34 0.853 Viscosity 309 0.241 0.142 0.756 Flash point 2602 28.74 18.16 0.772 Solubility 2073 0.909 0.651 0.693 Boiling point 1590 30.18 16.03 0.821 Vapor pressure 1317 1.686 1.068 0.648 with cosine warm restarts) ran for 83 epochs before early stopping triggered, with the best validation loss of 0.388 achieved at epoch 33. The cosine warm-restart schedule produced visible improvements at restart boundaries (epoch 30 marks the first restart at T0 = 30 epochs), confirming that the periodic exploration of new loss landscape regions benefits multi-task optimization. During Stage 1, the per-property validation losses exhibit differ-ent convergence rates: heat capacity and boiling point converge rapidly within the first 10 epochs, while log P and viscosity require more epochs to reach their minimum, reflect-ing the different complexities of the underlying structure–property relationships. Stage 2 (backbone-frozen head fine-tuning with cosine decay) ran for 26 additional epochs at a reduced learning rate of 2 × 10 −5, with the best validation loss (0.381) achieved within the first epoch, demonstrating the immediate benefit of isolated head calibration against the frozen backbone representation. The validation RMSE values (Table 7) are generally lower than the test values for properties with scaffold-based splitting (e.g., boiling point: 30.18 K validation vs. 47.82 K test), reflecting the greater structural diversity in the test set enforced by the scaffold split. For properties with coverage-balanced splitting (hydration free energy, viscosity, heat capacity), validation and test performance are more comparable, as the random assignment does not impose scaffold novelty. 
+
+3.4 Multi-task learning trade-offs and capacity dilution 
+
+The simultaneous prediction of nine properties through a shared backbone necessarily in-volves trade-offs between task complementarity and capacity dilution. Figure 5 illustrates the highly heterogeneous data availability across properties and splits, ranging from 201 test samples for heat capacity to 2969 for flash point. This imbalance is a defining charac-teristic of real-world multi-property datasets and poses challenges for both training and evaluation. The multi-task setting provides clear benefits for data-scarce properties through pos-itive transfer from larger property datasets. Heat capacity (861 training molecules), viscosity (2024 molecules), and hydration free energy (642 molecules) all achieve stronger performance than would be expected from their training set sizes alone, demonstrat-ing that the shared backbone extracts generalizable molecular features from the more 33 Cp HFE log P Tm log Tf log S Tb log Pvap 
+
+> 0
+> 2000
+> 4000
+> 6000
+> 8000
+> 10000
+> 12000
+> Number of Samples
+> 3,233
+> 1,862
+> 9,975
+> 12,404
+> 4,250
+> 6,863
+> 9,016
+> 6,085
+> 5,284
+> Data Availability per Property and Split
+> Train
+> Validation
+> Test
+
+Figure 5: Data availability per property and split. The highly heterogeneous sample counts across properties reflect the different availability of experimental measurements in public databases. Training counts reflect unique molecules (before SMILES augmenta-tion). data-rich properties. Conversely, data-rich properties (boiling point, vapor pressure) show moderate performance regression in the nine-property setting relative to single-task baselines. Figure 6 quantifies the generalization gap (∆RMSE = RMSE test −RMSE train ) for each property, providing a direct measure of how much performance degrades when moving from the training distribution to structurally novel test molecules. Because properties have different units and scales, the normalized RMSE (NRMSE = RMSE/ σexp ) is used for cross-property comparison. The largest generalization gaps are observed for properties that use scaffold-based splitting and thus face the greatest structural novelty in the test set (boiling point, flash point, solubility). In contrast, properties with coverage-balanced splitting (heat capacity, viscosity, hydration free energy) exhibit much smaller gaps, con-firming that the model generalizes well when the test set does not impose strict structural novelty. This capacity dilution phenomenon is well documented in multi-task learning Craw-shaw [2020]. The shared backbone, constrained to produce a single 512-dimensional embedding that must serve nine different prediction objectives, cannot allocate unlim-ited capacity to any single task. The enhanced-capacity heads partially mitigate this by providing properties most affected by dilution with approximately 4 × more dedicated parameters ( ∼800 000 vs. ∼197 000). However, the fundamental bottleneck lies in the shared representation, not in the head capacity. Figure 7 presents the normalized error metrics (NRMSE = RMSE/ σexp and NMAE = MAE/ σexp , where σexp is the standard deviation of the experimental values in the test set) across all properties and splits. Normalizing by the experimental standard de-viation places all properties on a common, dimensionless scale and allows meaningful cross-property comparison: a value of 1.0 would correspond to simply predicting the mean. Heat capacity achieves the lowest normalized errors (NRMSE = 0.20, NMAE = 0.12), consistent with its high R2. The most challenging properties (solubility, boiling point, vapor pressure) cluster around NRMSE ≈ 0.62, indicating that the model explains 34 Cp HFE log P Tm log Tf log S Tb log Pvap 
+
+0.10 
+
+0.05 
+
+0.00 
+
+0.05 
+
+0.10 
+
+0.15 
+
+> Normalized  RMSE (Test  Train) /  exp
+> -0.129
+> 0.050
+> 0.075
+> 0.007
+> 0.066
+> 0.054
+> -0.031
+> 0.155
+> 0.043
+> Largest gap:
+> boiling_point
+
+Generalization Gap: Normalized RMSE (Test Train) Figure 6: Generalization gap (normalized ∆RMSE: test NRMSE minus train NRMSE) for each property. Larger gaps indicate greater difficulty in generalizing to structurally novel test molecules, correlating with the scaffold-based splitting strategy used for common properties. substantially more variance than a mean-only baseline. The consistent ordering of train 
+
+< validation < test normalized errors across all properties confirms the expected gen-eralization hierarchy, with the gap being smallest for properties with coverage-balanced splitting. Cp HFE log P Tm log Tf log S Tb log Pvap             
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normalized RMSE (RMSE/  exp )
+> 0.28
+> 0.33
+> 0.53
+> 0.58 0.56
+> 0.51
+> 0.68
+> 0.61
+> 0.65
+> exp
+> (a) NRMSE Across Properties and Splits
+> Train
+> Validation
+> Test
+> CpHFE log PTmlog Tflog STblog Pvap
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normalized MAE (MAE/  exp )
+> 0.16
+> 0.23
+> 0.35
+> 0.43
+> 0.35
+> 0.31
+> 0.48
+> 0.33
+> 0.43
+> exp
+> (b) NMAE Across Properties and Splits
+> Train
+> Validation
+> Test
+
+Figure 7: Normalized RMSE (a) and normalized MAE (b) across all nine properties for training, validation, and test splits. Metrics are normalized by the standard deviation of experimental values in the test set ( σexp ), enabling meaningful cross-property comparison. The dashed line at 1.0 represents the error of a mean-only predictor. 35 3.5 Role of domain-informed inductive bias 
+
+A central hypothesis of this work is that encoding established thermophysical correlations as output-layer activation functions improves both predictive accuracy and thermophysi-cal consistency. The ablation study in Section 3.6 provides a comprehensive quantitative evaluation of this hypothesis, but several qualitative observations further support it. The Andrade head for viscosity produces predictions that monotonically decrease with temper-ature for the vast majority of test molecules, consistent with the known behavior of liquid viscosity, a property that a standard FFNN output could not guarantee. Similarly, the Wagner head for vapor pressure produces predictions that increase monotonically with temperature and approach asymptotic behavior at high temperatures, consistent with the physics of liquid-vapor equilibrium. The group contribution head for boiling point decomposes predictions into additive contributions that, while not directly interpretable as classical group increments, exhibit consistent patterns: aromatic groups contribute positive increments relative to aliphatic groups, and hydroxyl groups contribute larger increments than ether linkages. The residual distributions in Figure 4 provide further support for the domain-informed approach. Properties with thermodynamically-informed inductive bias neurons (viscosity, vapor pressure, solubility) exhibit residual distributions that are well-centered at zero with approximately Gaussian tails, suggesting that the domain equations successfully capture the systematic component of the structure–property relationship and leave only random (unstructured) residual error. In contrast, the DirectHead properties (melting point, flash point) show slightly heavier tails, which may partially reflect the absence of a thermodynamically-informed constraint to regularize the predictions. The fact that these thermodynamically meaningful behaviors emerge without explicit constraints in the loss function, solely from the structural inductive bias of the output equations, validates the extension of the PUFFIN paradigm from single-task to multi-task settings. 
+
+3.6 Ablation studies 
+
+To quantify the individual contribution of each architectural component and the domain-informed prediction heads, five ablation experiments were conducted. Each variant mod-ifies exactly one aspect of the full MultiPUFFIN architecture while keeping the training data, random seed, normalization, and two-stage training strategy identical. All abla-tion models use the same 100-epoch training budget with early stopping (patience of 20 epochs). 
+
+3.6.1 Contribution of architectural components 
+
+Three architectural variants were trained to assess the contribution of the Transformer encoder and the SchNet 3D geometry encoder (Table 8, Figure 8): 
+
+• GCN-Only : removes both the Transformer and SchNet encoders, using only the 3-layer GCN for molecular encoding. This represents the simplest baseline archi-tecture. 
+
+• No SchNet : removes only the SchNet 3D geometry encoder, retaining the GCN and Transformer branches. This isolates the contribution of explicit 3D conformer information. 36 • Full MultiPUFFIN : the complete trimodal architecture with GCN, Transformer, and SchNet (reference). Removing all auxiliary encoders (GCN-Only) degrades performance across most prop-erties, as measured by RMSE increases. The largest degradations are observed for hy-dration free energy (RMSE: 1 .103 → 2.176 kcal/mol, ∆ = +1 .07) and heat capacity (RMSE: 28 .81 → 38 .10 J/mol/K, ∆ = +9 .29), both of which are data-scarce properties that benefit substantially from the richer representations provided by multimodal encod-ing. Viscosity similarly degrades (RMSE: 0 .249 → 0.304, ∆ = +0 .055), while melting point and flash point show moderate increases. Interestingly, the GCN-Only model achieves a lower RMSE for log P (0 .714 vs. 0 .906), suggesting that the additional modalities may introduce slight interference for this par-ticular property. This is consistent with the observation that octanol-water partition coefficients correlate strongly with 2D substructure fingerprints, and the additional rep-resentational complexity from SMILES tokens and 3D geometry may not provide com-mensurate signal. Removing only the SchNet encoder (No SchNet) has a pronounced effect on hydration free energy (RMSE: 1 .103 → 2.005 kcal/mol, ∆ = +0 .90), which is physically expected since solvation thermodynamics depend critically on 3D molecular geometry and solvent-accessible surface area. Heat capacity (∆ = +11 .65 J/mol/K) and log P (∆ = +0 .20) are also substantially affected. The relatively small impact on boiling point and flash point suggests that these properties are primarily governed by 2D molecular features captured by the GCN and Transformer. Table 8: Architectural ablation: test RMSE for the full MultiPUFFIN model versus simplified encoder configurations. Note: All ablation models (including the Full Model reference) were trained with a standardized 100-epoch budget and early stopping patience of 20 epochs, which differs from the full two-stage training protocol used for the final model reported in Table 6. Bold values indicate the lowest RMSE (best performance) for each property; ∆ denotes the change from the full model (positive = degradation). Units match Table 6. Property Full Model GCN-Only No SchNet Heat capacity (J/mol/K) 28.81 38.10 (+9.29) 40.47 (+11.65) HFE (kcal/mol) 1.103 2.176 (+1.07) 2.005 (+0.90) log P 0.906 0.714 ( −0.19) 1.109 (+0.20) Viscosity (log 10 ) 0.249 0.304 (+0.055) 0.296 (+0.048) Melting point (K) 41.91 45.94 (+4.03) 46.30 (+4.39) Flash point (K) 34.58 34.14 (−0.44) 33.40 ( −1.18) Boiling point (K) 52.95 53.02 (+0.06) 52.77 (−0.18) Vapor pressure (log 10 ) 1.972 1.918 (−0.053) 1.926 ( −0.045) Solubility (log) 1.477 1.639 (+0.16) 1.588 (+0.11) 
+
+3.6.2 Influence of domain-informed prediction heads 
+
+To evaluate the contribution of domain-informed inductive bias, three head ablation variants were trained (Table 9, Figure 9): 37 Solubility 
+
+> log P
+> HFE
+> BP
+> VP
+> Viscosity
+> MP
+> FP
+> Cp
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test R²
+> Architectural Ablation: Contribution of Each Encoder
+> Full MultiPUFFIN
+> GCN-Only
+> No SchNet
+
+Figure 8: Architectural ablation study: per-property test RMSE for the full trimodal MultiPUFFIN architecture versus the GCN-Only and No SchNet variants. Removing the SchNet 3D encoder disproportionately increases RMSE for geometry-sensitive properties (HFE, heat capacity), while removing the Transformer and SchNet structural encoders (GCN-Only) degrades performance across most properties. 
+
+• All DirectHeads : replaces all domain-informed prediction heads with generic feed-forward networks (DirectHead), removing all domain equations. The three properties that already use DirectHead (log P , melting point, flash point) are un-affected. 
+
+• Swapped Antoine ↔Andrade : assigns the Antoine equation to viscosity and the Andrade equation to vapor pressure, the reverse of the physically correct assign-ment. This tests whether the specific equation-property pairing matters or whether any structured output provides equivalent regularization. 
+
+• All GroupContribution : replaces all six thermodynamically-informed heads with the GroupContributionHead, which provides additive decomposition structure but without property-specific functional forms. This tests whether generic structured outputs (additive contributions) provide comparable benefit to property-matched equations. The All DirectHeads variant reveals that removing domain equations does not uni-formly degrade performance. With the initial equation assignments, hydration free en-ergy improves substantially when the thermodynamic decomposition head is replaced (RMSE: 1 .045 → 0.771 kcal/mol), and log P shows a similar gain when the LFER head is removed (RMSE: 1 .190 → 0.754). These improvements motivated the equation-level ablation (Section 3.6.3), which ultimately led to the adoption of the Born solvation model for hydration free energy and the DirectHead for log P in the final model. Conversely, vis-cosity degrades notably (RMSE: 0 .326 → 0.354), confirming that the Andrade equation provides a meaningful inductive bias for temperature-dependent viscosity prediction. The net effect across all nine properties is modest, indicating that the domain-informed heads primarily improve specific properties (viscosity, solubility) where the physics equations closely match the underlying data-generating process. The Swapped Antoine ↔Andrade variant provides the most striking evidence for the importance of correct equation-property pairing. Assigning the Antoine equation to vis-38 cosity and the Andrade equation to vapor pressure causes a catastrophic collapse in vapor pressure prediction (RMSE: 1 .972 → 2.806, a 42% increase), reducing performance to near-random levels. Viscosity also degrades substantially (RMSE: 0 .249 → 0.307, ∆ = +0 .058), though less dramatically than vapor pressure. This asymmetry is physically interpretable: the Andrade equation (ln η = A + B/T ) imposed on vapor pressure cannot capture the three-parameter curvature of the Antoine equation (log P = A − B/ (C + T )), while the Antoine equation applied to viscosity provides a reasonable, if suboptimal, approximation to the Andrade form. These results demonstrate that the performance benefit of domain-informed heads arises not merely from imposing any structured out-put, but specifically from matching the functional form to the underlying physics of each property. The remaining properties are largely unaffected by the swap, confirming that the head architecture provides a modular, property-specific inductive bias that does not propagate interference through the shared backbone. The All GroupContribution variant, which replaces all six thermodynamically-informed heads with a generic additive group contribution structure, yields a surprising result: RMSE improves for most properties. This improvement is driven by HFE (RMSE: 1.103 → 0.803), melting point (41 .91 → 38 .66 K), boiling point (52 .95 → 50 .21 K), and flash point (34 .58 → 33 .19 K). However, viscosity degrades (RMSE: 0 .249 → 0.280), confirming that the Andrade equation provides a stronger inductive bias than generic additive decomposition for temperature-dependent viscosity. The GroupContribution head’s improvement over the thermodynamically-informed heads for most properties sug-gests that the additive fragment-level decomposition captures broadly useful structure-property relationships, while the property-specific functional forms (Andrade, Antoine) provide targeted benefits only for properties where the underlying physics closely matches the assumed equation form. Taken together, the three head ablation variants reveal a nuanced picture of domain-informed inductive bias (Figure 10, Figure 11). The benefit of thermodynamically-informed prediction heads is property-specific , not universal: the Andrade equation is es-sential for viscosity (confirmed by both the DirectHead degradation and the catastrophic swap result), while several other domain equations (HydrationFreeEnergyHead, Linear-FreeEnergyHead) impose unnecessary rigidity that reduces performance. The GroupCon-tribution head provides a strong middle ground (structured but flexible) that outperforms both the full model and the All DirectHeads variant on average. These findings suggest that future work should focus on identifying which properties genuinely benefit from property-specific functional forms versus those better served by generic structured heads. 
+
+3.6.3 Equation-level ablation: alternative thermodynamic equations 
+
+The preceding ablation experiments assess the impact of removing or swapping domain-informed heads entirely. A complementary question is whether the specific thermody-namic equation chosen for each property is optimal, or whether alternative equations from the same domain could improve predictions. To address this, we conducted a sys-tematic equation-level ablation: for each property, the trained backbone was frozen and only the prediction head was replaced and retrained using the Stage 2 protocol (learn-ing rate 5 × 10 −4, patience 15, maximum 80 epochs). This isolates the contribution of the equation’s functional form from the backbone representation quality. A total of 28 equation–property combinations were evaluated across the nine properties, including 12 newly implemented domain-informed heads alongside the existing baselines and Direct-39 Table 9: Domain-informed head ablation: test RMSE across all nine properties. Note: 
+
+All ablation models (including the Full Model reference) were trained with a standard-ized 100-epoch budget and early stopping patience of 20 epochs, which differs from the full two-stage training protocol used for the final model reported in Table 6. Bold values indicate lowest RMSE (best performance) per property. The Swapped variant exchanges Antoine ↔Andrade assignments; the All GroupContrib variant replaces all thermodynamically-informed heads with generic additive decomposition. Units match Table 6. Property Full Model All Direct Swapped All GroupContrib Heat capacity (J/mol/K) 28.81 40.54 31.84 28.13 HFE (kcal/mol) 1.103 0.740 1.291 0.803 log P 0.906 0.742 0.835 0.920 Viscosity (log 10 ) 0.249 0.283 0.307 0.280 Melting point (K) 41.91 40.19 42.94 38.66 
+
+Flash point (K) 34.58 33.46 34.22 33.19 
+
+Boiling point (K) 52.95 50.40 53.62 50.21 
+
+Vapor pressure (log 10 ) 1.972 1.939 2.806 1.941 Solubility (log) 1.477 1.489 1.472 1.454 VP 
+
+> Viscosity
+> Solubility
+> BP
+> log P
+> HFE
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test R²
+> Influence of Domain-Informed Prediction Heads
+> (Properties with physics-based equations only)
+> Full MultiPUFFIN
+> All DirectHeads
+> Swapped Antoine<->Andrade
+> All GroupContribution
+
+Figure 9: Influence of domain-informed prediction heads on the six thermodynamically-informed properties. The All DirectHeads variant reveals that domain equations are most beneficial for viscosity (Andrade), while hydration free energy and log P
+
+achieve lower RMSE without the thermodynamically-informed constraints. The Swapped Antoine ↔Andrade variant demonstrates catastrophic vapor pressure degradation (RMSE increases by 42%), proving that correct equation-property pairing is essential. 40 Solubility log P HFE BP VP Viscosity MP FP Cp                                                 
+
+> Full MultiPUFFIN
+> GCN-Only
+> No SchNet
+> All DirectHeads
+> Swapped Antoine<->Andrade
+> All GroupContribution
+> 0.61 0.84 0.90 0.61 0.60 0.76 0.77 0.66 0.96
+> 0.52 0.90 0.59 0.61 0.62 0.65 0.73 0.67 0.93
+> 0.55 0.76 0.66 0.61 0.62 0.66 0.72 0.68 0.92
+> 0.60 0.89 0.95 0.65 0.61 0.69 0.79 0.68 0.92
+> 0.61 0.87 0.86 0.60 0.19 0.64 0.76 0.67 0.95
+> 0.62 0.84 0.94 0.65 0.61 0.70 0.81 0.69 0.96
+
+Per-Property Test R² Across All Ablation Variants 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Test R²
+
+Figure 10: Per-property test RMSE heatmap across all ablation variants. Green indicates low RMSE (better performance); red indicates high RMSE. The All GroupContribution variant achieves the lowest RMSE for most properties, though the full model provides the best performance for viscosity (Andrade equation) and is the only configuration that maintains thermodynamic consistency via property-specific functional forms. Solubility 
+
+> log P
+> HFE
+> BP
+> VP
+> Viscosity
+> MP
+> FP
+> Cp
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> R² (Full  Ablation)
+> Contribution of Each Component
+> (Positive = full model is better)
+> GCN-Only
+> No SchNet
+> All DirectHeads
+> Swapped Antoine<->Andrade
+> All GroupContribution
+
+Figure 11: Per-component contribution to model performance, expressed as ∆RMSE = RMSE ablation − RMSE full (positive values indicate the full model achieves lower error). The most dramatic effect is the catastrophic vapor pressure RMSE increase when the Antoine and Andrade equations are swapped (∆RMSE = +0 .83). The SchNet 3D en-coder contributes most to reducing HFE error (∆RMSE = +0 .90 kcal/mol), while several properties show negative ∆RMSE for the All DirectHeads and All GroupContribution variants, indicating that the domain-specific equations are overly restrictive for those properties. 41 Head references (Table 11). The results reveal three distinct regimes of equation–performance interaction: 
+
+Regime 1: Alternative equation improves over baseline. The most striking im-provement occurs for hydration free energy, where replacing the thermodynamic decom-position head (∆ G = ∆ H − T ∆S; RMSE = 1.045 kcal/mol) with a Born solvation model (RMSE = 0.704 kcal/mol, a 33% reduction) yields a substantial gain. The Born model parameterizes hydration free energy through an effective cavity radius and dielec-tric correction, providing a physically motivated functional form that better matches the underlying electrostatic physics of ion–solvent interactions. Notably, the DirectHead also outperforms the thermodynamic baseline (RMSE = 0.771 kcal/mol), indicating that the ∆H − T ∆S decomposition imposes an overly rigid two-parameter partition that lim-its flexibility. For vapor pressure, the six-parameter Wagner equation (RMSE = 1.789) marginally improves over the three-parameter Antoine equation (RMSE = 1.802), con-sistent with the Wagner equation’s superior ability to capture vapor pressure curva-ture over wide temperature ranges. The Shomate equation for heat capacity (RMSE = 20.62 J/mol/K) provides a small improvement over the DirectHead baseline (RMSE = 21.03 J/mol/K), suggesting that the polynomial temperature dependence encoded in the NIST Shomate formulation offers a modest but real inductive bias for this property. 
+
+Regime 2: Baseline equation is optimal or near-optimal. For viscosity, the two-parameter Andrade equation (RMSE = 0.326) outperforms both the three-parameter Vogel–Fulcher–Tammann (VFT) equation (RMSE = 0.330) and the DirectHead (RMSE = 0.354). The VFT equation introduces a third parameter ( T0, the Vogel temperature) that provides greater flexibility for glass-forming liquids but is unnecessary for the molec-ular liquids in the training set, where the simpler Andrade form suffices. The 0 .028 RMSE gap between the Andrade head and the DirectHead confirms the strong inductive bias value of this equation. For solubility, the van ’t Hoff equation (RMSE = 1.180) outperforms both the Modified Apelblat three-parameter extension (RMSE = 1.197) and the DirectHead (RMSE = 1.194), indicating that the additional temperature-dependent term in the Apelblat equation does not improve predictions for the predominantly room-temperature solubility data. The group contribution head for boiling point (RMSE = 47.82 K) substantially outperforms the Nannoolal ratio method (RMSE = 55.26 K), though part of this gap may reflect the enhanced-capacity architecture of the baseline head ( ∼808 000 vs. ∼535 000 parameters). 
+
+Regime 3: Equation diverges during head-only training. Three equations ex-hibited numerical instability and failed to converge: the Yalkowsky equation for melting point ( Tm = ∆ Hfus /∆Sfus ), the NASA 7-coefficient polynomial for heat capacity, and the empirical four-parameter viscosity equation. These divergences arise from the in-teraction between the equation’s functional form and the head-only training protocol. The Yalkowsky equation involves division by the predicted entropy of fusion, which can approach zero and produce extreme temperature predictions. The NASA polynomial includes T 4 terms that amplify small parameter errors into catastrophic predictions at temperatures outside the training range. These results indicate that certain thermody-namic equations require joint backbone–head training to maintain numerical stability, as the backbone gradients help regularize the parameter predictions. 42 Implications for equation selection. Across the six properties with domain-informed initial heads, the initial equation is optimal or near-optimal in four cases (viscosity, sol-ubility, boiling point, and flash point), while alternative equations provide meaningful improvement for two properties (hydration free energy and vapor pressure). The log P
+
+property presents an interesting case: the DirectHead (RMSE = 1.182) slightly outper-forms both the initial LFER head (RMSE = 1.190) and the Abraham LSER (RMSE = 1.185), suggesting that the backbone embedding already encodes sufficient hydrophobic-ity information and the linear decomposition adds no benefit. For the three properties initially using DirectHead baselines, the Shomate equation provides a small improve-ment for heat capacity, the Satyanarayana–Rao correlation is competitive for flash point (RMSE = 30.71 K vs. 30.32 K), and no stable domain-informed alternative was found for melting point. These findings guided the final equation assignments reported in Table 3, identifying the Born model for hydration free energy ( −33% RMSE), the Wagner equa-tion for vapor pressure, the Shomate polynomial for heat capacity, and the DirectHead for log P as improvements over the initial configuration. 
+
+Optimal equation assignment. Based on these findings, we assembled an optimal hybrid configuration that selects the best-performing equation for each property from the equation-level ablation: Wagner for vapor pressure, DirectHead for log P , Born for hy-dration free energy, Shomate for heat capacity, and the original baseline equations for the remaining five properties (Table 10). This hybrid model was constructed by swapping four prediction heads on the frozen MultiPUFFIN backbone using the pre-trained checkpoints from the equation-level ablation, requiring no backbone retraining. The optimal hybrid achieves a mean test R2 = 0 .716 compared to 0 .708 for the baseline assignment, a +1 .1% relative improvement. The improvement is dominated by the Born solvation model for hydration free energy ( R2: 0 .892 → 0.951; RMSE: 1 .045 → 0.704 kcal/mol, −32 .6%), with smaller contributions from the Wagner equation for vapor pressure ( −0.7% RMSE), the Shomate equation for heat capacity ( −1.9% RMSE), and the DirectHead for log P
+
+(−0.6% RMSE). These results demonstrate that per-property equation optimization pro-vides a meaningful and modular avenue for improving multi-task predictions without retraining the shared backbone, and that the optimal equation assignment depends on the interaction between the equation’s functional form and the backbone’s learned rep-resentations. 
+
+3.7 Advantages of the multimodal foundation model over a single-modality GNN 
+
+The ablation studies presented in Section 3.6.1 provide direct empirical evidence for the advantages of the MultiPUFFIN multimodal foundation model over a single-modality graph neural network (GCN-Only), which represents the simplest and most widely used baseline for molecular property prediction. This subsection synthesizes these findings and articulates the mechanistic reasons underlying each advantage. 
+
+3.7.1 Complementary information from multiple data modalities 
+
+The most fundamental advantage of the multimodal architecture is that each encoder branch captures qualitatively different aspects of molecular structure that a single GNN 43 Table 10: Optimal hybrid equation assignment vs. baseline MultiPUFFIN. Four of nine prediction heads were replaced with better-performing alternatives identified by the equation-level ablation (Section 3.6.3). Changed heads are indicated with →. All re-sults use the same frozen backbone; only the prediction heads differ.                                                           
+
+> Property Equation RMSE R2∆RMSE ∆R2
+> Solubility (log) van ’t Hoff 1.180 0.539 ——log PDirectHead →1.182 0.718 −0.008 +0.004 HFE (kcal/mol) Born →0.704 0.951 −0.341 +0.059 Boiling point (K) Group contribution 47.82 0.632 ——Vapor pressure (log 10 )Wagner →1.789 0.587 −0.013 +0.006 Viscosity (log 10 )Andrade 0.326 0.684 ——Melting point (K) DirectHead 45.09 0.667 ——Flash point (K) DirectHead 30.32 0.740 ——Heat capacity (J/mol/K) Shomate →20.62 0.924 −0.406 +0.003
+> Mean R20.716 +0.008
+
+cannot access. The GCN encoder operates through iterative neighborhood aggrega-tion (message passing), which naturally captures local chemical environments (functional groups, ring systems, branching patterns) and mirrors the additive, group-contribution-like effects that underlie many bulk thermophysical properties. However, the GCN’s inductive bias imposes a fixed receptive field: with L = 4 layers, information can propa-gate at most four bonds from any given atom. Long-range structural dependencies (such as the influence of a distant electron-withdrawing group on molecular acidity, or the cou-pling between substituents on opposite sides of a macrocyclic ring) require either many GCN layers (which introduces over-smoothing Li et al. [2018]) or an alternative encoder with a global receptive field. The Transformer encoder addresses this limitation by processing the SMILES string as a linear sequence, where self-attention enables any token to attend directly to any other token regardless of their distance in the sequence. This allows the model to capture long-range dependencies that the GCN would require multiple message-passing rounds to propagate. Furthermore, the SMILES syntax implicitly encodes stereochemistry, formal charges, and valence information that complement the atom- and bond-level features used by the GCN. The complementarity of these two modalities is quantified by the architecture ablation: removing the Transformer (GCN-Only) increases hydration free energy RMSE by 97% (1 .103 → 2.176 kcal/mol), heat capacity RMSE by 32% (28 .81 →
+
+38 .10 J/mol/K), and viscosity RMSE by 22% (0 .249 → 0.304). The SchNet 3D encoder provides a third, orthogonal source of information: through-space interatomic distances, dihedral angles, and molecular shape. These spatial features are entirely absent from both the 2D graph and the SMILES string, yet they govern properties that depend on intermolecular interactions: vapor pressure (molecular packing and surface accessibility), viscosity (resistance to flow, governed by molecular shape), and hydration free energy (the three-dimensional cavity that a solute carves in the solvent). Removing only the SchNet encoder (No SchNet ablation) increases hydration free energy RMSE by 82% (1 .103 → 2.005 kcal/mol) and heat capacity RMSE by 40% (28 .81 →
+
+40 .47 J/mol/K), confirming the critical role of 3D geometry for these properties. Importantly, the advantage of multimodal encoding is property-dependent . The GCN-44 Table 11: Equation-level ablation: test RMSE for alternative thermodynamic equations on each property, with the backbone frozen and only the prediction head retrained. Bold values indicate the lowest RMSE (best equation) per property. ∆ denotes the change relative to the baseline equation (negative = improvement). The DirectHead (no physics) serves as a reference for the contribution of domain-informed structure. Three equations diverged during training ( †) and are excluded from the main comparison. 
+
+Property Equation RMSE ∆RMSE R2 Parameters Vapor pressure (log 10 Pa) Antoine (baseline) 1.802 0.581 792 579 Wagner (6-param) 1.789 −0.013 0.587 528 390 Clausius–Clapeyron 1.814 +0.012 0.576 526 338 DirectHead 1.794 −0.008 0.585 525 825 Viscosity (log 10 mPa ·s) Andrade (baseline) 0.326 0.684 197 891 VFT 0.330 +0.004 0.677 197 891 DirectHead 0.354 +0.028 0.628 197 377 Solubility (log mol/L) van ’t Hoff (baseline) 1.180 0.539 197 634 Modified Apelblat 1.197 +0.017 0.526 197 891 DirectHead 1.194 +0.014 0.528 197 377 Boiling point (K) Group Contribution (baseline) 47.82 0.632 808 482 Nannoolal Ratio 55.26 +7.44 0.509 535 059 DirectHead 48.92 +1.10 0.615 525 825 log P (–) LFER (baseline) 1.190 0.714 203 569 Abraham LSER 1.185 −0.005 0.716 198 411 DirectHead 1.182 −0.008 0.718 197 377 HFE (kcal/mol) Thermodynamic (baseline) 1.045 0.892 197 634 Born Model 0.704 −0.341 0.951 197 891 DirectHead 0.771 −0.275 0.941 197 377 Melting point (K) DirectHead (baseline) 45.09 0.667 197 377 Yalkowsky Tm = ∆ H/ ∆S † — — — 197 634 Flash point (K) DirectHead (baseline) 30.32 0.740 197 377 Satyanarayana–Rao 30.71 +0.39 0.733 197 636 Carroll NFP 34.30 +3.98 0.667 197 637 Heat capacity (J/mol/K) DirectHead (baseline) 21.03 0.921 197 377 Shomate (NIST) 20.62 −0.41 0.924 198 405 
+
+45 Only model outperforms the full model for log P (RMSE: 0 .714 vs. 0 .906), indicating that the octanol–water partition coefficient is primarily determined by local 2D substructure patterns and that the additional modalities introduce slight noise for this specific prop-erty. This observation underscores that the multimodal architecture’s value lies not in uniformly improving all properties but in providing a richer representational substrate from which the shared embedding can select the most relevant features for each property through the learned gating mechanism. 
+
+3.7.2 Multi-task positive transfer for data-scarce properties 
+
+A single-modality GNN trained on one property can only learn from the labeled data available for that property. The MultiPUFFIN foundation model, by contrast, trains a shared backbone across nine simultaneous objectives, enabling positive transfer : the shared molecular representation learned from data-rich properties benefits data-scarce properties that could not achieve comparable performance on their own. The magnitude of this transfer is substantial for the most data-limited properties: 
+
+• Heat capacity (ntrain = 968 molecules): achieves RMSE = 20 .62 J mol −1 K−1,far stronger than what the available training data could support in a single-task setting, because the shared backbone has learned general molecular representations from the 12,000+ melting point and 10,000+ log P data points. 
+
+• Hydration free energy (ntrain = 642 molecules): achieves RMSE = 0.704 kcal/mol, approaching the experimental uncertainty ( ∼0.6 kcal/mol), benefiting from shared representations learned from related solvation and polarity properties combined with the Born solvation model inductive bias. 
+
+• Viscosity (ntrain = 2 ,024 molecules): achieves RMSE = 0.326 in log 10 mPa ·s, competitive with single-task baselines trained on property-specific datasets. A single-task GNN with 642 training molecules for hydration free energy would have insufficient data to learn a rich molecular representation; the multi-task backbone effec-tively amplifies the effective training set by sharing representational capacity across all nine tasks. 
+
+3.7.3 Thermodynamic consistency through domain-informed prediction heads 
+
+A standard GNN outputs property predictions through a generic feedforward network (MLP) that imposes no thermodynamic constraints. The resulting predictions may vio-late known thermodynamic relationships: vapor pressure may decrease with temperature, viscosity may increase with temperature for a liquid, or predicted equation parameters may have unphysical signs. These violations are not merely aesthetic; they render the model unreliable for engineering applications where interpolation across thermodynamic conditions is essential (e.g., process simulation, distillation column design, extraction modeling). MultiPUFFIN addresses this by replacing generic output layers with domain-informed inductive bias neurons that embed established thermophysical equations directly into the prediction architecture. The Wagner equation head for vapor pressure guarantees mono-tonic P (T ) increase by construction; the Andrade equation head for viscosity guarantees 46 monotonic η(T ) decrease; the van ’t Hoff head for solubility guarantees thermodynam-ically meaningful temperature dependence; and the Born solvation model for hydration free energy encodes the electrostatic physics of ion–solvent interactions. The ablation studies confirm that this is not merely a structural constraint but a genuine performance benefit: removing the Andrade equation (replacing with a DirectHead) increases viscosity RMSE from 0.326 to 0.354 (+8 .6%), and swapping the Antoine and Andrade equations (assigning the wrong physics to each property) causes catastrophic vapor pressure degra-dation (RMSE: 1 .972 → 2.806, +42%). 
+
+3.7.4 Graceful degradation with missing data 
+
+In practice, molecular datasets are inherently incomplete: not every molecule has exper-imental measurements for all properties, 3D conformers may fail to generate for certain structures, and experimental chromatographic features are available for only a subset of compounds. A simple GNN pipeline would require separate models or imputation strategies for each missing-data scenario. The MultiPUFFIN architecture handles these cases naturally through three mechanisms: (i) the geometry gate suppresses the SchNet contribution when 3D data is unavailable (zero-vector fallback); (ii) the multi-task loss function backpropagates only through properties with available labels for each molecule, allowing the shared backbone to learn from heterogeneous label availability; and (iii) the experimental and descriptor encoders include learned missing-data embeddings that allow the model to distinguish between “this feature is zero” and “this feature is unavailable.” This graceful degradation enables a single trained model to handle the full diversity of real-world molecular data without preprocessing gymnastics. 
+
+3.8 Embedding space analysis 
+
+To assess whether the learned molecular representation captures meaningful chemical structure, the unified 512-dimensional embedding u (the output of the cross-modal fu-sion module, before any prediction head) was extracted for all 37 968 unique molecules across the training, validation, and test sets. This embedding constitutes the shared rep-resentation from which all nine property heads operate; its structure therefore reflects the model’s internal organization of chemical space. The embedding was projected to two di-mensions using UMAP McInnes et al. [2018] (cosine distance, nneighbors = 30, dmin = 0 .3) and subsequently analyzed through both unsupervised clustering and property-based col-oring. 
+
+3.8.1 Continuous property gradients in embedding space 
+
+Figure 12 presents the UMAP projection of the embedding space colored by each of the nine predicted property values. The key observation is that all properties exhibit smooth, continuous gradients across the embedding manifold: molecules with similar property values are consistently embedded in nearby regions. Boiling point and flash point display a clear low-to-high gradient from the lower-left to the upper-right region of the manifold (reflecting the strong correlation between these two properties), while log P
+
+shows a gradient roughly orthogonal to the thermal properties, separating hydrophilic from hydrophobic molecules. Hydration free energy, which correlates with polarity and molecular surface accessibility, occupies a compact region of the embedding space with the most negative values concentrated in a distinct cluster. These smooth property landscapes 47 indicate that the multi-task training objective has successfully organized the embedding space according to thermophysical similarity, rather than memorizing property values through disconnected mappings. 
+
+Figure 12: UMAP projection of the MultiPUFFIN unified embedding ( u ∈ R512 )for 37 968 unique molecules, colored by each of the nine predicted properties. Gray points indicate molecules without a measurement for the given property. All properties show smooth, continuous gradients, indicating that the learned representation organizes molecules by thermophysical similarity. Temperature-based properties (boiling point, melting point, flash point) share similar spatial gradients, reflecting their physical corre-lations. 
+
+3.8.2 Cluster structure and chemical interpretability 
+
+To quantify the structure of the embedding space, k-Means clustering was applied to the 512-dimensional embeddings (Figure 13). Silhouette analysis across k ∈ { 5, 8, 10 , 12 , 15 , 20 }
+
+identified k = 5 as optimal (silhouette score = 0 .178), yielding clusters with chemically interpretable property profiles: 48 • Cluster 0 (n = 5 ,217): Polar, hydrophilic molecules: lowest mean log P (−0.26) and most negative mean hydration free energy ( −17 .2 kcal/mol). This cluster corre-sponds to molecules with substantial hydrogen-bonding capacity and high aqueous solubility. 
+
+• Cluster 1 (n = 7 ,735): Small, volatile molecules: lowest mean boiling point (427 K) and melting point (259 K), consistent with low-molecular-weight compounds with weak intermolecular interactions. 
+
+• Cluster 2 (n = 6 ,595): High-boiling polar species: elevated boiling point (551 K) and melting point (459 K) with moderate log P (2.5), characteristic of larger polar molecules. 
+
+• Cluster 3 (n = 4 ,530): Hydrophobic molecules: highest mean log P (5.5) and high boiling point (577 K), consistent with large lipophilic compounds. 
+
+• Cluster 4 (n = 13 ,891): General-purpose cluster encompassing structurally diverse molecules with intermediate property values across all targets. The moderate silhouette score (0.178) indicates that the embedding space is not sharply partitioned but instead forms a continuous manifold with gradual transitions be-tween chemical families, an expected outcome for a multi-task model trained to predict continuous properties across diverse molecular classes. Density-based clustering (HDB-SCAN, nmin = 50) corroborates this finding, identifying only two high-density regions with 10.2% of molecules classified as noise (inter-cluster transitions). Coloring the embedding by Murcko scaffold family reveals that structurally related molecules (sharing the same generic scaffold) are consistently co-localized in the UMAP projection, even when they occupy different k-Means clusters. The 3649 unique generic scaffolds identified in the dataset form recognizable archipelagos in the embedding space, with the top 10 scaffold families each forming spatially coherent groups. This indicates that the model has learned to group molecules by structural similarity at the scaffold level, a non-trivial outcome given that the training objective contains no explicit struc-tural loss, only property prediction errors. The scaffold organization also provides a visual explanation for the generalization challenge under scaffold-based splitting: test-set molecules that belong to novel scaffolds must be embedded in previously unoccupied re-gions of the manifold, explaining the larger generalization gaps observed for scaffold-split properties. Finally, overlaying the train/val/test split assignments confirms that all three splits are well-mixed throughout the embedding space, with no systematic segregation of test molecules into specific regions. This validates the scaffold-based splitting strategy: al-though test molecules belong to novel scaffolds, they span the full range of the property landscape rather than being confined to a single chemical subspace. 
+
+3.9 Comparison with single-property models and literature base-lines 
+
+To contextualize the predictive performance of MultiPUFFIN, we evaluated the model directly on the same molecules used in three widely cited benchmarks: the ESOL dataset Delaney [2004] for aqueous solubility (1117 molecules), the FreeSolv dataset Mobley and 49 Figure 13: Cluster structure of the MultiPUFFIN embedding space. From left to right: (a) k-Means clusters ( k = 5, optimal by silhouette analysis), revealing chemically inter-pretable groups ranging from polar/hydrophilic to hydrophobic; (b) HDBSCAN density-based clustering, identifying two major density cores with 10.2% noise (inter-cluster tran-sitions); (c) top-10 Murcko scaffold families, showing scaffold-level co-localization in em-bedding space; (d) train/val/test split overlay, confirming that all splits are well-mixed throughout the manifold. Guthrie [2014] for hydration free energy (642 molecules), and the MoleculeNet Lipophilic-ity dataset Wu et al. [2018] for log P (4200 molecules). Because all three benchmark datasets were incorporated into MultiPUFFIN’s training corpus during data curation, we report performance separately for molecules assigned to MultiPUFFIN’s scaffold-based test split (never seen during training) and for all benchmark molecules (Table 12). For solubility, MultiPUFFIN achieves an RMSE of 0.705 on the 177 ESOL molecules in its scaffold-split test set, outperforming Delaney’s original ESOL model (RMSE = 0.75) and the MoleculeNet GCN baseline (RMSE = 0.97) despite the more stringent scaffold-based splitting. On all 1117 ESOL molecules, MultiPUFFIN achieves RMSE = 0.649 ( R2 = 0 .904), competitive with the single-task MPNN baseline (RMSE = 0.58, ran-dom split). Additionally, the van ’t Hoff inductive bias provides temperature-dependent solubility predictions that most single-task baselines cannot offer. For hydration free energy, MultiPUFFIN’s test-only RMSE of 1.689 kcal/mol on the 50 FreeSolv molecules in the scaffold-split test set is higher than the best single-task models (Uni-Mol RMSE = 0.60, Attentive FP RMSE = 0.73), though this comparison is affected by both the small test subset ( n = 50) and the scaffold-based splitting. On all 642 FreeSolv molecules, MultiPUFFIN achieves RMSE = 1.271 kcal/mol ( R2 = 0 .891). The optimal hybrid configuration using the Born solvation model head (Section 3.6.3) would reduce this further. For log P , MultiPUFFIN’s scaffold-split performance (RMSE = 1.121, n = 87) is above the MoleculeNet consensus range of 0.6–0.9 for single-task GNN models with ran-dom splits. The low test subset size ( n = 87, representing only 2 .1% of the Lipophilicity benchmark) and the scaffold-based splitting (which assigns structurally novel molecules to the test set) contribute to this gap. For vapor pressure, the original PUFFIN Santana et al. [2024] reported an RMSE of 0.47 in log 10 (Pa) using a single-task GCN trained on approximately 6000 molecules. MultiPUFFIN achieves an RMSE of 1.789 on a substantially more challenging scaffold-split test set of 1651 molecules. A direct comparison on identical molecules is not possible because the original PUFFIN dataset is not publicly available; however, MultiPUFFIN retains the thermodynamic consistency guarantee of PUFFIN (monotonic vapor pressure increase with temperature) while simultaneously predicting eight additional properties. 50 Table 12: MultiPUFFIN evaluated on standard benchmark datasets. “Test-only” in-cludes only benchmark molecules assigned to MultiPUFFIN’s scaffold-split test set; “All” includes all benchmark molecules. Literature baselines use random splitting unless noted. Bold indicates lowest RMSE.                                    
+
+> Benchmark Method nRMSE ESOL (solubility, log mol/L) Delaney (2004, random) 1128 0.75 GCN (MoleculeNet, random) 1128 0.97 MPNN (MoleculeNet, random) 1128 0.58
+> MultiPUFFIN (all) 1117 0.649 MultiPUFFIN (test-only, scaffold) 177 0.705 FreeSolv (HFE, kcal/mol) GCN (MoleculeNet, random) 642 2.87 MPNN (MoleculeNet, random) 642 2.19 Uni-Mol (random) 642 0.60
+> MultiPUFFIN (all) 642 1.271 MultiPUFFIN (test-only, scaffold) 50 1.689 Lipophilicity (log P)GCN (MoleculeNet, random) 4200 0.85 MPNN (MoleculeNet, random) 4200 0.72 Uni-Mol (random) 4200 0.60
+> MultiPUFFIN (all) 4200 0.811 MultiPUFFIN (test-only, scaffold) 87 1.121
+
+For viscosity, ExPUFFIN Rebello et al. [2025] reported a 37% RMSE reduction over a standard FFNN baseline using the Andrade equation head. MultiPUFFIN achieves a test RMSE of 0.326 in log 10 (mPa · s) across a broader chemical diversity (1752 unique viscosity training molecules from four complementary sources). It is important to emphasize that direct comparison with single-task benchmarks is inherently asymmetric for three reasons. First, most published benchmark results use ran-dom or stratified splitting, while MultiPUFFIN uses scaffold-based splitting that imposes substantially greater structural novelty in the test set. Second, single-task models dedi-cate their entire capacity to one property, while MultiPUFFIN distributes a shared 35-million-parameter backbone across nine simultaneous objectives with significant missing-label sparsity (each molecule has labels for 2–5 of 9 properties). Third, the test subset sizes for individual benchmarks within MultiPUFFIN’s scaffold split are small (50–177 molecules), increasing statistical uncertainty. Despite these disadvantages, MultiPUFFIN achieves competitive RMSE values on the ESOL benchmark and provides a qualitatively different capability: the ability to predict all nine properties from a single model with thermodynamic consistency for domain-informed properties. As shown in Table 1, MultiPUFFIN uniquely combines multimodal structural en-coding (SMILES, 2D graph, 3D conformer), domain-informed prediction heads with em-bedded thermophysical equations, and simultaneous multi-task thermophysical property prediction, a combination not present in any existing molecular foundation model. While models such as Uni-Mol2 Lu et al. [2024] and MolE M´ endez-Lucio et al. [2024] achieve strong performance on standard molecular benchmarks, they lack the thermodynamic consistency guarantees and the dedicated thermophysical property coverage that Multi-PUFFIN provides. 51 3.10 Direct comparison with a molecular foundation model base-line 
+
+To provide a direct empirical comparison against an existing molecular foundation model, we fine-tuned ChemBERTa-2 Ahmad et al. [2022] (a SMILES-based Transformer pre-trained via masked language modelling and multi-task regression on 77 million molecules) on the identical training, validation, and test splits used for MultiPUFFIN. For each of the nine properties, a separate ChemBERTa-2 model was trained with a per-property regression head (three-layer MLP with GELU activations and dropout), z-score target normalization, Huber loss, differential learning rates (2 × 10 −5 for the backbone, 2 × 10 −4
+
+for the head), and early stopping with patience of 5 epochs. Each per-property model has approximately 3.8 million trainable parameters. Table 13 presents the comparison using normalized error metrics (NRMSE (RMSE divided by the test target range) and NMSE (MSE divided by the test target variance)), which enable cross-property comparison on a common scale, alongside absolute MAE values in original property units. For vapor pressure and viscosity, whose values span several orders of magnitude, both models are evaluated in log 10 space. Table 13: Comparison of MultiPUFFIN and fine-tuned ChemBERTa-2 across nine physic-ochemical properties. NRMSE (normalized root-mean-square error, lower is better) is de-fined as RMSE divided by the test target range; NMSE (normalized mean-square error, lower is better) is MSE divided by the test target variance. MAE values are in original property units. For vapor pressure and viscosity, metrics are computed in log 10 space for both models. Properties marked with † are temperature-dependent; ChemBERTa-2 receives only a SMILES string as input and therefore cannot distinguish measurements at different temperatures for the same molecule.                                                                                              
+
+> NRMSE ↓NMSE ↓MAE ↓
+> Property ntest CB-2 MP CB-2 MP CB-2 MP Solubility (log mol/L) 2700 0.085 0.081 0.504 0.461 0.868 0.831
+> log P1570 0.083 0.078 0.313 0.282 0.779 0.760
+> Hydration free energy (kcal/mol) 269 0.067 0.032 0.213 0.049 0.924 0.429
+> Boiling point (K) 2106 0.046 0.046 0.360 0.368 27.85 25.66
+> Melting point (K) 6206 0.084 0.079 0.376 0.333 35.47 33.47
+> Flash point (K) 2840 0.061 0.058 0.283 0.260 20.74 18.65
+> Vapor pressure †(log 10 Pa) 1651 0.536 0.112 9.565 0.418 7.847 1.180
+> Viscosity †(log 10 mPa ·s) 331 1.359 0.059 167.99 0.316 6.392 0.203
+> Heat capacity †(J/mol/K) 297 0.045 0.039 0.098 0.076 14.04 10.57 Mean (all 9) 0.263 0.065 19.97 0.285 ——
+> Mean (6 temp.-indep.) 0.071 0.062 0.342 0.292 ——
+> CB-2 = ChemBERTa-2 (fine-tuned, per-property); MP = MultiPUFFIN (single multi-task model).
+
+Three findings emerge from this comparison. First, MultiPUFFIN outperforms or matches ChemBERTa-2 on all nine properties, despite using a single multi-task model compared to nine separate fine-tuned models. Even on the six temperature-independent properties where the comparison is most direct, MultiPUFFIN achieves a lower mean NRMSE (0.065 vs. 0.071) and lower mean NMSE (0.303 vs. 0.342). This result is notable 52 because ChemBERTa-2 was pre-trained on 77 million molecules (two thousand times more data than MultiPUFFIN’s training set of 37 968 molecules), suggesting that domain-informed inductive biases can compensate for orders-of-magnitude differences in pre-training scale. Second, the most dramatic performance gap occurs for the three temperature-dependent properties (vapor pressure, viscosity, and heat capacity), where ChemBERTa-2’s NRMSE increases by an order of magnitude relative to MultiPUFFIN. Because ChemBERTa-2 re-ceives only a SMILES string as input, it cannot distinguish measurements of the same molecule at different temperatures and effectively predicts a single average value per molecule. MultiPUFFIN, by contrast, conditions its predictions on temperature through the Antoine ( pvap = 10 A−B/ (C+T )), Andrade ( η = exp( A + B/T )), and van ’t Hoff equa-tions, producing thermodynamically meaningful temperature-dependent curves from a single forward pass. This structural advantage is fundamental and cannot be overcome by additional pre-training data. Third, the comparison highlights a qualitative distinction between molecular founda-tion models and domain-informed architectures. ChemBERTa-2 learns general-purpose molecular representations through self-supervised pre-training but relies on unconstrained MLP heads that impose no physical structure on the output. MultiPUFFIN, while trained on a substantially smaller dataset, embeds thermophysical equations directly into its pre-diction heads, guaranteeing thermodynamic consistency by construction. The empirical results confirm that this domain knowledge translates into measurable accuracy gains even for temperature-independent properties, and provides an essential advantage for temperature-dependent predictions. 
+
+# 4 Conclusions 
+
+This work presented MultiPUFFIN, a multimodal domain-constrained foundation model for molecular property prediction that generalizes the PUFFIN inductive bias paradigm to a multi-task setting with nine simultaneous property predictions. The model addresses four critical gaps in the current landscape of molecular foundation models: the lack of thermodynamic consistency in existing architectures, the limitation of prior domain-informed models to single-property settings, the absence of multimodal structural encod-ing in thermophysical property prediction, and the lack of a unified framework combin-ing graph, SMILES, and 3D conformer representations with thermodynamically-informed output layers. A direct comparison against ChemBERTa-2 (a SMILES-based foundation model pre-trained on 77 million molecules) demonstrates that domain-informed induc-tive biases and multimodal encoding can substantially reduce the data and computational requirements for achieving competitive molecular property prediction performance. The combination of five encoders (GCN, Transformer, and SchNet for structural modalities, supplemented by experimental and descriptor auxiliary encoders) through hierarchical cross-modal attention, gated fusion, and concatenation provides a richer molecular representation than any single modality alone, capturing 2D topology, SMILES syntax, 3D geometry, thermodynamic conditions, and coarse-grained physicochemical de-scriptors within a unified 512-dimensional embedding. The domain-informed inductive bias concept demonstrated in PUFFIN for single-property vapor pressure prediction and in ExPUFFIN for single-property viscosity prediction scales successfully to nine simul-taneous properties: the Wagner equation for vapor pressure, the Andrade equation for 53 viscosity, the van ’t Hoff equation for solubility, group contribution methods for boiling point, the Born solvation model for hydration free energy, and the Shomate polynomial for heat capacity all contribute meaningful structural constraints that improve both ac-curacy and thermophysical consistency. The two-stage training strategy (joint multi-task training with uncertainty-weighted loss and cosine warm-restart scheduling, followed by backbone-frozen head fine-tuning) provides measurable improvements in prediction qual-ity, particularly for properties with complex equation parameter landscapes. SMILES enumeration augmentation, which triples the effective training set size, provides con-sistent improvements across properties by improving the robustness of the Transformer encoder to SMILES syntax variations. Six key findings emerge from this work. First, the domain-informed inductive bias paradigm successfully generalizes from single-task to multi-task settings: the thermodynamically-informed output equations produce thermodynamically consistent predictions (monotonic temperature dependence for vapor pressure and viscosity, thermodynamically meaningful equation parameters) without requiring explicit consistency constraints in the loss func-tion. Ablation studies (Section 3.6) confirm that the Andrade equation provides a mean-ingful inductive bias for viscosity (RMSE increases from 0.326 to 0.354 when removed), while also revealing that certain domain equations (HydrationFreeEnergyHead, Linear-FreeEnergyHead) may impose unnecessary rigidity for properties with more complex structure-property relationships. Critically, swapping the Antoine and Andrade equa-tion assignments causes catastrophic vapor pressure degradation (RMSE: 1 .972 → 2.806, a 42% increase), demonstrating that the performance benefit arises from the specific equation-property match, not merely from imposing any structured output. Notably, replacing all thermodynamically-informed heads with generic group contribution heads reduces RMSE for most properties, indicating that the additive fragment decomposi-tion structure provides a broadly useful inductive bias, while property-specific equations remain essential only for properties where the physics closely matches the assumed func-tional form (e.g., viscosity). An equation-level ablation (Section 3.6.3) further demon-strates that the choice of thermodynamic equation matters: replacing the thermodynamic decomposition head for hydration free energy with a Born solvation model reduces RMSE from 1.045 to 0.704 kcal/mol (33% improvement), while the baseline equations for vis-cosity, solubility, and boiling point prove optimal among their respective alternatives. The equation-level ablation informed the final equation assignments (Table 3), select-ing the best-performing equation per property without requiring backbone retraining. Compared to the initial configuration (mean R2 = 0 .708), the final model achieves mean 
+
+R2 = 0 .716, demonstrating that per-property equation selection provides a modular and computationally inexpensive pathway for model improvement. Second, multi-task learn-ing enables effective positive transfer for data-scarce properties: heat capacity (RMSE = 20 .62 J mol −1 K−1), hydration free energy (RMSE = 0.704 kcal/mol), and viscosity (RMSE = 0.326) achieve stronger performance than their training set sizes alone would suggest, benefiting from shared molecular representations learned from more data-rich properties. Third, the multimodal fusion mechanism learns complementary contributions from each encoder branch, with the gated fusion dynamically weighting graph, SMILES, and 3D information for each molecule. The architectural ablation study quantifies the importance of each modality: removing the SchNet 3D encoder disproportionately in-creases RMSE for geometry-sensitive properties such as hydration free energy (∆RMSE = +0 .90 kcal/mol). Fourth, the trimodal encoder architecture (GCN + Transformer + SchNet) provides the best overall performance, though the marginal benefit of each ad-54 ditional modality is property-dependent. Fifth, analysis of the learned embedding space (Section 3.8) reveals that the multi-task training objective organizes molecules into a con-tinuous manifold where all nine properties exhibit smooth spatial gradients: molecules with similar thermophysical profiles are embedded in nearby regions without any ex-plicit structural loss. Unsupervised clustering identifies five chemically interpretable groups (polar/hydrophilic, small/volatile, high-boiling polar, hydrophobic, and general-purpose), while Murcko scaffold families form spatially coherent archipelagos, confirming that the shared representation captures both property-relevant and structurally meaning-ful chemical features. Sixth, a direct comparison against ChemBERTa-2 (Section 3.10), a SMILES-based foundation model pre-trained on 77 million molecules, reveals that Multi-PUFFIN outperforms the fine-tuned baseline on all nine properties despite using a single multi-task model versus nine separately fine-tuned models, and despite being trained on 2000 × fewer molecules (38K vs. 77M). For the six temperature-independent properties, the performance advantage is moderate (mean NRMSE: 0.062 vs. 0.071), demonstrating that domain-informed inductive biases and multimodal encoding compensate for the vast difference in pre-training scale. For the three temperature-dependent properties (vapor pressure, viscosity, heat capacity), the advantage is dramatic (order-of-magnitude lower NRMSE), because ChemBERTa-2 (receiving only a SMILES string as input) fundamen-tally cannot distinguish measurements at different temperatures for the same molecule. This finding has important implications for the molecular foundation model commu-nity: rather than relying solely on brute-force scaling of pre-training data, incorporating domain-informed inductive biases and multimodal inputs can achieve superior perfor-mance with substantially lower data and computational requirements. The primary challenge identified in this work is multi-task capacity dilution: the expansion from six to nine properties reduces the performance achievable for individual tasks, particularly boiling point (RMSE = 47 .82 K) and vapor pressure (RMSE = 1.789 in log 10 units), which had achieved lower RMSE values in a six-property configuration. Enhanced-capacity heads with residual connections partially mitigate this effect but do not fully resolve it. The generalization gap analysis (Section 3) reveals that scaffold-based splitting imposes a substantially greater challenge than coverage-balanced splitting, with the largest RMSE increases from train to test observed for boiling point, flash point, and solubility, underscoring the difficulty of extrapolating to structurally novel chemical scaffolds. Several directions for future work emerge from these findings. First, expanding train-ing data diversity through integration of public thermophysical databases (EPA Comp-Tox, NIST ThermoML, ECHA REACH) and community-curated compilations could col-lectively expand coverage from 23 837 to an estimated 40,000–60,000 unique molecules, with the largest gains expected for melting point, log P , and boiling point. Second, self-supervised pre-training of the encoder branches on large-scale unlabeled molecu-lar corpora (following the paradigm demonstrated by Uni-Mol Zhou et al. [2023] and ChemBERTa-2 Ahmad et al. [2022]) could substantially improve backbone quality before multi-task supervised fine-tuning, complementing data expansion by extracting richer representations from the available structural information. Third, mixture-of-experts lay-ers Shazeer et al. [2017] could enable dynamic capacity allocation across tasks without increasing per-task computational cost, providing a more efficient alternative to uniform model scaling. Fourth, the property set can be extended to include density, surface tension, thermal conductivity, and activity coefficients, each with appropriate domain-informed prediction heads. Fifth, gradient surgery methods such as PCGrad Yu et al. 55 [2020] and CAGrad Liu et al. [2021], which project conflicting task gradients to re-duce inter-task interference, could be adapted to improve the multi-task optimization landscape. Sixth, incorporating additional input modalities such as textual chemical descriptions from scientific literature (following the multimodal alignment paradigm of MoleculeSTM Liu et al. [2023]) and experimental chromatographic data (GC retention indices, HPLC retention times) could further enrich the molecular representation with empirical information. The MultiPUFFIN framework demonstrates that domain-informed foundation mod-els for molecular property prediction (combining the strengths of multimodal deep learn-ing with the physical rigor of established thermophysical correlations) offer a promis-ing path toward models that are simultaneously accurate, thermodynamically consis-tent, and broadly applicable across chemical engineering applications. The comparison with ChemBERTa-2 provides compelling evidence that incorporating domain knowledge through inductive bias neurons and enriching the information space through multimodal encoding can substantially reduce the data and computational requirements for achiev-ing competitive molecular property prediction, offering a more efficient and physically grounded alternative to brute-force pre-training at scale. 
+
+# References 
+
+Chao Pang, Henry H Tong, and Liguang Wei. Advanced deep learning methods for molecular property prediction. Quantitative Biology , 11(4):395–404, 2023. George W Thomson. The antoine equation for vapor-pressure data. Chemical Reviews ,38(1):1–39, 1946. E N da C Andrade. The viscosity of liquids. Nature , 125:309–310, 1930. Yash Nannoolal, J¨ urgen Rarey, and Deresh Ramjugernath. Estimation of pure compo-nent properties: Part 3. estimation of the vapor pressure of non-electrolyte organic compounds via group contributions and group interactions. Fluid Phase Equilibria ,269(1-2):117–133, 2008. Moitrayee Das, Arghya Ghosh, and Raghavan B Sunoj. Advances in machine learning with chemical language models in molecular property and reaction outcome predictions. 
+
+Journal of Computational Chemistry , 45(14):1160–1176, 2024. Justin Gilmer, Samuel S Schoenholz, Patrick F Riley, Oriol Vinyals, and George E Dahl. Neural message passing for quantum chemistry. International Conference on Machine Learning , pages 1263–1272, 2017. Thomas N Kipf and Max Welling. Semi-supervised classification with graph convolutional networks. International Conference on Learning Representations , 2017. Kristof T Sch¨ utt, Huziel E Sauceda, P-J Kindermans, Alexandre Tkatchenko, and K-R M¨ uller. SchNet–a deep learning architecture for molecules and materials. The Journal of Chemical Physics , 148(24), 2018. Johannes Gasteiger, Janek Groß, and Stephan G¨ unnemann. Directional message passing for molecular graphs. International Conference on Learning Representations , 2020. 56 Florence H Vermeire and William H Green. Transfer learning for solvation free energies: from quantum chemistry to experiments. Chemical Engineering Journal , 418:129307, 2021. Artur M Schweidtmann, Jan G Rittig, Andrea K¨ onig, Martin Grohe, Alexander Mitsos, and Manuel Dahmen. Graph neural networks for prediction of fuel ignition quality. 
+
+Energy & Fuels , 34(9):11395–11407, 2020. Jan G Rittig, Kobi C Felton, Alexei A Lapkin, and Alexander Mitsos. Gibbs–Duhem-informed neural networks for binary activity coefficient prediction. Digital Discovery ,2:1752–1767, 2023. Multiple authors. A perspective on foundation models in chemistry. JACS Au , 2024. doi: 10.1021/jacsau.4c01160. Multiple authors. Foundation models for atomistic simulation of chemistry and materials. 
+
+Nature Reviews Chemistry , 2025. doi: 10.1038/s41570-025-00793-5. Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. BERT: Pre-training of deep bidirectional transformers for language understanding. North American Chapter of the Association for Computational Linguistics , pages 4171–4186, 2019. Tom Brown et al. Language models are few-shot learners. Advances in Neural Information Processing Systems , 33:1877–1901, 2020. Alexey Dosovitskiy et al. An image is worth 16x16 words: Transformers for image recog-nition at scale. International Conference on Learning Representations , 2021. Sheng Wang, Yuzhi Guo, Yuhao Wang, Hao Sun, and Junzhou Huang. SMILES-BERT: Large scale unsupervised pre-training for molecular property prediction. ACM Interna-tional Conference on Bioinformatics, Computational Biology and Health Informatics ,pages 429–436, 2019. Walid Ahmad, Elana Simon, Seyone Chithrananda, Gabriel Grand, and Bharath Ram-sundar. ChemBERTa-2: Towards chemical foundation models. arXiv preprint arXiv:2209.01712 , 2022. Weihua Hu, Bowen Liu, Joseph Gomes, Marinka Zitnik, Percy Liang, Vijay Pande, and Jure Leskovec. Strategies for pre-training graph neural networks. International Con-ference on Learning Representations , 2020. Han Li, Dan Zhao, and Jianyang Zeng. An effective self-supervised framework for learning expressive molecular global representations to drug discovery. Briefings in Bioinfor-matics , 23(6), 2022. Yuyang Wang, Jianren Wang, Zhonglin Cao, and Amir Barati Farimani. Molecular contrastive learning of representations via graph neural networks. Nature Machine Intelligence , 4:279–287, 2022. Oscar M´ endez-Lucio et al. MolE: A foundation model for molecular graphs using disen-tangled attention. Nature Communications , 15:9208, 2024. 57 Ying Yuan, Zhenguo Lu, and Yijia Li. Virtual bonding enhanced graph self-supervised learning for molecular property prediction. Journal of Computational Chemistry , 46 (16), 2025. Sandeep A Sangala and S Raghunathan. Graph neural network for 3-dimensional struc-tures including dihedral angles for molecular property prediction. Journal of Compu-tational Chemistry , 46(13), 2025. Gengmo Zhou, Zhifeng Gao, Qiankun Ding, Hang Zheng, Hongteng Xu, Zhewei Wei, Linfeng Zhang, and Guolin Ke. Uni-Mol: A universal 3D molecular representation learning framework. International Conference on Learning Representations , 2023. Shuqi Lu et al. Uni-Mol2: Exploring molecular pretraining model at scale. Advances in Neural Information Processing Systems , 37, 2024. Uni-Mol Team. Uni-Mol3: A multi-molecular foundation model for advancing organic reaction modeling. arXiv preprint arXiv:2508.00920 , 2025. Jian Li et al. MoleculeFormer is a GCN-transformer architecture for molecular property prediction. Communications Biology , 8:264, 2025. Tadas Baltruˇ saitis, Chaitanya Ahuja, and Louis-Philippe Morency. Multimodal machine learning: A survey and taxonomy. IEEE Transactions on Pattern Analysis and Ma-chine Intelligence , 41(2):423–443, 2019. David Weininger. SMILES, a chemical language and information system. 1. introduction to methodology and encoding rules. Journal of Chemical Information and Computer Sciences , 28(1):31–36, 1988. Shengchao Liu, Weili Nie, Chengpeng Wang, Jianmo Lu, Zhuoran Qiao, Ling Liu, Jian Tang, Chaowei Xiao, and Animashree Anandkumar. Multi-modal molecule structure– text model for text-based retrieval and editing. Nature Machine Intelligence , 5:1447– 1457, 2023. Bing Su, Dazhao Du, Zhao Yang, Yujie Zhou, Jiangmeng Li, Anyi Rao, Hao Sun, Zhiwu Lu, and Ji-Rong Wen. MoMu: A molecular multimodal model for text-based molecular generation. arXiv preprint arXiv:2209.05481 , 2022. Pengfei Liu, Yiming Ren, Jun Tao, and Zhixiang Ren. GIT-Mol: A multi-modal large language model for molecular science with graph, image, and text. Computers in Biology and Medicine , 171:108073, 2024. Yibo Li et al. Advancing molecular graph-text pre-training via fine-grained alignment. 
+
+arXiv preprint arXiv:2409.14106 , 2024. Ruibin Chen et al. Pretraining graph transformer for molecular representation with fusion of multimodal information. Information Fusion , 106:102290, 2024. Zaixi Chen et al. MolPrompt: Improving multi-modal molecular pre-training with knowl-edge prompts. Bioinformatics , 41(9), 2025. Artur M Schweidtmann, Dongda Zhang, and Moritz von Stosch. A review and perspective on hybrid modeling methodologies. Digital Chemical Engineering , 10:100136, 2024. 58 Maziar Raissi, Paris Perdikaris, and George E Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involv-ing nonlinear partial differential equations. Journal of Computational Physics , 378: 686–707, 2019. Oliver T Unke and Markus Meuwly. PhysNet: A neural network for predicting ener-gies, forces, dipole moments, and partial charges. Journal of Chemical Theory and Computation , 15(6):3678–3693, 2019. Joshua L Lansford, Klavs F Jensen, and Brian C Barnes. Physics-informed transfer learn-ing for out-of-sample vapor pressure predictions. Propellants, Explosives, Pyrotechnics ,48(8), 2023. Ulderico Di Caprio, Jan Degr` eve, Peter Hellinckx, Steffen Waldherr, and Mumin Enis Leblebici. HybridGamma: A thermodynamically consistent framework for hybrid mod-elling of activity coefficients. Chemical Engineering Journal , 475:146104, 2023. Amine R N Aouichaoui, Fengqi Fan, Seyed S Mansouri, Jens Abildskov, and G¨ urkan Sin. Combining group-contribution concept and graph neural networks toward interpretable molecular property models. Journal of Chemical Information and Modeling , 63(3):725– 744, 2023. Vinicius Viena Santana, Carine Menezes Rebello, Luana P Queiroz, Ana Mafalda Ribeiro, Nadia Shardt, and Idelfonso B R Nogueira. PUFFIN: A path-unifying feed-forward interfaced network for vapor pressure prediction. Chemical Engineering Science , 286: 119623, 2024. Carine Menezes Rebello, Ulderico Di Caprio, Jenny Steen-Hansen, Bruno Rodrigues, Erbet Almeida Costa, Anderson Rapello dos Santos, Flora Esposito, Mumin Enis Leblebici, and Idelfonso B R Nogueira. ExPUFFIN: Thermodynamic consistent vis-cosity prediction in an extended path-unifying feed-forward interfaced network. arXiv preprint arXiv:2512.06927 , 2025. Murat Cihan Sorkun, Abhishek Khetan, and S¨ uleyman Er. AqSolDB, a curated reference set of aqueous solubility and 2D descriptors for a diverse set of compounds. Scientific Data , 6:143, 2019. Zhenqin Wu, Bharath Ramsundar, Evan N Feinberg, Joseph Gomes, Caleb Geniesse, Aneesh S Pappu, Karl Leswing, and Vijay Pande. MoleculeNet: A benchmark for molecular machine learning. Chemical Science , 9(2):513–530, 2018. Anna Gaulton, Anne Hersey, Micha l Nowotka, A Patricia Bento, Jon Chambers, David Mendez, Prudence Mutowo, Francis Atkinson, Louisa J Bellis, Elena Cibri´ an-Uhalte, et al. The ChEMBL database in 2017. Nucleic Acids Research , 45(D1):D986–D994, 2017. David L Mobley and J Peter Guthrie. FreeSolv: A database of experimental and calcu-lated hydration free energies, with input files. Journal of Computer-Aided Molecular Design , 28(7):711–720, 2014. Kamel Mansouri, Chris M Grulke, Richard S Judson, and Antony J Williams. OPERA models for predicting physicochemical properties and environmental fate endpoints. 
+
+Journal of Cheminformatics , 10:10, 2018. 59 Michael Frenkel, Robert D Chirico, Vladimir Diky, Xinjian Yan, Qian Dong, and Chris Muzny. ThermoML: An XML-based approach for storage and exchange of experi-mental and critically evaluated thermophysical and thermochemical property data. 1. Experimental data. Journal of Chemical & Engineering Data , 50(1):42–50, 2005. European Chemicals Agency. ECHA REACH registered substances database. https:// echa.europa.eu/information-on-chemicals/registered-substances , 2024. Ac-cessed: 2024. Jean-Claude Bradley, Andrew Lang, and Antony Williams. Open melting point data. 
+
+Nature Precedings , 2014. doi: 10.1038/npre.2014.9136.1. Yifan Sun, Sascha M P Rogge, et al. Prediction of flash points for fuel mixtures using machine learning and a novel dataset. Fuel , 239:109–116, 2019. ABB-ADD consortium. ABB-ADD liquid heat capacity dataset, 2023. Curated liquid heat capacity data for organic compounds. Andrew K Chew et al. A comprehensive viscosity dataset for deep learning-based molec-ular property prediction. Journal of Cheminformatics , 16:82, 2024. Sunghwan Kim, Jie Chen, Tiejun Cheng, Asta Gindulyte, Jia He, Siqian He, Qingliang Li, Benjamin A Shoemaker, Paul A Thiessen, Bo Yu, et al. PubChem 2023 update. 
+
+Nucleic Acids Research , 51(D1):D1373–D1380, 2023. RDKit community. RDKit: Open-source cheminformatics. https://www.rdkit.org ,2024. Sereina Riniker and Gregory A Landrum. Better informed distance geometry: using what we know to improve conformation generation. Journal of Chemical Information and Modeling , 55(12):2562–2574, 2015. Thomas A Halgren. Merck molecular force field. I. Basis, form, scope, parameterization, and performance of MMFF94. Journal of Computational Chemistry , 17(5-6):490–519, 1996. Tianle Cai, Shengjie Luo, Keyulu Xu, Di He, Tie-Yan Liu, and Liwei Wang. GraphNorm: A principled approach to accelerating graph neural network training. In International Conference on Machine Learning , pages 1204–1215, 2021. Sergey Ioffe and Christian Szegedy. Batch normalization: Accelerating deep network training by reducing internal covariate shift. International Conference on Machine Learning , pages 448–456, 2015. Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition. In IEEE/CVF Conference on Computer Vision and Pattern Recog-nition , pages 770–778, 2016. Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Lukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in Neural Information Processing Systems , 30, 2017. 60 Dan Hendrycks and Kevin Gimpel. Gaussian error linear units (GELUs). arXiv preprint arXiv:1606.08415 , 2016. Ruibin Xiong, Yunchang Yang, Di He, Kai Zheng, Shuxin Zheng, Chen Xing, Huishuai Zhang, Yanyan Lan, Liwei Wang, and Tie-Yan Liu. On layer normalization in the Transformer architecture. International Conference on Machine Learning , pages 10524–10533, 2020. Alex Kendall, Yarin Gal, and Roberto Cipolla. Multi-task learning using uncertainty to weigh losses for scene geometry and semantics. IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 7482–7491, 2018. Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. International Conference on Learning Representations , 2019. Ilya Loshchilov and Frank Hutter. SGDR: Stochastic gradient descent with warm restarts. 
+
+International Conference on Learning Representations , 2017. Adam Paszke et al. PyTorch: An imperative style, high-performance deep learning library. Advances in Neural Information Processing Systems , 32, 2019. Matthias Fey and Jan Eric Lenssen. Fast graph representation learning with PyTorch Geometric. ICLR Workshop on Representation Learning on Graphs and Manifolds ,2019. Manallack Karthikeyan, Robert C Glen, and Andreas Bender. General melting point prediction based on a diverse compound data set and artificial neural networks. Journal of Chemical Information and Modeling , 45(3):581–590, 2005. Michael Crawshaw. Multi-task learning with deep neural networks: A survey. arXiv preprint arXiv:2009.09796 , 2020. Qimai Li, Zhichao Han, and Xiao-Ming Wu. Deeper insights into graph convolutional networks for semi-supervised learning. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 32, 2018. Leland McInnes, John Healy, and James Melville. UMAP: Uniform manifold approxima-tion and projection for dimension reduction. arXiv preprint arXiv:1802.03426 , 2018. John S Delaney. ESOL: Estimating aqueous solubility directly from molecular structure. 
+
+Journal of Chemical Information and Computer Sciences , 44(3):1000–1005, 2004. Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le, Geoffrey Hinton, and Jeff Dean. Outrageously large neural networks: The sparsely-gated mixture-of-experts layer. International Conference on Learning Representations , 2017. Tianhe Yu, Saurabh Kumar, Abhishek Gupta, Sergey Levine, Karol Hausman, and Chelsea Finn. Gradient surgery for multi-task learning. Advances in Neural Infor-mation Processing Systems , 33:5824–5836, 2020. Bo Liu, Xingchao Liu, Xiaojie Jin, Peter Stone, and Qiang Liu. Conflict-averse gradient descent for multi-task learning. Advances in Neural Information Processing Systems ,34:18878–18890, 2021. 61

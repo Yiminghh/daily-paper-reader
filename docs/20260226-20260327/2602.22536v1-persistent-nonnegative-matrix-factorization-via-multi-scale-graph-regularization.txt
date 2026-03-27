@@ -1,0 +1,2600 @@
+Title: Persistent Nonnegative Matrix Factorization via Multi-Scale Graph Regularization
+
+URL Source: https://arxiv.org/pdf/2602.22536v1
+
+Published Time: Fri, 27 Feb 2026 01:20:50 GMT
+
+Number of Pages: 44
+
+Markdown Content:
+PERSISTENT NONNEGATIVE MATRIX FACTORIZATION VIA MULTI-SCALE GRAPH REGULARIZATION ∗
+
+JICHAO ZHANG † , RAN MIAO ‡ , AND LIMIN LI §
+
+Abstract. Matrix factorization techniques, especially Nonnegative Matrix Factorization (NMF), have been widely used for dimensionality reduction and interpretable data representation. However, existing NMF-based methods are inherently single-scale and fail to capture the evolution of connectiv-ity structures across resolutions. In this work, we propose persistent nonnegative matrix factorization (pNMF), a scale-parameterized family of NMF problems, that produces a sequence of persistence-aligned embeddings rather than a single one. By leveraging persistent homology, we identify a canon-ical minimal sufficient scale set at which the underlying connectivity undergoes qualitative changes. These canonical scales induce a sequence of graph Laplacians, leading to a coupled NMF formulation with scale-wise geometric regularization and explicit cross-scale consistency constraint. We analyze the structural properties of the embeddings along the scale parameter and establish bounds on their increments between consecutive scales. The resulting model defines a nontrivial solution path across scales, rather than a single factorization, which poses new computational challenges. We develop a sequential alternating optimization algorithm with guaranteed convergence. Numerical experiments on synthetic and single-cell RNA sequencing datasets demonstrate the effectiveness of the proposed approach in multi-scale low-rank embeddings. 
+
+Key words. Nonnegative Matrix Factorization, Persistent Homology, Graph Laplacian Regu-larization, Multi-scale Embeddings 
+
+MSC codes. 15A23, 55N31, 68Q25 
+
+1. Introduction. Matrix factorization is a fundamental technique in machine learning, particularly for tasks such as feature extraction and dimensionality reduc-tion. By decomposing a data matrix into the product of two or more smaller matrices, it yields a compact embedding that reveals latent patterns within the data. This capa-bility is especially valuable in domains such as computer vision, pattern recognition, bioinformatics, and recommender systems [16], where data are often high-dimensional and complex. Classical matrix factorization techniques—such as LU decomposition, QR de-composition, and Singular Value Decomposition (SVD) [26]—have long served as foundational tools in numerical linear algebra. However, these methods typically do not impose constraints such as nonnegativity, which can limit their interpretability and effectiveness in applications where the data and its components are naturally nonnegative. Meanwhile, psychological [24] and physiological [29, 20] evidence sug-gests that the human brain processes information using parts-based representations. Inspired by this, Nonnegative Matrix Factorization (NMF) [18] introduces nonneg-ativity constraints, factorizing a nonnegative data matrix into the product of two low-rank nonnegative matrices: a basis matrix and a coefficient matrix. These con-straints enforce additive combinations of basis components, encouraging the model to learn parts of objects rather than holistic patterns. For example, in image analysis, 
+
+> ∗
+
+Submitted to the editors DATE. 
+
+Funding: This work was funded by National Natural Science Foundation of China project under Grant No. 12222115. 
+
+> †
+
+School of Mathematics and Statistics, Xi’an Jiaotong University, Xi’an, Shaanxi Province, 710049, China (jichaozhang@stu.xjtu.edu.cn). 
+
+> ‡
+
+School of Mathematics and Statistics, Xi’an Jiaotong University, Xi’an, Shaanxi Province, 710049, China (reimu741@stu.xjtu.edu.cn). 
+
+> §
+
+Corresponding author. School of Mathematics and Statistics, Xi’an Jiaotong University, Xi’an, Shaanxi Province, 710049, China (liminli@mail.xjtu.edu.cn). 1
+
+> arXiv:2602.22536v1 [cs.LG] 26 Feb 2026
+
+2 ZHANG, MIAO, AND LI 
+
+NMF may learn facial components such as eyes, noses, or mouths, rather than entire faces—hence the term “parts-based” representation. Despite these advantages, standard NMF treats each data point independently and thus fails to preserve the geometric structure inherent in many datasets. In practice, data are often assumed to lie on a low-dimensional manifold embedded in a high-dimensional space [27, 25, 1], and ignoring this manifold structure can lead to suboptimal representations. To address this limitation, Graph Regularized Nonnegative Matrix Factorization (GNMF) [4] incorporates geometric information by constructing a k-nearest neighbors ( k-NN) graph that captures the intrinsic manifold structure of the data. The graph structure is encoded via the graph Laplacian [8], which is used to define a graph-based regularization term added to the NMF objective. This encourages the learned low-rank embedding to respect the geometry—i.e., nearby points in the original space remain close in the embedding space—thus achieving a geometry-preserving, parts-based factorization. However, the use of a standard graph Laplacian in GNMF captures only a single-scale of the data manifold, thereby limiting its capacity to reflect multi-scale structural patterns. To overcome this limitation, Persistent Combinatorial Laplacian [30]—also known as the persistent Laplacian (PL) or persistent spectral graph—was introduced. This framework has inspired a variety of theoretical developments [21] and algorithmic implementations [31], facilitating the integration of topological persistence into spec-tral graph methods. Building upon this foundation, Topological NMF (TNMF) [14] was proposed, which integrates persistent Laplacian regularization into the NMF ob-jective to capture multi-scale geometric and topological information. In TNMF, the single graph Laplacian used in GNMF is replaced by a sum of Laplacians derived from a series of weighted graphs, where each graph is generated by partitioning the edge weight range into several equally spaced intervals. Additionally, a variant called 
+
+k-TNMF [14] was introduced, in which the weighted graphs are substituted with a series of k-NN graphs, generated by varying the neighborhood parameter k.Despite the introduction of persistent Laplacian regularization in TNMF, the method still suffers from two key limitations. First, it learns only a single low-rank embedding, thereby failing to capture the evolution of data representations across multiple topological scales. Second, its construction of multi-scale graphs relies on manually partitioning edge weights or varying the neighborhood size k, which may not accurately reflect the intrinsic topological changes within the data. As a powerful alternative, Topological Data Analysis (TDA) [3, 33, 6], particularly persistent homol-ogy [35, 11], offers a robust and mathematically grounded framework for capturing multi-scale topological features in high-dimensional data. By tracking the appear-ance and disappearance of topological features (e.g., connected components, cycles, and voids) as a scale parameter varies, persistent homology provides a natural ba-sis for multi-scale embeddings learning. Recent works have successfully incorporated persistent homology into applications such as image segmentation [9], topological au-toencoders [23], and cell state analysis [15]-typically by introducing a topological loss function. Motivated by these insights, we propose a novel method termed persistent Non-negative Matrix Factorization (pNMF), which integrates nonnegative matrix factor-ization with persistent homology–guided multi-scale topological graph constructions. This framework is specifically designed to extract interpretable, low-rank, and multi-scale embeddings of high-dimensional and complex data, while explicitly modeling the evolution of data connectivity across scales. The main contributions of this work are summarized as follows: PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 3
+
+• We define a canonical minimal sufficient scale set for data connectivity via the stability structure of 0-dimensional persistent homology. We show that the death scales induced by the H0 persistence diagram form a minimal set that exhausts all connectivity transitions of the underlying data. Based on these canonical scales, we construct a family of multi-scale graphs and associated graph Laplacians, and establish Lipschitz continuity with respect to scale, together with spectral stability and monotonicity properties. 
+
+• We propose a novel multi-scale persistent nonnegative matrix factorization (pNMF) model that couples scale-wise geometric regularization with explicit cross-scale smoothness and anchoring constraints. This formulation gives a sequence of persistence-aligned low-rank factorizations and admits quan-titative bounds on the variation of factor matrices across adjacent scales, providing theoretical guarantees on the stability of the resulting multi-scale embeddings. 
+
+• We develop an efficient sequential alternating optimization scheme tailored to the proposed pNMF formulation and establish its convergence to a stationary point. Numerical experiments on synthetic benchmarks and single-cell RNA sequencing datasets corroborate the theoretical analysis and demonstrate the effectiveness of the proposed method in capturing coherent multi-scale struc-tures, as well as the impact of individual model components. The code for the proposed pNMF and experiments is available at https://github. com/LiminLi-xjtu/pNMF. 
+
+2. Related Work. In this section, we briefly review two fundamental method-ologies: nonnegative matrix factorization and persistent homolgy, which are the basics of our proposed method of persistent nonnegative matrix factorization. 
+
+2.1. Nonnegative Matrix Factorization. Nonnegative Matrix Factorization (NMF) [18, 17, 32, 12] is a widely utilized matrix decomposition technique that enables low-rank embedding of high-dimensional nonnegative data. Given a nonnegative data matrix X ∈ Rp×n representing n data points with dimension p, NMF seeks nonnegative matricesa W ∈ Rp×d (basis matrix) and H ∈
+
+Rd×n (coefficient matrix) such that X ≈ W H , typically by solving min  
+
+> W,H
+
+∥X − W H ∥2 
+
+> F
+
+, s.t. W ≥ 0, H ≥ 0,
+
+where ∥ · ∥ F denotes the Frobenius norm. By replacing the original high-dimensional matrix X with H, NMF achieves effective dimensionality reduction. In this context, 
+
+H can be interpreted as a nonnegative low-rank embedding of the input data. Graph Regularized Nonnegative Matrix Factorization (GNMF) [4] extends NMF by incorporating geometric information through a graph Laplacian regularization term. The corresponding optimization problem is formulated as min  
+
+> W,H
+
+∥X − W H ∥2 
+
+> F
+
++ λ Tr( HLH ⊤), s.t. W ≥ 0, H ≥ 0,
+
+where Tr( ·) denotes the matrix trace, ( ·)⊤ represents the matrix transpose, L is the graph Laplacian [8] constructed from the data affinity graph, and λ > 0 is a regular-ization parameter controlling the contribution of the geometric term. The graph regularization term Tr( HLH ⊤) encourages nearby data points to re-main close in the learned embedding, yielding geometry-preserving low-rank embed-ding that are effective for clustering and manifold learning tasks. 4 ZHANG, MIAO, AND LI 
+
+2.2. Persistent Homology. Persistent homology [35, 11] is a fundamental tool in Topological Data Analysis (TDA) [3, 33, 6], designed to capture the multi-scale topological structure of data. By tracking the birth and death of topological fea-tures—such as connected components, cycles, and voids—across varying scales, it provides a coordinate-invariant and noise-robust summary of the intrinsic geometric organization of a dataset. Let V be a finite set of points. A k-simplex σ = ( v0, v 1, . . . , v k) is defined as the convex hull of k + 1 independent vertices in V . A simplicial complex K is a collection of simplices that is closed under taking faces and whose simplices intersect only along common faces. Such complexes provide a combinatorial representation for the underlying geometric structures of data. Given a simplicial complex K, algebraic topology associates a sequence of chain groups Ck(K) together with boundary operators ∂k satisfying ∂k ◦ ∂k+1 = 0. The k-th 
+
+homology group is defined as 
+
+Hk(K) = ker( ∂k)im( ∂k+1 ) ,
+
+which characterizes k-dimensional topological features of K. The corresponding Betti number βk = rank( Hk) counts the number of such features, including connected components ( k = 0), cycles ( k = 1), and voids ( k = 2). For a finite point set V equipped with a distance metric, a common construction is the Vietoris–Rips complex [34]. For ε ≥ 0, the Vietoris–Rips complex Vε consists of all simplices whose vertices are pairwise within distance ε. Rather than selecting a single scale, one considers the filtration 
+
+· · · ⊆ V εi ⊆ V εj ⊆ · · · , with · · · < ε i < ε j < · · · ,
+
+which enables the study of topological features across multiple scales. As ε increases, 
+
+k-dimensional features may appear (birth) and disappear (death). These events are recorded as pairs ( bi, d i), forming the persistence diagram 
+
+Dk = {(bi, d i) | bi < d i, i = 1 , 2, . . . }.
+
+Persistence diagrams compactly encode the multiscale evolution of topological struc-tures, where long-lived features are typically regarded as topologically significant. A detailed review of the mathematical background of persistent homology is pro-vided in the supplementary material section A. 
+
+3. Persistent Nonnegative Matrix Factorization(pNMF). In this section, we propose our model of persistent nonnegative matrix factorization for a given high-dimensional, nonnegative data X ∈ Rp×n for n data points, which innovatively inte-grates persistent homology with matrix factorization by first capturing multi-scale topological features and then embedding data points across continuously varying scales, thereby bridging topological representation with latent feature learning. 
+
+3.1. Canonical Minimal Sufficient Scale Set. Let X = {x1, x 2, . . . , x n} ⊂ 
+
+Rp be a set of n data points. We construct a nested sequence of simplicial complexes 
+
+{X (ε)}ε≥0 using the Vietoris–Rips (VR) construction. For a scale parameter ε ≥ 0, the VR complex is defined as 
+
+X (ε) = {σ ⊆ X | dist( xi, x j ) < ε, ∀ xi̸ = xj ∈ σ},PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 5where σ denotes a simplex and dist( xi, x j ) is the Euclidean distance between points xi
+
+and xj . As the scale parameter ε increases, the VR complexes form a nested sequence, such that the complex at any smaller scale is contained within the complex at every larger scale. In this work, we focus on the evolution of the 0-dimensional homology groups 
+
+{H 0(X (ε)) }ε> 0, which characterize the connectivity structure of the data across scales. To formalize this evolution, we introduce the homology-valued map 
+
+F : R+ −→ Ab / ∼=, F (ε) := [ H0(X (ε))] ,
+
+where Ab / ∼= denotes the set of isomorphism classes of abelian groups. The map F is piecewise constant and changes only at certain critical scale values. To formalize which scales are sufficient to capture all connectivity transitions, we introduce the following notion. 
+
+Definition 3.1 (Sufficient Scale Set). A finite set Λ ⊂ R+ is called sufficient 
+
+(with respect to H0) if for every ε > 0 there exists ε′ ∈ Λ such that F (ε) = F (ε′), i.e., the 0-dimensional homology groups at ε and ε′ are isomorphic. 
+
+A sufficient scale set guarantees that restricting attention to Λ preserves all con-nectivity information encoded in H0. A natural question is how to construct such a set. Since changes in the VR filtration are triggered precisely by the appearance of edges, and edges appear exactly at pairwise distances, a most straightforward suffi-cient set is obtained by collecting all pairwise distances. 
+
+Definition 3.2 (Distance-Scale Set). The distance-scale set of X is defined as 
+
+∆⋆ := {∥ xi − xj ∥2 | 1 ≤ i < j ≤ n} ∪ { δmax },
+
+where δmax is a sufficiently large scale such that X (δmax ) is fully connected. 
+
+A sufficient scale set guarantees that no topological information encoded in H0 is lost. In particular, the distance-scale set ∆ ⋆ is trivially sufficient. Among all sufficient scale sets, we are interested in those with minimal cardinality. 
+
+Definition 3.3 (Minimal Sufficient Scale Set). A sufficient scale set is called 
+
+minimal if no proper subset of it remains sufficient. 
+
+Although minimal sufficient scale sets have the smallest possible size, they are generally not unique. To eliminate this ambiguity, we further introduce a canonical representative. 
+
+Definition 3.4 (Canonical Minimal Sufficient Scale Set). A minimal sufficient scale set Λ ⊂ R+ is called canonical if for every ε ∈ Λ, there exists an interval 
+
+(ε−, ε ] ⊂ R+ such that F (ε) = F (ε′) for all ε′ ∈ (ε−, ε ].
+
+The map F is right-continuous and piecewise constant. More precisely, for every 
+
+ε > 0, there exists ε− < ε such that F (ε′) = F (ε) for all ε′ ∈ (ε−, ε ]. Hence, the canonical minimal sufficient scale set coincides with the set of jump points of F viewed as a c` adl` ag map with values in Ab / ∼=. To explicitly identify such canonical scales in a principled and computable man-ner, we consider the 0-dimensional persistence diagram D0 associated with the VR filtration. The diagram D0 records the birth and death times of all connected com-ponents. Since each data point initially forms an isolated component, all components are born at time 0. Thus, D0 takes the form 
+
+D0 = {(0 , d t) | t = 1 , 2, . . . , n }, d1 ≤ d2 ≤ · · · ≤ dn,6 ZHANG, MIAO, AND LI 
+
+where dt denotes the death time at which the t-th component merges into another component and ceases to exist as an independent class in H0(X(dt)). Under a generic position assumption on the data (which holds almost surely in practice), such ties occur with probability zero. Therefore, without loss of generality, we assume the death times to be strictly ordered throughout this paper, i.e., d1 < d 2 < · · · < d n. As 
+
+dt increases, the 0-th Betti number β0 decreases monotonically from n (the number of data points) to 1 (when all points are connected). Note that, in theory, the final death time in D0 is infinite; in practice, we replace it with a sufficiently large finite value, which coincides with δmax and guarantees full connectivity of the induced graph for numerical implementation. We collect the scales εt, given by the death times in D0(X), to form a scale set Λ⋆ := {ε1, ε 2, . . . , ε n}.
+
+Theorem 3.5. The scale set Λ⋆ is the canonical minimal sufficient scale set. Proof. The proof is provided in the supplementary material subsection B.1. The scale set Λ ⋆ therefore uniquely captures all essential transition points in the connectivity structure of the data and forms the basis for constructing multi-scale topological graphs in pNMF. 
+
+3.2. Multi-scale topological graphs. Our pNMF enables multi-scale low-rank embeddings by leveraging topological graphs constructed across multiple scales. Specifically, we construct a family of scale-dependent graphs associated with the se-lected scale parameters, which serve as structural regularizers in the proposed pNMF framework. Let X = {x1, x 2, . . . , x n} ⊂ Rp be a finite point set. For each scale ε > 0, let A(ε) ∈ Rn×n denote the weighted adjacency matrix (3.1) Aij (ε) = 
+
+
+
+exp( − ∥xi − xj ∥22
+
+εα ), i̸ = j, ∥xi − xj ∥2 < ε, 
+
+0, otherwise ,
+
+with a constant α > 0 controlling the decay rate of edge weights with respect to the scale parameter. Let D(ε) be the diagonal degree matrix with Dii (ε) = Pnj=1 Aij (ε), and define the (unnormalized) graph Laplacian L(ε) = D(ε) − A(ε). Each adjacency matrix A(ε) induces a weighted graph G(X, A (ε)), capturing both the connectivity and the relative affinities among the data points X at scale ε. We refer to the sequence 
+
+{G(X, A (ε)) }ε> 0 as the multi-scale topological graphs , as illustrated in Figure 1. 
+
+Theorem 3.6 (Piecewise Lipschitz Continuity of Laplacian). Let ∆⋆ = {δ1 <δ2 < · · · < δ m} be the distance-scale set on a finite point set X = {x1, x 2, . . . , x n} ⊂ 
+
+Rp. For each k = 1 , 2, . . . , m − 1, there exists a constant C > 0, such that for all 
+
+ε, ε ′ ∈ (δk, δ k+1 ], the Laplacian satisfies 
+
+∥L(ε) − L(ε′)∥F ≤ C|ε − ε′|.
+
+Proof. The proof is provided in the supplementary material subsection B.2. 
+
+Theorem 3.7 (Lipschitz Bound Between Adjacent Scales). For any two consec-utive scales δk, δ k+1 ∈ ∆⋆, there exists a constant C > 0, depending only on X and 
+
+n, such that 
+
+∥L(δk+1 ) − L(δk)∥F ≤ C(δk+1 − δk).PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 7Persistence Diagram:  𝒟𝒟 0Vietoris-Rips Complex:  𝒳𝒳 (𝜀𝜀 )
+
+0
+
+## ⋯ ⋯
+
+𝜀𝜀 7 𝜀𝜀 8
+
+a
+
+c
+
+b
+
+𝜀𝜀 ↑  
+
+> 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 1))
+
+Multi-scale Topological Graphs                
+
+> 𝜀𝜀 9
+> Edge Weight
+> 𝜀𝜀 1
+> 𝜀𝜀 2𝜀𝜀 3
+> 𝜀𝜀 4
+> 𝜀𝜀 5
+> 𝜀𝜀 6
+> 𝜀𝜀 7
+> 𝜀𝜀 8
+> 𝜀𝜀 9
+> 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 10 ))
+> 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 5)) 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 2)) 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 3)) 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 4))
+> 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 7)) 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 7)) 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 8)) 𝐺𝐺 (𝑋𝑋 ,𝐴𝐴 (𝜀𝜀 9))
+
+Fig. 1 . Illustration of the construction of multi-scale topological graphs from persistent homol-ogy. (a) Vietoris–Rips complex X (ε) on a dataset X ∈ R2×10 . (b) The associated 0-dimensional persistence diagram D0, encoding the death times of connected components. (c) A sequence of weighted graphs defined at the persistence-based scales {εt}, which serve as the multi-scale topologi-cal graphs. 
+
+Similarly, for any two consecutive scales εt, ε t+1 ∈ Λ⋆, there exists a constant C > 0,depending only on X and n, such that 
+
+∥L(εt+1 ) − L(εt)∥F ≤ C(εt+1 − εt).
+
+Proof. (i) Proof on ∆⋆. Fix two consecutive scales δk, δ k+1 ∈ ∆⋆. Denote ∆A := A(δk+1 )−A(δk), ∆D := D(δk+1 )−D(δk), ∆L := L(δk+1 )−L(δk) = ∆ D−∆A. 
+
+Introduce the edge sets 
+
+Eold := {(i, j )|∥ xi − xj ∥2 < δ k}, Enew := {(i, j )|δk ≤ ∥ xi − xj ∥2 < δ k+1 },
+
+and decompose ∆ A = (∆ A)old + (∆ A)new , where (∆ A)old corresponds to existing edges in Eold and (∆ A)new corresponds to newly added edges in Enew .For edges in Eold , the support of the adjacency matrix remains unchanged on (δk, δ k+1 ]. By Theorem 3.6, there exists a constant C1 > 0, independent of k, such 8 ZHANG, MIAO, AND LI 
+
+that ∥(∆ A)old ∥F ≤ C1(δk+1 − δk). For edges in Enew , we have (∆ A)ij = Aij (δk) = exp( −∥ xi − xj ∥22/δ αk ), and hence 0 < (∆ A)ij < 1. Since X is finite, the number of newly added edges |Enew | is finite. Therefore, 
+
+∥(∆ A)new ∥F < p|Enew | ≤ C2(δk+1 − δk),
+
+where C2 = √n/ min t(δt+1 − δt) is a constant, independent of k. Combining the two parts yields 
+
+∥∆A∥F ≤ C3(δk+1 − δk),
+
+with C3 depending only on X and n.Moreover, ∥∆D∥F ≤ √n∥∆A∥F ≤ C4(δk+1 − δk). Finally, 
+
+∥∆L∥F ≤ ∥ ∆D∥F + ∥∆A∥F ≤ C(δk+1 − δk),
+
+where C = C3 + C4 depends only on X and n. This proves the claim on ∆ ⋆.
+
+(ii) Proof on Λ⋆. Let εt, ε t+1 ∈ Λ⋆. Denote by δk1 , δ k2 , . . . , δ kr all consecutive scales in ∆ ⋆ lying in [ εt, ε t+1 ], with δk1 = εt and δkr = εt+1 . Then 
+
+L(εt+1 ) − L(εt) = 
+
+> r−1
+
+X
+
+> j=1
+
+(L(δkj+1 ) − L(δkj )) .
+
+Applying the triangle inequality and the first part of the proof yields 
+
+∥L(εt+1 ) − L(εt)∥F ≤
+
+> r−1
+
+X
+
+> j=1
+
+∥L(δkj+1 ) − L(δkj )∥F ≤
+
+> r−1
+
+X
+
+> j=1
+
+C(δkj+1 − δkj ) = C(εt+1 − εt).
+
+This completes the proof. Since operator-level stability alone does not directly characterize the behavior of the Laplacian spectrum, we next show that, when the scale parameter is restricted to the canonical minimal sufficient scale set Λ ⋆, the Laplacian eigenvalues exhibit not only Lipschitz stability but also a monotone evolution across consecutive scales. 
+
+Theorem 3.8 (Spectral stability and monotonicity on the canonical minimal suf-ficient scale set). Let Λ⋆ = {ε1 < ε 2 < · · · < ε n} be the canonical minimal sufficient scale set on a finite point set X = {x1, x 2, . . . , x n} ⊂ Rp. Let 0 = γ1(ε) ≤ γ2(ε) ≤· · · ≤ γn(ε) denote the eigenvalues of L(ε). Then for any two consecutive scales 
+
+εt, ε t+1 ∈ Λ⋆, the following statements hold. 
+
+(1) Lipschitz bound for eigenvalues. There exists a constant C > 0, depend-ing only on X and n, such that for all k = 1 , 2, . . . , n ,
+
+|γk(εt+1 ) − γk(εt)| ≤ C(εt+1 − εt).
+
+(2) Monotonicity of eigenvalues. 
+
+γk(εt) ≤ γk(εt+1 ), ∀k = 1 , 2, . . . , n. 
+
+Moreover, letting k = dim ker L(εt), we have 0 = γk(εt) < γ k(εt+1 ).
+
+(3) Strict decrease of kernel dimension. As a direct consequence of (2), 
+
+dim ker L(εt) > dim ker L(εt+1 ).
+
+Proof. The proof is provided in the supplementary material subsection B.4. PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 9For consecutive scales in ∆ ⋆ \ Λ⋆, the induced Laplacian perturbation preserves graph connectivity and the nullity of L(δ), affecting only intra-component structure. In contrast, consecutive scales in Λ ⋆ necessarily induce connectivity changes, mani-fested by a strict decrease in the multiplicity of the zero eigenvalue. Thus, ∆ ⋆ and Λ ⋆
+
+correspond respectively to metric refinements and topology-altering transitions. 
+
+3.3. Persistent nonnegative matrix factorization. The goal of pNMF is to learn a family of multi-scale low-rank embeddings {Ht}nt=1 for the input data matrix X ∈ Rp×n, where each embedding corresponds to a graph constructed at a topologically meaningful scale εt ∈ Λ⋆. At each scale εt, X is approximated by a nonnegative factorization X ≈ WtHt, with a basis matrix Wt ∈ Rp×d and a coefficient (embedding) matrix Ht ∈ Rd×n. For notational convenience, we write At := A(εt), 
+
+Dt := D(εt), and Lt := L(εt). The collection {Ht}nt=1 is referred to as the multi-scale low-rank embeddings .Motivated by the persistence principle in topological data analysis, pNMF en-forces that embeddings evolve smoothly across scales, so that structures persisting over wide scale ranges give rise to stable latent components, while short-lived struc-tures are naturally suppressed. This is achieved by integrating scale-adaptive geo-metric regularization, explicit cross-scale coupling, and a stabilizing anchoring term within a unified optimization framework, leading to the following model: (3.2) min 
+
+> Wt,H t
+> t=1 ,2,...,n
+
+O =
+
+> n
+
+X
+
+> t=1
+
+∥X − WtHt∥2
+
+> F
+
+| {z }
+
+> data fidelity
+
++ λ1
+
+> n
+
+X
+
+> t=1
+
+Tr( HtLtH⊤ 
+
+> t
+
+)
+
+| {z }
+
+> geometric regularization
+
++ λ2
+
+> n
+
+X
+
+> t=2
+
+∥Ht − Ht−1∥2
+
+> F
+
+| {z }
+
+> scale smoothness
+
++ λ3
+
+> n
+
+X
+
+> t=1
+
+∥Ht∥2
+
+> F
+
+| {z }
+
+> scale anchoring
+
+s.t. Wt ≥ 0, H t ≥ 0, ∀t = 1 , 2, . . . , n. 
+
+The four terms in (3.2) play distinct and complementary roles. The data fidelity term ensures faithful low-rank approximation of X at each scale, while the geometric regularization term, based on the graph Laplacian Lt, encourages the embeddings to respect the local manifold structure encoded by the scale-specific graph At. The scale smoothness term explicitly couples successive embeddings, promoting continuity across scales, and the anchoring term controls the overall magnitude of the embed-dings to improve numerical stability. The parameters λ1 > 0, λ2 > 0, and λ3 > 0balance local geometry preservation, cross-scale coherence, and embedding regular-ity, respectively. The nonnegativity constraints preserve the interpretability of the learned embeddings. 
+
+Remark. The pNMF formulation possesses several distinctive properties. First, the scale sequence {εt}nt=1 is not chosen heuristically but is derived from the 0-dimensional persistence diagram, ensuring that each embedding corresponds to a meaningful transition in the connectivity structure of the data. Second, geometric regularization is imposed through scale-specific graph Laplacians, enabling the model to preserve local manifold structures in a scale-adaptive manner rather than relying on a fixed neighborhood construction. Third, the joint optimization framework, incor-porating both cross-scale smoothness and anchoring, promotes coherent and stable evolution of embeddings across scales. Finally, the nonnegativity constraints yield additive and parts-based embeddings, enhancing interpretability and allowing the 10 ZHANG, MIAO, AND LI 
+
+progression of latent components to be explicitly tracked along the scale sequence. 
+
+3.4. Theoretical Analysis of Multi-scale Embeddings Continuity. While pNMF is motivated by topological persistence, it is important to theoretically under-stand how the embeddings {Ht}nt=1 evolve across scales. Building on the Lipschitz bound of the graph Laplacians across adjacent scales in Λ ⋆ established in Theorem 3.7, we establish bounds on the increments of the pNMF embeddings. 
+
+Theorem 3.9 (Bounds for multi-scale embedding increments). Let {(Wt, H t)}nt=1 
+
+be a first-order stationary point of the pNMF model (3.2) . For 1 < t ≤ n, define 
+
+∆Ht := Ht − Ht−1, ∆Lt := Lt − Lt−1, CX := ∥X⊤X∥F .
+
+Assume that for all t, Ht has full row rank d, and there exist constants CH > 0 and 
+
+ℓ > 0 such that ∥Ht∥F ≤ CH and γmin (HtH⊤ 
+
+> t
+
+) ≥ ℓ, where γmin means the minimal eigenvalue of the corresponding matrix. Then the increments satisfy the recursive inequality 
+
+(3.3) (2 λ2 + λ3 − C)∥∆Ht∥F ≤ λ1CH ∥∆Lt∥F + λ2(∥∆Ht−1∥F + ∥∆Ht+1 ∥F ),
+
+where C := ( C1
+
+√n − d + C2 CH 
+
+> ℓ
+
+)CX , C1 := 1 
+
+> ℓ
+
++ 2C2 
+
+> H
+> ℓ2
+
+, C2 := C1CH + CH 
+
+> ℓ
+
+.Furthermore, assuming λ3 > C , define 
+
+a := λ1CH
+
+2λ2 + λ3 − C , b := λ2
+
+2λ2 + λ3 − C ,
+
+the following two bounds hold: 
+
+(3.4) max  
+
+> t
+
+∥∆Ht∥F ≤ λ1CH
+
+λ3 − C max  
+
+> t
+
+∥∆Lt∥F , (Uniform bound )(3.5) ∥∆Ht∥F ≤ a
+
+√1 − 4b2
+
+X
+
+> k
+
+ρ|t−k|∥∆Lk∥F , (Pointwise bound )
+
+where ρ := 1−√1−4b2 
+
+> 2b
+
+∈ (0 , 1) .Proof. Proof of Recursive inequality. Fix 1 < t < n and assume the nonneg-ativity constraints are inactive at scales t. The first-order stationary conditions with respect to Wt and Ht are (WtHt − X)H⊤ 
+
+> t
+
+= 0 ,(3.6) 
+
+W ⊤ 
+
+> t
+
+(WtHt − X) + λ1HtLt + λ2(2 Ht − Ht−1 − Ht+1 ) + λ3Ht = 0 .(3.7) Since rank( Ht) = d, (3.6) implies Wt = XH † 
+
+> t
+
+and H† 
+
+> t
+
+= H⊤ 
+
+> t
+
+(HtH⊤ 
+
+> t
+
+)−1. Define 
+
+Rt := W ⊤ 
+
+> t
+
+(WtHt − X) = ( H† 
+
+> t
+
+)⊤X⊤X(H† 
+
+> t
+
+Ht − I). Similarly, the stationary condition at scale t − 1(2 < t < n ) yields (3.8) Rt−1 + λ1Ht−1Lt−1 + λ2(2 Ht−1 − Ht−2 − Ht) + λ3Ht−1 = 0 .
+
+Subtracting (3.8) from (3.7), we obtain ∆Ht(λ1Lt + (2 λ2 + λ3)I) = Rt−1 − Rt − λ1Ht−1∆Lt + λ2(∆ Ht−1 + ∆ Ht+1 ).PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 11 Taking Frobenius norms on both sides and applying the triangle inequality gives 
+
+∥∆Ht(λ1Lt + (2 λ2 + λ3)I)∥F
+
+≤∥ Rt − Rt−1∥F + λ1∥Ht−1∥F ∥∆Lt∥F + λ2(∥∆Ht−1∥F + ∥∆Ht+1 ∥F ).
+
+We first bound the residual difference by 
+
+∥Rt − Rt−1∥F
+
+≤∥ (H† 
+
+> t
+
+)⊤ − (H†
+
+> t−1
+
+)⊤∥F CX ∥H† 
+
+> t
+
+Ht − I∥F + ∥(H†
+
+> t−1
+
+)⊤∥F CX ∥H† 
+
+> t
+
+Ht − H†
+
+> t−1
+
+Ht−1∥F .
+
+Since rank( Ht) = d, H† 
+
+> t
+
+Ht is an orthogonal projector in Rn×n with rank d, thus 
+
+∥H† 
+
+> t
+
+Ht − I∥F = √n − d. Moreover, under ∥Ht∥F ≤ CH and γmin (HtH⊤ 
+
+> t
+
+) ≥ ℓ, one can bound 
+
+∥(H† 
+
+> t
+
+)⊤ − (H†
+
+> t−1
+
+)⊤∥F ≤ C1∥∆Ht∥F , ∥(H†
+
+> t−1
+
+)⊤∥F ≤ CH
+
+ℓ ,
+
+and 
+
+∥H† 
+
+> t
+
+Ht − H†
+
+> t−1
+
+Ht−1∥F ≤ (C1CH + CH
+
+ℓ )∥∆Ht∥F .
+
+Combining the above estimates yields 
+
+∥Rt − Rt−1∥F ≤ C∥∆Ht∥F , where C = ( C1
+
+√n − d + C2
+
+CH
+
+ℓ )CX ,
+
+with C1, C 2 defined in the theorem statement. Since Lt is a graph Laplacian, it is symmetric positive semidefinite and thus its smallest eigenvalue is zero. Consequently, λ1Lt + (2 λ2 + λ3)I is symmetric positive semidefinite with all eigenvalues bounded below by 2 λ2 + λ3. Using the trace repre-sentation of the Frobenius norm, we have 
+
+∥∆Ht(λ1Lt + (2 λ2 + λ3)I)∥F ≥ (2 λ2 + λ3)∥∆Ht∥F ,
+
+where the inequality follows from the fact that ( λ1Lt + (2 λ2 + λ3)I)2 ⪰ (2 λ2 + λ3)2I
+
+and ∆ H⊤ 
+
+> t
+
+∆Ht ⪰ 0. Combining the above inequalities, we arrive at (2 λ2 + λ3 − C)∥∆Ht∥F ≤ λ1CH ∥∆Lt∥F + λ2(∥∆Ht−1∥F + ∥∆Ht+1 ∥F ),
+
+which proves (3.3). 
+
+Proof of Uniform bound. Taking the maximum over t on both sides of (3.3), we obtain max  
+
+> t
+
+∥∆Ht∥F ≤ a max  
+
+> t
+
+∥∆Lt∥F + b(max  
+
+> t
+
+∥∆Ht−1∥F + max  
+
+> t
+
+∥∆Ht+1 ∥F ).
+
+Since max t ∥∆Ht∥F = max t ∥∆Ht−1∥F = max t ∥∆Ht+1 ∥F ,(1 − 2b) max  
+
+> t
+
+∥∆Ht∥F ≤ a max  
+
+> t
+
+∥∆Lt∥F .
+
+Under the assumption λ3 > C , the coefficient 1 − 2b is strictly positive, and therefore max  
+
+> t
+
+∥∆Ht∥F ≤ a
+
+1 − 2b max  
+
+> t
+
+∥∆Lt∥F = λ1CH
+
+λ3 − C max  
+
+> t
+
+∥∆Lt∥F ,
+
+which proves (3.4). 12 ZHANG, MIAO, AND LI 
+
+Proof of Pointwise bound. From (3.3), we have 
+
+∥∆Ht∥F − b∥∆Ht−1∥F − b∥∆Ht+1 ∥F ≤ a∥∆Lt∥F .
+
+Consider the linear difference operator ( T · )t := ( ·)t −b(·)t−1 −b(·)t+1 . Then the above inequality can be written compactly as ( T ∥ ∆H∥)t ≤ a∥∆Lt∥F .Since 0 < b < 1/2, the operator T is strictly diagonally dominant and admits a unique decaying discrete Green’s function {hk}k∈Z satisfying ( T h)k = δk0 and lim |k|→∞ hk = 0. For k̸ = 0, hk solves the homogeneous recurrence hk − bh k−1 −
+
+bh k+1 = 0. Seeking solutions of the form hk = r|k| with |r| < 1 yields the characteristic equation br 2 − r + b = 0, whose roots are r± = 1±√1−4b2 
+
+> 2b
+
+. The decay condition selects 
+
+r− ∈ (0 , 1), hence hk = Cr |k|− . Enforcing the equation at k = 0 gives C = 1 /√1 − 4b2.Therefore, 
+
+hk = 1
+
+√1 − 4b2 ρ|k|, ρ := 1 − √1 − 4b2
+
+2b ∈ (0 , 1) ,
+
+and in particular hk ≥ 0 for all k.Extending ∥∆Lk∥F by zero outside its natural index set and applying the com-parison principle associated with T yields 
+
+∥∆Ht∥F ≤ a(T −1∥∆L∥)t = a X
+
+> k
+
+ht−k∥∆Lk∥F = a
+
+√1 − 4b2
+
+X
+
+> k
+
+ρ|t−k|∥∆Lk∥F ,
+
+which proves (3.5). 
+
+4. Optimization Algorithm. To minimize the objective function O in (3.2), we employ a sequential alternating optimization scheme that iteratively updates the pairs {(Wt, H t)}nt=1 .For each t with 1 ≤ t ≤ n, let H+1 and H−1 denote the available temporal neighbors of Ht, that is, H+1 = Ht+1 if t < n and undefined otherwise, and H−1 =
+
+Ht−1 if t > 1 and undefined otherwise. When a neighbor does not exist (i.e., t = 1 or t = n), the corresponding temporal term is omitted. Then, ( Wt, H t) is updated by solving the following t-th subproblem: (4.1) min  
+
+> W,H
+
+ft(W, H ) = ∥X − W H ∥2 
+
+> F
+
++ λ1Tr( HL tH⊤)+ λ2(∥H+1 − H∥2 
+
+> F
+
++ ∥H − H−1∥2 
+
+> F
+
+) + λ3∥H∥2
+
+> F
+
+s.t. W ≥ 0, H ≥ 0.
+
+To solve this optimization problem, we introduce the Lagrange multipliers Φ ∈
+
+Rp×d and Ψ ∈ Rd×n, corresponding to the nonnegativity constraints W ≥ 0 and 
+
+H ≥ 0, respectively. The Lagrangian function L is defined as 
+
+L(W, H, Φ, Ψ) = ∥X − W H ∥2 
+
+> F
+
++ λ1Tr( HL tH⊤) + λ2(∥H+1 − H∥2 
+
+> F
+
++ ∥H − H−1∥2 
+
+> F
+
+)+ λ3∥H∥2 
+
+> F
+
++ Tr(Φ ⊤W ) + Tr(Ψ ⊤H).
+
+The Karush–Kuhn–Tucker (KKT) conditions yield the following necessary optimality conditions: (4.2) 
+
+ 
+
+> ∂L
+> ∂W
+
+= 2( W H − X)H⊤ + Φ = 0 , 
+
+> ∂L
+> ∂H
+
+= 2 W ⊤(W H − X) + 2 λ1HL t + 2 λ2(2 H − H+1 − H−1) + 2 λ3H + Ψ = 0 ,W, H ≥ 0, Φ, Ψ ≤ 0,
+
+Φ ⊙ W = 0 , Ψ ⊙ H = 0 .PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 13 Applying the KKT conditions leads to the following multiplicative update rules at the r-th iteration: 
+
+H(r+1) = H(r) ⊙ W (r)⊤X + λ1H(r)At + λ2(H+1 + H−1)
+
+W (r)⊤W (r)H(r) + λ1H(r)Dt + (2 λ2 + λ3)H(r) ,W (r+1) = W (r) ⊙ XH (r+1) ⊤
+
+W (r)H(r+1) H(r+1) ⊤ .
+
+Here, matrix division operations are performed element-wise (Hadamard division), i.e., for any two matrices A and B of the same size, ( A/B )ij = Aij /B ij .We reinterpret the multiplicative update rules as a form of gradient descent with adaptive step sizes 
+
+H(r+1) = H(r) − Γ(r) ⊙ ∇ H ft(W (r), H (r)),W (r+1) = W (r) − Ω(r) ⊙ ∇ W ft(W (r), H (r+1) ).
+
+with step sizes Γ(r) = H(r)
+
+2( W (r)⊤W (r)H(r) + λ1H(r)Dt + (2 λ2 + λ3)H(r)) ,
+
+Ω(r) = W (r)
+
+2W (r)H(r+1) H(r+1) ⊤ .
+
+However, this formulation suffers from two issues: 
+
+• The denominator in the step size may be zero, causing numerical instability. 
+
+• If ( H(r))ij = 0 (or ( W (r))ij = 0) and the gradient is negative, the update is blocked due to zero step size. To address these issues, we adopt the modification in [19] (4.3) H(r+1) = H(r) − ¯Γ(r) ⊙ ∇ H ft(W (r), H (r)),W (r+1) = W (r) − ¯Ω(r) ⊙ ∇ W ft(W (r), H (r+1) ),
+
+with step sizes ¯Γ(r) = ¯H(r)
+
+2( W (r)⊤W (r) ¯H(r) + λ1 ¯H(r)Dt + (2 λ2 + λ3) ¯H(r)) + ν1 ,
+
+¯Ω(r) = ¯W (r)
+
+2( ¯W (r)H(r+1) H(r+1) ⊤) + ν1 .
+
+Here, ¯H(r) is defined element-wise as (4.4) ( ¯H(r))ij =
+
+(
+
+(H(r))ij , ∇H ft(W (r), H (r))ij ≥ 0,
+
+max {(H(r))ij , μ }, ∇H ft(W (r), H (r))ij < 0,
+
+and ¯W (r) is defined analogously. Both ν and μ are predefined small positive constants (default 10 −9). For the standard NMF objective function, it is easy to verify that if W and H form a solution, then so do W S and S−1H for any d × d positive diagonal matrix S. This implies that the factorization is not unique. To eliminate this ambiguity and improve the interpretability of the learned factors, it is common to apply a normalization 14 ZHANG, MIAO, AND LI 
+
+Algorithm 4.1 Sequential Alternating Optimization 
+
+Input : X ∈ Rp×n
+
+Parameters : λ1, λ 2, λ 3
+
+Output : {(Wt, H t)}nt=1 
+
+Notation : ( ·)(s,r ) denotes the value at outer iteration s and inner iteration r. 
+
+> 1:
+
+Initialize {(W (0 ,0)  
+
+> t
+
+, H (0 ,0)  
+
+> t
+
+)}nt=1 . 
+
+> 2:
+
+s = 1  
+
+> 3:
+
+while O(W1, H 1, W 2, H 2, ..., W n, H n) not converge do  
+
+> 4:
+
+for t = 1 to n do  
+
+> 5:
+
+r = 1  
+
+> 6:
+
+while f (Wt, H t) not converge do  
+
+> 7:
+
+Update 
+
+
+
+W (s,r ) 
+
+> t
+
+, H (s,r )
+
+> t
+
+
+
+using (4.3)  
+
+> 8:
+
+r+ = 1  
+
+> 9:
+
+end while  
+
+> 10:
+
+end for  
+
+> 11:
+
+s+ = 1  
+
+> 12:
+
+end while  
+
+> 13:
+
+Normalize {(Wt, H t)}nt=1 using (4.5).  
+
+> 14:
+
+return {(Wt, H t)}nt=1 
+
+strategy, such as enforcing that the column sums of W or the row sums of H are equal to one. Our proposed pNMF model also adopts this strategy. After the optimization procedure converges, we normalize each matrix Wt such that each of its columns sums to one. The corresponding matrix Ht is then rescaled to preserve the product 
+
+WtHt. The normalization step is defined as follows: (4.5) (Wt):,j = (Wt):,j pP
+
+> i=1
+
+(Wt)ij 
+
+, (Ht)j, : = ( Ht)j, : ·
+
+> p
+
+X
+
+> i=1
+
+(Wt)ij .
+
+The overall computational complexity of the proposed algorithm is O(srn (dpn +
+
+d2(p + n) + dn 2)), where s and r denote the numbers of outer and inner iterations, respectively. A detailed complexity analysis is provided in the supplementary material subsection B.9. The detailed algorithm steps are outlined in Algorithm 4.1. 
+
+5. Convergence Analysis. We study the convergence behavior of the proposed update rules in (4.3) and establish several fundamental convergence properties. 
+
+Theorem 5.1. The objective function ft in (4.1) is nonincreasing under the up-date rules given in (4.3) . In particular, for all 1 ≤ t ≤ n and r ≥ 1, it holds that 
+
+ft(W (r+1)  
+
+> t
+
+, H (r+1)  
+
+> t
+
+) ≤ ft(W (r) 
+
+> t
+
+, H (r+1)  
+
+> t
+
+) ≤ ft(W (r) 
+
+> t
+
+, H (r) 
+
+> t
+
+).
+
+Proof. The proof is provided in the supplementary material subsection B.6. Now, we are ready to prove that any limit point of the sequence {W (r) 
+
+> t
+
+, H (r) 
+
+> t
+
+}∞
+
+> r=1
+
+generated by the update rules in (4.3) is a stationary point of the objective function, i.e., it satisfies the KKT optimality conditions defined in (4.2). For simplicity in the subsequent theorem statement, we rewrite the KKT conditions for the t-th subproblem PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 15 in an equivalent but simpler form as follows (5.1) 
+
+
+
+W ≥ 0, H ≥ 0,
+
+∇W ft(W, H ) ≥ 0, ∇H ft(W, H ) ≥ 0,W ⊙ ∇ W ft(W, H ) = 0 , H ⊙ ∇ H ft(W, H ) = 0 ..
+
+Theorem 5.2. Let W (1)  
+
+> t
+
+≥ 0 and H(1)  
+
+> t
+
+≥ 0 be the initial matrices. Then any limit point (W ∗ 
+
+> t
+
+, H ∗ 
+
+> t
+
+) of the sequence {W (r) 
+
+> t
+
+, H (r) 
+
+> t
+
+}∞
+
+> r=1
+
+, generated by the update rules in (4.3) satisfies the KKT conditions in (5.1) .Proof. The proof is provided in the supplementary material subsection B.7. 
+
+Theorem 5.3. Let {(W (s,r ) 
+
+> t
+
+, H (s,r ) 
+
+> t
+
+)}nt=1 denote the iterates at the s-th outer it-eration and the r-th inner iteration, and let (W (s, ∗) 
+
+> t
+
+, H (s, ∗) 
+
+> t
+
+) denote a limit point of the inner iterations within the s-th outer iteration. Then, under in Algorithm 4.1 , the overall objective function O in (3.2) is nonincreasing for all outer iteration s ≥ 1:
+
+O(W (s+1 ,∗)1 , H (s+1 ,∗)1 , . . . , W (s+1 ,∗) 
+
+> n
+
+, H (s+1 ,∗) 
+
+> n
+
+) ≤ O (W (s, ∗)1 , H (s, ∗)1 , . . . , W (s, ∗) 
+
+> n
+
+, H (s, ∗) 
+
+> n
+
+).
+
+Proof. The proof is provided in the supplementary material subsection B.8. 
+
+6. Simulation Experiment. 6.1. Simulation Data Generation. We construct a synthetic dataset with a deliberately designed multi-scale structure, while embedding it in a high-dimensional ambient space. The dataset consists of four concentric circles in three-dimensional space, each containing 20 data points. Each circle lies on a distinct plane whose nor-mal vector is randomly generated, ensuring that the circles are not coplanar. This configuration naturally induces hierarchical geometric structures that become distin-guishable at different scales. To account for measurement noise and model perturbations, independent Gauss-ian noise is added to each spatial coordinate. In addition, to emulate the high-dimensional observation settings commonly encountered in real-world applications, the noisy three-dimensional samples are further augmented with 97 additional dimen-sions of independent Gaussian noise. Consequently, the final dataset lies in R100 ,while its intrinsic structure remains governed by a low-dimensional, noisy manifold with a clear multi-scale organization. 
+
+6.2. Multi-scale Embeddings Visualization. We visualize the evolution of the latent embeddings learned by pNMF across scales on the simulated dataset de-scribed above, moving from coarse to fine representations along the scale index. This experiment is designed to provide an intuitive illustration of the multi-scale and per-sistent representation behavior of pNMF under controlled conditions. All factor matrices are initialized using nonnegative double singular value de-composition with average filling (NNDSVDA) [2]. For visualization, the latent di-mension is set to d = 2, enabling direct inspection of the learned embeddings in a two-dimensional space. Unless otherwise specified, the hyperparameters λ1 and λ2 are set to 100 to emphasize geometric regularization and cross-scale smoothness, while the anchoring parameter λ3 is fixed to 1. In the construction of adjacency matrices in (3.1), the decay parameter is set to α = 1 .5, and this setting is kept fixed for all experiments unless otherwise stated. This choice balances within-scale locality and cross-scale distinguishability. 16 ZHANG, MIAO, AND LI 3D_concentric_circles H1 H10 H20 H30            
+
+> H40 H50 H60 H70 H80
+> Circle_1 Circle_2 Circle_3 Circle_4
+> Fig. 2 .Multi-scale embeddings visualization on simulation data. The first panel shows the intrinsic three-dimensional simulation data before embedding into a 100-dimensional ambient space. The remaining nine panels display the corresponding two-dimensional embeddings {Ht}80
+> t=1 uni-formly sampled across scales.
+
+Figure 2 presents the simulation data in their intrinsic three-dimensional space along with the corresponding two-dimensional embeddings {Ht}80  
+
+> t=1
+
+learned by pNMF across multiple scales. For clarity, embeddings from nine scales uniformly sampled along the scale index are displayed. At the coarsest scale ( t = 80), all data points col-lapse into a single cluster with no discernible structure, reflecting a highly aggregated global representation. As the scale becomes finer, the embedded points progressively separate and organize into concentric circular structures in the latent space. Notably, these circular patterns emerge in a sequential and ordered manner, fol-lowing the radii of the original concentric circles from the outermost ring to the inner-most one. This gradual and structured emergence demonstrates the ability of pNMF to capture hierarchical geometric structures in a persistent manner across scales, re-fining the latent embedding from a coarse global configuration to a detailed geometric organization while maintaining consistency between neighboring scales. 
+
+6.3. Effect of Persistence-Based Scale Selection. In this experiment, we in-vestigate how different scale selection strategies affect the quality and interpretability of the multi-scale embeddings produced by pNMF. Recall that the scale parame-ters {εt}nt=1 used in pNMF are derived from the death times of the 0-dimensional persistence diagram, yielding a scale set Λ ⋆. As established in the Theorem 3.5, Λ ⋆
+
+constitutes a canonical minimal sufficient scale set, capturing all essential connectivity transitions of the data while avoiding redundant or uninformative scales. To isolate the effect of scale selection, we construct three alternative strategies for comparison, all with the same cardinality as Λ ⋆:
+
+• pNMF-UDS : scales are uniformly sampled from the predefined distance-scale set, including the minimum and maximum distances; 
+
+• pNMF-RDS : scales are randomly sampled from the distance-scale Set, again including the minimum and maximum distances; 
+
+• pNMF-MSS : scales are chosen as an arbitrary minimal sufficient scale set. Starting from the canonical set Λ ⋆ = {εt}nt=1 , one scale is randomly selected PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 17 H1 H20 H40 H60 H80     
+
+> pNMF
+> pNMF-UDS
+> pNMF-RDS
+> pNMF-MSS
+> Circle_1 Circle_2 Circle_3 Circle_4
+> Fig. 3 .Effect of persistence-based scale selection on multi-scale embeddings visualization. Each column corresponds to the same scale index, while each row represents a different scale selection strategy, ordered as pNMF, pNMF-UDS, pNMF-RDS, and pNMF-MSS.
+
+from each interval (0 , ε 1], (ε1, ε 2], . . . , (εn−1, ε n], yielding a sufficient but non-canonical scale sequence. All variants share identical model configurations and differ only in the choice of scale parameters. To facilitate a direct qualitative comparison, we visualize the multi-scale embeddings learned by each method in Figure 3. For pNMF with persistence-based scales, the embeddings exhibit a clear and coherent evolution across scales. As the scale becomes finer, geometric structures emerge gradually and stably, with latent points progressively separating into concen-tric circular patterns that faithfully reflect the intrinsic organization of the simulated data. Structural transitions occur smoothly across neighboring scales, resulting in an interpretable and consistent multi-scale embedding trajectory. In contrast, both 
+
+pNMF-UDS and pNMF-RDS fail to produce meaningful multi-scale embeddings. Across a large portion of the selected scales, the embeddings collapse into a single point or a highly concentrated cluster, indicating the absence of informative geomet-ric structure. When separation does occur, it appears abruptly at isolated scales rather than evolving continuously, suggesting a misalignment between heuristic scale sampling and the intrinsic connectivity transitions of the data. The pNMF-MSS variant produces embedding trajectories qualitatively similar to those of pNMF, confirming that sufficiency of the scale set is crucial for preserv-ing multi-scale structure. However, minimal sufficient scale sets are generally not unique, and constructing any such set still requires prior knowledge of the canonical set Λ ⋆. Therefore, while sufficiency ensures structural preservation, the persistence-based construction further provides a canonical and principled selection mechanism, 18 ZHANG, MIAO, AND LI 0 20 40 60                              
+
+> |t|
+> 0
+> 50
+> 100
+> 150
+> 200
+> 250
+> Lt F
+> tLtCorrelation
+> (r = 0.9995, p = 5.57e-118)
+> 050 100 150 200 250
+> LtF
+> 0
+> 20
+> 40
+> 60
+> Ht F
+> LtHtCorrelation
+> (r = 0.5700, p = 4.17e-08)
+> 020 40 60
+> |t|
+> 0
+> 20
+> 40
+> 60
+> Ht F
+> tHtCorrelation
+> (r = 0.5571, p = 9.71e-08)
+> Fig. 4 .Correlations among scale increments, Laplacian increments, and embedding increments for pNMF. Left: Correlation between ∆εtand ∆Lt; Middle: Correlation between ∆Ltand ∆Ht;Right: Correlation between ∆εtand ∆Ht. Correlation coefficients and p-values are reported in each panel.
+
+eliminating arbitrariness while retaining interpretability. Overall, these observations demonstrate that persistence-based scale selection is essential for realizing the full potential of pNMF. By selecting scales that are both sufficient and minimal, and anchoring them to topologically meaningful connectivity transitions, pNMF achieves stable, interpretable, and coherent multi-scale embed-dings, in accordance with the theoretical guarantees established in Theorem 3.5. 
+
+6.4. Empirical Validation of Scale-Controlled Variations. This experi-ment examines how key quantities in pNMF evolve across consecutive scales, focusing on their stability and structured variations as predicted by the theoretical analysis. In particular, Theorem 3.7 establishes that, for consecutive persistence-guided scales, the increment of the graph Laplacian is Lipschitz bound with respect to the scale increment. Moreover, Theorem 3.9 shows that the increments of the learned embed-dings are explicitly controlled by the Laplacian increments, implying that variations across scales are structured rather than arbitrary. To empirically validate these properties, we analyze three types of quantities along the persistence-based scale sequence: the scale parameters themselves, the induced graph Laplacians, and the learned embedding matrices. Specifically, for each pair of consecutive scales, we compute the scale increment |∆εt| = |εt − εt−1|, the Laplacian increment ∥∆Lt∥F = ∥Lt − Lt−1∥F , and the embedding increment ∥∆Ht∥ = ∥Ht −
+
+Ht−1∥F .As shown in Figure 4, the scale increments ∆ εt are nearly perfectly correlated with the Laplacian increments ∆ Lt (r = 0 .9995, p = 5 .57 × 10 −118 ), reflecting the persistence-based construction in which scales concentrate around critical connectivity transitions. Since the graph Laplacian is constructed directly from the scale param-eter through adjacency matrix, its variation is an immediate structural response to changes in εt, leading to an almost deterministic linear relationship. Here, the Pearson correlation quantifies the degree to which the magnitude of variations in one quantity systematically co-varies with variations in another across consecutive scales: a high correlation indicates that large changes in one quantity coincide with large changes in the other, whereas a lower correlation indicates weaker coupling. In contrast, the embedding increments ∆ Ht are moderately correlated with both the Laplacian increments ( r = 0 .5700, p = 4 .17 × 10 −8) and the scale increments (r = 0 .5571, p = 9 .71 × 10 −8). Unlike the Laplacian, the embeddings are obtained by solving a constrained optimization problem that balances data reconstruction and PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 19 graph regularization. Therefore, changes in Lt influence Ht indirectly through the optimization process rather than via a direct functional mapping, resulting in a mod-erate but statistically significant correlation. Taken together, these results empirically confirm that pNMF induces structured cross-scale variations: the graph Laplacian evolves in a controlled manner following the scale increments, and the learned embeddings respond accordingly through the regularized optimization mechanism, in line with the theoretical bounds on embedding increments. 
+
+Remark. The empirical convergence behavior and an ablation study on the reg-ularization terms are reported in the supplementary material subsection C.1.1 and subsection C.1.2. 
+
+7. Application to scRNA-seq Data Clustering. In this study, we evalu-ate the proposed method on five publicly available scRNA-seq datasets, three of which are obtained from the Gene Expression Omnibus (GEO) database, namely GSE75748time, GSE94820, and GSE75140. The GSE75748time dataset [7] is a snap-shot and temporal scRNA-seq dataset comprising 758 human progenitor cells, encom-passing 6 cell types and 19,189 genes. The GSE94820 dataset [28] consists of 1,140 single human blood dendritic cells and monocytes, covering 5 cell types and 26,593 genes. The GSE75140 dataset [5] includes 734 cells from human fetal neocortex or human cerebral organoids collected at multiple time points, classified into 9 cell types and containing 18,927 genes. In addition, two datasets of human blood dendritic cells, referred to as Dendritic batch1 and Dendritic batch2 [28], are also included. Each dataset contains 384 cells from 4 cell types and 15,426 genes. 
+
+7.1. Baselines. We compare the proposed pNMF with several NMF-based ap-proaches, including NMF, GNMF, TNMF, and k-TNMF. NMF [18] approximates the data matrix X by factorizing it into two nonnegative matrices W and H. GNMF [4] extends NMF by incorporating a graph regularization term to preserve the geometric structure of the data. TNMF [14] further generalizes GNMF by replacing the single graph Laplacian with a sum of graph Laplacians induced by multiple weighted graphs, while k-TNMF [14] substitutes the weighted graph with k-NN graph. To ensure a fair comparison, all methods use NNDSVDA for initialization. Fol-lowing common practice in NMF-based clustering methods, the latent dimension is set to d = √n, which avoids using label information and ensures a fair unsupervised setting across datasets. Based on the parameter analysis in subsection C.2.3, the default values of λ1, λ2, and λ3 are all set to 1 unless otherwise specified. 
+
+7.2. Clustering Results. Clustering performance is evaluated using Adjusted Rand Index (ARI), Normalized Mutual Information (NMI), Purity, and Accuracy; formal definitions are provided in the supplementary material subsection C.2.1. We evaluate clustering performance using the low-rank embeddings obtained from all methods. For baseline approaches, a single embedding matrix is directly used for 
+
+k-means clustering. In contrast, the proposed pNMF generates a sequence of embed-dings {Ht}nt=1 across multiple scales. To provide a fair comparison, we report results for two variants of pNMF: 
+
+• pNMF : clustering based on the finest-scale embedding H1.
+
+• pNMF-best : clustering performed on all embeddings {Ht}nt=1 , where the embedding achieving the highest average score across ARI, NMI, Purity, and Accuracy is selected. Table 1 summarizes the quantitative clustering results across all five scRNA-seq 20 ZHANG, MIAO, AND LI                                                                                                                                
+
+> Table 1
+> Clustering results of different methods on scRNA-seq datasets.
+> Dataset Metric NMF GNMF TNMF k-TNMF pNMF pNMF-best GSE75748time ARI ↑0.611 0.602 0.644 0.592 0.722 0.727
+> NMI ↑0.735 0.731 0.768 0.711 0.854 0.860
+> Purity ↑0.745 0.720 0.749 0.751 0.850 0.852
+> Accuracy ↑0.693 0.679 0.744 0.736 0.850 0.852
+> GSE94820 ARI ↑0.547 0.615 0.617 0.607 0.629 0.629
+> NMI ↑0.665 0.710 0.705 0.699 0.724 0.724
+> Purity ↑0.750 0.788 0.788 0.787 0.793 0.793
+> Accuracy ↑0.714 0.757 0.759 0.755 0.765 0.765
+> GSE75140 ARI ↑0.260 0.286 0.229 0.253 0.239 0.262 NMI ↑0.432 0.406 0.401 0.353 0.393 0.415 Purity ↑0.495 0.467 0.455 0.439 0.478 0.507
+> Accuracy ↑0.406 0.410 0.411 0.388 0.402 0.456
+> Dendritic batch1 ARI ↑0.567 0.617 0.603 0.618 0.835 0.835
+> NMI ↑0.673 0.715 0.700 0.715 0.839 0.839
+> Purity ↑0.701 0.716 0.711 0.714 0.938 0.938
+> Accuracy ↑0.701 0.716 0.708 0.714 0.938 0.938
+> Dendritic batch2 ARI ↑0.587 0.845 0.820 0.826 0.830 0.837 NMI ↑0.696 0.815 0.809 0.814 0.827 0.834
+> Purity ↑0.711 0.940 0.930 0.932 0.935 0.938 Accuracy ↑0.703 0.940 0.930 0.932 0.935 0.938
+
+datasets, where the best-performing result for each metric is highlighted in bold and the second-best result is underlined. Overall, pNMF demonstrates consistently competitive or superior performance compared to baseline methods. In the Dendritic batch1 dataset, both pNMF and pNMF-best substantially outperform other baselines across all metrics, with notable relative improvements, e.g., 21.7% in ARI, 12.4% in NMI, and 22.2% in both Purity and Accuracy over the second-best method. For the GSE75748time and GSE94820 datasets, pNMF and pNMF-best also achieve the highest performance in all met-rics. On GSE75140, although GNMF attains the highest ARI and NMF achieves the highest NMI, pNMF-best improves Purity and Accuracy, suggesting a better bal-ance between cluster compactness and label alignment on this complex developmental dataset. For Dendritic batch2, pNMF-best remains highly competitive and achieves top-tier performance in most metrics, demonstrating robustness across datasets with varying structural characteristics. Figure 5 further illustrates how clustering accuracy evolves across scales. The results show that pNMF achieves its highest accuracy at fine scales, where the em-beddings capture detailed local structure. As the scale becomes coarser, accuracy gradually decrease, reflecting the smoothing of fine-grained distinctions in the latent embedding. This trend confirms that pNMF effectively encodes multi-scale structure: fine-scale embeddings are most informative for clustering, while coarser embeddings provide progressively more global, less discriminative representations, consistent with the theoretical analysis of scale-dependent embedding stability. Qualitative visualizations of the learned embeddings using t-SNE and UMAP are provided in the supplementary material subsection C.2.2. 
+
+7.3. Multi-scale Clustering with Hierarchical Label Granularity. Build-ing on the multi-scale embedding structure revealed in the preceding simulation exper-iments, we further investigate whether the sequence of embeddings {Ht}nt=1 produced by pNMF naturally aligns with different levels of semantic label granularity. To this PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 21 0 200 400 600                    
+
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> GSE75748time
+> 0200 400 600 800 1000
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> GSE94820
+> 0200 400 600
+> 0.20
+> 0.25
+> 0.30
+> 0.35
+> 0.40
+> 0.45
+> GSE75140
+> 0100 200 300 400
+> 0.4
+> 0.6
+> 0.8
+> Dendritic_batch1
+> 0100 200 300 400
+> 0.4
+> 0.6
+> 0.8
+> Dendritic_batch2
+> pNMF
+> NMF
+> GNMF
+> TNMF
+> kTNMF
+> Index tof Ht
+> Accuracy
+
+Fig. 5 . Multi-scale clustering Accuracy across different scales t. The curves compare pNMF and baseline methods in terms of Accuracy as the scale index varies. 
+
+end, we conduct clustering experiments on the GSE75748time dataset, which provides temporally ordered cell populations and thus supports a hierarchical organization of labels. The dataset contains six time-point labels corresponding to distinct devel-opmental stages: 00hr, 12hr, 24hr, 36hr, 72hr, and 96hr. This temporal structure enables us to systematically construct label configurations ranging from fine-grained to coarse-grained semantics. To guide the construction of label hierarchies, we first inspect the t-SNE and UMAP visualizations of the original data matrix X (see Figure 9). Based on the observed spatial proximity and temporal continuity among cell populations, we pro-gressively merge biologically adjacent time points to form a sequence of fine-to-coarse label configurations: 
+
+• 6-class labels : 00hr, 12hr, 24hr, 36hr, 72hr, and 96hr; 
+
+• 5-class labels : merging 72hr and 96hr into a single class; 
+
+• 4-class labels : further merging 36hr, 72hr, and 96hr into a single class; 
+
+• 3-class labels : additionally merging 12hr and 24hr, resulting in three classes: 
+
+– Class 1: 00hr; 
+
+– Class 2: 12hr and 24hr; 
+
+– Class 3: 36hr, 72hr, and 96hr. For each label configuration, we perform k-means clustering on every embedding Ht
+
+in the multi-scale sequence and evaluate the results using ARI, NMI, Purity, and Accuracy. The clustering performance as a function of the scale index t is reported in Figure 6. Across all label granularities, a clear and consistent pattern emerges. Under fine-grained label settings (e.g., the original 6-class configuration), clustering performance peaks at small values of t, corresponding to fine-scale embeddings that preserve de-tailed cell-state distinctions. As the scale becomes coarser, performance gradually degrades, reflecting the progressive loss of fine-grained information. In contrast, as the label granularity becomes coarser, the scale at which clustering performance peaks shifts toward larger values of t. For instance, in the 3-class setting, clustering scores are already high at relatively small scales and remain stable or slightly improve as the scale increases, before eventually degrading when excessive coarsening 22 ZHANG, MIAO, AND LI 0.0                     
+
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> ARI
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> NMI
+> 0100 200 300 400 500 600 700
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> Purity
+> 0100 200 300 400 500 600 700
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> Accuracy
+> Index tof Ht
+> Score
+> 6-class 5-class 4-class 3-class
+
+Fig. 6. Clustering performance across different label granularities on the GSE75748time dataset. Each subfigure corresponds to a clustering metric (ARI, NMI, Purity, or Accuracy) and shows the performance across different label granularities (6-, 5-, 4-, and 3-class labels) as a func-tion of the scale index t.
+
+leads to information loss. This behavior indicates that coarse-scale embeddings are more effective at capturing global semantic structure, while overly coarse scales may oversmooth discriminative information. Taken together, these results demonstrate that pNMF induces a coherent hierar-chy of embeddings across scales, where different regions of the scale sequence naturally correspond to different levels of semantic abstraction. Without requiring explicit scale selection or additional supervision, pNMF enables effective clustering across fine-to-coarse label resolutions, thereby highlighting its flexibility and interpretability for multi-resolution data analysis. 
+
+Remark. The proposed pNMF exhibits stable performance over a wide range of regularization parameters; detailed parameter analysis is provided in the supplemen-tary material subsection C.2.3. 
+
+8. Conclusion. In this work, we developed persistent nonnegative matrix fac-torization (pNMF) as a principled framework for learning interpretable and stable multi-scale embeddings from high-dimensional nonnegative data. By grounding the construction of multi-scale graphs in 0-dimensional persistent homology, pNMF pro-vides a theoretically justified mechanism for capturing essential connectivity tran-sitions and for coherently coupling low-rank embeddings across scales. Through the integration of scale-wise geometric regularization and explicit cross-scale coupling, the proposed framework enables the analysis of data structure evolution while preserving the parts-based interpretability inherent to nonnegative matrix factorization. Despite these promising results, several limitations and open questions natu-PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 23 rally arise from the present study. The current framework primarily focuses on 0-dimensional topological information, corresponding to connectivity and connected components. While this choice enables a principled and tractable construction of multi-scale graphs, extending pNMF to incorporate higher-dimensional topological features such as loops or voids remains challenging. In particular, the non-uniform birth times of topological features and the lack of a natural total ordering of death times across dimensions make it difficult to preserve consistent nesting relationships using a single scalar filtration parameter. Developing principled strategies to integrate higher- or mixed-dimensional persistent homology into multi-scale graph constructions therefore remains an important and challenging direction for future work. From an optimization perspective, the proposed pNMF model is currently solved using a sequential alternating scheme with theoretical convergence guarantees. Ex-ploring alternative optimization strategies, including accelerated methods or hybrid approaches that combine model-based optimization with deep learning techniques, may further improve scalability and adaptability, particularly in large-scale or stream-ing data scenarios. Looking ahead, while this work primarily evaluates the learned multi-scale embed-dings through clustering performance at selected scales, many downstream tasks could benefit from a more comprehensive use of the entire family of embeddings. Applica-tions such as hierarchical clustering, trajectory inference, or scale-aware downstream learning offer promising opportunities for future work that more fully exploits the persistent and multi-scale nature of embeddings learned by pNMF. 24 ZHANG, MIAO, AND LI 
+
+Appendix A. Background on Persistent Homology. Persistent homol-ogy [35, 11] is a fundamental tool in Topological Data Analysis (TDA) [3, 33, 6], designed to capture the multi-scale topological structure of data. By tracking the birth and death of topological features—such as connected components, cycles, and voids—across varying scales, persistent homology provides a coordinate-invariant and noise-robust summary of the intrinsic shape of a dataset. 
+
+A.1. Simplicial Complexes. In algebraic topology, a simplex is the fundamen-tal geometric building block of a simplicial complex, defined over a finite point set 
+
+V in Euclidean space. Formally, a k dimensional simplex ( k-simplex) σ spanned by geometrically independent vertices v0, v 1, . . . , v k ∈ V is defined as the convex hull of these vertices, i,e, 
+
+σ = {
+
+> k
+
+X
+
+> i=0
+
+aivi|ai ≥ 0,
+
+> k
+
+X
+
+> i=0
+
+ai = 1 },
+
+denoted by σ = ( v0, v 1, · · · , v k). Typical examples include a 0-simplex (a point), a 1-simplex (a line segment), a 2-simplex (a filled triangle), and a 3-simplex (a solid tetrahedron). We denote by Kk the set of all possible k-simplices on V .A face of a simplex σ is any simplex spanned by a nonempty proper subset of its vertices. If a simplex τ ⊊ σ and τ̸ = ∅, then τ is called a face of σ, and σ is a coface of τ . For instance, a 2-simplex ( v0, v 1, v 2) has as its faces the three 1-simplices (v0, v 1), ( v1, v 2), and ( v2, v 0), along with its three 0-simplicies v0, v 1 and v2. Similarly, a 3-simplex ( v0, v 1, v 2, v 3) has as its faces the four 2-simplices ( v1, v 2, v 3), ( v0, v 2, v 3), (v0, v 1, v 3), and ( v0, v 1, v 2), together with its six 1-simplices and four 0-simplices. To facilitate the definition of homology, a simplex σ could be assigned an orien-tation , and the oriented simplex is denoted by [ v0, v 1, . . . , v k], where the ordering of vertices determines the orientation. Two orderings correspond to the same orientation if they differ by an even permutation; odd permutations yield the opposite orienta-tion. For example, the oriented 2-simplex [ v0, v 1, v 2] has the opposite orientation of [v0, v 2, v 1]. Orientation plays a crucial role in defining the boundary operator and, consequently, the homology groups. A simplicial complex K on a finite vertex set V is a collection of simplices satis-fying: 
+
+• Face closure: if σ ∈ K and τ ⊆ σ, then τ ∈ K . This condition ensures that every face of a simplex in K is also contained in K.
+
+• Geometric consistency: if σ, σ ′ ∈ K , then σ ∩ σ′ is either empty or a common face of both. This condition guarantees that simplices intersect only in a way consistent with their faces. Equivalently, K can be viewed as a subset of S 
+
+> k≥0
+
+Kk, where Kk denotes the set of k-simplices on V . Intuitively, a simplicial complex is a finite family of simplices consistently glued along shared faces; for instance, several triangles sharing edges can form a simplicial complex approximating a surface. 
+
+A.2. Homology. Building upon simplicial complexes, one introduces algebraic structures that encode their topological features. For a simplicial complex K, the k-th 
+
+chain group Ck(K) is defined as the free abelian group generated by all oriented k-simplices of K. Elements of Ck(K), called k-chains, are formal finite sums of oriented simplices with integer coefficients: P 
+
+> i
+
+aiσi, where each σi is an oriented k-simplex and ai ∈ Z.A key operator on chain groups is the boundary operator ∂k : Ck(K) → C k−1(K), PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 25 which acts linearly on k-chains and is defined on any oriented k-simplex by 
+
+∂k[v0, v 1, . . . , v k] = 
+
+> k
+
+X
+
+> i=0
+
+(−1) i[v0, . . . , ˆvi, . . . , v k],
+
+where ˆ vi indicates omission of the vertex vi. Using the boundary operator, one defines two important subgroups of Ck(K): the k-cycle group ker( ∂k) defined by the kernel of 
+
+∂k and the k-boundary group im( ∂k+1 ) defined by the image of ∂k+1 . An important property of the boundary operators is that the boundary of a boundary is always empty, ∂k ◦ ∂k+1 = 0, which implies the nesting im( ∂k+1 ) ⊆ ker( ∂k) ⊆ C k(K). The k-th homology group of K is then defined as the quotient 
+
+Hk(K) = ker( ∂k)im( ∂k+1 ) .
+
+Its elements are equivalence classes of k-cycles modulo boundaries. Intuitively, Hk(K)characterizes k-dimensional “holes” in K, such as connected components ( k = 0), cycles ( k = 1), and voids ( k = 2). The Betti numbers [22] provide a quantitative measure of the size of homology groups. The k-th Betti number is defined as 
+
+βk(K) = rank( Hk(K)) ,
+
+giving a concise numerical summary of the k-dimensional topological features of K.For example, β0 counts the number of connected components, β1 counts the number of independent one-dimensional holes (loops), and β2 counts the number of enclosed voids in three dimensions. 
+
+A.3. Persistent Diagram. Given a finite point set V with a chosen distance metric, one can construct a simplicial complex to capture the topology of the data. A standard choice is the Vietoris–Rips complex [34]. For a scale parameter ε ≥ 0, the Vietoris–Rips complex Vε is the simplicial complex whose simplices are all finite simplices σ with vertices in V such that dist( vi, v j ) < ε for all vertices vi, v j ∈ σ. 
+
+In particular, 0-simplices correspond to points in V , 1-simplices (edges) connect pairs of points within ε, 2-simplices (triangles) form whenever three points are pairwise within ε, and higher-dimensional simplices are defined analogously. The homology groups Hk(Vε) computed on these complexes depend strongly on the choice of ε. For small ε, the complex consists primarily of isolated vertices, whereas for large ε, all points may merge into a single connected component. Since selecting a single, optimal scale is generally infeasible without prior knowledge of the underlying space, one considers a nested sequence of complexes, called a filtration :
+
+· · · ⊆ V εi ⊆ V εj ⊆ · · · , with · · · < ε i < ε j < · · · .
+
+This filtration allows one to track the evolution of topological features across multiple scales. At each scale εi, the simplicial complex Vεi is constructed, and its homology groups Hk(Vεi ) are computed. As the scale parameter increases, new k-dimensional topological features (connected component, cycles) may appear (birth), and existing ones may disappear (death). These events are recorded as ordered pairs ( bi, d i), 26 ZHANG, MIAO, AND LI 
+
+where bi and di denote the birth and death scales of the i-th feature, respectively. The collection of all such pairs forms the persistence diagram :
+
+Dk = {(bi, d i) | bi < d i, i = 1 , 2, . . . } ,
+
+which compactly encodes the multiscale evolution of k-dimensional topological struc-tures across the filtration. Features with long lifespans ( di − bi large) are typically interpreted as topologically significant, whereas short-lived features are often treated as noise [10]. Persistence diagrams provide a concise, multi-scale summary of the topological structure of the data. They are stable under small perturbations of the input points and can be incorporated into downstream data analysis or machine learning work-flows via vectorization techniques, including persistence images, landscapes, or kernel methods. 
+
+Appendix B. Additional Proofs and Complexity Analysis. B.1. Proof of Theorem 3.5. 
+
+Theorem B.1. The scale set Λ⋆ is the canonical minimal sufficient scale set. Proof. We prove the claim by showing that Λ ⋆ is (i) sufficient, (ii) minimal, and (iii) canonical. 
+
+(i) Sufficiency. Consider the VR filtration {X (ε)}ε≥0 and the associated 0-dimensional persistence diagram D0. By construction of the VR filtration, new con-nected components are created only at ε = 0, and components merge only when an edge appears. Consequently, the isomorphism class of H0(X (ε)) changes if and only if 
+
+ε crosses a death time dt in the persistence diagram D0. Between any two consecutive death times, H0(X (ε)) remains unchanged. Therefore, for any ε > 0, there exists 
+
+εt ∈ Λ⋆ such that 
+
+H0(X (ε)) ∼= H0(X (εt)) ,
+
+which shows that Λ ⋆ is a sufficient scale set. 
+
+(ii) Minimality. Each scale εt ∈ Λ⋆ corresponds to a death time at which two connected components merge, resulting in a strict change in the isomorphism class of H0(X (ε)) and a decrease of the Betti number β0 by one. If any εt were removed from Λ ⋆, the corresponding homological transition could not be represented by any remaining scale in the set. Hence, no proper subset of Λ ⋆ is sufficient, and Λ ⋆ is minimal. 
+
+(iii) Canonicity. The 0-dimensional persistence diagram D0 is uniquely deter-mined by the metric structure of the dataset X. Since Λ ⋆ is defined as the collection of death times in D0, it is uniquely and canonically determined. Moreover, each element of Λ ⋆ represents exactly one maximal interval of scale values over which H0(X (ε)) remains unchanged, selected at the critical transition point. Thus, Λ ⋆ is a canonical minimal sufficient scale set. This completes the proof. 
+
+B.2. Proof of Theorem 3.6. 
+
+Theorem B.2 (Piecewise Lipschitz Continuity of Laplacian). Let ∆⋆ = {δ1 <δ2 < · · · < δ m} be the distance-scale set on a finite point set X = {x1, x 2, . . . , x n} ⊂ 
+
+Rp. For each k = 1 , 2, . . . , m − 1, there exists a constant C > 0, such that for all 
+
+ε, ε ′ ∈ (δk, δ k+1 ], the Laplacian satisfies 
+
+∥L(ε) − L(ε′)∥F ≤ C|ε − ε′|.PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 27 
+
+Proof. Fix k ∈ { 1, 2, . . . , m −1} and consider ε, ε ′ ∈ Ik := ( δk, δ k+1 ]. By definition of ∆ ⋆, the interval Ik does not contain any element of ∆ ⋆, so the support of the adjacency matrix A(ε) remains unchanged for all ε ∈ Ik. Let ∆A := A(ε) − A(ε′), ∆D := D(ε) − D(ε′), ∆L := L(ε) − L(ε′) = ∆ D − ∆A. 
+
+For each edge ( i, j ) corresponding to a nonzero entry of A(ε), the weight is defined by 
+
+Aij (ε) = exp( − ∥xi − xj ∥22
+
+εα ), α > 0.
+
+Since X is finite and ε is bounded away from zero on Ik, the derivative 
+
+ddε Aij (ε) = α∥xi − xj ∥22
+
+εα+1 exp( − ∥xi − xj ∥22
+
+εα )is continuous and therefore uniformly bounded on Ik. Denote by Mk > 0 a uniform bound on |dA ij /dε | for all edges ( i, j ) in Ik.By the mean value theorem, for each edge ( i, j ) there exists some ˜ ε between ε
+
+and ε′ such that 
+
+|(∆ A)ij | = |Aij (ε) − Aij (ε′)| = | ddε Aij (˜ ε)|| ε − ε′| ≤ Mk|ε − ε′|.
+
+Since the number of edges is finite, the Frobenius norm satisfies 
+
+∥∆A∥F ≤ p|Ek|Mk|ε − ε′|,
+
+where Ek denotes the set of edges with nonzero weights on Ik.For the degree matrix, we have (∆ D)ii =
+
+> n
+
+X
+
+> j=1
+
+(∆ A)ij ,
+
+which implies 
+
+∥∆D∥F ≤ √n∥∆A∥F ≤ √np|Ek|Mk|ε − ε′|.
+
+Finally, using the triangle inequality for the Laplacian, 
+
+∥∆L∥F = ∥∆D − ∆A∥F ≤ ∥ ∆D∥F + ∥∆A∥F ≤ (√n + 1) p|Ek|Mk|ε − ε′|.
+
+Setting C := ( √n + 1) p|Ek|Mk completes the proof. 
+
+B.3. Proof of Theorem 3.7. 
+
+Theorem B.3 (Lipschitz Bound Between Adjacent Scales). For any two con-secutive scales δk, δ k+1 ∈ ∆⋆, there exists a constant C > 0, depending only on X and 
+
+n, such that 
+
+∥L(δk+1 ) − L(δk)∥F ≤ C(δk+1 − δk).
+
+Similarly, for any two consecutive scales εt, ε t+1 ∈ Λ⋆, there exists a constant C > 0,depending only on X and n, such that 
+
+∥L(εt+1 ) − L(εt)∥F ≤ C(εt+1 − εt).28 ZHANG, MIAO, AND LI 
+
+Proof. (i) Proof on ∆⋆. Fix two consecutive scales δk, δ k+1 ∈ ∆⋆. Denote ∆A := A(δk+1 )−A(δk), ∆D := D(δk+1 )−D(δk), ∆L := L(δk+1 )−L(δk) = ∆ D−∆A. 
+
+Introduce the edge sets 
+
+Eold := {(i, j )|∥ xi − xj ∥2 < δ k}, Enew := {(i, j )|δk ≤ ∥ xi − xj ∥2 < δ k+1 }.
+
+and decompose ∆A = (∆ A)old + (∆ A)new ,
+
+where (∆ A)old corresponds to existing edges in Eold and (∆ A)new corresponds to newly added edges in Enew .For edges in Eold , the support of the adjacency matrix remains unchanged on (δk, δ k+1 ]. By Theorem B.2, there exists a constant C1 > 0, independent of k, such that 
+
+∥(∆ A)old ∥F ≤ C1(δk+1 − δk).
+
+For edges in Enew , we have (∆ A)ij = Aij (δk) = exp( − ∥xi − xj ∥22
+
+δαk
+
+),
+
+and hence 0 < (∆ A)ij < 1.
+
+Since X is finite, the number of newly added edges |Enew | is finite. Therefore, 
+
+∥(∆ A)new ∥F < p|Enew | ≤ C2(δk+1 − δk),
+
+where C2 = √n 
+
+> min t(δt+1 −δt)
+
+is a constant, independent of k. Combining the two parts yields 
+
+∥∆A∥F ≤ C3(δk+1 − δk),
+
+with C3 depending only on X and n.Moreover, 
+
+∥∆D∥F ≤ √n∥∆A∥F ≤ C4(δk+1 − δk).
+
+Finally, 
+
+∥∆L∥F ≤ ∥ ∆D∥F + ∥∆A∥F ≤ C(δk+1 − δk),
+
+where C = C3 + C4 depends only on X and n. This proves the claim on ∆ ⋆.
+
+(ii) Proof on Λ⋆. Let εt, ε t+1 ∈ Λ⋆. Denote by δk1 , δ k2 , . . . , δ kr all consecutive scales in ∆ ⋆ lying in [ εt, ε t+1 ], with δk1 = εt and δkr = εt+1 . Then 
+
+L(εt+1 ) − L(εt) = 
+
+> r−1
+
+X
+
+> j=1
+
+(L(δkj+1 ) − L(δkj )) .
+
+Applying the triangle inequality and the first part of the proof yields 
+
+∥L(εt+1 ) − L(εt)∥F ≤
+
+> r−1
+
+X
+
+> j=1
+
+∥L(δkj+1 ) − L(δkj )∥F ≤
+
+> r−1
+
+X
+
+> j=1
+
+C(δkj+1 − δkj ) = C(εt+1 − εt).
+
+This completes the proof. PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 29 
+
+B.4. Proof of Theorem 3.8. 
+
+Theorem B.4 (Spectral stability and monotonicity on the canonical minimal sufficient scale set). Let Λ⋆ = {ε1 < ε 2 < · · · < ε m} be the canonical minimal sufficient scale set on a finite point set X = {x1, x 2, . . . , x n} ⊂ Rp. Let 0 = γ1(ε) ≤
+
+γ2(ε) ≤ · · · ≤ γn(ε) denote the eigenvalues of L(ε). Then for any two consecutive scales εt, ε t+1 ∈ Λ⋆, the following statements hold. 
+
+(1) Lipschitz bound for eigenvalues. There exists a constant C > 0, depend-ing only on X and n, such that for all k = 1 , 2, . . . , n ,
+
+|γk(εt+1 ) − γk(εt)| ≤ C(εt+1 − εt).
+
+(2) Monotonicity of eigenvalues. 
+
+γk(εt) ≤ γk(εt+1 ), ∀k = 1 , 2, . . . , n. 
+
+Moreover, letting k = dim ker L(εt), we have 
+
+0 = γk(εt) < γ k(εt+1 ).
+
+(3) Strict decrease of kernel dimension. As a direct consequence of (2), 
+
+dim ker L(εt) > dim ker L(εt+1 ).
+
+Proof. Proof of (1). By Theorem B.3, there exists a constant CL > 0, depending only on X and n, such that 
+
+∥L(εt+1 ) − L(εt)∥F ≤ CL(εt+1 − εt).
+
+Since the operator norm is bounded by the Frobenius norm, 
+
+∥L(εt+1 ) − L(εt)∥2 ≤ ∥ L(εt+1 ) − L(εt)∥F ,
+
+Weyl’s inequality for symmetric matrices yields, for all k = 1 , 2, . . . , n ,
+
+|γk(εt+1 ) − γk(εt)| ≤ ∥ L(εt+1 ) − L(εt)∥2 ≤ ∥ L(εt+1 ) − L(εt)∥F ≤ CL(εt+1 − εt).
+
+Setting C = CL proves (1). 
+
+Proof of (2). For two consecutive scales εt < ε t+1 in Λ ⋆, the Laplacian update can be written as 
+
+L(εt+1 ) = L(εt) + ∆ L, 
+
+where ∆ L is the Laplacian contribution induced by newly added edges. Each added edge contributes a positive semidefinite matrix, and hence ∆L ⪰ 0,
+
+where ⪰ denotes the positive semidefinite order. Therefore, 
+
+L(εt+1 ) ⪰ L(εt)in the Loewner partial order. By the Courant–Fischer min–max principle [13], this implies 
+
+γk(εt) ≤ γk(εt+1 ), ∀k = 1 , 2, . . . , n. 30 ZHANG, MIAO, AND LI 
+
+Moreover, since Λ ⋆ is the canonical minimal sufficient scale set, the graph topology changes at each transition εt → εt+1 , in the sense that at least one newly added edge connects two previously disconnected components. Consequently, the nullity of L(ε)strictly decreases by at least one. In particular, letting k = dim ker L(εt), we obtain 0 = γk(εt) < γ k(εt+1 ).
+
+This completes the proof of (2). 
+
+Proof of (3). By definition, dim ker L(ε) equals the multiplicity of the zero eigenvalue. From (2), the zero eigenvalue at scale εt becomes strictly positive at scale 
+
+εt+1 , implying a strict decrease in the kernel dimension. This completes the proof. 
+
+Remark. While Theorem B.4 is stated for the canonical minimal sufficient scale set, the conclusions hold for any minimal sufficient scale set, as the proof relies only on the minimal sufficiency property rather than the uniqueness of the canonical set. 
+
+B.5. Proof of Theorem 3.9. 
+
+Theorem B.5 (Bounds for multi-scale embedding increments). 
+
+Let {(Wt, H t)}nt=1 be a first-order stationary point of the pNMF model (3.2) . For 
+
+1 < t ≤ n, define 
+
+∆Ht := Ht − Ht−1, ∆Lt := Lt − Lt−1, CX := ∥X⊤X∥F .
+
+Assume that for all t, Ht has full row rank d, and there exist constants CH > 0 and 
+
+ℓ > 0 such that 
+
+∥Ht∥F ≤ CH , γmin (HtH⊤ 
+
+> t
+
+) ≥ ℓ, ∀ t, 
+
+where γmin means the minimal eigenvalue of the corresponding matrix. Then the increments satisfy the recursive inequality 
+
+(B.1) (2 λ2 + λ3 − C)∥∆Ht∥F ≤ λ1CH ∥∆Lt∥F + λ2(∥∆Ht−1∥F + ∥∆Ht+1 ∥F ),
+
+where C := ( C1
+
+√n − d + C2 CH 
+
+> ℓ
+
+)CX , C1 := 1 
+
+> ℓ
+
++ 2C2 
+
+> H
+> ℓ2
+
+, C2 := C1CH + CH 
+
+> ℓ
+
+.Furthermore, assuming λ3 > C , define 
+
+a := λ1CH
+
+2λ2 + λ3 − C , b := λ2
+
+2λ2 + λ3 − C ,
+
+the following two bounds hold: 
+
+(B.2) max  
+
+> t
+
+∥∆Ht∥F ≤ λ1CH
+
+λ3 − C max  
+
+> t
+
+∥∆Lt∥F , (Uniform bound )(B.3) ∥∆Ht∥F ≤ a
+
+√1 − 4b2
+
+X
+
+> k
+
+ρ|t−k|∥∆Lk∥F , (Pointwise bound )
+
+where 
+
+ρ := 1 − √1 − 4b2
+
+2b ∈ (0 , 1) .PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 31 
+
+Proof. Proof of Recursive inequality. Fix 1 < t < n and assume the nonneg-ativity constraints are inactive at scales t. The first-order stationary conditions with respect to Wt and Ht are (WtHt − X)H⊤ 
+
+> t
+
+= 0 ,(B.4) 
+
+W ⊤ 
+
+> t
+
+(WtHt − X) + λ1HtLt + λ2(2 Ht − Ht−1 − Ht+1 ) + λ3Ht = 0 .(B.5) Since rank( Ht) = d, (B.4) implies 
+
+Wt = XH † 
+
+> t
+
+, H† 
+
+> t
+
+= H⊤ 
+
+> t
+
+(HtH⊤ 
+
+> t
+
+)−1.
+
+Define 
+
+Rt := W ⊤ 
+
+> t
+
+(WtHt − X) = ( H† 
+
+> t
+
+)⊤X⊤X(H† 
+
+> t
+
+Ht − I).
+
+Similarly, the stationary condition at scale t − 1(2 < t < n ) yields (B.6) Rt−1 + λ1Ht−1Lt−1 + λ2(2 Ht−1 − Ht−2 − Ht) + λ3Ht−1 = 0 .
+
+Subtracting (B.6) from (B.5), we obtain ∆Ht(λ1Lt + (2 λ2 + λ3)I) = Rt−1 − Rt − λ1Ht−1∆Lt + λ2(∆ Ht−1 + ∆ Ht+1 ).
+
+Taking Frobenius norms on both sides and applying the triangle inequality gives 
+
+∥∆Ht(λ1Lt + (2 λ2 + λ3)I)∥F
+
+≤∥ Rt − Rt−1∥F + λ1∥Ht−1∥F ∥∆Lt∥F + λ2(∥∆Ht−1∥F + ∥∆Ht+1 ∥F ).
+
+We first bound the residual difference by 
+
+∥Rt − Rt−1∥F
+
+≤∥ (H† 
+
+> t
+
+)⊤ − (H†
+
+> t−1
+
+)⊤∥F CX ∥H† 
+
+> t
+
+Ht − I∥F + ∥(H†
+
+> t−1
+
+)⊤∥F CX ∥H† 
+
+> t
+
+Ht − H†
+
+> t−1
+
+Ht−1∥F .
+
+Since rank( Ht) = d, H† 
+
+> t
+
+Ht is an orthogonal projector in Rn×n with rank d, thus 
+
+∥H† 
+
+> t
+
+Ht − I∥F = √n − d. Moreover, under ∥Ht∥F ≤ CH and γmin (HtH⊤ 
+
+> t
+
+) ≥ ℓ, one can bound 
+
+∥(H† 
+
+> t
+
+)⊤ − (H†
+
+> t−1
+
+)⊤∥F ≤ C1∥∆Ht∥F , ∥(H†
+
+> t−1
+
+)⊤∥F ≤ CH
+
+ℓ ,
+
+and 
+
+∥H† 
+
+> t
+
+Ht − H†
+
+> t−1
+
+Ht−1∥F ≤ (C1CH + CH
+
+ℓ )∥∆Ht∥F .
+
+Combining the above estimates yields 
+
+∥Rt − Rt−1∥F ≤ C∥∆Ht∥F , where C = ( C1
+
+√n − d + C2
+
+CH
+
+ℓ )CX ,
+
+with C1, C 2 defined in the theorem statement. Since Lt is a graph Laplacian, it is symmetric positive semidefinite and thus its smallest eigenvalue is zero. Consequently, λ1Lt + (2 λ2 + λ3)I is symmetric positive 32 ZHANG, MIAO, AND LI 
+
+semidefinite with all eigenvalues bounded below by 2 λ2 + λ3. Using the trace repre-sentation of the Frobenius norm, we have 
+
+∥∆Ht(λ1Lt + (2 λ2 + λ3)I)∥F
+
+=
+
+q
+
+Tr(∆ H⊤ 
+
+> t
+
+∆Ht(λ1Lt + (2 λ2 + λ3)I)2)
+
+≥(2 λ2 + λ3)
+
+q
+
+Tr(∆ H⊤ 
+
+> t
+
+∆Ht)=(2 λ2 + λ3)∥∆Ht∥F ,
+
+where the inequality follows from the fact that ( λ1Lt + (2 λ2 + λ3)I)2 ⪰ (2 λ2 + λ3)2I
+
+and ∆ H⊤ 
+
+> t
+
+∆Ht ⪰ 0. Combining the above inequalities, we arrive at (2 λ2 + λ3 − C)∥∆Ht∥F ≤ λ1CH ∥∆Lt∥F + λ2(∥∆Ht−1∥F + ∥∆Ht+1 ∥F ),
+
+which proves (B.1). 
+
+Proof of Uniform bound. Taking the maximum over t on both sides of (B.1), we obtain max  
+
+> t
+
+∥∆Ht∥F ≤ a max  
+
+> t
+
+∥∆Lt∥F + b(max  
+
+> t
+
+∥∆Ht−1∥F + max  
+
+> t
+
+∥∆Ht+1 ∥F ).
+
+Since max  
+
+> t
+
+∥∆Ht∥F = max  
+
+> t
+
+∥∆Ht−1∥F = max  
+
+> t
+
+∥∆Ht+1 ∥F ,(1 − 2b) max  
+
+> t
+
+∥∆Ht∥F ≤ a max  
+
+> t
+
+∥∆Lt∥F .
+
+Under the assumption λ3 > C , the coefficient 1 − 2b is strictly positive, and therefore max  
+
+> t
+
+∥∆Ht∥F ≤ a
+
+1 − 2b max  
+
+> t
+
+∥∆Lt∥F = λ1CH
+
+λ3 − C max  
+
+> t
+
+∥∆Lt∥F ,
+
+which proves (B.2). 
+
+Proof of Pointwise bound. From (B.1), we have 
+
+∥∆Ht∥F − b∥∆Ht−1∥F − b∥∆Ht+1 ∥F ≤ a∥∆Lt∥F .
+
+Consider the linear difference operator (T · )t := ( ·)t − b(·)t−1 − b(·)t+1 .
+
+Then the above inequality can be written compactly as (T ∥ ∆H∥)t ≤ a∥∆Lt∥F .
+
+Since 0 < b < 12 , the operator T is strictly diagonally dominant and admits a unique decaying discrete Green’s function {hk}k∈Z satisfying (T h)k = δk0, lim  
+
+> |k|→∞
+
+hk = 0 .
+
+For k̸ = 0, hk solves the homogeneous recurrence 
+
+hk − bh k−1 − bh k+1 = 0 .PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 33 Seeking solutions of the form hk = r|k| with |r| < 1 yields the characteristic equation 
+
+br 2 − r + b = 0 .
+
+whose roots are r± = 1±√1−4b2 
+
+> 2b
+
+. The decay condition selects r− ∈ (0 , 1), hence 
+
+hk = Cr |k|− . Enforcing the equation at k = 0 gives C = 1 /√1 − 4b2. Therefore, 
+
+hk = 1
+
+√1 − 4b2 ρ|k|, ρ := 1 − √1 − 4b2
+
+2b ∈ (0 , 1) ,
+
+and in particular hk ≥ 0 for all k.Extending ∥∆Lk∥F by zero outside its natural index set and applying the com-parison principle associated with T yields 
+
+∥∆Ht∥F ≤ a(T −1∥∆L∥)t = a X
+
+> k
+
+ht−k∥∆Lk∥F = a
+
+√1 − 4b2
+
+X
+
+> k
+
+ρ|t−k|∥∆Lk∥F ,
+
+which proves (B.3). 
+
+B.6. Proof of Theorem 5.1. 
+
+Theorem B.6. The objective function ft in (4.1) is nonincreasing under the up-date rules given in (4.3) . In particular, for all 1 ≤ t ≤ n and all r ≥ 1, it holds that 
+
+ft(W (r+1)  
+
+> t
+
+, H (r+1)  
+
+> t
+
+) ≤ ft(W (r) 
+
+> t
+
+, H (r+1)  
+
+> t
+
+) ≤ ft(W (r) 
+
+> t
+
+, H (r) 
+
+> t
+
+).
+
+Proof. We prove that the stated inequalities hold for any fixed t. Throughout this proof, we omit the scale index t for simplicity, i.e., we use f , W (r), H(r), L and 
+
+D to denote ft, W (r) 
+
+> t
+
+, H(r) 
+
+> t
+
+, Lt and Dt respectively. The goal is to show that the objective function decreases monotonically under the updates: first, we prove 
+
+f (W (r), H (r+1) ) ≤ f (W (r), H (r)),
+
+and then 
+
+f (W (r+1) , H (r+1) ) ≤ f (W (r), H (r+1) ).
+
+We begin by fixing W (r) and considering the function Υ( H) := f (W (r), H ),
+
+which depends only on H. The gradient of Υ with respect to H is 
+
+∇H Υ( H) = 2 W (r)⊤(W (r)H − X) + 2 λ1HL + 2 λ2(2 H − H+1 − H−1) + 2 λ3H. 
+
+To facilitate the analysis, define the matrix Θ(r) := 2( W (r)⊤W (r) ¯H(r) + λ1 ¯H(r)D + (2 λ2 + λ3) ¯H(r)) + ν1
+
+¯H(r) ,
+
+where ¯H(r) is the modified matrix defined in (4.4), and ν > 0 ensures strict positivity. Next, we construct an auxiliary function 
+
+G(H, H (r)) := Υ( H(r)) + ⟨∇ H Υ( H(r)), H − H(r)⟩ + 12 ∥
+
+p
+
+Θ(r) ⊙ (H − H(r))∥2 
+
+> F
+
+.34 ZHANG, MIAO, AND LI 
+
+By the convexity of ∥W (r)H∥2 
+
+> F
+
+, the positive semidefinite property of L, and the construction of Θ (r), the function G serves as a quadratic upper bound of Υ: Υ( H) ≤ G(H, H (r)), ∀H, 
+
+with equality at the current iterate: 
+
+G(H(r), H (r)) = Υ( H(r)).
+
+The update for H in (4.3) is precisely the minimizer of this auxiliary function: 
+
+H(r+1) = arg min  
+
+> H
+
+G(H, H (r)),
+
+which immediately implies 
+
+G(H(r+1) , H (r)) ≤ G(H(r), H (r)) = Υ( H(r)).
+
+Since G majorizes Υ, we also have Υ( H(r+1) ) ≤ G(H(r+1) , H (r)).
+
+Combining these inequalities, we obtain Υ( H(r+1) ) ≤ Υ( H(r)),
+
+i.e., 
+
+f (W (r), H (r+1) ) ≤ f (W (r), H (r)),
+
+which establishes that updating H alone does not increase the objective function. Finally, after updating H to H(r+1) , we fix it and perform the update on W .By applying the same argument to the subproblem with respect to W , we similarly obtain 
+
+f (W (r+1) , H (r+1) ) ≤ f (W (r), H (r+1) ),
+
+showing that the objective function also does not increase when updating W .Therefore, by sequentially updating H and W , we conclude that the sequence of objective values 
+
+ft(W (r) 
+
+> t
+
+, H (r) 
+
+> t
+
+), f t(W (r) 
+
+> t
+
+, H (r+1)  
+
+> t
+
+), f t(W (r+1)  
+
+> t
+
+, H (r+1)  
+
+> t
+
+)is nonincreasing at each iteration. This completes the proof. 
+
+B.7. Proof of Theorem 5.2. 
+
+Theorem B.7. Let W (1)  
+
+> t
+
+≥ 0 and H(1)  
+
+> t
+
+≥ 0 be the initial matrices. Then any limit point (W ∗ 
+
+> t
+
+, H ∗ 
+
+> t
+
+) of the sequence {W (r) 
+
+> t
+
+, H (r) 
+
+> t
+
+}∞
+
+> r=1
+
+, generated by the update rules in (4.3) satisfies the KKT conditions in (5.1) .Proof. We prove the theorem holds for any t. For simplicity, we also omit the index t in the proof, i.e., we use W (r) and H(r) to denote W (r) 
+
+> t
+
+and H(r) 
+
+> t
+
+. Suppose that there exists a convergent subsequence {W (r), H (r)}r∈R such that lim  
+
+> r∈R , r →∞
+
+W (r) = W ∗, lim  
+
+> r∈R , r →∞
+
+H(r) = H∗.PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 35 To establish W ∗ ≥ 0 and H∗ ≥ 0, it suffices to show that W (r) ≥ 0 and H(r) ≥ 0hold for all r ≥ 1. We first demonstrate that ( H(r))ij ≥ 0 for all r ≥ 1; the argument for ( W (r))ij ≥ 0 follows analogously. When r = 1, the result clearly holds due to the initialization. Assume by induction that H(r) ≥ 0 holds for some r. Then, we analyze the update from r to r + 1. Since ¯H(r) ≥ 0 and the denominator in (4.3) is strictly positive due to ν > 0, we have ¯Γ(r) ≥ 0. If ∇H f (W (r), H (r))ij < 0, it follows that (H(r+1) )ij = ( H(r))ij − (¯Γ(r))ij ∇H f (W (r), H (r))ij ≥ (H(r))ij ≥ 0.
+
+Otherwise if ∇H f (W (r), H (r))ij ≥ 0, we have ¯H(r) ≥ H(r), with ( ¯H(r))ij =(H(r))ij and ( ¯H(r))i′j′ ≥ (H(r))i′j′ for all ( i′, j ′)̸ = ( i, j ). Thus, we have: (¯Γ(r))ij ≤ (Γ (r))ij 
+
+Furthermore, (H(r+1) )ij = ( H(r))ij − (¯Γ(r))ij ∇H f (W (r), H (r))ij 
+
+≥ (H(r))ij − (Γ (r))ij ∇H f (W (r), H (r))ij 
+
+≥ (H(r))ij 
+
+(W (r)⊤X + λ1H(r)A + λ2(H+1 + H−1)) ij 
+
+(W (r)⊤W (r)H(r) + λ1H(r)D + (2 λ2 + λ3)H(r))ij 
+
+≥ 0.
+
+Therefore, by induction, we conclude that H(r) ≥ 0 for all r ≥ 1. By the positivity-preserving property of limits, we conclude that W ∗ ≥ 0, H∗ ≥ 0. To establish the remaining KKT conditions, we examine the optimality of the limit point ( W ∗, H ∗) under the nonnegativity constraints. For each index ( i, j ), the KKT conditions can be verified by considering the two cases: ( H∗)ij > 0 and ( H∗)ij = 0. We first prove: for each index ( i, j ), if ( H∗)ij > 0, then ∇H f (W ∗, H ∗)ij = 0. By the definition of ( ¯H(r))ij in (4.4), the sequence {( ¯H(r))ij }r∈R may converge to either ( H∗)ij or μ. Since the index set ( i, j ) is finite, there exists an infinite subset ¯R ⊂ R such that lim  
+
+> r∈¯R, r →∞
+
+¯H(r) = ¯H∗ exists .
+
+From the update rule in (4.3), we have: 0 = lim  
+
+> r∈¯R, r →∞
+
+(H(r))ij − (H(r+1) )ij 
+
+= lim  
+
+> r∈¯R, r →∞
+
+(¯Γ(r))ij ∇H f (W (r), H (r))ij 
+
+= ( ¯Γ∗)ij ∇H f (W ∗, H ∗)ij 
+
+Note that ( ¯Γ∗)ij ≥ 0. Hence, if ( H∗)ij > 0, the above equation immediately implies 
+
+∇H f (W ∗, H ∗)ij = 0. Similarly, if ( W ∗)ij > 0, then ∇W f (W ∗, H ∗)ij = 0. Next, we prove: for each index ( i, j ), if ( H∗)ij = 0, then ∇H f (W ∗, H ∗)ij ≥ 0. We prove this by contradiction. Suppose the statement is false. Then there exists an index ( i, j ) such that (H∗)ij = 0 and ∇H f (W ∗, H ∗)ij < 0.36 ZHANG, MIAO, AND LI 
+
+For large enough r ∈ ¯R, we have ∇H f (W (r), H (r))ij < 0, and hence lim  
+
+> r∈¯R, r →∞
+
+( ¯H(r))ij = ( ¯H∗)ij = μ > 0.
+
+Therefore, 0 = lim  
+
+> r∈¯R, r →∞
+
+(H(r))ij − (H(r+1) )ij = ( ¯Γ∗)ij ∇H f (W ∗, H ∗)ij < 0,
+
+which leads to a contradiction. Thus, our assumption must be false, and we conclude: 
+
+∇H f (W ∗, H ∗)ij ≥ 0. Similarly, if ( W ∗)ij = 0, then ∇W f (W ∗, H ∗)ij ≥ 0. This completes the proof. 
+
+B.8. Proof of Theorem 5.3. 
+
+Theorem B.8. Let {(W (s,r ) 
+
+> t
+
+, H (s,r ) 
+
+> t
+
+)}nt=1 denote the iterates at the s-th outer it-eration and the r-th inner iteration, and let (W (s, ∗) 
+
+> t
+
+, H (s, ∗) 
+
+> t
+
+) denote a limit point of the inner iterations within the s-th outer iteration. Then, under in Algorithm 4.1 , the overall objective function O in (3.2) is nonincreasing across outer iterations: 
+
+O(W (s+1 ,∗)1 , H (s+1 ,∗)1 , . . . , W (s+1 ,∗) 
+
+> n
+
+, H (s+1 ,∗) 
+
+> n
+
+)
+
+≤O (W (s, ∗)1 , H (s, ∗)1 , . . . , W (s, ∗) 
+
+> n
+
+, H (s, ∗) 
+
+> n
+
+), ∀s ≥ 1.
+
+Proof. For each outer iteration s, denote by ( W (s,r ) 
+
+> t
+
+, H (s,r ) 
+
+> t
+
+) the iterates of the inner updates for block t, and let ( W (s, ∗) 
+
+> t
+
+, H (s, ∗) 
+
+> t
+
+) be the corresponding limit. Accord-ing to Theorem B.6, updating each block ( Wt, H t) using the rule in (4.3) ensures that the objective function O does not increase while all other variables are fixed: 
+
+O(. . . , W (s,r +1)  
+
+> t
+
+, H (s,r +1)  
+
+> t
+
+, . . . ) ≤ O (. . . , W (s,r ) 
+
+> t
+
+, H (s,r ) 
+
+> t
+
+, . . . ).
+
+Taking the limit of the inner iterations yields 
+
+O(. . . , W (s, ∗) 
+
+> t
+
+, H (s, ∗) 
+
+> t
+
+, . . . ) ≤ O (. . . , W (s,r ) 
+
+> t
+
+, H (s,r ) 
+
+> t
+
+, . . . ), ∀r. 
+
+During the s-th outer iteration, the blocks ( W1, H 1), . . . , (Wn, H n) are updated sequentially. Since each block update is nonincreasing, the overall objective function satisfies the chain of inequalities 
+
+O(W (s, ∗)1 , H (s, ∗)1 , . . . , W (s, ∗) 
+
+> n
+
+, H (s, ∗) 
+
+> n
+
+)
+
+≥O (W (s+1 ,∗)1 , H (s+1 ,∗)1 , W (s, ∗)2 , H (s, ∗)2 , . . . , W (s, ∗) 
+
+> n
+
+, H (s, ∗) 
+
+> n
+
+)
+
+≥ . . . 
+
+≥O (W (s+1 ,∗)1 , H (s+1 ,∗)1 , . . . , W (s+1 ,∗) 
+
+> n
+
+, H (s+1 ,∗) 
+
+> n
+
+).
+
+which directly shows that the objective function does not increase after completing all block updates. Therefore, by sequentially updating all blocks in each outer iteration, we conclude that 
+
+O(W (s, ∗)1 , H (s, ∗)1 , . . . , W (s, ∗) 
+
+> n
+
+, H (s, ∗) 
+
+> n
+
+)
+
+≥O (W (s+1 ,∗)1 , H (s+1 ,∗)1 , . . . , W (s+1 ,∗) 
+
+> n
+
+, H (s+1 ,∗) 
+
+> n
+
+), ∀s ≥ 1.
+
+This establishes that the sequence of objective values is nonincreasing over the alter-nating optimization process, completing the proof. PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 37 
+
+B.9. Computational Complexity. We analyze the computational complexity of the proposed optimization algorithm described in Algorithm 4.1. The analysis is carried out at the level of a single inner iteration for one scale t, followed by aggregation over all scales and outer iterations. 
+
+Cost of updating Ht. The dominant computational costs in updating Ht arise from matrix multiplications involving Wt, X, and the scale-specific graph structures. Specifically, the main operations include: (i) computing W ⊤ 
+
+> t
+
+X, which costs O(dpn ); (ii) computing products of the form W ⊤ 
+
+> t
+
+WtHt, which cost O(d2(p + n)); and (iii) applying the graph Laplacian terms HtDt and HtLt. Since Dt and Lt are dense in general, these terms incur a cost of O(dn 2). As a result, the total cost of one update of Ht is 
+
+O(dpn + d2(p + n) + dn 2).
+
+Cost of updating Wt. Updating Wt primarily involves matrix products with Ht
+
+and X. The dominant operations are computing XH ⊤ 
+
+> t
+
+and WtHtH⊤ 
+
+> t
+
+, which together cost 
+
+O(dpn + d2(p + n)) .
+
+Compared with the update of Ht, this cost does not involve graph-related terms and is therefore of lower order when n is large. 
+
+Overall complexity. Combining the updates of Ht and Wt, the computational complexity of one inner iteration at a single scale t is 
+
+O(dpn + d2(p + n) + dn 2).
+
+Since the algorithm sequentially updates all n scales in each outer iteration, and assuming that each ( Wt, H t) pair is updated for r inner iterations on average and that the algorithm performs s outer iterations, the total computational complexity is 
+
+O(srn (dpn + d2(p + n) + dn 2)) .
+
+If sparse graph constructions are employed, the dn 2 term can be significantly reduced, leading to improved scalability for large n.
+
+Appendix C. Additional Experimental Results. C.1. Simulation Experiment. C.1.1. Empirical Convergence Behavior. We examine the empirical conver-gence behavior of pNMF on the simulated dataset by tracking the evolution of the objective function throughout the optimization process. The proposed Algorithm 4.1 follows a sequential alternating optimization scheme with nested loops: each outer it-eration sequentially updates all n scales, and each scale-specific subproblem is solved via an inner iterative procedure. Figure 7(a) reports the objective function value evaluated at each outer iteration. The objective decreases monotonically and stabilizes after a moderate number of iterations, indicating stable convergence of the overall optimization process in practice. To further characterize the convergence speed, Figure 7(b) shows the relative decrease of the objective function between successive outer iterations, defined as |O (s−1) −O(s)|/O(s−1) . The rapid decay of the relative change suggests that the algorithm efficiently approaches a stationary point. To provide a more fine-grained view, Figure 7(c) illustrates the evolution of the objective function across all update steps within the outer–scale–inner optimization 38 ZHANG, MIAO, AND LI 2 4 6 8 10              
+
+> Outer iteration s
+> 5.0
+> 5.1
+> 5.2
+> 5.3
+> 5.4
+> Objective value
+> 1e7 (a) Objective value per outer iteration
+> 246810
+> Outer iteration s
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> Relative objective value
+> (b) Relative objective value | (s1) (s)|/ (s1)
+> 1-1-0
+> 1-3-75
+> 1-5-116
+> 1-7-189
+> 1-10-85
+> 1-13-52
+> 1-16-114
+> 1-20-99
+> 1-25-18
+> 1-30-70
+> 1-37-18
+> 1-47-22
+> 1-80-2
+> 2-4-5
+> 2-8-107
+> 2-13-53
+> 2-18-120
+> 2-27-41
+> 2-38-31
+> 2-78-12
+> 3-6-49
+> 3-26-44
+> 4-7-22
+> 5-40-5
+> 7-80-22
+> 10-75-0
+> Iteration index (outer-scale-inner)
+> 5.0
+> 5.1
+> 5.2
+> 5.3
+> 5.4
+> Objective value
+> 1e7 (c) Objective value across all update steps
+
+Fig. 7 . Empirical convergence behavior of pNMF on the simulation dataset. (a) Objective func-tion value versus outer iteration. (b) Relative decrease of the objective function between successive outer iterations. (c) Fine-grained evolution of the objective function across all update steps in the outer–scale–inner optimization process. 
+
+process. Each individual update, including scale-wise updates and inner-loop refine-ments, leads to a non-increasing objective value. This empirical behavior is consistent with the design of the subproblem updates and their alignment with the global ob-jective. Overall, these results demonstrate that the proposed sequential alternating opti-mization strategy remains stable and well-behaved even under a multi-scale and nested optimization setting, and provide empirical support for the theoretical convergence analysis presented earlier. 
+
+C.1.2. Ablation Study on Regularization Terms. We conduct an ablation study on the simulated dataset to investigate the role of each regularization component in the proposed pNMF model, with a particular focus on how the removal of individual terms affects the resulting multi-scale embeddings. The pNMF objective consists of a data fidelity term, a scale-specific geometric regularization term weighted by λ1, a cross-scale smoothness term weighted by λ2, and an anchoring term weighted by λ3,each targeting a distinct aspect of multi-scale structure modeling. Starting from the full pNMF model, we consider the following ablation variants to disentangle the effects of individual regularization components: 
+
+• pNMF (Full) : the complete model with all regularization terms enabled; 
+
+• pNMF-noGeom : the geometric regularization term is removed by setting 
+
+λ1 = 0; 
+
+• pNMF-noSmooth : the cross-scale smoothness term is removed by setting 
+
+λ2 = 0; 
+
+• pNMF-noAnchor : the anchoring term is removed by setting λ3 = 0; 
+
+• pNMF-GeomOnly : only the geometric regularization term is retained, with 
+
+λ2 = λ3 = 0; PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 39 
+
+• pNMF-SmoothOnly : only the cross-scale smoothness term is retained, with λ1 = λ3 = 0. This design allows us to separately examine the roles of geometric structure induc-tion and cross-scale regulation. All variants use the same persistence-based scale sequence, initialization strategy, and stopping criteria. The hyperparameters of the retained terms are fixed to the same values as in the full model, ensuring that any observed differences arise solely from the presence or absence of specific regularization components. The qualitative results of the ablation study are shown in Figure 8. Each col-umn corresponds to the same scale index, while each row represents a different model variant. The full pNMF model exhibits clear and interpretable multi-scale embedding behavior: as the scale becomes finer, the concentric circular structures emerge pro-gressively, and embeddings at different scales capture distinct geometric resolutions of the data. For pNMF-noGeom , the embeddings at all scales closely resemble those ob-tained at the finest scale of the full model, effectively collapsing the multi-scale em-beddings into a single geometric configuration. Although geometric structure is still present, the embeddings no longer adapt to changes in scale, indicating that geometric regularization is essential for inducing scale-dependent structure. A similar degener-ation is observed for pNMF-SmoothOnly , suggesting that cross-scale smoothness alone is insufficient to generate meaningful geometric organization across scales. Removing the cross-scale smoothness term ( pNMF-noSmooth ) leads to a no-ticeable degradation of embedding quality at intermediate scales. While geometric patterns remain visible at certain scales, the concentric circular structures become distorted or unstable at others, resulting in a fragmented and difficult-to-interpret cross-scale evolution. This behavior highlights the role of the cross-scale smoothness term in regulating how geometric structures evolve coherently across scales, rather than in creating the structures themselves. In contrast, pNMF-noAnchor and pNMF-GeomOnly produce embeddings that are visually similar to those of the full model on the simulated dataset. This indicates that, under the controlled and symmetric simulation setting, geometric reg-ularization alone is sufficient to stabilize the global configuration of the embeddings, and the anchoring term has a limited effect. Overall, this ablation study demonstrates that geometric regularization is neces-sary for enforcing scale-dependent structure, while cross-scale smoothness is crucial for maintaining a coherent and interpretable evolution across scales. The anchor-ing term serves as a complementary stabilizer whose contribution depends on data complexity, jointly supporting the design of the full pNMF objective. 
+
+C.2. Application to scRNA-seq Data Clustering. C.2.1. Evaluation Metrics. Let L = {l1, l 2, . . . , l n} and C = {c1, c 2, . . . , c n}
+
+denote the true and predicted labels, respectively, where n is the total number of data points. To evaluate clustering performance, we adopt four widely used metrics: Adjusted Rand Index (ARI), Normalized Mutual Information (NMI), Purity, and Accuracy. 
+
+• Adjusted Rand Index (ARI). ARI quantifies the agreement between the predicted and true labels, adjusted for chance. It is defined as ARI = RI − E[RI] max(RI) − E[RI] ,40 ZHANG, MIAO, AND LI H1 H20 H40 H60 H80    
+
+> pNMF
+> pNMF-noGeom
+> pNMF-noSmooth
+> pNMF-noAnchor
+> pNMF-GeomOnly
+> pNMF-SmoothOnly
+> Circle_1 Circle_2 Circle_3 Circle_4
+
+Fig. 8 . Effect of regularization ablation on multi-scale embedding visualization. Each column corresponds to the same scale index, while each row represents a different model variant. From top to bottom: pNMF (Full), pNMF-noGeom, pNMF-noSmooth, pNMF-noAnchor, pNMF-GeomOnly, and pNMF-SmoothOnly. 
+
+where RI denotes the Rand Index and E[RI] is its expected value under ran-dom labeling. ARI ranges from −1 to 1, with 1 indicating perfect agreement and 0 corresponding to random clustering. 
+
+• Normalized Mutual Information (NMI). NMI measures the mutual de-pendence between the true and predicted labels, defined as NMI( C, L ) = 2 · I(C; L)
+
+H(C) + H(L) ,
+
+where I(C; L) denotes the mutual information between C and L, and H(C)and H(L) are their respective entropies. NMI takes values in [0 , 1], with larger values indicating better agreement. 
+
+• Purity. Purity evaluates the extent to which each cluster contains data PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 41 points from a single true label, defined as Purity = 1
+
+n
+
+X
+
+> i
+
+max  
+
+> j
+
+|Ci ∩ Lj |.
+
+The intersection |Ci ∩ Lj | denotes the number of data points in cluster i that have the true label j. Purity ranges from 0 to 1, with 1 indicating that each cluster consists entirely of data points from a single true label. 
+
+• Accuracy. Accuracy measures the proportion of correctly clustered data points. Before computing accuracy, predicted cluster labels are matched to the true labels using the Hungarian algorithm. It is defined as Accuracy = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+δ(ci, l i),
+
+where δ(ci, l i) is the Kronecker delta function, equal to 1 if ci = li, and 0 otherwise. Accuracy ranges from 0 to 1, with 1 indicating that all data points are correctly clustered. 
+
+C.2.2. Clustering Visualization. We visualize the low-dimensional embed-dings using t-SNE and UMAP (Figure 9). Across datasets, pNMF embeddings more clearly separate distinct cell types compared to baseline methods, consistent with the quantitative clustering results. For example, in GSE75748time, pNMF distinguishes the two cell populations at 00hr and 12hr, whereas baseline embeddings exhibit over-lapping clusters. Similarly, in Dendritic batch1, pNMF embeddings provide a more accurate separation of the four cell types. These qualitative results further corrobo-rate the quantitative improvements, demonstrating that pNMF preserves biologically meaningful structures in single-cell data. 
+
+C.2.3. Parameter Analysis. We investigate the sensitivity of pNMF to its regularization parameters by conducting a comprehensive parameter analysis on five scRNA-seq datasets. Specifically, the three regularization coefficients λ1, λ2, and λ3
+
+are independently varied over {0.1, 1, 10 }, resulting in 27 parameter combinations for each dataset. For each configuration, clustering performance is evaluated using ARI, NMI, Purity, Accuracy, as well as their average. The results are summarized using radar charts in Figure 10, where each subplot corresponds to one dataset and each polygon represents a specific parameter combi-nation. This visualization provides an intuitive overview of both performance level and stability under different regularization settings. Overall, pNMF exhibits robust performance across a wide range of parameter values. In particular, the radar charts show that configurations with moderate regu-larization strengths generally achieve consistently strong performance across all met-rics, whereas extremely small or large values may lead to mild degradation on certain datasets. This indicates that pNMF does not rely on delicate parameter tuning to achieve good clustering quality. Examining the effect of individual regularization terms, we observe that the geo-metric regularization coefficient λ1 plays a central role in clustering performance. Across datasets, settings with λ1 = 1 tend to yield stable and well-balanced results, while smaller values may insufficiently enforce geometric structure and larger values occasionally lead to over-regularization. The cross-scale smoothness parameter λ2 shows a similar trend. Moderate values generally promote coherent performance across scales, whereas overly weak smooth-ness may reduce stability, especially in datasets with complex cell-type transitions. 42 ZHANG, MIAO, AND LI GSE75748time       
+
+> (t-SNE)
+> XNMF GNMF TNMF kTNMF pNMF pNMF-best
+> GSE75748time
+> (UMAP)
+> GSE94820
+> (t-SNE)
+> GSE94820
+> (UMAP)
+> GSE75140
+> (t-SNE)
+> GSE75140
+> (UMAP)
+> Dendritic_batch1
+> (t-SNE)
+> Dendritic_batch1
+> (UMAP)
+> Dendritic_batch2
+> (t-SNE)
+> Dendritic_batch2
+> (UMAP)
+> 00hr
+> 12hr
+> 24hr
+> 36hr
+> 72hr
+> 96hr
+> CD141
+> CD1C
+> DoubleNeg
+> Mono
+> pDC
+> 12 weeks post-conception
+> 13 weeks post-conception
+> 33 days
+> 35 days
+> 37 days
+> 41 days
+> 53 days
+> 58 days
+> 65 days
+> CD141
+> pDC
+> DoubleNeg
+> CD1C
+> CD141
+> pDC
+> DoubleNeg
+> CD1C
+
+Fig. 9 . t-SNE and UMAP visualizations for scRNA-seq datasets. Each dataset is represented by two rows of panels: the first row shows t-SNE embeddings and the second row shows UMAP embeddings. The first column corresponds to the raw data X directly visualized, while the remaining columns show embeddings from different methods. 
+
+This behavior is consistent with the role of λ2 in regulating the evolution of embed-dings along the scale dimension. In contrast, the anchoring parameter λ3 has a comparatively milder influence on clustering performance. While appropriate anchoring can slightly improve stability, the radar charts suggest that pNMF remains effective over a broad range of λ3 values, indicating that anchoring mainly serves as a complementary regularization term rather than a dominant factor. Based on this analysis, we adopt λ1 = λ2 = λ3 = 1 as the default setting in all PERSISTENT NONNEGATIVE MATRIX FACTORIZATION 43 ARI 
+
+> NMI
+> Purity
+> Accuracy
+> Average
+> 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8
+
+GSE75748time 
+
+> ARI
+> NMI
+> Purity
+> Accuracy
+> Average
+> 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8
+
+GSE94820     
+
+> ARI
+> NMI
+> Purity
+> Accuracy
+> Average
+> 0.1 0.2 0.3 0.4 0.5
+
+GSE75140 
+
+> ARI
+> NMI
+> Purity
+> Accuracy
+> Average
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+
+Dendritic_batch1 
+
+> ARI
+> NMI
+> Purity
+> Accuracy
+> Average
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+
+Dendritic_batch2 1 = 0.1, 2 = 0.1, 3 = 0.1                                                                                                                                   
+
+> 1= 0.1, 2= 0.1, 3= 1
+> 1= 0.1, 2= 0.1, 3= 10
+> 1= 0.1, 2= 1, 3= 0.1
+> 1= 0.1, 2= 1, 3= 1
+> 1= 0.1, 2= 1, 3= 10
+> 1= 0.1, 2= 10, 3= 0.1
+> 1= 0.1, 2= 10, 3= 1
+> 1= 0.1, 2= 10, 3= 10
+> 1= 1, 2= 0.1, 3= 0.1
+> 1= 1, 2= 0.1, 3= 1
+> 1= 1, 2= 0.1, 3= 10
+> 1= 1, 2= 1, 3= 0.1
+> 1= 1, 2= 1, 3= 1
+> 1= 1, 2= 1, 3= 10
+> 1= 1, 2= 10, 3= 0.1
+> 1= 1, 2= 10, 3= 1
+> 1= 1, 2= 10, 3= 10
+> 1= 10, 2= 0.1, 3= 0.1
+> 1= 10, 2= 0.1, 3= 1
+> 1= 10, 2= 0.1, 3= 10
+> 1= 10, 2= 1, 3= 0.1
+> 1= 10, 2= 1, 3= 1
+> 1= 10, 2= 1, 3= 10
+> 1= 10, 2= 10, 3= 0.1
+> 1= 10, 2= 10, 3= 1
+> 1= 10, 2= 10, 3= 10
+
+Fig. 10 . Parameter analysis radar charts for scRNA-seq datasets. Each chart displays the clustering performance of pNMF under 27 combinations of regularization parameters λ1, λ2, and 
+
+λ3. The metrics plotted are ARI, NMI, Purity, Accuracy, and their average. 
+
+subsequent experiments. This choice provides a favorable trade-off between clustering accuracy, robustness, and interpretability across datasets, while avoiding dataset-specific parameter tuning. 
+
+Appendix D. Code Availability. The code for the proposed pNMF and experiments is available at https://github.com/LiminLi-xjtu/pNMF. 
+
+REFERENCES [1] M. Belkin, P. Niyogi, and V. Sindhwani , Manifold regularization: A geometric framework for learning from labeled and unlabeled examples. , Journal of machine learning research, 7 (2006). [2] C. Boutsidis and E. Gallopoulos , Svd based initialization: A head start for nonnegative matrix factorization , Pattern recognition, 41 (2008), pp. 1350–1362. [3] P. Bubenik et al. , Statistical topological data analysis using persistence landscapes. , J. Mach. Learn. Res., 16 (2015), pp. 77–102. [4] D. Cai, X. He, J. Han, and T. S. Huang , Graph regularized nonnegative matrix factorization for data representation , IEEE transactions on pattern analysis and machine intelligence, 33 (2010), pp. 1548–1560. [5] J. G. Camp, F. Badsha, M. Florio, S. Kanton, T. Gerber, M. Wilsch-Br¨ auninger, E. Lewitus, A. Sykes, W. Hevers, M. Lancaster, et al. , Human cerebral organoids recapitulate gene expression programs of fetal neocortex development , Proceedings of the National Academy of Sciences, 112 (2015), pp. 15672–15677. [6] F. Chazal and B. Michel , An introduction to topological data analysis: fundamental and practical aspects for data scientists , Frontiers in artificial intelligence, 4 (2021), p. 667963. [7] L.-F. Chu, N. Leng, J. Zhang, Z. Hou, D. Mamott, D. T. Vereide, J. Choi, C. Kendziorski, R. Stewart, and J. A. Thomson , Single-cell rna-seq reveals novel 44 ZHANG, MIAO, AND LI 
+
+regulators of human embryonic stem cell differentiation to definitive endoderm , Genome biology, 17 (2016), pp. 1–20. [8] F. R. Chung , Spectral graph theory , vol. 92, American Mathematical Soc., 1997. [9] J. R. Clough, N. Byrne, I. Oksuz, V. A. Zimmer, J. A. Schnabel, and A. P. King , A topo-logical loss function for deep-learning based image segmentation using persistent homology ,IEEE transactions on pattern analysis and machine intelligence, 44 (2020), pp. 8766–8778. [10] D. Cohen-Steiner, H. Edelsbrunner, and J. Harer , Stability of persistence diagrams ,in Proceedings of the twenty-first annual symposium on Computational geometry, 2005, pp. 263–271. [11] H. Edelsbrunner, J. Harer, et al. , Persistent homology-a survey , Contemporary mathe-matics, 453 (2008), pp. 257–282. [12] N. Gillis , Nonnegative matrix factorization , SIAM, 2020. [13] G. H. Golub and C. F. Van Loan , Matrix computations , JHU press, 2013. [14] Y. Hozumi and G.-W. Wei , Analyzing single cell rna sequencing with topological nonnegative matrix factorization , Journal of Computational and Applied Mathematics, 445 (2024), p. 115842. [15] T. Huynh and Z. Cang , Topological and geometric analysis of cell states in single-cell tran-scriptomic data , Briefings in Bioinformatics, 25 (2024), p. bbae176. [16] Y. Koren, R. Bell, and C. Volinsky , Matrix factorization techniques for recommender systems , Computer, 42 (2009), pp. 30–37. [17] D. Lee and H. S. Seung , Algorithms for non-negative matrix factorization , Advances in neural information processing systems, 13 (2000). [18] D. D. Lee and H. S. Seung , Learning the parts of objects by non-negative matrix factorization ,nature, 401 (1999), pp. 788–791. [19] C.-J. Lin , On the convergence of multiplicative update algorithms for nonnegative matrix fac-torization , IEEE Transactions on Neural Networks, 18 (2007), pp. 1589–1596. [20] N. K. Logothetis and D. L. Sheinberg , Visual object recognition. , Annual review of neuro-science, 19 (1996), pp. 577–621. [21] F. M´ emoli, Z. Wan, and Y. Wang , Persistent laplacians: Properties, algorithms and impli-cations , SIAM Journal on Mathematics of Data Science, 4 (2022), pp. 858–884. [22] J. Milnor , On the betti numbers of real varieties , Proceedings of the American Mathematical Society, 15 (1964), pp. 275–280. [23] M. Moor, M. Horn, B. Rieck, and K. Borgwardt , Topological autoencoders , in International conference on machine learning, PMLR, 2020, pp. 7045–7054. [24] S. E. Palmer , Hierarchical structure in perceptual representation , Cognitive psychology, 9 (1977), pp. 441–474. [25] S. T. Roweis and L. K. Saul , Nonlinear dimensionality reduction by locally linear embedding ,science, 290 (2000), pp. 2323–2326. [26] G. W. Stewart , On the early history of the singular value decomposition , SIAM review, 35 (1993), pp. 551–566. [27] J. B. Tenenbaum, V. d. Silva, and J. C. Langford , A global geometric framework for nonlinear dimensionality reduction , science, 290 (2000), pp. 2319–2323. [28] A.-C. Villani, R. Satija, G. Reynolds, S. Sarkizova, K. Shekhar, J. Fletcher, M. Gries-beck, A. Butler, S. Zheng, S. Lazo, et al. , Single-cell rna-seq reveals new types of human blood dendritic cells, monocytes, and progenitors , Science, 356 (2017), p. eaah4573. [29] E. Wachsmuth, M. W. Oram, and D. I. Perrett , Recognition of objects and their component parts: responses of single units in the temporal cortex of the macaque , Cerebral Cortex, 4 (1994), pp. 509–522. [30] R. Wang, D. D. Nguyen, and G.-W. Wei , Persistent spectral graph , International journal for numerical methods in biomedical engineering, 36 (2020), p. e3376. [31] R. Wang, R. Zhao, E. Ribando-Gros, J. Chen, Y. Tong, and G.-W. Wei , Hermes: Per-sistent spectral graph software , Foundations of data science (Springfield, Mo.), 3 (2021), p. 67. [32] Y.-X. Wang and Y.-J. Zhang , Nonnegative matrix factorization: A comprehensive review ,IEEE Transactions on knowledge and data engineering, 25 (2012), pp. 1336–1353. [33] L. Wasserman , Topological data analysis , Annual Review of Statistics and Its Application, 5 (2018), pp. 501–532. [34] A. Zomorodian , Fast construction of the vietoris-rips complex , Computers & Graphics, 34 (2010), pp. 263–271. [35] A. Zomorodian and G. Carlsson , Computing persistent homology , in Proceedings of the twentieth annual symposium on Computational geometry, 2004, pp. 347–356.

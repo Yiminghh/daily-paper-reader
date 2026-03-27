@@ -1,0 +1,2568 @@
+Title: Flowette: Flow Matching with Graphette Priors for Graph Generation
+
+URL Source: https://arxiv.org/pdf/2602.23566v1
+
+Published Time: Mon, 02 Mar 2026 01:19:31 GMT
+
+Number of Pages: 37
+
+Markdown Content:
+# Flowette: Flow Matching with Graphette Priors for Graph Generation 
+
+Asiri Wijesinghe 1 Sevvandi Kandanaarachchi 1 Daniel M. Steinberg 1 Cheng Soon Ong 1 2 
+
+Abstract 
+
+We study generative modeling of graphs with re-curring subgraph motifs. We propose Flowette, a continuous flow matching framework, that em-ploys a graph neural network based transformer to learn a velocity field defined over graph rep-resentations with node and edge attributes. Our model preserves topology through optimal trans-port based coupling, and long-range structural dependencies through regularisation. To incorpo-rate domain driven structural priors, we introduce graphettes, a new probabilistic family of graph structure models that generalize graphons via con-trolled structural edits for motifs like rings, stars and trees. We theoretically analyze the coupling, invariance, and structural properties of the pro-posed framework, and empirically evaluate it on synthetic and small-molecule graph generation tasks. Flowette demonstrates consistent improve-ments, highlighting the effectiveness of combin-ing structural priors with flow-based training for modeling complex graph distributions. 
+
+1. Introduction 
+
+Generative modeling of graphs has applications spanning molecular design, social networks, biological systems, and combinatorial optimization (You et al., 2018; Kipf & Welling, 2016; Zhu et al., 2022). Graphs exhibit complex structure, permutation symmetry, and rich higher-order mo-tifs such as cycles, hubs, and repeated subgraphs. These motifs encode essential domain semantics. For instance, molecular graphs are characterized by ring structures and valence constraints. Existing approaches rely on domain-specific architectures, resulting in specialized models for each motif (Jin et al., 2018; Shi et al., 2020; Karami, 2023). This limits transferability and obscures the underlying prin-ciples of structure-aware graph generation. Recent progress in continuous-time generative modeling-  
+
+> 1Data61, CSIRO, Australia 2College of Systems and Society, ANU, Australia. Correspondence to: Asiri Wijesinghe <asiriwi-jesinghe.wijesinghe@data61.csiro.au >.
+> Preprint. March 2, 2026.
+
+notably diffusion models and flow matching-has provided powerful tools for high-dimensional generation (Song et al., 2021; Lipman et al., 2023). Flow matching (FM) directly learns a velocity field transporting samples from a source distribution to the data distribution (Lipman et al., 2023; Liu et al., 2023). However, existing graph FM approaches typi-cally rely on implicit or independent coupling between noise and data graphs, ignoring structural compatibility under per-mutation and size variability. As a result of forcing models to interpolate between topologically mismatched graphs, velocity supervision can be high-variance and inconsistent. Three ingredients are essential for structure-aware flow-based graph generation. First, supervision pairs in flow matching should be structurally aligned. Second, the train-ing objective must explicitly regularize global trajectory coherence and domain feasibility. Third, the source dis-tribution itself should encode meaningful structural priors, reflecting the dominant motifs. We introduce Flowette, a graph generation framework that contains these three ingredients. (1) Flowette couples noise graphs and data graphs using fused Gromov-Wasserstein (FGW) optimal transport (Titouan et al., 2019), yield-ing node permutation-consistent correspondences across variable-sized graphs. By providing supervision pairs that respect topology, we enable structure aligned flow match-ing on graphs. The velocity field is parameterized by a topology respecting Graph Neural Network (GNN) based transformer that jointly evolves node features, edge features, and adjacency values. (2) We introduce regularisation terms in the training objective to preserve long range structures and permutation equivariance. The resulting training objec-tive leads to more stable continuous time generation and improved structural fidelity. (3) To enable structural induc-tive biases in the source distribution, we introduce a new mathematical object graphettes , a probabilistic family of graph priors that generalize graphons via controlled edits. Graphettes allow principled injection or removal of mo-tifs (rings, stars, cycles), providing a unified mechanism to model dense, sparse, and motif-rich graphs within a single framework. Unlike task-specific heuristics, graphettes de-couple structural assumptions from the neural architecture. 1
+
+> arXiv:2602.23566v1 [cs.LG] 27 Feb 2026 Flowette: Flow Matching with Graphette Priors
+
+2. Background and setting 
+
+Graphs have interchangeable representations, and we use the following conventions. A graph G with n vertices (nodes) can be written in terms of vertices and edges, (V, E ), or equivalently by its A ∈ { 0, 1}n×n binary adjacency matrix. We retrieve the sets of vertices and edges in G by V (G)
+
+and E(G) respectively and denote the number of vertices by |V (G)|.When we need to model attributed graphs with node and edge features, we use X ∈ Rn×dx for node features and 
+
+F ∈ Rn×n×df for edge features of G. Sec. 3 introduces the flow matching framework for attributed graphs, and we denote a graph G by (A, X, F ), a triple consisting of the adjacency matrix, node and edge features of G. In Sec. 4 we introduce graphette priors focusing on non-attributed graphs G, which we denote by (V, E ). We use G ∼ W to indicate that a graph is sampled from some distribution or using a sampling function W.
+
+2.1. Flow Matching on Graphs Related Work. Graph generation has need to capture local and global structures, as motivated by domains like molecu-lar design, combinatorial optimisation, and biological net-works (Mercado et al., 2021; Sun & Yang, 2023; Yi et al., 2023). Existing methods can be broadly grouped into autore-gressive (You et al., 2018; Liao et al., 2019; Shi et al., 2020; Goyal et al., 2020) and one-shot paradigms (Dai et al., 2020; Shirzad et al., 2022; Karami, 2023; Davies et al., 2023). Diffusion-based generative models have recently become the dominant one-shot paradigm for graphs (Niu et al., 2020; Jo et al., 2022b), but discrete time versions tie sampling tra-jectory to the training schedule. Continuous-time discrete diffusion models based on Continuous Time Markov Chains (CTMCs) address this rigidity by decoupling the sampling grid from the training objective (Campbell et al., 2022; Xu et al., 2024a). DisCo (Xu et al., 2024a), for instance, defines a discrete-state continuous-time diffusion on graphs and inherits the permutation-equivariant/invariant properties of DiGress (Vignac et al., 2022) while enabling flexible nu-merical integration and theoretical control of approximation error (Xu et al., 2024a). Discrete flow matching (DFM) extends FM to discrete state spaces, where probability paths are defined by time-inhomogeneous CTMCs and the model parameterises transition rates rather than continuous veloc-ities (Campbell et al., 2024; Gat et al., 2024; Qin et al., 2025). In parallel, some works have explored continuous FM and flow-based formulations for graphs by relaxing discrete structures into continuous spaces (Liu et al., 2019; Eijkelboom et al., 2024b). However, they typically rely on implicit couplings between source and target graphs. More discussion of related work is in Appendix A. 
+
+Flow matching offers an alternative to diffusion-based training for continuous-time generative models (Lipman et al., 2023). Rectified-flow variants adopt linear inter-polants, and regress the associated constant conditional velocity field (Liu et al., 2023), leading to state-of-the-art results in high-dimensional image and sequence generation (Esser et al., 2024; Ma et al., 2024). We need coupling be-tween graph samples Gi 
+
+> 0
+
+from a source (noise) distribution in S and target (data) graphs Gj 
+
+> 1
+
+from the data distribution in S. S will later correspond to a continuous relaxation of adjacency matrices, node features, and edge features. FM learns a time-conditioned vector field vθ : S × [0 , 1] → S ,parameterized by θ, that approximates the conditional ve-locity along the path defined by time t ∈ [0 , 1] . It assumes paired samples (Gi
+
+> 0
+
+, G j
+
+> 1
+
+) together with interpolating states 
+
+(Gt)t∈[0 ,1] defining a probability path between the noise distribution and the data distribution. The FM training ob-jective is defined as a regression loss: 
+
+LFM (θ) = E G0,G 1
+
+> t∼U [0 ,1]
+
+h
+
+∥vθ (Gt, t ) − u⋆(Gt | G0, G 1)∥22
+
+i
+
+.
+
+(1) At generation time, new samples are obtained by solving the ordinary differential equation 
+
+dG t
+
+dt = vθ (Gt, t ), Gt=0 ∼ p0, (2) using a numerical integrator (e.g. Euler), and taking Gt=1 
+
+as a sample from the learned model distribution. 
+
+2.2. Structural priors 
+
+To provide suitable inductive bias for a particular applica-tion, we need a flexible class of probabilistic models to design meaningful priors. This work extends graphons, a widely used approach for graph priors (Han et al., 2022). 
+
+Definition 2.1. (Graphon ) A graphon is a symmetric, mea-surable function W : [0 , 1] 2 → [0 , 1] . Given n ∈ N, a graph 
+
+G with n nodes can be sampled from W by: (i) drawing latent variables x1, . . . , x niid 
+
+∼ U [0 , 1] , and (ii) for each 1 ≤
+
+i < j ≤ n, sampling an edge Aij ∼ Bernoulli( W (xi, x j )) 
+
+independently, then set Aji = Aij . We write G ∼ G(n, W ).The limitation of graphons is that graphs sampled from graphons are dense, i.e., the number of edges grow quadrati-cally with the number of nodes. However, many realworld graphs such as social and molecular networks are sparse, i.e., the number of edges grow subquadratically with the nodes. Sparsified graphons (Keriven et al., 2020; Klopp et al., 2017) is an alternative used to model sparse graphs. 
+
+Definition 2.2. (Sparsified graphon .) Let W : [0 , 1] 2 →
+
+[0 , 1] denote a graphon and {ρi}i = ( ρ1, ρ 2, . . . , ρ n, . . . )
+
+denote a real-valued sequence converging to zero such that 
+
+0 ≤ ρi ≤ 1. Then the graphon Wn := ρnW is called the sparsified graphon. We denote a graph G with n nodes sampled from Wn by G ∼ G(n, W, ρ n).2Flowette: Flow Matching with Graphette Priors Flow M atching 
+
+Upd ate 
+
+Velocity Field 
+
+Tr ansformer,  vθ
+
+Gr aphette prior, 
+
+Dataset  
+
+> <latexit sha1_base64="QPdLtpi3bBEnCpbvjqz2TERjU2Y=">AAACaHicfVHRatswFJXdre3crnW7lTH2ojYEnBKCXUq3l0HpHrqHPrSwNIUoMbIiJ6KybKTrQjBm/7i3fcBe9hWT0wzWdvSC4HDOubpXR0khhYEw/Om4Ky9erq6tv/I2Nl9vbfs7u9cmLzXjfZbLXN8k1HApFO+DAMlvCs1plkg+SG6/NPrgjmsjcvUN5gUfZXSqRCoYBUvF/vc2ySjMGJXVoMafcTDoYqJneay6OO14bZKIaXAeh2PRxedxNK5IIcaHZD8QnbrRGsvfCy7qgMCMA+14pLI9pMbEiAw/NyH2W2EvXBR+CqIlaKFlXcb+DzLJWZlxBUxSY4ZRWMCoohoEk7z2SGl4QdktnfKhhYpm3IyqRVA1bltmgtNc26MAL9h/OyqaGTPPEutsdjaPtYb8nzYsIf00qoQqSuCK3Q9KS4khx03qeCI0ZyDnFlCmhd0VsxnVlIH9G8+GED1+8lNwfdSLTnonV8et07NlHOvoAzpAAYrQR3SKvqJL1EcM/XI2nLfOnvPb9d137vt7q+sse96gB+Ue/AEoVbOT</latexit>
+
+{G0} → W = ( W, ωn, f ) 
+
+> <latexit sha1_base64="aSJQh6njb0+f4/42WEqL5NO9SA8=">AAACgnicfVFdS+NAFJ1Ed9W6H9V99GW0FKKUbqKiPqwgKrgPPrhgrdBpw2Q6aQcnkzBzI5SQH+Lf8s1fo5NawbXLXhg4nHPux9wbZVIY8P0nx11Y/PR5aXmltvrl67fv9bX1G5PmmvEOS2WqbyNquBSKd0CA5LeZ5jSJJO9Gd2eV3r3n2ohUXcMk4/2EjpSIBaNgqbD+0CQJhTGjsuiW+Bh73RYmepyGqoXj7VqTRGLkXYT+QLTwRRgMCpKJwQ7Z9MR2WWmV5a3AZekRGHOgFVnYJFJiYkSC/9uicgZzzvMyrDf8tj8NPA+CGWigWVyF9UcyTFmecAVMUmN6gZ9Bv6AaBJO8rJHc8IyyOzriPQsVTbjpF9MVlrhpmSGOU22fAjxl32cUNDFmkkTWWY1oPmoV+S+tl0N81C+EynLgir02inOJIcXVPfBQaM5ATiygTAs7K2ZjqikDe7WaXULw8cvz4Ga3HRy0D/7sN05OZ+tYRhtoC3koQIfoBP1GV6iDGHp2mk7b+ekuujtu4O69Wl1nlvMD/RXurxcenryl</latexit>
+
+{G1} → D
+
+Flow M atching Loss 
+
+Velocity Loss 
+
+End-point Loss 
+
+Chem. Reg. 
+
+Fused Gromov-
+
+Wasserstein Coupling  Minib atch P airs 
+
+# {(  )} , 
+
+> <latexit sha1_base64="QHxHpWkW0Rl/wSkaFIfwnHpHRrM=">AAACv3ichVFda9swFJW9tevSr3R73IvWEHBLCHYZ7R426D6ge+hDCk1TiBIjK3IiIstGuh4E4z+5h8H+zaQ0K11T6AXB4Zxzdb+SQgoDYfjH81+83Nh8tfW6sb2zu7ffPHhzY/JSM95nucz1bUINl0LxPgiQ/LbQnGaJ5INk/s3pg59cG5Gra1gUfJTRqRKpYBQsFTd/t0lGYcaorAY1/oyDQQcTPctj1cHpUaNNEjENLuJwLDr4Io7GFSnE+Ji8D8RR7TRn+ffBZR0QmHGgjqxsEqkxMSLDz5Sw1mjN+r1u3OOeS3PVSPVsP0tbHTdbYTdcBl4H0Qq00Cp6cfMXmeSszLgCJqkxwygsYFRRDYJJbnspDS8om9MpH1qoaMbNqFruv8Zty0xwmmv7FOAl+zCjopkxiyyxTjeSeaw58iltWEL6cVQJVZTAFbsrlJYSQ47dMfFEaM5ALiygTAvbK2YzqikDe/KGXUL0eOR1cHPSjU67p1cfWudfV+vYQu/QIQpQhM7QOfqBeqiPmPfJS7y5J/0v/tRXfnFn9b1Vzlv0X/iLv06+0nU=</latexit>
+
+P = {( Gi
+
+0, G ω→(i)
+
+1
+
+)} 
+
+Figure 1. Flowette training scheme. FGW optimal transport with Hungarian matching discussed in Sec. 3.1, GNN Transformer in App. B, Topology-aware loss and regularisation in Sec. 3.3 and graphettes in Sec. 4. See Algorithm 1 for details. 
+
+3. Structure Preserving Flows 
+
+We visualise our overall design in Figure 1. In this sec-tion we address key challenges that arise when learning continuous-time generative dynamics on graphs and clarify how our method departs from the standard flow-matching pipeline. First, naively coupling noise and data graphs (e.g., by minibatch index) ignores structural compatibil-ity and leads to high-variance supervision since the velocity field must interpolate between topologically mismatched source-target pairs. Second, unconstrained velocity fields defined over continuous graph representations can yield in-valid structures under finite-step integration, particularly for molecular graphs where chemical constraints must be respected. To address these issues, we have three core com-ponents: (i) a structure-aware coupling mechanism for su-pervision (Sec. 3.1), which replaces independent or (Eu-clidean) optimal transport coupling with FGW-distance and Hungarian graph matching; (ii) a permutation-equivariant GNN transformer that parameterizes the velocity field over evolving graph representations (Sec. 3.2 and App. B); and (iii) an enhanced training objective (Sec. 3.3) that aug-ments the flow-matching loss with endpoint consistency and chemistry-aware structural regularization. Together, these design choices yield coherent, permutation-invariant super-vision across variable-sized graphs and promote structurally valid generations under finite-step integration. In this sec-tion we use G to refer to attributed graphs, G = ( A, X, F )
+
+and we present the full training scheme in Algorithm 1. 
+
+3.1. Graph Structure Coupling, (G0, G 1)
+
+For our graphs we extract structural node embeddings Z =[z1, . . . , z n]⊤ = fenc (G) ∈ Rn×dz , using a pretrained edge-aware Graph Isomorphism Network (GIN) encoder fenc (Xu et al., 2019), which maps the input graph to node-level latent representations capturing higher-order structural context. 
+
+FGW-Distance Computation. Let G0 = ( A0, X 0, F 0)
+
+and G1 = ( A1, X 1, F 1) denote two undirected attributed graphs with |V (G0)| = n0 and |V (G1)| = n1 respec-tively. Let Z0 = fenc (G0) and Z1 = fenc (G1) de-note the corresponding encoder-induced structural node embeddings. We define the intra-graph structural cost matrices C(Z0) ∈ Rn0×n0 and C(Z1) ∈ Rn1×n1 by 
+
+C(Za)ik = ∥zai − zak ∥22, where a ∈ { 0, 1}. The cross-graph feature cost matrix M (X0, X 1) ∈ Rn0×n1 is defined as M (X0, X 1)ij = ∥x0
+
+i − x1
+
+j ∥22. Using these costs, we can compute a fused optimal transport plan T ⋆ ∈ Rn0×n1 by solving, 
+
+T ⋆ ∈ arg min 
+
+T ∈Π( p,q )
+
+FGW α(G0, G 1), (3) where α ∈ [0 , 1] trades off features and structure, Π( p, q ) = 
+
+{T ∈ Rn0×n1
+
+≥0 : T 1 = p, T ⊤1 = q}. The FGW objective (Titouan et al., 2019) we use in Eq. (3) is 
+
+FGW α(G0, G 1) := min 
+
+T ∈Π( p,q )
+
+ 1 − α ⟨T, M (X0, X 1)⟩
+
++ α LGW 
+
+ T ; C(Z0), C (Z1),
+
+(4) where the squared-loss GW term is 
+
+LGW 
+
+ T ; C(Z0), C (Z1) = Pn0
+
+i,k =1 
+
+Pn1
+
+j,ℓ =1 
+
+ C(Z0)ik −
+
+C(Z1)jℓ 
+
+2 Tij Tkℓ . We use uniform node measures p ∈
+
+∆n0 and q ∈ ∆n1 , where ∆n = r ∈ Rn
+
+≥0 | 1⊤r = 1 
+
+denotes the probability simplex on n elements, and 
+
+p = n−10 1n0 for G0 and q = n−11 1n1 for G1. The resulting FGW distance is the optimal value of Eq. (3) and is used as a graph-to-graph discrepancy. 
+
+Batch-Level Coupling via Hungarian Matching. In each minibatch, we sample a set of B noise graphs 3Flowette: Flow Matching with Graphette Priors 
+
+{Gi
+
+> 0
+
+}Bi=1 ∼ W and B target graphs {Gj
+
+> 1
+
+}Bj=1 ∼ D . We compute a cost matrix D ∈ RB×B with entries 
+
+Dij = FGW( Gi
+
+> 0
+
+, G j
+
+> 1
+
+), (5) then obtain a one-to-one bipartite assignment 
+
+π⋆ = arg min 
+
+> π∈SB
+> B
+
+X
+
+> i=1
+
+Di,π (i), (6) where SB is the set of permutations (Kuhn, 1955). This prevents degenerate training in which many target graphs align to the same noise graph, and yields stable coverage across diverse graph topologies. We refer to this Hungarian matching procedure on FGW-distances as FGW-coupling . It ensures that (A0, X 0, F 0)
+
+and (A1, X 1, F 1) correspond in a structure-preserving man-ner, resulting in lower-variance velocity supervision than naive index-wise or (Euclidean) optimal transport coupling. Finally, in App. C.1 we show that; FGW-distance is permu-tation invariant (Lemma C.1), FGW-distance is 0 for isomor-phic graphs (Corollary C.2), and FGW-coupling recovers the optimal permutation-consistent bipartite assignments. 
+
+3.2. Flow Matching on FGW-Coupled Graphs. 
+
+For each FGW-coupled graph pair (G0, G 1), we consider graph representations (A0, X 0, F 0) and (A1, X 1, F 1) re-stricted to a common node budget n under the structure-preserving node correspondence induced by FGW. In this setting, G0 ∼ W denotes a noise graph sampled from the graphette prior (which will define in the next section), while 
+
+G1 ∼ D denotes a target graph sampled from the data dis-tribution. The prior W is used exclusively to generate the initial graph topology A0. The X0 and F0 are then sampled independently from fixed categorical prior distributions cor-responding to atom-type and bond-type priors, respectively. For t ∼ U [0 , 1] , we construct rectified linear interpolants, 
+
+At = (1 − t)A0 + tA 1,Xt = (1 − t)X0 + tX 1,Ft = (1 − t)F0 + tF 1.
+
+(7) Under this parameterization, the ideal transport velocities are constant and given by ∆A = A1 − A0, ∆X = X1 −
+
+X0, and ∆F = F1 − F0. We model the continuous-time transport dynamics using a time-conditioned velocity field 
+
+vθ : ( At, X t, F t, t ) 7 →  vA, v X , v F
+
+,
+
+where vA ∈ Rn×n, vX ∈ Rn×dx , and vF ∈ Rn×n×df
+
+predict the instantaneous velocities of the adjacency, node features, and edge features, respectively. We use a novel 
+
+permutation invariant GNN transformer to implement the velocity field predictor, vθ . We give details of its architec-ture in App. B as well as proof of its permutation invari-ance. This velocity field predictor is trained via a continuous flow-matching objective, matching (vA, v X , v F ) to the rec-tified displacements (∆ A, ∆X, ∆F ) at intermediate times by minimizing a flow matching loss (Eq. 8). Although the underlying graphs are discrete, all training and integration are performed in continuous space; discreteness is enforced only at generation time via projection or thresholding. 
+
+3.3. Flow Matching Learning Objective 
+
+We propose a rectified flow-matching objective for graph generation that learns a continuous-time transport from graphex priors to the data distribution while preserving both local and global graph structure. Since locally accurate velocity predictions may fail to integrate into globally co-herent graphs under finite-step solvers, an issue exacerbated in graph domains, we couple local velocity matching with endpoint-level structural consistency and domain-specific regularization to ensure stable and structurally valid graph generation. The overall training objective is as follows where each term is defined below. 
+
+L(θ) = Lvel +βend ·L end +βval ·L val +βatom ·L atom , (8) 
+
+Local Velocity Matching Loss. We enforce local flow correctness by matching predicted velocities to the rectified target transport:               
+
+> Lvel =∥vA−∆A∥2
+> F+λx∥vX−∆X∥2
+> F+λe∥vF−∆F∥2
+> F
+
+, (9) where vA, vX , and vF denote the predicted velocity com-ponents for the A, X and F , respectively. The targets 
+
+∆A = A1 − A0, ∆X = X1 − X0, and ∆F = F1 − F0 cor-respond to the rectified transport directions induced by the linear interpolation between the prior graph and the target graph. This loss enforces correct local transport behavior at each intermediate state along the rectified flow path. 
+
+Endpoint Consistency Loss. While Lvel constrains the instantaneous transport direction at a randomly sampled in-termediate time t, accurate graph generation further requires that the learned velocity field induces a globally coherent transport from t = 0 to t = 1 . We therefore supervise the endpoint implied by the rectified flow parameterization. Given a At, X t and Ft at time t, a single-step rectified inte-gration predicts the endpoint 
+
+ˆA1 = At + (1 − t)vA,
+
+ˆX1 = Xt + (1 − t)vX ,
+
+ˆF1 = Ft + (1 − t)vF
+
+(10) where ˆA1, ˆX1 and ˆF1 denote the predicted adjacency, node features, and edge features at t = 1 . We penalize deviations 4Flowette: Flow Matching with Graphette Priors 
+
+from the target graph via 
+
+Lend = ∥ ˆA1 − A1∥2 
+
+> F
+
++ λx∥ ˆX1 − X1∥2 
+
+> F
+
++ λe∥ ˆF1 − F1∥2 
+
+> F
+
+. (11) This loss enforces global transport consistency by requiring that local velocity predictions compose into a coherent end-to-end mapping. Such supervision is particularly important under finite-step numerical integration, where small local er-rors can otherwise accumulate and lead to significant global structural distortions. 
+
+Chemistry-Aware Regularization. While the global transport consistency loss Lend enforces structural coher-ence of the generated graph, it does not explicitly guarantee chemical feasibility. We therefore introduce differentiable, chemistry-aware regularizers applied exclusively to the pre-dicted endpoint ˆG1 = ( ˆA1, ˆX1, ˆF1), encouraging the model to produce globally valid molecular graphs at generation time. 
+
+Soft Valence Constraint. Let Aw = σ
+
+ 12
+
+ ˆA1 + ˆA⊤
+
+> 1
+
+ 
+
+∈
+
+Rn×n 
+
+> +
+
+be a symmetric, non-negative weighted adjacency matrix. Let Eij ∈ R ˜B be the bond-type logits for pair (i, j )
+
+and define bond-type probabilities 
+
+pij = softmax( Eij ) ∈ ∆ ˜B−1, (12) where ∆ ˜B−1 = {p ∈ R ˜B | p ≥ 0, 1⊤p = 1}.Let b ∈ R ˜B be the vector of bond orders (e.g., sin-gle/double/triple/aromatic), and define the expected bond order 
+
+dord ij = ⟨pij , b ⟩ =
+
+> ˜B
+
+X
+
+> k=1
+
+pij,k bk. (13) The expected valence of node i is then 
+
+cval i =
+
+> n
+
+X
+
+> j=1
+
+Awij dord ij . (14) Given the maximum allowable valence val max  
+
+> i
+
+determined by the predicted atom type, we penalize soft violations via 
+
+Lval = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+max 0, cval i − val max  
+
+> i
+
+. (15) This loss couples adjacency and bond-type predictions in a fully differentiable manner, discouraging chemically implau-sible bonding patterns without imposing hard constraints. 
+
+Atom-type Marginal Matching. To prevent global drift in node-type composition (e.g., overproduction of common atoms), we align the predicted atom-type marginal distribu-tion with that of the target graph at the endpoint: 
+
+Latom = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+softmax( ˆX1,i ) − 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+X1,i 
+
+> 22
+
+. (16) 
+
+Algorithm 1 Flowette Flow Matching Training 
+
+input Dataset Y; pretrained encoder fenc ; graphette prior W =(W, ρ n, f ); batch size B; epochs E; weights (λx, λ e); learn-ing rate η; FGW tradeoff α.
+
+output Velocity Field (GNN Transformer) vθ .Initialize vθ and initialize optimizer AdamW( θ, η )
+
+1: for epoch = 1 to E do 
+
+2: for all minibatch of target graphs G1 = {Gj
+
+> 1
+
+}Bj=1 ∼ D do 
+
+3: Let nj ← | V (Gj
+
+> 1
+
+)|
+
+// Sample a batch of noise graphs from a graphette 
+
+4: G0 = {Gi
+
+> 0
+
+}Bi=1 ∼ W 
+
+// Batch FGW-distances (Algorithm 5) 
+
+5: (D, T ) ← BATCH FGW (G0, G1, f enc , α )
+
+// Hungarian matching on FGW costs to get matched graph pairs 
+
+6: π⋆ ← HUNGARIAN MATCHING (D)
+
+7: Coupled pairs P ← { (Gi
+
+> 0
+
+, G π⋆(i)1 )}Bi=1 
+
+// Batch gradient update for vθ (Algorithm 6) 
+
+8: θ ← FLOW MATCHING UPDATE (P, θ )
+
+9: end for 
+
+10: end for 
+
+11: return vθ
+
+Unlike per-node classification losses, this term is permutation-invariant and operates purely at the graph level, enforcing global semantic consistency of the node-type com-position. As a result, it complements endpoint reconstruc-tion and improves overall chemical validity. 
+
+Theoretical Properties of the Learning Objective In Theorem C.4 we show that, under the rectified parameteriza-tion, jointly minimizing Lvel and Lend to zero forces vθ to recover the ideal constant transport field and guarantees ex-act end-point reconstruction under Euler integration. Then in Theorem C.5 we quantify how deviations from the ideal velocity field and finite step size jointly affect the endpoint error under Euler integration. For the computational com-plexity these aforementioned components, see Appendix D. 
+
+4. Structural Bias with Graphette Priors 
+
+In this section G = ( V, E ) refers to non-attributed graphs. 
+
+4.1. The Graphette 
+
+Inspired by the star function in graphexes (Veitch & Roy, 2019) and sparsified graphons we propose a generalized model that includes a graph edit function, which can edit graphs sampled from Wn or W .
+
+Definition 4.1. (The graphette ) We define W = ( W, ρ n, f )
+
+where W : [0 , 1] 2 → [0 , 1] denotes a graphon, {ρi}i de-notes a real-valued sequence with 0 ≤ ρi ≤ 1 and f denotes a graph edit function. A graph is generated using graphette 
+
+W by first sampling G′ from Wn := ρnW and then en-acting the function f , i.e., G′ ∼ G(n, W, ρ n) followed by 
+
+G ∼ f (G′).5Flowette: Flow Matching with Graphette Priors                                                           
+
+> Table 1. Graphette priors, as used in empirical benchmarks in Section 5. Application Graphette W= ( W, ρ n, f )
+> Community graphs f=I(GEF 1), ρn= 1 , and Wis a mixture of stochastic block model graphons Tree graphs f=h(GEF 2), ρn= ( ¯W n )−1+ϵand W(x, y ) = 0 .2
+> Egonets f=R◦S(GEF 3 and 4), ρn= 1 and W(x, y ) = exp  −10 3(x+y)
+> Molecular graphs f=R(GEF 3), ρn= ( ¯W n )−1+ϵ, where ¯W=R10
+> R10W(x, y )dxdy and W(x, y ) = 0 .2
+
+For the computationally inclined reader, we provide a gen-erative model description of graphettes and graphons in Appendix E. Graphette W does not require ρn → 0 as in the sparsified graphon (Def. 2.2). This gives us the flexibility to sample dense and sparse graphs. As is common in other GNN papers (Vignac et al., 2022) when a sample from the sparsified graphon (Def. 2.2) returns graphs with multiple components, we choose the largest connected component as the graph before applying the edits described below. 
+
+4.2. Rich and recurring subgraph motifs 
+
+We can choose a graph edit function f to suit our purpose. If a graphon W can generate the graphs we require, such as stochastic block model graphs, we can let f be the identity function, making no modifications to the graph. If we are modeling social networks, then f can add stars. Ring ad-dition is useful to model molecular networks as they have ring structures such as benzene. We use the following graph edit functions (GEF) depending on problem domain. 
+
+GEF 1: Identity . Let f = I be the identity function with 
+
+I(G) = G, which does not edit the graph. 
+
+This is used in App. F to show that graphettes can recover graphons and sparsified graphons. Furthermore, for stochas-tic block models, as illustrated in Section 5.1 graphettes are equivalent to graphons and our Flowette model achieves state of the art performance. 
+
+GEF 2: Cycle deletion . Let f = h denote a global function that removes cycles from the graph. 
+
+When the application requires that graphs are trees (no cy-cles), we choose f = h. For a connected graph the resulting graph is a tree. The class of graphettes also includes graph edit functions which may be parametrised, for example we may wish to model different ring sizes in molecular graphs in Sec. 5.2. 
+
+GEF 3: Ring addition . Let R(p, c ) denote a function where a ring of size c is added and connected to a node i with probability p, i.e., R(p, c ) = Bernoulli( p) × c.
+
+For social network graphs, we model hubs, which are highly connected individuals. 
+
+GEF 4: Star addition . Let S (a, b, {ui}ni=1 ) denote a function that adds stars given by a Poisson random vari-able Poi( an exp( ui + b)) to a node i where {ui}ni=1 =(u1, . . . , u n), 0 ≤ ui ≤ 1, a > 0 and |b| < 1.
+
+This models a non-uniform probability of any particular node i (indexed by ui) , having a star added, with star sizes varying with ui.
+
+Remark 4.2 . Some characteristics of graphettes are explored in Appendix F. In particular, graphettes can recover graphon 
+
+W and the sparsified graphon Wn, have the ability to gen-erate graphs similar to those generated by graphexes and generate dense graphs from a family of graphons. Further-more, the ring function GEF 3 can generate dense or sparse graphs depending on {ρi}i (see Lemmas in Appendix F). 
+
+4.3. Star and ring functions are well-behaved 
+
+Graph homomorphims are widely used to count subgraph motifs and have been used in GNNs (Jin et al., 2024). 
+
+Definition 4.3. Let G1 and G2 be graphs. A graph homo-morphism from G1 to G2 is a map f : V (G1) → V (G2)
+
+such that if uv ∈ E(G1) then f (u)f (v) ∈ E(G2). (Maps edges to edges.) Let Hom (G1, G 2) be the set of all such homomorphisms and let hom( G1, G 2) = |Hom (G1, G 2)|
+
+be the number of homomorphisms. Then homomorphism density is defined as 
+
+t(G1, G 2) = hom( G1, G 2)
+
+|V (G2)||V (G1)| .
+
+Definition 4.4. (Triangle-covered graphs .) Let G =(V, E ) be a graph. Then G is triangle-covered if for ev-ery vertex u ∈ V (G) there exits vertices {v, w } ∈ V (G)
+
+such that edges {uv, uw, vw } ∈ E(G). We denote the set of triangle-covered graphs by F.Roughly stated a graph is triangle-covered if every vertex belongs to a triangle. We show that homomorphisms of triangle-covered graphs are preserved by star and ring func-tions (GEF 3, 4). 
+
+Theorem 4.5. Let W = ( W, ρ n, f ) denote a graphette and let G′ ∼ G(n, W, ρ n) and G ∼ f (G′) where f ∈{R, S } (GEF 3, 4) with ring size c > 3 for R. Suppose 
+
+|V (G′)| = n and |V (G)| = n + m. Then for any triangle-covered F ∈ F , hom( F, G ) = hom( F, G ′) and t(F, G ) =      
+
+> n|V(F)|
+> (n+m)|V(F)|
+
+t(F, G ′).
+
+Theorems F.8 and F.9 supplement the above result by com-6Flowette: Flow Matching with Graphette Priors 
+
+Table 2. Generation performance on QM9 molecular graphs.                                     
+
+> Model Valid ↑Unique ↑NSPDK ↓
+> EDP-GNN (Niu et al., 2020) 47.52 99.25 0.0046 DiGress (Vignac et al., 2022) 98.19 96.20 0.0003 GDSS (Jo et al., 2022a) 95.72 98.46 0.0033 GruM (Jo et al., 2024) 99.69 96.90 0.0002 LGD-large (Zhou et al., 2024) 99.13 96.82 0.0002 SID (Boget, 2025) 99.67 95.66 0.0001
+> DeFoG (Qin et al., 2025) 99.30 96.30 -Flowette (Ours) 99.81 ±0.09 99.30 ±0.05 0.0003 ±0.002
+
+Table 3. Generation performance on ZINC250K molecular graphs.                                  
+
+> Model Valid ↑Unique ↑NSPDK ↓
+> EDP-GNN (Niu et al., 2020) 82.97 99.79 0.0485 DiGress (Vignac et al., 2022) 94.99 99.97 0.0021 GDSS (Jo et al., 2022a) 97.01 99.64 0.0195 GruM (Jo et al., 2024) 98.65 99.97 0.0015 SID (Boget, 2025) 99.50 99.84 0.0021 DeFoG (Qin et al., 2025) 99.22 99.99 0.0008 Flowette (Ours) 99.90 ±0.10 100.00 ±0.0 0.0006 ±0.004
+
+puting the effect of star and ring functions on vertex and edge homomorphisms and their densities. 
+
+5. Numerical Experiments 
+
+In this section, we evaluate the proposed flow matching framework on both synthetic graph generation benchmarks and real-world molecular graph generation tasks. The syn-thetic benchmarks are designed to probe structural fidelity under controlled graph families, while the molecular bench-marks assess chemical validity, diversity, and novelty in realistic settings. It is important to select an appropriate graphette prior that matches the graphs being modeled. Ta-ble 1 lists the graphette priors used for each application. 
+
+5.1. Experiments on Synthetic Graphs 
+
+We evaluate Flowette on three standard synthetic graph generation benchmarks: Tree (Bergmeister et al., 2023), Stochastic Block Model (SBM) (Martinkus et al., 2022), and Ego-small graphs (Jo et al., 2022a). We adopt the same training, validation, and test splits as in (Qin et al., 2025). Generation quality is assessed using 7 different metrics, described in more detail in Appendix H.2. We exclude chemistry-specific regularization terms for these synthetic data, by setting βval = 0 and βatom = 0 . We used L = 3 
+
+attention layers for Tree and Ego-small datasets, and L = 4 
+
+for the SBM dataset. Other hyperparameter settings are provided in Appendix H.3. Tables of results against 11 baseline algorithms are shown in Appendix H.4. We also illustrate the validity of our generative model by displaying some sampled graphs in Appendix I. 
+
+SBM Dataset. For SBM graphs in Table 7, our approach outperforms all baselines on Orbit, Validity, Uniqueness, Novelty, and V.U.N., while Degree and Clustering are 
+
+Table 4. Generation performance on Guacamol molecular graphs.                      
+
+> Model Valid ↑V.U.N ↑KL div. ↑
+> DiGress (Vignac et al., 2022) 85.2 85.1 92.9 DisCo (Xu et al., 2024b) 86.6 86.5 92.6 Cometh (Siraudin et al., 2024) 98.9 97.6 96.7 DeFoG (Qin et al., 2025) 99.0 97.9 97.7 Flowette (Ours) 98.6 98.0 97.9
+
+Table 5. Generation performance on MOSES molecular graphs.                             
+
+> Model Unique ↑Novelty ↑SNN ↑Scaff. ↑
+> DiGress (Vignac et al., 2022) 100.0 95.0 0.52 14.8 DisCo (Xu et al., 2024b) 100.0 97.7 0.50 15.1 Cometh (Siraudin et al., 2024) 99.9 92.6 0.54 16.0
+> DeFoG (Qin et al., 2025) 99.9 92.1 0.55 14.4 Flowette (Ours) 99.9 98.10 0.58 15.3
+
+marginally weaker than the strongest competitors. SBMs are defined by mesoscopic block structure rather than pre-cise local statistics, which is well captured by the graphette prior and reinforced by Flowette. This yields accurate recov-ery of block-level connectivity and higher-order substruc-ture patterns. Small discrepancies in degree and clustering arise because these second-order marginals can vary within blocks without affecting the overall community structure and are not explicitly constrained by our objective. 
+
+Tree Dataset. On the Tree dataset in Table 8, our method achieves the best performance on Orbit, Validity, Unique-ness, Novelty, and the combined V.U.N. score, while slightly underperforming on Degree. This behaviour is consistent with our use of a graphette structural prior and Flowette, which strongly constrain acyclicity and higher-order sub-graph structure. As a result, tree-specific substructure pat-terns and validity are preserved extremely well. In contrast, degree distributions in trees are highly sensitive to structural prior, and our continuous flow prioritizes global structural alignment over exact degree matching, leading to minor deviations in Degree despite structurally correct samples. 
+
+Ego-small Dataset. On Ego-small graphs in Table 9, our method achieves the best Orbit score and competitive De-gree performance, with Clustering slightly below the top baseline. Ego graphs are dominated by hub-and-spoke and star-like motifs, which align naturally with graphex con-structions and are effectively preserved by our flow model. While orbit statistics and degree distributions are recovered, clustering depends on fine-grained triangle closure, which may vary under continuous flow integration even when the overall ego-centric structure is correctly modeled. 
+
+5.2. Experiments on Molecular Graphs 
+
+We further evaluate our framework on four standard molec-ular graph generation benchmarks: QM9 (Wu et al., 2018), ZINC250K (Sterling & Irwin, 2015), Guacamol (Brown et al., 2019), and MOSES (Polykovskiy et al., 2020), which together span small molecules and larger, drug-like com-7Flowette: Flow Matching with Graphette Priors 
+
+Table 6. Ablation study of graph generation performance of QM9 and ZINC250K. Recall from Equation (8) , the components in the training objective: the velocity Lvel , end-to-end transport consistency Lend , soft valence constraint Lval , and atom-type matching Latom .QM9 ZINC250K Variant Valid Unique Novel Valid Unique Novel only Lvel 69.0 ± 0.10 65.0 ± 0.02 65.0 ± 0.06 75.0 ± 0.05 83.1 ± 0.10 83.1 ± 0.03 
+
+no Lval 76.0 ± 0.07 90.7 ± 0.04 90.7 ± 0.06 88.0 ± 0.10 91.0 ± 0.05 91.0 ± 0.04 
+
+no Latom 79.0 ± 0.05 93.6 ± 0.06 93.6 ± 0.03 92.1 ± 0.02 95.0 ± 0.08 95.0 ± 0.06 
+
+no Lend 71.0 ± 0.06 79.0 ± 0.05 79.0 ± 0.05 79.0 ± 0.11 85.0 ± 0.04 85.0 ± 0.07 
+
+only Lvel and Lend 73.1 ± 0.05 85.0 ± 0.06 85.0 ± 0.05 82.6 ± 0.03 90.5 ± 0.04 90.5 ± 0.04 
+
+Full model 99.8 ± 0.09 99.3 ± 0.05 99.4 ± 0.06 99.9 ± 0.10 100.0 ± 0.0 100.0 ± 0.0 
+
+pounds. Experiments on QM9 use the conventional dataset splits and evaluation criteria employed in recent molecular generation work (Vignac et al., 2022; Qin et al., 2025). For MOSES and Guacamol, we follow the respective bench-mark protocols for training and assessment (Polykovskiy et al., 2020; Brown et al., 2019). Details of the metrics are presented in Appendix H.5. As can be seen in Table 2, 3, 4, and 5, our approach achieves state of the art performance (or near to) on all metrics. We used L = 4 attention layers for Guacamol and MOSES, and L = 5 for QM9 and ZINC250K. Further details of our experimental protocol is provided in Appendix H.6. We compare our approach against five baseline models on the Guacamol and MOSES benchmarks: Digress (Vignac et al., 2022), DisCo (Xu et al., 2024b), Cometh (Siraudin et al., 2024), and DeFoG (Qin et al., 2025). We further evaluate our method on the QM9 and ZINC250K datasets using five comparable baselines: GruM (Jo et al., 2024), CatFlow (Ei-jkelboom et al., 2024a), DisCo (Xu et al., 2024b), Cometh (Siraudin et al., 2024), and DeFoG (Qin et al., 2025). 
+
+5.3. Ablation Analysis of Regularization Terms 
+
+To evaluate the role of each component in the Flowette train-ing objective, we conduct an ablation study by selectively removing its key elements. Table 6 reports an ablation study of the individual components of the Flowette training ob-jective in Eq. (8) on QM9 and ZINC250K. Overall, the results demonstrate that each term plays a distinct and com-plementary role. Endpoint consistency ( Lend ) and valence regularization ( Lval ) are the most critical components for stable and chemically valid generation, while atom-type marginal matching ( Latom ) primarily improves diversity. The chemistry-aware terms Lval and Latom primarily gov-ern feasibility and diversity. Following endpoint consis-tency, removing valence supervision ( no Lval ) causes a pronounced validity drop on both datasets, demonstrating the importance of soft valence constraints for preventing over-bonding. In contrast, removing atom-type marginal matching ( no Latom ) has a milder effect on validity, unique-ness and novelty. Removing both terms ( only Lvel and 
+
+Lend ) yields intermediate performance, confirming that the two regularizers provide complementary signals. Veloc-ity matching alone is insufficient, and strong performance emerges only when all components are jointly enforced. More discussion of the other ablations are in Appendix H.7. 
+
+Observed limitations While Flowette improves stability and structural fidelity in flow-based graph generation, sev-eral limitations remain. First, FGW-coupling introduces additional computational overhead, particularly as graph size or batch size increases. Second, although graphette priors provide interpretable and flexible structural bias, their design requires domain knowledge, limiting full automa-tion across arbitrary graph families. Finally, continuous relaxation of adjacency and edge attributes requires a pro-jection step at generation time, which may introduce minor discretization artifacts. 
+
+6. Conclusion 
+
+We propose a generative model, Flowette, for graphs with recurring sub-graph motifs. Our generative model contains three essential components for structure-aware flow-based graph generation: (1) structural alignment of supervision pairs using fused Gromov-Wasserstein optimal transport; (2) training objective that explicitly regularises towards global trajectory coherence and chemical feasibility (for molecule generation); (3) source distributions that encode structural priors. Flowette imposes structural inductive bias by graphette structural priors, where we have intro-duced a novel mathematical object, graphettes, which extend graphons by editing them with sub-graph motifs. Graphettes support injection of rings and stars, as well as cycle removal to model trees. The velocity field is learned by a GNN based transformer, and Flowette demonstrates state of the art per-formance on empirical benchmarks. Theoretical analysis of graphettes and ablation studies on Flowette provide deeper insight into alignment, invariance, and structural properties. We hope that each of the three proposed key components, structural alignment, global coherence regularization, and graphette priors, will independently be useful to further developments in graph generation. 8Flowette: Flow Matching with Graphette Priors 
+
+References 
+
+Aldous, D. J. Representations for partially exchangeable arrays of random variables. Journal of Multivariate Anal-ysis , 11(4):581–598, 1981. Austin, J., Johnson, D. D., Ho, J., Tarlow, D., and van den Berg, R. Structured denoising diffusion models in dis-crete state-spaces. In Advances in Neural Information Processing Systems 34 , 2021. Bergmeister, A., Martinkus, K., Perraudin, N., and Watten-hofer, R. Efficient and scalable graph generation through iterative local expansion. In International Conference on Learning Representations , 2023. Boget, Y. Simple and critical iterative denoising: A recast-ing of discrete diffusion in graph generation. In Interna-tional Conference on Machine Learning , 2025. Brown, N., Fiscato, M., Segler, M. H., and Vaucher, A. C. Guacamol: benchmarking models for de novo molecular design. Journal of chemical information and modeling ,59(3):1096–1108, 2019. Campbell, A., Benton, J., De Bortoli, V., Rainforth, T., Deligiannidis, G., and Doucet, A. A continuous time framework for discrete denoising models. In Advances in Neural Information Processing Systems 35 , 2022. Campbell, A., Yim, J., Barzilay, R., Rainforth, T., and Jaakkola, T. Generative flows on discrete state-spaces: En-abling multimodal flows with applications to protein co-design. In International Conference on Machine Learn-ing , 2024. Caron, F., Panero, F., and Rousseau, J. On sparsity, power-law, and clustering properties of graphex processes. Ad-vances in Applied Probability , 55(4):1211–1253, 2023. doi: 10.1017/apr.2022.75. Chen, X., He, J., Han, X., and Liu, L. Efficient and degree-guided graph generation via discrete diffusion modeling. In International Conference on Machine Learning , pp. 4585–4610. PMLR, 2023. Chen, X., Wang, Y., He, J., Du, Y., Hassoun, S., Xu, X., and Liu, L. Graph generative pre-trained transformer. In 
+
+International Conference on Machine Learning , 2025. Dai, H., Nazi, A., Li, Y., Dai, B., and Schuurmans, D. Scalable deep generative modeling for sparse graphs. In 
+
+International conference on machine learning , pp. 2302– 2312. PMLR, 2020. Davies, A. O., Ajmeri, N. S., et al. Size matters: Large graph generation with higgs. arXiv preprint arXiv:2306.11412 ,2023. De Cao, N. and Kipf, T. Molgan: An implicit genera-tive model for small molecular graphs. arXiv preprint arXiv:1805.11973 , 2018. Diamant, N. L., Tseng, A. M., Chuang, K. V., Biancalani, T., and Scalia, G. Improving graph generation by restrict-ing graph bandwidth. In International Conference on Machine Learning , pp. 7939–7959. PMLR, 2023. Eijkelboom, F., Bartosh, G., Andersson Naesseth, C., Welling, M., and van de Meent, J.-W. Variational flow matching for graph generation. Advances in Neural In-formation Processing Systems , 37:11735–11764, 2024a. Eijkelboom, F., Bartosh, G., Andersson Naesseth, C., Welling, M., and van de Meent, J.-W. Variational flow matching for graph generation. In Advances in Neural Information Processing Systems , 2024b. Esser, P., Kulal, S., Blattmann, A., Entezari, R., M ¨uller, J., Saini, H., Levi, Y., Lorenz, D., Sauer, A., Boesel, F., et al. Scaling rectified flow transformers for high-resolution image synthesis. In Proceedings of the 41st International Conference on Machine Learning , 2024. Gat, I., Remez, T., Shaul, N., Kreuk, F., Chen, R. T. Q., Synnaeve, G., Adi, Y., and Lipman, Y. Discrete flow matching. In Advances in Neural Information Processing Systems , 2024. Goyal, N., Jain, H. V., and Ranu, S. Graphgen: A scalable approach to domain-agnostic labeled graph generation. In 
+
+Proceedings of the web conference 2020 , pp. 1253–1263, 2020. Gretton, A., Borgwardt, K. M., Rasch, M. J., Sch ¨olkopf, B., and Smola, A. A kernel two-sample test. Jour-nal of Machine Learning Research , 13(25):723–773, 2012. URL http://jmlr.org/papers/v13/ gretton12a.html .Haefeli, K. K., Martinkus, K., Perraudin, N., and Watten-hofer, R. Diffusion models for graphs benefit from dis-crete state spaces. NeurIPS New Frontiers in Graph Learning Workshop (NeurIPS GLFrontiers) , 2022. Han, X., Jiang, Z., Liu, N., and Hu, X. G-mixup: Graph data augmentation for graph classification. In International conference on machine learning , pp. 8230–8248. PMLR, 2022. Han, X., Chen, X., Ruiz, F. J., and Liu, L.-P. Fitting au-toregressive graph generative models through maximum likelihood estimation. Journal of Machine Learning Re-search , 2023. Jin, E., Bronstein, M., Ceylan, ˙I. ˙I., and Lanzinger, M. Ho-momorphism counts for graph neural networks: all about 9Flowette: Flow Matching with Graphette Priors 
+
+that basis. In Proceedings of the 41st International Con-ference on Machine Learning , pp. 22075–22098, 2024. Jin, W., Barzilay, R., and Jaakkola, T. Junction tree vari-ational autoencoder for molecular graph generation. In 
+
+International conference on machine learning , pp. 2323– 2332. PMLR, 2018. Jo, J., Lee, S., and Hwang, S. J. Score-based generative modeling of graphs via the system of stochastic differen-tial equations. In International conference on machine learning , pp. 10362–10383. PMLR, 2022a. Jo, J., Lee, S., and Hwang, S. J. Score-based generative modeling of graphs via the system of stochastic differen-tial equations. In International Conference on Machine Learning (ICML) . PMLR, 2022b. Jo, J., Kim, D., and Hwang, S. J. Graph generation with dif-fusion mixture. In International Conference on Machine Learning , 2024. Karami, M. Higen: Hierarchical graph generative networks. 
+
+arXiv preprint arXiv:2305.19337 , 2023. Keriven, N., Bietti, A., and Vaiter, S. Convergence and stability of graph convolutional networks on large ran-dom graphs. Advances in Neural Information Processing Systems , 33:21512–21523, 2020. Kipf, T. N. and Welling, M. Variational graph auto-encoders. 
+
+arXiv preprint arXiv:1611.07308 , 2016. Klopp, O., Tsybakov, A. B., and Nicolas, V. Oracle inequal-ities for network models and sparse graphon estimation. 
+
+The Annals of Statistics , 45(1):316–354, 2017. Kong, L., Cui, J., Sun, H., Zhuang, Y., Prakash, B. A., and Zhang, C. Autoregressive diffusion model for graph generation. In Proceedings of the 40th International Conference on Machine Learning , 2023. Kuhn, H. W. The hungarian method for the assignment problem. Naval research logistics quarterly , 2(1-2):83– 97, 1955. Liao, R., Li, Y., Song, Y., Wang, S., Hamilton, W., Du-venaud, D. K., Urtasun, R., and Zemel, R. Efficient graph generation with graph recurrent attention networks. 
+
+Advances in neural information processing systems , 32, 2019. Limnios, S., Selvaraj, P., Cucuringu, M., Maple, C., Reinert, G., and Elliott, A. Sagess: Sampling graph denoising diffusion model for scalable graph generation. arXiv preprint arXiv:2306.16827 , 2023. Lipman, Y., Chen, R. T. Q., Ben-Hamu, H., Nickel, M., and Le, M. Flow matching for generative modeling. In 
+
+International Conference on Learning Representations ,2023. Lippe, P. and Gavves, E. Categorical normalizing flows via continuous transformations. In International Conference on Learning Representations , 2020. Liu, J., Kumar, A., Ba, J., Kiros, J., and Swersky, K. Graph normalizing flows. Advances in Neural Information Pro-cessing Systems , 32, 2019. Liu, X., Gong, C., and Liu, Q. Flow straight and fast: Learning to generate and transfer data with rectified flow. In International Conference on Learning Representations ,2023. Loshchilov, I. and Hutter, F. Decoupled weight decay reg-ularization. In International Conference on Learning Representations , 2019. Ma, N., Goldstein, M., Albergo, M. S., Boffi, N. M., Vanden-Eijnden, E., and Xie, S. Sit: Exploring flow and diffusion-based generative models with scalable interpolant trans-formers. In European Conference on Computer Vision ,2024. Martinkus, K., Loukas, A., Perraudin, N., and Wattenhofer, R. Spectre: Spectral conditioning helps to overcome the expressivity limits of one-shot graph generators. In In-ternational Conference on Machine Learning , pp. 15159– 15179. PMLR, 2022. Mercado, R., Rastemo, T., Lindel ¨of, E., Klambauer, G., En-gkvist, O., Chen, H., and Bjerrum, E. J. Graph networks for molecular design. Machine Learning: Science and Technology , 2(2):025023, 2021. Niu, C., Song, Y., Song, J., Zhao, S., Grover, A., and Ermon, S. Permutation invariant graph generation via score-based generative modeling. In International conference on arti-ficial intelligence and statistics , pp. 4474–4484. PMLR, 2020. Polykovskiy, D., Zhebrak, A., Sanchez-Lengeling, B., Golo-vanov, S., Tatanov, O., Belyaev, S., Kurbanov, R., Arta-monov, A., Aladinskiy, V., Veselov, M., et al. Molecular sets (moses): a benchmarking platform for molecular gen-eration models. Frontiers in pharmacology , 11:565644, 2020. Qin, Y., Madeira, M., Thanou, D., and Frossard, P. De-fog: Discrete flow matching for graph generation. In 
+
+International Conference on Machine Learning (ICML) ,2025. 10 Flowette: Flow Matching with Graphette Priors 
+
+Shi, C., Xu, M., Zhu, Z., Zhang, W., Zhang, M., and Tang, J. Masked graph modeling for molecule generation. In 
+
+International Conference on Machine Learning (ICML) ,2020. Shirzad, H., Hajimirsadeghi, H., Abdi, A. H., and Mori, G. Td-gen: Graph generation with tree decomposition. In Proceedings of the 2022 NeurIPS Workshop on Deep Generative Models for Highly Structured Data , 2022. Siraudin, A., Malliaros, F. D., and Morris, C. Cometh: A continuous-time discrete-state graph diffusion model. 
+
+Transactions on Machine Learning Research , 2024. Song, Y., Sohl-Dickstein, J., Kingma, D. P., Kumar, A., Er-mon, S., and Poole, B. Score-based generative modeling through stochastic differential equations. In International Conference on Learning Representations , 2021. Sterling, T. and Irwin, J. J. Zinc 15–ligand discovery for everyone. Journal of chemical information and modeling ,55(11):2324–2337, 2015. Sun, Z. and Yang, Y. Difusco: Graph-based diffusion solvers for combinatorial optimization. Advances in neural infor-mation processing systems , 36:3706–3731, 2023. Titouan, V., Courty, N., Tavenard, R., and Flamary, R. Op-timal transport for structured data with application on graphs. In International Conference on Machine Learn-ing (ICML) , 2019. Veitch, V. and Roy, D. M. The class of random graphs aris-ing from exchangeable random measures. arXiv preprint arXiv:1512.03099 , 2015. Veitch, V. and Roy, D. M. Sampling and estimation for (sparse) exchangeable graphs. The Annals of Statistics ,47(6):3274–3299, 2019. Vignac, C., Krawczuk, I., Siraudin, A., Wang, B., Cevher, V., and Frossard, P. DiGress: Discrete Denoising diffu-sion for graph generation. In The Eleventh International Conference on Learning Representations , 2022. Wu, Z., Ramsundar, B., Feinberg, E. N., Gomes, J., Ge-niesse, C., Pappu, A. S., Leswing, K., and Pande, V. Moleculenet: a benchmark for molecular machine learn-ing. Chemical science , 9(2):513–530, 2018. Xu, K., Hu, W., Leskovec, J., and Jegelka, S. How powerful are graph neural networks? In International Conference on Learning Representations (ICLR) , 2019. Xu, Z., Qiu, R., Chen, Y., Chen, H., Fan, X., Pan, M., Zeng, Z., Das, M., and Tong, H. Discrete-state continuous-time diffusion for graph generation. In Advances in Neural Information Processing Systems 37 , 2024a. Xu, Z., Qiu, R., Chen, Y., Chen, H., Fan, X., Pan, M., Zeng, Z., Das, M., and Tong, H. Discrete-state continuous-time diffusion for graph generation. Advances in Neural Infor-mation Processing Systems , 37:79704–79740, 2024b. Yi, K., Zhou, B., Shen, Y., Li `o, P., and Wang, Y. Graph denoising diffusion for inverse protein folding. Advances in Neural Information Processing Systems , 36:10238– 10257, 2023. You, J., Ying, R., Ren, X., Hamilton, W., and Leskovec, J. Graphrnn: Generating realistic graphs with deep auto-regressive models. In International conference on ma-chine learning , pp. 5708–5717. PMLR, 2018. Zhou, C., Wang, X., and Zhang, M. Unifying generation and prediction on graphs with latent graph diffusion. Ad-vances in Neural Information Processing Systems , 37: 61963–61999, 2024. Zhu, Y., Du, Y., Wang, Y., Xu, Y., Zhang, J., Liu, Q., and Wu, S. A survey on deep graph generation: Methods and applications. In Learning on Graphs Conference , pp. 47–1. PMLR, 2022. 11 Flowette: Flow Matching with Graphette Priors 
+
+A. Historical Background and Related Work on Flow Matching 
+
+A.1. Graph generative models 
+
+Graph generative modeling aims to learn distributions over graphs that capture both local connectivity patterns and global structural properties, with applications in molecular design, combinatorial optimisation, and biological networks (Mercado et al., 2021; Sun & Yang, 2023; Yi et al., 2023). Existing methods can be broadly grouped into autoregressive and one-shot paradigms. Autoregressive models sequentially grow a graph by inserting nodes and edges according to a chosen ordering (You et al., 2018; Liao et al., 2019; Shi et al., 2020; Goyal et al., 2020). This sequential view allows fine-grained control and the injection of domain-specific constraints (e.g. valency checks in molecular generation), but comes at a cost: models must either learn an effective node/edge ordering or commit to a hand-crafted one, which enlarges the hypothesis space and breaks permutation invariance (Kong et al., 2023; Han et al., 2023). As a result, autoregressive approaches tend to be computationally expensive, difficult to parallelise, and brittle on graphs with complex long-range dependencies. To mitigate these issues, a large body of work has explored one-shot generation, where all graph variables are predicted in a single pass. One-shot models instantiate graph-adapted versions of VAEs, GANs, and normalising flows (Kipf & Welling, 2016; De Cao & Kipf, 2018; Liu et al., 2019). While they restore permutation equivariance/ invariance and avoid learning an ordering, purely one-shot models often underfit rich higher-order structure unless equipped with carefully engineered architectures or hierarchical decompositions (Dai et al., 2020; Shirzad et al., 2022; Karami, 2023; Davies et al., 2023). 
+
+Graph diffusion models. Diffusion-based generative models have recently become the dominant one-shot paradigm for graphs. Early work adapted continuous diffusion frameworks to graph-structured data by treating adjacency and features as continuous variables (Niu et al., 2020; Jo et al., 2022b), which simplifies optimisation but departs from the discrete nature of graph topology. Subsequent methods introduced discrete-state diffusion over node and edge categories using discrete-time Markov chains (Austin et al., 2021; Vignac et al., 2022; Haefeli et al., 2022), achieving strong performance on benchmark graph and molecular datasets. However, these models tie the sampling trajectory to the training schedule: the number of reverse steps must match the (fixed) number of forward noising steps, and sampling cost is therefore tightly coupled to training hyperparameters. Continuous-time discrete diffusion models based on Continuous Time Markov Chains (CTMCs) address this rigidity by decoupling the sampling grid from the training objective (Campbell et al., 2022; Xu et al., 2024a). DisCo (Xu et al., 2024a), for instance, defines a discrete-state continuous-time diffusion on graphs and inherits the permutation-equivariant/invariant properties of DiGress while enabling flexible numerical integration and theoretical control of approximation error (Xu et al., 2024a). Other variants exploit degree information or hierarchical decompositions to improve scalability and sample quality (Chen et al., 2023; Bergmeister et al., 2023; Limnios et al., 2023). Despite these advances, diffusion-based graph models still rely on carefully designed rate matrices or noise schedules, and their local node/edge updates make it difficult to preserve global topology and higher-order motifs without additional inductive biases or auxiliary constraints. 
+
+Graph flow matching models. Flow matching (FM) offers an efficient alternative to diffusion-based training for continuous-time generative models. Rather than learning to reverse a fixed stochastic process, FM directly regresses a time-dependent vector field whose trajectories transport a simple source distribution to a complex target distribution along a chosen probability path (Lipman et al., 2023). Rectified-flow variants further simplify training by adopting linear interpolants between data and noise and regressing the associated constant conditional velocity field (Liu et al., 2023), leading to state-of-the-art results in high-dimensional image and sequence generation (Esser et al., 2024; Ma et al., 2024). Extending FM to discrete state spaces has given rise to discrete flow matching (DFM), where probability paths are defined by time-inhomogeneous CTMCs and the model parameterises transition rates rather than continuous velocities (Campbell et al., 2024; Gat et al., 2024). Compared to discrete diffusion, DFM replaces hand-designed forward rate matrices with learnable dynamics and decouples the choice of interpolation path from the training objective. Building on this, DeFoG introduces the first DFM-based framework for graph generation, combining CTMC-based flows with a graph transformer backbone and a training–sampling decoupling that improves flexibility over purely diffusion-based methods (Qin et al., 2025). In parallel, some works have explored continuous FM and flow-based formulations for graphs by relaxing discrete structures into continuous spaces. Graph normalising flows and related models learn invertible transports over continuous embeddings of adjacency and attributes (Liu et al., 2019), while variational flow matching for graph generation embeds graphs into continuous latent spaces and trains vector fields via a variational objective (Eijkelboom et al., 2024b). These approaches demonstrate that FM-style training can be competitive to diffusion-based graph generators in terms of efficiency and 12 Flowette: Flow Matching with Graphette Priors 
+
+flexibility. However, they typically rely on implicit couplings between source and target graphs (e.g. through shared encoders or attention over batched graphs) and do not explicitly enforce structural alignment under permutation and size variability. Consequently, velocity supervision can become inconsistent across permutations or mismatched graph components, making it difficult to guarantee stable preservation of global topology and higher-order motifs during integration. Our work situates itself in this emerging line of flow-matching graph generators, but departs from prior art in two key ways: (1) we adopt a continuous FM framework over relaxed adjacency and node features while explicitly aligning noise and data graphs via structure-aware matching, and (2) we incorporate principled structural priors into both the source distribution and the training objective to capture local and global structural properties. This design yields coherent, permutation-invariant velocity supervision across variable-sized graphs and enables Flowette to learn stable continuous-time graph transformations that preserve rich combinatorial structure beyond what is typically captured by existing diffusion- or flow-based models. 
+
+Beyond graphons for sparse graphs. As a consequence of the Aldous-Hoover theorem (Aldous, 1981) graphs sampled from graphons are dense, i.e., the number of edges grow quadratically with the number of nodes. However, many realworld graphs such as social and molecular networks are sparse, i.e., the number of edges grow subquadratically with the nodes. Graphexes (Veitch & Roy, 2015) and graph sparsification (Klopp et al., 2017) are two popular methods that are used for sparse graph modelling. Graphexes, introduced by Veitch & Roy (2015) have the functionality to add stars and isolated edges to a graph sampled by a graphon and have rich mathematical underpinnings (Veitch & Roy, 2019; Caron et al., 2023). Sparsified graphons are based on the simple fact that sparse graph sequences converge to the zero graphon W = 0 . However, a graph sampled from W = 0 is not representative of sparse graphs as it contains only nodes without any edges. To rectify this issue, sparsified graphons propose a sequence {ρn}n converging to zero and the graphs are sampled from ρnW , where 
+
+W̸ = 0 . Sparsified graphons are used in many settings including Keriven et al. (2020); Klopp et al. (2017). 
+
+A.2. Flow matching training 
+
+FM provides a framework for learning continuous-time generative models by directly regressing a time-dependent velocity field that transports samples from a simple source distribution to a target data distribution along a prescribed probability path (Lipman et al., 2023). Unlike diffusion-based models, FM does not require simulating or inverting a stochastic corruption process, and avoids likelihood evaluation or score estimation. Let S denote a continuous state space and let p0 and p1 be probability distributions over S, representing a source (noise) distribution and a target (data) distribution, respectively. In the graph setting, S will later correspond to a continuous relaxation of adjacency matrices, node features, and edge features. Flow matching assumes access to paired samples (s0, s 1)
+
+with s0 ∼ p0 and s1 ∼ p1, together with a family of interpolating states (st)t∈[0 ,1] defining a probability path between p0
+
+and p1.A commonly used choice is the rectified linear path ,
+
+st = (1 − t)s0 + ts 1, t ∼ U [0 , 1] , (17) which yields a constant conditional velocity 
+
+u⋆(st | s0, s 1) = s1 − s0. (18) Flow matching learns a time-conditioned vector field vθ : S × [0 , 1] → S , parameterised by θ, that approximates the conditional velocity along the path. The FM objective is defined as a regression loss: 
+
+LFM (θ) = Es0∼p0, s 1∼p1
+
+> t∼U [0 ,1]
+
+h
+
+∥vθ (st, t ) − u⋆(st | s0, s 1)∥22
+
+i
+
+. (19) Minimising Eq. (1) encourages the learned vector field to induce trajectories that transport mass from p0 to p1.At generation time, new samples are obtained by solving the ordinary differential equation 
+
+ds t
+
+dt = vθ (st, t ), st=0 ∼ p0, (20) using a numerical integrator (e.g. Euler or Runge-Kutta), and taking st=1 as a sample from the learned model distribution. 13 Flowette: Flow Matching with Graphette Priors 
+
+B. GNN Transformer for Learning Velocity Fields 
+
+At time t ∈ [0 , 1] , we represent the continuous graph state as (At, X t, F t), where At ∈ Rn×n is a soft adjacency matrix, 
+
+Xt ∈ Rn×H denotes node features, and Ft ∈ Rn×n×H denotes edge features. The adjacency At is treated as a continuous variable during flow matching and serves as a structural bias rather than a discrete connectivity constraint. 
+
+Input projections and time conditioning. A scalar time t ∈ [0 , 1] is embedded via 
+
+ct = ψt(t) ∈ RH , (21) where ψt is a multi-layer perceptron (MLP). To enable joint node–edge reasoning, we map node and edge features into a common latent space of dimension H using separate learnable transformations. Specifically, node features are embedded via a function 
+
+ψx : Rdx → RH , h(0)  
+
+> i
+
+= ψx
+
+ Xt(i) + 1N c⊤ 
+
+> t
+
+,
+
+while edge features are embedded via a distinct function 
+
+ψf : Rdf +1 → RH , b(0)  
+
+> ij
+
+= ψf
+
+ [ Ft(i, j ) ∥ At(i, j ) ]  + ct,
+
+where ∥ denotes concatenation. In practice, ψx and ψf are implemented as learnable linear layers or MLPs. We denote the node and edge hidden states at layer ℓ by h(ℓ) 
+
+> i
+
+∈ RH and b(ℓ) 
+
+> ij
+
+∈ RH . Given node features Xht ∈ Rn×dx , edge features Ft ∈ Rn×n×df , and adjacency At ∈ Rn×n, the GNN transformer predicts velocity fields (vA, v X , v F ) used for flow. 
+
+Stacked attention layers. We apply L layers of the edge-aware velocity attention: 
+
+h(ℓ) 
+
+> i
+
+, b (ℓ) 
+
+> ij
+
+= AttnLayer  h(ℓ−1)  
+
+> i
+
+, b (ℓ−1)  
+
+> ij
+
+, A (ℓ−1) 
+
+> t
+
+, ℓ = 1 , . . . , L. (22) 
+
+Velocity prediction heads. Final velocity fields are obtained via linear projections: 
+
+vX (i) = h(L) 
+
+> i
+
+W X 
+
+> out
+
+∈ Rn×dx , (23) 
+
+vF (i, j ) = b(L) 
+
+> ij
+
+W E 
+
+> out
+
+∈ Rdf , (24) 
+
+vA(i, j ) = w⊤ 
+
+> A
+
+b(L) 
+
+> ij
+
+∈ R. (25) 
+
+Symmetry enforcement. To ensure undirected graph consistency, we symmetrize outputs as 
+
+vA ← σ( 12 (vA + v⊤ 
+
+> A
+
+)) , vE (i, j ) ← 12
+
+ vE (i, j ) + vE (j, i ) (26) where σ denotes the non-negative activation function. This architecture jointly models node, edge, and adjacency dynamics under a unified time-conditioned attention mechanism. By explicitly propagating dense edge states and topology-aware attention biases, the model captures higher-order structural evolution, which is critical for flow matching on molecular graphs. 
+
+B.1. Edge-Aware Velocity Attention Layer Structural-biased attention. We first compute query and key projections 
+
+Q(ℓ) 
+
+> i
+
+= h(ℓ) 
+
+> i
+
+W (ℓ) 
+
+> Q
+
+, K(ℓ) 
+
+> j
+
+= h(ℓ) 
+
+> j
+
+W (ℓ) 
+
+> K
+
+, (27) where W (ℓ) 
+
+> Q
+
+, W (ℓ) 
+
+> K
+
+∈ RH×H . The attention logits are defined as 
+
+S(ℓ) 
+
+> ij
+
+= ⟨Q(ℓ) 
+
+> i
+
+, K (ℓ) 
+
+> j
+
+⟩√H + A(ℓ) 
+
+> t
+
+(i, j ), (28) where the adjacency A(ℓ) 
+
+> t
+
+(i, j ) acts as an additive structural bias. Row-wise normalized attention weights are then given by 
+
+˜α(ℓ) 
+
+> ij
+
+= softmax j (Sij ) = exp( S(ℓ) 
+
+> ij
+
+)
+
+PNk=1 exp( S(ℓ) 
+
+> ik
+
+) . (29) 14 Flowette: Flow Matching with Graphette Priors 
+
+Edge-conditioned message construction. For each ordered node pair (i, j ), we form a joint edge-conditioned concatenated representation 
+
+u(ℓ) 
+
+> ij
+
+= [ h(ℓ) 
+
+> i
+
+∥ h(ℓ) 
+
+> j
+
+∥ ψ(b(ℓ) 
+
+> ij
+
+) ] ∈ R3H , (30) where ψ(·) is a MLP, and then uij is processed by an edge MLP 
+
+m(ℓ) 
+
+> ij
+
+= ϕe(u(ℓ) 
+
+> ij
+
+) ∈ RH . (31) 
+
+Node aggregation and updates. Node-wise aggregated messages are computed as 
+
+˜m(ℓ) 
+
+> i
+
+=
+
+> N
+
+X
+
+> j=1
+
+˜α(ℓ) 
+
+> ij
+
+m(ℓ) 
+
+> ij
+
+, (32) and node states are updated via a MLP 
+
+h(ℓ+1)  
+
+> i
+
+= h(ℓ) 
+
+> i
+
++ ϕn( ˜ m(ℓ) 
+
+> i
+
+). (33) Edge states are updated symmetrically using 
+
+b(ℓ+1)  
+
+> ij
+
+= b(ℓ) 
+
+> ij
+
++ ϕu(m(ℓ) 
+
+> ij
+
+), (34) where ϕn and ϕu are learnable MLPs with SiLU activations. Unlike standard attention layers that aggregate only node features, our formulation explicitly maintains and updates pairwise edge states. The adjacency bias A(ℓ) 
+
+> t
+
+(i, j ) allows the model to softly favor plausible bonds while retaining the flexibility to modify connectivity during flow integration, which is essential for preserving cycles and long-range structural motifs in molecular graphs. 
+
+Proposition B.1. [Permutation equivariance of the velocity field] Let vθ : ( At, X t, F t, t ) 7 →  vA, v X , v F
+
+ denote the time-conditioned GNN transformer described in Section 3, with L layers of edge-aware velocity attention, shared learnable linear maps and MLPs, and adjacency bias At inside the attention logits. For any permutation π ∈ Sn with permutation matrix Pπ , define the permuted graph state (A′
+
+> t
+
+, X ′
+
+> t
+
+, F ′ 
+
+> t
+
+) = ( Pπ AtP ⊤ 
+
+> π
+
+, P π Xt, P π FtP ⊤ 
+
+> π
+
+). Then there exists a parameterization of vθ such that vθ (A′
+
+> t
+
+, X ′
+
+> t
+
+, F ′ 
+
+> t
+
+, t ) =  Pπ vAP ⊤ 
+
+> π
+
+, P π vX , P π vF P ⊤
+
+> π
+
+, i.e., the predicted adjacency, node, and edge velocities transform equivariantly under any node relabeling. 
+
+See Sec. C.2 for the proof. 
+
+C. Proofs for Structure Preserving Flows (Section 3) 
+
+C.1. Theoretical Properties of FGW-Coupling Lemma C.1. [Permutation invariance of FGW-distance] Let G0, G 1 be two graphs as above, and let π ∈ Sn0 , τ ∈ Sn1 be arbitrary node permutations with permutation matrices Pπ , Pτ . Define permuted graphs eG0 = ( π · A0, π · X0, π · F0) and 
+
+eG1 = ( τ · A1, τ · X1, τ · F1). Then, (1) The FGW-distance is invariant: FGW α(G0, G 1) = FGW α( eG0, eG1); (2) If T ⋆ is an optimal coupling for FGW α(G0, G 1), then eT ⋆ := Pπ T ⋆P ⊤ 
+
+> τ
+
+is an optimal coupling for FGW α( eG0, eG1). Conversely, any optimal coupling eT ⋆ for the permuted problem corresponds to an optimal coupling T ⋆ = P ⊤ 
+
+> π
+
+eT ⋆Pτ for the original problem. Proof. We first express how the costs transform under permutations. For the appearance term, since π only reorders rows of X0 and τ only reorders rows of X1, we have 
+
+M (π · X0, τ · X1) = Pπ M (X0, X 1) P ⊤ 
+
+> τ
+
+.
+
+Similarly, the intra-graph distance matrices satisfy 
+
+C(π · Z0) = Pπ C(Z0) P ⊤ 
+
+> π
+
+, C(τ · Z1) = Pτ C(Z1) P ⊤ 
+
+> τ
+
+.
+
+15 Flowette: Flow Matching with Graphette Priors 
+
+We now show that any feasible coupling T for the original problem corresponds to a feasible coupling eT for the permuted problem with the same objective value. Let T ∈ Π( p, q ), so T 1 = p and T ⊤1 = q. Define eT = Pπ T P ⊤ 
+
+> τ
+
+. Since Pπ and Pτ are permutation matrices, 
+
+eT 1 = Pπ T P ⊤ 
+
+> τ
+
+1 = Pπ T 1 = Pπ p = p, 
+
+because p is uniform and invariant under permutation. Analogously, 
+
+eT ⊤1 = Pτ T ⊤P ⊤ 
+
+> π
+
+1 = Pτ T ⊤1 = Pτ q = q. 
+
+Non-negativity is preserved since Pπ and Pτ just reorder entries. Thus eT ∈ Π( p, q ).
+
+Feature cost. The linear appearance term for the permuted problem is 
+
+⟨ eT , M (π · X0, τ · X1)⟩ = ⟨Pπ T P ⊤ 
+
+> τ
+
+, P π M (X0, X 1)P ⊤ 
+
+> τ
+
+⟩
+
+= ⟨T, M (X0, X 1)⟩,
+
+where we used invariance of the Frobenius inner product under simultaneous left- and right-multiplication by orthogonal matrices. 
+
+GW term. Let C0 = C(Z0) and C1 = C(Z1). For the permuted graphs, the structural costs are eC0 = Pπ C0P ⊤ 
+
+> π
+
+and 
+
+eC1 = Pτ C1P ⊤ 
+
+> τ
+
+. The GW term of Eq. (4) for ( eG0, eG1) and coupling eT is 
+
+LGW ( eT ; eC0, eC1) = X
+
+> i,k
+
+X
+
+> j,ℓ
+
+  eC0(i, k ) − eC1(j, ℓ )2 eTij eTkℓ .
+
+Using the definitions of eC0, eC1, eT and reindexing by i′ = π−1(i), k′ = π−1(k), j′ = τ −1(j), ℓ′ = τ −1(ℓ), we obtain 
+
+LGW ( eT ; eC0, eC1) = LGW (T ; C0, C 1).
+
+Indeed, each term in the sum is just a relabeling of the indices of the corresponding term for (T ; C0, C 1).
+
+FGW Objective. Combining the two parts, 
+
+(1 − α) ⟨ eT , M (π · X0, τ · X1)⟩ + α LGW ( eT ; eC0, eC1)
+
+equals 
+
+(1 − α) ⟨T, M (X0, X 1)⟩ + α LGW (T ; C0, C 1).
+
+Thus every feasible T for the original problem corresponds to a feasible eT for the permuted problem with identical objective value, and conversely via T = P ⊤ 
+
+> π
+
+eT P τ . Therefore the minimal values of the two optimization problems coincide, proving (1), and optimal solutions map to each other, proving (2). As a useful special case, if two graphs are identical up to a node relabeling, the FGW distance is zero and the optimal coupling is the corresponding permutation coupling. 
+
+Corollary C.2. [Zero FGW-distance for isomorphic graphs] Assume n0 = n1 = n and suppose there exists a permutation 
+
+σ ∈ Sn such that x0 
+
+> i
+
+= x1 
+
+> σ(i)
+
+and C(Z0)ik = C(Z1)σ(i),σ (k) for all i, k . Let Tσ = 1 
+
+> n
+
+Pσ . Then Tσ is feasible, achieves objective value 0 in Eq. (4) , and hence FGW α(G0, G 1) = 0 .Proof. By construction Tσ ∈ Π( p, q ) with uniform node measures. Under the stated assumptions, M (X0, X 1) and 
+
+C(Z0), C (Z1) align exactly under the permutation σ, so each term in both the appearance cost and the GW term of Eq. (4) vanishes when evaluated at Tσ . Non-negativity of the integrand implies that the minimal value of Eq. (4) is zero; hence Tσ
+
+is optimal and the distance is zero. 16 Flowette: Flow Matching with Graphette Priors 
+
+Theorem C.3. [Permutation-consistent FGW-coupling] Let {Gi
+
+> 0
+
+}Bi=1 and {Gj
+
+> 1
+
+}Bj=1 be two collections of graphs. Form the FGW-distance matrix D ∈ RB×B 
+
+> ≥0
+
+with Dij := FGW α(Gi
+
+> 0
+
+, G j
+
+> 1
+
+) as in Eq. (5) . Suppose there exists a permutation π⋆ ∈ SB
+
+such that: 
+
+• For each i, the pair (Gi
+
+> 0
+
+, G π⋆(i)1 ) satisfies the conditions of Corollary C.2, hence Di,π ⋆(i) = 0 .
+
+• For every i and every j̸ = π⋆(i) we have Dij ≥ 0, and the assignment π⋆ is the unique permutation achieving total cost zero: for any π̸ = π⋆, PBi=1 Di,π (i) > 0.Then any solution of the Hungarian assignment problem 
+
+bπ ∈ arg min 
+
+> π∈SB
+> B
+
+X
+
+> i=1
+
+Di,π (i) (35) 
+
+recovers π⋆, i.e., bπ = π⋆. More generally, if there are several zero-cost permutations, the set of minimizers of Eq. (35) 
+
+coincides with the set of such zero-cost permutations. Proof. By construction of D, all entries are non-negative because both the appearance and GW terms in Eq. (4) are non-negative. Assumption (i) and Corollary C.2 imply that Di,π ⋆(i) = 0 for each i, hence 
+
+> B
+
+X
+
+> i=1
+
+Di,π ⋆(i) = 0 .
+
+Consider any other permutation π̸ = π⋆. By assumption (ii), the corresponding total cost is strictly positive: PBi=1 Di,π (i) >
+
+0. Therefore π⋆ is the unique minimizer of Eq. (35) , and the Hungarian algorithm, which solves this linear assignment problem exactly, must return bπ = π⋆.If multiple permutations achieve total cost zero, then any such permutation is a minimizer of Eq. (35) , and no permutation with positive total cost can be optimal. Thus the set of minimizers is precisely the set of zero-cost permutations. This theorem shows that, whenever the FGW-distance separates the correct pairings from all others, our Hungarian coupling step recovers a batch-wise one-to-one matching that is consistent with feature- and structure-preserving node permutations. 
+
+C.2. Theoretical Analysis of the Velocity Field Predictor Proposition B.1. [Permutation equivariance of the velocity field] Let vθ : ( At, X t, F t, t ) 7 →  vA, v X , v F
+
+ denote the time-conditioned GNN transformer described in Section 3, with L layers of edge-aware velocity attention, shared learnable linear maps and MLPs, and adjacency bias At inside the attention logits. For any permutation π ∈ Sn with permutation matrix Pπ , define the permuted graph state (A′
+
+> t
+
+, X ′
+
+> t
+
+, F ′ 
+
+> t
+
+) = ( Pπ AtP ⊤ 
+
+> π
+
+, P π Xt, P π FtP ⊤ 
+
+> π
+
+). Then there exists a parameterization of vθ such that vθ (A′
+
+> t
+
+, X ′
+
+> t
+
+, F ′ 
+
+> t
+
+, t ) =  Pπ vAP ⊤ 
+
+> π
+
+, P π vX , P π vF P ⊤
+
+> π
+
+, i.e., the predicted adjacency, node, and edge velocities transform equivariantly under any node relabeling. Proof. We prove the claim by induction on the L attention layers, using the fact that all linear maps have shared weights and that permutations act by row/column reordering. 
+
+Initialization. At time t, initial node and edge embeddings are 
+
+h(0)  
+
+> i
+
+= ψx(Xt(i)) + ct, b(0)  
+
+> ij
+
+= ψf
+
+ [Ft(i, j ), A t(i, j )]  + ct,
+
+where ψx and ψf are shared MLPs applied row-wise and ct depends only on t. For the permuted state (A′
+
+> t
+
+, X ′
+
+> t
+
+, F ′ 
+
+> t
+
+) we obtain 
+
+h′(0)  
+
+> i
+
+= ψx(X′
+
+> t
+
+(i)) + ct = ψx(Xt(π−1(i))) + ct = h(0) 
+
+> π−1(i)
+
+,
+
+so in matrix form H′(0) = Pπ H(0) . Similarly, 
+
+b′(0)  
+
+> ij
+
+= ψf ([ F ′ 
+
+> t
+
+(i, j ), A ′
+
+> t
+
+(i, j )]) + ct = ψf ([ Ft(π−1(i), π −1(j)) , A t(π−1(i), π −1(j))]) + ct = b(0) 
+
+> π−1(i),π −1(j)
+
+,
+
+i.e., B′(0) = Pπ B(0) P ⊤ 
+
+> π
+
+.17 Flowette: Flow Matching with Graphette Priors 
+
+Inductive step. Assume that at layer ℓ we have H(ℓ) ∈ RN ×H , B(ℓ) ∈ RN ×N ×H and 
+
+H′(ℓ) = Pπ H(ℓ), B′(ℓ) = Pπ B(ℓ)P ⊤ 
+
+> π
+
+.
+
+Attention logits. We compute 
+
+Q(ℓ) = H(ℓ)W (ℓ) 
+
+> Q
+
+, K(ℓ) = H(ℓ)W (ℓ) 
+
+> K
+
+,
+
+with shared weight matrices W (ℓ) 
+
+> Q
+
+, W (ℓ) 
+
+> K
+
+. For the permuted state, 
+
+Q′(ℓ) = H′(ℓ)W (ℓ) 
+
+> Q
+
+= Pπ H(ℓ)W (ℓ) 
+
+> Q
+
+= Pπ Q(ℓ),
+
+and similarly K′(ℓ) = Pπ K(ℓ). The attention logits are 
+
+S(ℓ) 
+
+> ij
+
+= ⟨Q(ℓ) 
+
+> i
+
+, K (ℓ) 
+
+> j
+
+⟩√H + At(i, j ),
+
+and 
+
+S′(ℓ) 
+
+> ij
+
+= ⟨Q′(ℓ) 
+
+> i
+
+, K ′(ℓ) 
+
+> j
+
+⟩√H + A′
+
+> t
+
+(i, j ).
+
+Using Q′(ℓ) = Pπ Q(ℓ), K′(ℓ) = Pπ K(ℓ), and A′ 
+
+> t
+
+= Pπ AtP ⊤ 
+
+> π
+
+, we obtain 
+
+S′(ℓ) = Pπ S(ℓ)P ⊤ 
+
+> π
+
+.
+
+Row-wise softmax is equivariant under row permutations, so the attention weights satisfy 
+
+α′(ℓ) = Pπ α(ℓ)P ⊤ 
+
+> π
+
+.
+
+Edge messages. For each pair (i, j ), we compute 
+
+u(ℓ) 
+
+> ij
+
+= h(ℓ) 
+
+> i
+
+∥ h(ℓ) 
+
+> j
+
+∥ ψ(b(ℓ) 
+
+> ij
+
+), m(ℓ) 
+
+> ij
+
+= ϕe(u(ℓ) 
+
+> ij
+
+),
+
+where ψ and ϕe are shared MLPs. By the inductive hypothesis and shared weights, 
+
+u′(ℓ) 
+
+> ij
+
+= u(ℓ)
+
+> π−1(i),π −1(j)
+
+, m′(ℓ) 
+
+> ij
+
+= m(ℓ)
+
+> π−1(i),π −1(j)
+
+.
+
+Node aggregation. Node-wise aggregated messages are 
+
+em(ℓ) 
+
+> i
+
+=
+
+> N
+
+X
+
+> j=1
+
+α(ℓ) 
+
+> ij
+
+m(ℓ) 
+
+> ij
+
+.
+
+Using the permutation relations for α(ℓ) and m(ℓ), one checks that em′(ℓ) 
+
+> i
+
+= em(ℓ)
+
+> π−1(i)
+
+, i.e., fM ′(ℓ) = Pπ fM (ℓ).
+
+Node and edge updates. Node states are updated via a shared MLP ϕn:
+
+h(ℓ+1)  
+
+> i
+
+= h(ℓ) 
+
+> i
+
++ ϕn( em(ℓ) 
+
+> i
+
+).
+
+Thus 
+
+h′(ℓ+1)  
+
+> i
+
+= h(ℓ) 
+
+> π−1(i)
+
++ ϕn( em(ℓ)
+
+> π−1(i)
+
+) = h(ℓ+1) 
+
+> π−1(i)
+
+,
+
+so H′(ℓ+1) = Pπ H(ℓ+1) . Edge states are updated symmetrically via a shared MLP ϕu:
+
+b(ℓ+1)  
+
+> ij
+
+= b(ℓ) 
+
+> ij
+
++ ϕu(m(ℓ) 
+
+> ij
+
+),
+
+which yields B′(ℓ+1) = Pπ B(ℓ+1) P ⊤ 
+
+> π
+
+.By induction, the equivariance relations hold for all ℓ = 0 , . . . , L .18 Flowette: Flow Matching with Graphette Priors 
+
+Output velocities. Finally, the velocity heads are linear maps applied row-wise: 
+
+vX (i) = h(L) 
+
+> i
+
+W X
+
+> out
+
+, vF (i, j ) = b(L) 
+
+> ij
+
+W E
+
+> out
+
+, vA(i, j ) = w⊤ 
+
+> A
+
+b(L) 
+
+> ij
+
+.
+
+Therefore, for the permuted state, we have 
+
+v′ 
+
+> X
+
+(i) = vX (π−1(i)) , v′ 
+
+> F
+
+(i, j ) = vF (π−1(i), π −1(j)) , v′
+
+> A
+
+(i, j ) = vA(π−1(i), π −1(j)) ,
+
+or in matrix form 
+
+v′ 
+
+> X
+
+= Pπ vX , v′ 
+
+> F
+
+= Pπ vF P ⊤ 
+
+> π
+
+, v′ 
+
+> A
+
+= Pπ vAP ⊤ 
+
+> π
+
+.
+
+This is precisely the desired permutation equivariance. Together, Lemma C.1 and Theorem C.3 and Proposition B.1 show that our FGW alignment, Hungarian pairing, and velocity field respect node permutations, ensuring that the overall flow-matching objective is well-defined on graphs up to isomorphism. 
+
+C.3. Theoretical Properties of the Learning Objective Theorem C.4. [Endpoint Consistency of Rectified Transport] Fix an FGW-coupled pair of graphs (A0, X 0, F 0) and 
+
+(A1, X 1, F 1) and the rectified path (At, X t, F t)t∈[0 ,1] defined above. Assume that for this pair and for t ∼ U [0 , 1] the velocity field vθ satisfies Lvel = 0 and βend Lend = 0 . Then for almost every t ∈ [0 , 1] , vθ (At, X t, F t, t ) = (∆ A, ∆X, ∆F ),and the solution of the ODE 
+
+ddt (At, X t, F t) = vθ (At, X t, F t, t ), (A0, X 0, F 0) given , (36) 
+
+satisfies (A1, X 1, F 1) = ( A0 + ∆ A, X 0 + ∆ X, F 0 + ∆ F ). Consequently, K-step explicit Euler integration with step size 
+
+h = 1 /K recovers the exact endpoint for any K ∈ N.Proof. We argue in two steps. 
+
+Step 1: Identification of the velocity field. By definition of Lvel in Eq. (9), for each sampled t we have 
+
+Lvel (t) = ∥vA(At, X t, F t, t ) − ∆A∥2 
+
+> F
+
++ λx∥vX (At, X t, F t, t ) − ∆X∥2 
+
+> F
+
++ λe∥vF (At, X t, F t, t ) − ∆F ∥2 
+
+> F
+
+. (37) The loss is a sum of nonnegative terms. If its expectation with respect to t ∼ U [0 , 1] is zero, then Lvel (t) = 0 for almost every t (w.r.t Lebesgue measure); otherwise the integral of a strictly positive integrand would be strictly positive. Thus, for almost every t,
+
+vA(At, X t, F t, t ) = ∆ A, vX (At, X t, F t, t ) = ∆ X, vF (At, X t, F t, t ) = ∆ F. (38) In particular, the learned velocity field coincides with the constant ideal transport (∆ A, ∆X, ∆F ) along the rectified path. 
+
+Step 2: Exact reconstruction by ODE and Euler integration. Consider the ODE 
+
+ddt At = vA(At, X t, F t, t ), A0 given , (39) and analogously for Xt and Ft. By Step 1, for almost every t we have dA t/dt = ∆ A, dX t/dt = ∆ X, and dF t/dt = ∆ F
+
+along the rectified path. Integrating from t = 0 to t = 1 yields 
+
+A1 = A0 +
+
+Z 10
+
+∆A dt = A0 + ∆ A, X1 = X0 + ∆ X, F1 = F0 + ∆ F, (40) which matches the desired endpoints by definition of (∆ A, ∆X, ∆F ).19 Flowette: Flow Matching with Graphette Priors 
+
+Now consider explicit Euler integration with K steps and step size h = 1 /K . Starting from (A(0) , X (0) , F (0) ) = (A0, X 0, F 0), the Euler updates are 
+
+A(k+1) = A(k) + h v A(A(k), X (k), F (k), t k), (41) 
+
+X(k+1) = X(k) + h v X (A(k), X (k), F (k), t k), (42) 
+
+F (k+1) = F (k) + h v F (A(k), X (k), F (k), t k), (43) where tk = k/K . Along the rectified path, each state (A(k), X (k), F (k)) equals (Atk , X tk , F tk ), and by Step 1 the velocity is constant and equal to (∆ A, ∆X, ∆F ) almost everywhere. Therefore, 
+
+A(K) = A0 + h
+
+> K−1
+
+X
+
+> k=0
+
+∆A = A0 + K · 1
+
+K ∆A = A0 + ∆ A, (44) and similarly for X(K) and F (K). Thus Euler integration also recovers (A1, X 1, F 1) exactly. 
+
+Theorem C.5. [Finite-Step Stability] Let st = ( At, X t, F t) denote the rectified path between s0 and s1, and let v⋆(st, t ) = (∆ A, ∆X, ∆F ) be the ideal constant velocity. Suppose vθ satisfies 
+
+∥vθ (st, t ) − v⋆(st, t )∥F ≤ ε for all t ∈ [0 , 1] , (45) 
+
+and is L-Lipschitz in s, i.e., ∥vθ (s, t ) − vθ (s′, t )∥F ≤ L∥s − s′∥F , ∀s, s ′, ∀t ∈ [0 , 1] . Let s(K) denote the endpoint obtained by K-step explicit Euler integration of vθ from s0 with step size h = 1 /K . Then there exists a constant C > 0
+
+depending only on L such that ∥s(K) − s1∥F ≤ C ε + h = C
+
+
+
+ε + 1
+
+> K
+
+
+
+.Proof. Let s⋆t denote the exact rectified path driven by v⋆, i.e., s⋆t = s0 + t(s1 − s0), so that s⋆ 
+
+> 1
+
+= s1 and ds ⋆t /dt = v⋆(s⋆t , t ).Let s(k) be the Euler iterates with step size h = 1 /K , starting at s(0) = s0:
+
+s(k+1) = s(k) + h v θ (s(k), t k), tk = kh. (46) Define the error at step k as 
+
+ek := s(k) − s⋆tk . (47) We derive a recursion for ek. Using the definition of s(k+1) and the exact flow of s⋆t ,
+
+ek+1 = s(k+1) − s⋆tk+1 (48) 
+
+= s(k) + h v θ (s(k), t k) −
+
+
+
+s⋆tk +
+
+Z tk+1 
+
+> tk
+
+v⋆(s⋆u, u ) du 
+
+
+
+(49) 
+
+= ek + h vθ (s(k), t k) − v⋆(s⋆tk , t k) −
+
+Z tk+1 
+
+> tk
+
+ v⋆(s⋆u, u ) − v⋆(s⋆tk , t k) du. (50) Taking Frobenius norms and applying the triangle inequality, 
+
+∥ek+1 ∥F ≤ ∥ ek∥F + h ∥vθ (s(k), t k) − v⋆(s⋆tk , t k)∥F +
+
+Z tk+1 
+
+> tk
+
+∥v⋆(s⋆u, u ) − v⋆(s⋆tk , t k)∥F du. (51) We bound the two new terms separately. 
+
+Velocity mismatch term. Add and subtract vθ (s⋆tk , t k), and use the Lipschitz property and Eq. (45): 
+
+∥vθ (s(k), t k) − v⋆(s⋆tk , t k)∥F ≤ ∥ vθ (s(k), t k) − vθ (s⋆tk , t k)∥F + ∥vθ (s⋆tk , t k) − v⋆(s⋆tk , t k)∥F (52) 
+
+≤ L∥s(k) − s⋆tk ∥F + ε = L∥ek∥F + ε. (53) 20 Flowette: Flow Matching with Graphette Priors 
+
+Local truncation term. Since v⋆(s, t ) is constant in s and t along the rectified path (indeed, v⋆(s⋆u, u ) = ∆ s := s1 − s0
+
+for all u), we have 
+
+v⋆(s⋆u, u ) − v⋆(s⋆tk , t k) = 0 for all u ∈ [tk, t k+1 ], (54) and therefore the integral term in Eq. (51) vanishes. More generally, if one allows a non-constant but Lipschitz v⋆, that term can be bounded by a constant times h2; in our rectified setting it is exactly zero. 
+
+Putting it together. Substituting the bounds into Eq. (51) yields 
+
+∥ek+1 ∥F ≤ ∥ ek∥F + h(L∥ek∥F + ε) = (1 + Lh )∥ek∥F + hε. (55) We have e0 = s(0) − s⋆ 
+
+> 0
+
+= 0 , and by induction 
+
+∥eK ∥F ≤ hε 
+
+> K−1
+
+X
+
+> j=0
+
+(1 + Lh )j = hε (1 + Lh )K − 1
+
+Lh ≤ εL
+
+ (1 + Lh )K − 1. (56) Since K = 1 /h , the standard estimate (1 + Lh )1/h ≤ eL for h ∈ (0 , 1] gives 
+
+(1 + Lh )K = (1 + Lh )1/h ≤ eL, (57) and hence 
+
+∥eK ∥F ≤ εL (eL − 1) =: C1ε, (58) where C1 depends only on L. If one also keeps the O(h) local truncation term for a non-constant ideal velocity, a standard Gronwall-type argument yields an additional term C2h. Collecting constants into C := C1 + C2 we obtain 
+
+∥s(K) − s1∥F = ∥eK ∥F ≤ C(ε + h), (59) as claimed. Theorem C.5 formalizes the intuition that under our rectified parameterization, the endpoint consistency loss Lend and the velocity loss Lvel together control both the local velocity error ε and the global endpoint error under finite-step integration. 
+
+D. Computational Complexity Analysis 
+
+Let B be the batch size, n the graph size used for flow matching, m the number of edges |E| in the graph, L the number of transformer layers, H the hidden dimension, and K the number of Euler steps. 
+
+FGW alignment. Computing the FGW cost matrix between B noise and B target graphs requires B2 FGW solves. Using a square-loss FGW solver with I iterations, this costs O(B2In 3), plus O(B2m(dx + dz )) to form feature and structure costs; Hungarian matching adds O(B3). These computations can be embarrassingly parallel and precomputed offline once per dataset. 
+
+Flow-matching training. After FGW precomputation, each minibatch contains B matched graph pairs. Edge-aware flow matching costs O(LmH 2 + md f ) per pair, yielding a per-minibatch cost O(B(LmH 2 + md f )) . Training over R epochs and M minibatches therefore costs O(RM B (LmH 2 + md f )) .
+
+Sampling. Euler integration for K steps requires K forward passes of the transformer, with total cost O(Km (LH 2 + df )) .21 Flowette: Flow Matching with Graphette Priors 
+
+E. Generative stories 
+
+E.1. Generative story for graphons, sparsified graphons and graphettes Algorithm 2 Sampling from a graphon W
+
+input n, W
+
+output Adjacency matrix A of sampled graph. 
+
+1: Sample x1, . . . , x niid 
+
+∼ Unif[0 , 1] 
+
+2: for i ∈ { 1, . . . , n } do 
+
+3: for j ∈ { (i + 1) , . . . , n } do 
+
+4: Sample Aij ∼ Bernoulli (W (xi, x j )) 
+
+5: Set Aji = Aij 
+
+6: end for 
+
+7: end for 
+
+8: return A
+
+Algorithm 3 Sampling from a sparsified graphon Wn = ρnW
+
+input n, W , sequence {ρi}i = ( ρ1, ρ 2, . . . , ρ n, . . . )
+
+output Adjacency matrix A of sampled graph. 
+
+1: Get the nth value of {ρi}i denoted by ρn
+
+2: Sample x1, . . . , x niid 
+
+∼ Unif[0 , 1] 
+
+3: for i ∈ { 1, . . . , n } do 
+
+4: for j ∈ { (i + 1) , . . . , n } do 
+
+5: Sample Aij ∼ Bernoulli (ρnW (xi, x j )) 
+
+6: Set Aji = Aij 
+
+7: end for 
+
+8: end for 
+
+9: return A
+
+Algorithm 4 Sampling from a graphette W = ( W, ρ n, f )
+
+input n, W , sequence {ρi}i = ( ρ1, ρ 2, . . . , ρ n, . . . ), graph edit function f (G, · · · ) where · · · denote other function specific parameters 
+
+output Adjacency matrix A of sampled graph. 
+
+// First sample a graph from the sparsified graphon 
+
+1: Get the nth value of {ρi}i denoted by ρn
+
+2: Sample x1, . . . , x niid 
+
+∼ Unif[0 , 1] 
+
+3: for i ∈ { 1, . . . , n } do 
+
+4: for j ∈ { (i + 1) , . . . , n } do 
+
+5: Sample A′ 
+
+> ij
+
+∼ Bernoulli (ρnW (xi, x j )) 
+
+6: Set A′ 
+
+> ji
+
+= A′
+
+> ij
+
+7: end for 
+
+8: end for 
+
+9: Get the graph G′ from the adjacency matrix A′;
+
+// Then enact the graph edit function on it 
+
+10: G = f (G′, · · · );
+
+11: Get the adjacency matrix A of G;
+
+12: return A
+
+22 Flowette: Flow Matching with Graphette Priors 
+
+F. Theorem proofs in Section 4 
+
+Lemma F.1. The graphette W = ( W, ρ n, f ) recovers W when ρn = 1 and f is the identity function. Proof. This results in G being sampled from Wn = W and as f is the identity, no edits are done. For increasing n the resulting graph sequence {Gn}n is dense. 
+
+Lemma F.2. The graphette W = ( W, ρ n, f ) generates dense graphs from a family of graphons {Wn}n when ρn → c > 0
+
+and f is the identity function. Proof. When ρn → c > 0, the graphon family {Wn}n where Wn = ρnW̸ → 0. As graphs sampled from any non-zero graphon are dense we have the result. 
+
+Lemma F.3. The graphette W = ( W, ρ n, f ) recovers the sparsified graphon Wn when ρn → 0 and f is the identity function. Proof. When ρn → 0 and f is the identity, W generates graphs from Wn = ρnW and Wn → 0 as in the sparsified graphon setting. 
+
+Lemma F.4. The graphette W = ( W, ρ n, f ) can generate graphs with stars and isolated edges similar to the graphex construction. Proof. Let ρn = 1 . As illustrated in Veitch & Roy (2019), a star function such as S(x, n ) = Poi( n exp( x + 0 .2)) ,where S(x, n ) edges are added to the node at latent position x can generate stars. An isolated edge function such as 
+
+I(ℓ, n ) = Poi( nℓ ) can add isolated edges at a rate ℓ to the graph. By letting f = I ◦ S, both stars and isolated edges can be added. 
+
+Lemma F.5. The graphette W = ( W, ρ n, f ) with ρn = 1 and an appropriate star function can produce sparse graphs. Proof. Consider a simple deterministic star function S(x, n ) = ⌊αn ⌋, where α > 0. As ρn = 1 , the graph is first sampled from W . Note {G′
+
+> n
+
+}n sampled from W is dense. The star function will add Pni=1 ⌊αn ⌋ ≈ αn 2 new nodes and edges to Gn.After star addition, the edge density of Gn
+
+density (Gn) ≈ m + αn 2
+
+(n + αn 2)2 → 0 ,
+
+making the sequence sparse, where m denotes the edges in G′ 
+
+> n
+
+before enacting the star function. For stochastic star functions such as S(x, n ) = Poi( αn ) or S(x, n ) = Poi( αn exp( bx − c)) the result holds with high probability for α, b > 0 and can be shown using concentration inequalities. 
+
+Lemma F.6. The graphette W = ( W, ρ n, f ) with ρn = 1 and ring function R(p, c ) (GEF 3) produces dense graphs with high probability. Proof. The graph sequence {G′
+
+> n
+
+}n is sampled from Wn = W and is dense. Suppose G′ 
+
+> n
+
+has n nodes and m edges. Then the expectation of the number of nodes to be replaced by rings is np . These nodes will be replaced by npc nodes resulting in an increase in node count from n to n + np (c − 1) in expectation. As a ring of size c has c edges, the edge count increases from m to m + npc in expectation. Using the first order Taylor approximation of edge density we obtain 
+
+E (density (Gn)) ≈ m + npc  
+
+> 12
+
+(n + np (c − 1))( n + np (c − 1) − 1) .
+
+As graphs sampled from W are dense, 2m/n (n − 1) → ρ̸ = 0 . This implies that E (density (Gn)) converges to a non-zero constant. In expectation the graphs {Gn}n are dense. Using concentration bounds we can show that the probability of the number of nodes and edges in Gn being away from their expectations is small. Thus, we can show that 
+
+P (density (Gn) < E (density (Gn)) − ϵ) is small giving us the result. 
+
+Lemma F.7. The graphette W = ( W, ρ n, f ) with ρn → 0 and ring function R(xi, p, c ) (graph edit function 4.2.3) with 
+
+C = {c} produces sparse graphs for c ≥ 3.
+
+23 Flowette: Flow Matching with Graphette Priors 
+
+Proof. Consider a connected G′
+
+> n
+
+. Suppose G′ 
+
+> n
+
+has n nodes and m edges and suppose a graph edit replaces k nodes in a graph G′ 
+
+> n
+
+with rings of size c resulting in graph Gn. Then Gn, the edited graph has n − k + kc nodes and m + kc edges. Thus, the new edge density is density (Gn) = m + kc  
+
+> 12
+
+(n + k(c − 1))( n + k(c − 1) − 1) .
+
+By computing density (G′
+
+> n
+
+) − density (Gn) we can show that density (Gn) ≤ density (G′
+
+> n
+
+)
+
+for c ≥ 3 showing that the edge density decreases by the addition of rings of size c. As graphs sampled from Wn = ρnW
+
+are sparse we obtain the result. 
+
+Theorem 4.5. Let W = ( W, ρ n, f ) denote a graphette and let G′ ∼ G(n, W, ρ n) and G ∼ f (G′) where f ∈ { R, S } (GEF 3, 4) with ring size c > 3 for R. Suppose |V (G′)| = n and |V (G)| = n + m. Then for any triangle-covered F ∈ F ,
+
+hom( F, G ) = hom( F, G ′) and t(F, G ) = n|V (F )|   
+
+> (n+m)|V(F)|
+
+t(F, G ′).Proof. As G′ ⊆ G we have Hom (F, G ′) ⊆ Hom (F, G ). Next we show that Hom (F, G ) ⊆ Hom (F, G ′). Let h ∈
+
+Hom (F, G ).As F ∈ F , for every u ∈ V (F ) there exists {v, w } ∈ V (F ) such that {uv, vw, wu } ∈ E(F ). As h : F → G is a homomorphism, we have {h(u)h(v), h (v)h(w), h (w)h(u)} ∈ E(G). This forms a triangle in G. However, the star function S only adds degree-1 vertices to G′, resulting in no new triangles. Similarly, for the ring function R with c > 3, no new triangles are added. Therefore, this triangle is present in G′ making h ∈ Hom (F, G ′). Thus, Hom (F, G ) ⊆ Hom (F, G ′)
+
+making Hom (F, G ) = Hom (F, G ′) and hom( F, G ′) = hom( F, G ). As 
+
+t(F, G ) = hom( F, G )(n + m)|V (F )| and t(F, G ′) = hom( F, G )
+
+n|V (F )|
+
+we get the result. 
+
+Theorem F.8. Let W = ( W, ρ n, f ) denote a graphette and let G′ ∼ G(n, W, ρ n) and G ∼ f (G′) where f = S denotes the star function (GEF 4). Suppose |V (G′)| = n and |V (G)| = n + m. Then we have the following: 1. hom( , G ) = hom( , G ′) + m and t( , G ) = 1 
+
+2. hom( , G ) = hom( , G ′) + 2 m and t( , G ) = 2( |E(G′)|+m)(n+m)2 = n2
+
+> (n+m)2
+
+
+
+1 + m
+
+> |E(G′)|
+
+
+
+t( , G ′)
+
+Proof. 1. A vertex can be mapped to any vertex in graph G making hom( , G ) = |V (G)| = n + m and hom( , G ′) = 
+
+|V (G′)| = n giving the first equality. As t(F, G ) = hom( F,G )    
+
+> |V(G)||V(F)|
+
+we get 
+
+t( , G ) = n + m
+
+|V (G)| = 1 = n
+
+|V (G′)| = t( , G ′) .
+
+2. Adding stars using S adds m vertices and m edges to G′. Thus, |E(G)| = |E(G′)| + m. An edge can be mapped to any edge in graph G in two ways giving hom( , G ) = 2 |E(G)| = 2( |E(G′)| + m) = hom( , G ′) + 2 m. The homomorphism density 
+
+t( , G ′) = 2|E(G′)|
+
+n2 , (60) 
+
+t( , G ) = 2|E(G)|
+
+(n + m)2 = 2( |E(G′)| + m)(n + m)2 (61) By dividing equation (60) from equation (61) we get the result. 24 Flowette: Flow Matching with Graphette Priors 
+
+Theorem F.9. Let W = ( W, ρ n, f ) denote a graphette and let G′ ∼ G(n, W, ρ n) and G ∼ f (G′) where f = R denotes the ring function (GEF 3) with ring size c > 3 for c ∈ C . Suppose R adds k rings and |V (G′)| = n and |V (G)| = n + m.Then we have the following: 1. hom( , G ) = hom( , G ′) + m and t( , G ) = 1 
+
+2. hom( , G ) = hom( , G ′) + 2( m + k) and t( , G ) = 2( |E(G′)|+m+k)(n+m)2 = n2
+
+> (n+m)2
+
+
+
+1 + m+k
+
+> |E(G′)|
+
+
+
+t( , G ′)
+
+Proof. Part 1 is the same as in Theorem F.8. For part 2 note that a ring has the same number of vertices and edges. If k rings are added to G′ and the number of vertices increased by m then the edges would increase by m + k as R connects each ring to a node in G′. The rest is the same as in Theorem F.8. 25 Flowette: Flow Matching with Graphette Priors 
+
+G. Algorithms 
+
+Algorithm 5 BATCH FGW 
+
+input Noise graphs G(0) = {Gi
+
+> 0
+
+}Bi=1 ; target graphs G(1) = {G(1)  
+
+> j
+
+}Bj=1 ; pretrained encoder fenc ; FGW tradeoff α ∈ [0 , 1] .
+
+output Cost matrix D ∈ RB×B ; couplings T ∈ RB×B .
+
+1: Initialize D ← 0B×B
+
+2: Initialize T ← ∅ // optional dictionary/map for couplings 
+
+3: for i = 1 to B do 
+
+4: for j = 1 to B do 
+
+5: (Dij , T ij ) ← FGW α
+
+
+
+Gi
+
+> 0
+
+, G (1)  
+
+> j
+
+; fenc 
+
+
+
+6: end for 
+
+7: end for 
+
+8: return D and T
+
+Algorithm 6 FLOW MATCHING UPDATE 
+
+input Coupled pairs P = {(Gi
+
+> 0
+
+, G π⋆(i)1 )}Bi=1 ; velocity field parameters θ; (node budget); (stateful AdamW) 
+
+output Updated velocity Field (GNN Transformer) parameters θ.
+
+1: L ← 0, m ← 0
+
+2: for all (G0, G 1) ∈ P do 
+
+3: if |V (G0)| = 0 or |V (G1)| = 0 then 
+
+4: continue 
+
+5: end if 
+
+6: n ← min  |V (G0)|, |V (G1)|, node budget 
+
+7: (A0, X 0, E 0) ← GRAPH (G0, n )
+
+8: (A1, X 1, E 1) ← GRAPH (G1, n )
+
+9: t ∼ U [0 , 1] 
+
+10: At ← (1 − t)A0 + tA 1
+
+11: Xt ← (1 − t)X0 + tX 1
+
+12: Et ← (1 − t)E0 + tE 1
+
+13: ∆A ← (A1 − A0)
+
+14: ∆X ← X1 − X0
+
+15: ∆E ← E1 − E0
+
+16: (vA, v X , v E ) ← vθ (At, X t, E t, t )
+
+// Flow-matching velocity loss 
+
+17: ℓvel ← ∥ vA − ∆A∥22 + λx∥vX − ∆X∥22 + λe∥vE − ∆E∥22
+
+// Endpoint consistency (rectified-flow identity) 
+
+18: bA1 ← At + (1 − t)vA
+
+19: bX1 ← Xt + (1 − t)vX
+
+20: bE1 ← Et + (1 − t)vE
+
+21: ℓend ← ∥ bA1 − A1∥22 + λx∥ bX1 − X1∥22 + λe∥ bE1 − E1∥22
+
+22: ℓ ← ℓvel + β1ℓend + β2ℓval + β3ℓatom 
+
+23: L ← L + ℓ
+
+24: m ← m + 1 
+
+25: end for 
+
+26: if m > 0 then 
+
+27: L ← L /m 
+
+28: Update θ via AdamW step using ∇θ L and η
+
+29: end if 
+
+30: return θ
+
+26 Flowette: Flow Matching with Graphette Priors 
+
+Algorithm 7 Euler Integration of the Learned Flow 
+
+input Velocity field vθ ; initial state (A0, X 0, E 0); number of steps K; non-negativity activation function σ(·).
+
+output Final state (A1, X 1, E 1).
+
+1: Set (A ← A0, X ← X0, E ← E0)
+
+2: ∆t ← 1/K 
+
+3: for k = 0 to K − 1 do 
+
+4: t ← k/K 
+
+5: (vA, v X , v E ) ← vθ (A, X, E, t )
+
+6: A ← A + ∆ t v A
+
+7: X ← X + ∆ t v X
+
+8: E ← E + ∆ t v E
+
+9: end for 
+
+10: A ← σ(A)
+
+11: A ← 12 (A + A⊤)
+
+12: return (A, X, E )
+
+Algorithm 8 ATTACH DISJOINT RINGS 
+
+input Graph G = ( V, E ); node budget n; ring counts R = {(s, c s)}.
+
+output Graph eG with |V ( eG)| ≤ n.
+
+1: eG ← G
+
+2: if R = ∅ then 
+
+3: return eG
+
+4: end if 
+
+5: for all (s, c s) ∈ R do 
+
+6: for r = 1 to cs do 
+
+7: rem ← n − | V ( eG)|
+
+8: if rem ≤ 0 then 
+
+9: break 
+
+10: end if 
+
+11: s′ ← min( s, rem )
+
+12: if s′ < 3 then 
+
+13: continue 
+
+14: end if 
+
+15: H ← Cycle( s′) // fresh cycle component 
+
+16: eG ← eG ⊎ H
+
+17: Sample v ∼ Unif  V ( eG) \ V (H), w ∼ Unif  V (H)
+
+18: E( eG) ← E( eG) ∪ { (v, w )} // attach by one edge 
+
+19: end for 
+
+20: end for 
+
+21: return eG
+
+27 Flowette: Flow Matching with Graphette Priors 
+
+Algorithm 9 Graphex Sampling with Ring Injection 
+
+input Graphon matrix W ∈ [0 , 1] m×m; node budget n; sparsity factor ρ (or None ); stability ε > 0; ring-size counts R
+
+(e.g., {(5 , c 5), (6 , c 6)}); max attempts T .
+
+output Undirected graph G = ( V, E ) with |V | ≤ n.
+
+// Sparsified-graphon sampling (graphex base) 
+
+1: ¯W ← 1
+
+> m2
+
+Pma,b =1 Wab 
+
+2: if ρ = None then 
+
+3: ρ ← 1¯W n + ε
+
+4: end if 
+
+5: W ′ ← ρ W 
+
+6: Sample u1, . . . , u niid 
+
+∼ Unif[0 , 1] 
+
+7: Map to indices ℓi ← min( m − 1, ⌊mu i⌋) for i ∈ [n]
+
+8: Initialize adjacency A ← 0 ∈ { 0, 1}n×n
+
+9: for 1 ≤ i < j ≤ n do 
+
+10: pij ← W ′
+
+> ℓi,ℓ j
+
+11: Sample Aij ∼ Bernoulli( pij ); set Aji ← Aij 
+
+12: end for 
+
+13: G ← GRAPH FROM ADJ (A)
+
+// Keep largest connected component and enforce node budget 
+
+14: C⋆ ← arg max C∈CC( G) |C|
+
+15: G ← G[C⋆]
+
+16: if |V (G)| > n then 
+
+17: Sample S ⊆ V (G) uniformly with |S| = n; G ← G[S]
+
+18: end if 
+
+// Budgeted disjoint ring injection (attach new components) 
+
+19: G ← ATTACH DISJOINT RINGS (G, n, R)
+
+// Final safety check 
+
+20: if |V (G)| > n then 
+
+21: Sample S ⊆ V (G) uniformly with |S| = n; G ← G[S]
+
+22: end if 
+
+23: return G
+
+H. Details of Empirical Evaluation 
+
+H.1. Discretisation and chemical validity. 
+
+At sampling time only, the final continuous output is deterministically mapped to a discrete molecular graph: atom and bond types are decoded via argmax over categorical logits, the adjacency matrix is interpreted as an edge-confidence score, and chemical feasibility is ensured through valence-aware pruning that removes low-confidence bonds when valence constraints are violated. Importantly, this projection is applied exclusively at inference and does not affect training or gradient flow. In contrast to diffusion-based molecular generators such as DiGress (Vignac et al., 2022) and DisCo (Xu et al., 2024a), which typically rely on post-hoc validity checks or rejection of invalid samples after denoising, our approach guarantees chemical validity through a deterministic terminal projection without altering the learned dynamics or discarding samples. 
+
+H.2. Evaluation Metrics for Synthetic Graph Evaluation 
+
+Generation quality is assessed using different metrics: (1) degree distribution (Deg.), (2) clustering coefficient (Clus.), and (3) orbit count (Orbit) statistics. For all metrics, we quantify the discrepancy between the generated and test distributions using Maximum Mean Discrepancy (MMD) (Gretton et al., 2012; Martinkus et al., 2022; Bergmeister et al., 2023; Qin et al., 2025). These discrepancies are summarized using the Ratio metric (lower is better). We also report generation quality using validity (V), uniqueness (U), novelty (N), and their combined V.U.N. metric. Following prior work (Qin et al., 2025), we generate the same number of graphs as in the test set (40 samples) to enable a fair comparison of graph statistic distributions. We evaluate generative quality by comparing the distributions of key graph statistics computed on generated samples against 28 Flowette: Flow Matching with Graphette Priors 
+
+those of the test set. Specifically, we consider degree distributions, clustering coefficients, and orbit counts. Distributional discrepancies are quantified using the Maximum Mean Discrepancy (MMD). Specifically, we first compute MMD values between the training and test sets for the same statistics, establishing a reference level of distributional shift. We then compute MMD values between the generated and test sets. The Ratio is defined as the average generated:test MMD normalized by the average training:test MMD, providing a scale-free measure of how closely the generated graphs match the test distribution. Rather than reporting absolute MMD values, we follow a normalised evaluation protocol that reports relative error ratios. For a given statistic, we compute 
+
+r = MMD 2 Ggen , Gtest 
+
+
+
+MMD 2 Gtrain , Gtest 
+
+ , (62) where Ggen , Gtrain , and Gtest denote the generated, training, and test graph sets, respectively. The denominator corresponds to the reference training–test discrepancy reported in prior work (Vignac et al., 2022). Note that throughout, we use MMD 2,consistent with the convention adopted in DiGress, where the squared MMD is reported. 
+
+H.3. Hyperparameter settings for Synthetic Graph Evaluation 
+
+For synthetic graph benchmarks, we use a simplified training objective by setting βval = 0 and βatom = 0 , thereby excluding chemistry-specific regularization terms that are not applicable to purely structural graph data. We optimize all models using the AdamW optimizer (Loshchilov & Hutter, 2019). For synthetic graph benchmarks, models are trained for 100 epochs with a learning rate of 1e−3, hidden dimension H = 128 , and batch size B = 32 . We set the βend = 1 .0 and λx = λe = 0 .5,and use an FGW trade-off parameter α = 0 .5. Euler integration is performed with K = 50 steps at sampling time. For the network architecture, we use L = 3 attention layers for the Tree and Ego-small datasets, and L = 4 attention layers for the SBM dataset. 
+
+H.4. Tables of results for syntehtic datasets 
+
+We compare our method against eleven baselines: GRAN (Liao et al., 2019), SPECTRE (Martinkus et al., 2022), DiGress (Vignac et al., 2022), EDGE (Chen et al., 2023), BwR (Diamant et al., 2023), BiGG (Dai et al., 2020), GraphGen (Goyal et al., 2020), HSpectre (Bergmeister et al., 2023), GruM (Jo et al., 2024), CatFlow (Eijkelboom et al., 2024a), DisCo (Xu et al., 2024b), Cometh-PC (Siraudin et al., 2024), and DeFoG (Qin et al., 2025). 
+
+Table 7. Generation performance on SBM synthetic graphs.                                                                                                          
+
+> Model Deg. ↓Clus. ↓Orbit ↓Valid ↑Unique ↑Novel ↑V.U.N ↑
+> SPECTRE (Martinkus et al., 2022) 0.0015 0.0521 0.0412 52.5 100.0 100.0 52.5 DiGress (Vignac et al., 2022) 0.0018 0.0485 0.0415 60.0 100.0 100.0 60.0 BwR (Diamant et al., 2023) 0.0478 0.0638 0.1139 7.5 100.0 100.0 7.5 HSpectre (Bergmeister et al., 2023) 0.0141 0.0528 0.0809 75.0 100.0 100.0 75.0 GruM (Jo et al., 2024) 0.0015 0.0589 0.0450 ---85.0 CatFlow (Eijkelboom et al., 2024a) 0.0012 0.0498 0.0357 ---85.0 DisCo (Xu et al., 2024b) 0.0006 0.0266 0.0510 66.2 100.0 100.0 66.2 Cometh (Siraudin et al., 2024) 0.0020 0.0498 0.0383 75.0 100.0 100.0 75.0 DeFoG (Qin et al., 2025) 0.0006 0.0517 0.0556 90.0 90.0 90.0 90.0 G2PT (Chen et al., 2025) 0.0035 0.0120 0.0007 ---100.0
+> Flowette (Ours) 0.0076 ±0.0035 0.0508 ±0.01 0.0000 ±0.0 100.0 ±0.0 100.0 ±0.0 100.0 ±0.0 100.0 ±0.0
+
+H.5. Evaluation Metrics for Molecular Graph Evaluation 
+
+We evalute generative performance using a collection of complementary molecular metrics (Vignac et al., 2022; Qin et al., 2025). Validity reports the fraction of generated molecules that satisfy basic chemical constraints such as allowable valences. Uniqueness quantifies how many generated molecules are structurally distinct, as determined by non-isomorphic SMILES representations. Novelty measures the proportion of samples that do not appear in the training set. To evaluate distributional similarity, we report the Similarity to Nearest Neighbor (SNN), which captures how close each generated molecule is to its most similar training example using Tanimoto similarity. Scaffold similarity (Scaf.) compares the distributions of Bemis–Murcko core structures. while KL divergence (KL div.) measures discrepancies between generated and reference distributions of selected physicochemical descriptors. Neighborhood Subgraph Pairwise Distance Kernel (NSPDK) evaluates 29 Flowette: Flow Matching with Graphette Priors 
+
+Table 8. Generation performance on Tree synthetic graphs. 
+
+Model Deg. ↓ Clus. ↓ Orbit ↓ Valid ↑ Unique ↑ Novel ↑ V.U.N ↑
+
+GRAN (Liao et al., 2019) 0.1884 0.0080 0.0199 0.0 100.0 100.0 0.0 DiGress (Vignac et al., 2022) 0.0002 0.0000 0.0000 90.0 100.0 100.0 90.0 BwR (Diamant et al., 2023) 0.0016 0.1239 0.0003 0.0 100.0 100.0 0.0 EDGE (Chen et al., 2023) 0.2678 0.0000 0.7357 0.0 7.5 100.0 0.0 BiGG (Dai et al., 2020) 0.0014 0.0000 0.0000 100 87.5 50.0 75.0 GraphGen (Goyal et al., 2020) 0.0105 0.0000 0.0000 95.0 100.0 100.0 95.0 HSpectre (Bergmeister et al., 2023) 0.0004 0.0000 0.0000 82.5 100.0 100.0 82.5 DeFoG (Qin et al., 2025) 0.0002 0.0000 0.0000 96.5 100.0 100.0 96.5 G2PT (Chen et al., 2025) 0.0020 0.0000 0.0000 - - - 99.0 Flowette (Ours) 0.0005 ± 0.002 0.0000 ± 0.0 0.0000 ± 0.0 100.0 ± 0.0 100.0 ± 0.0 100.0 ± 0.0 100.0 ± 0.0 
+
+Table 9. Generation performance on Ego-small synthetic graphs.                                     
+
+> Model Deg. ↓Clus. ↓Orbit ↓
+> GraphRNN (You et al., 2018) 0.0768 1.1456 0.1087 GRAN (Liao et al., 2019) 0.5778 0.3360 0.0406 GraphCNF (Lippe & Gavves, 2020) 0.1010 0.7654 0.0820 GDSS (Jo et al., 2022a) 0.8189 0.6032 0.3315 DiscDDPM (Haefeli et al., 2022) 0.4613 0.1681 0.0633 DiGress (Vignac et al., 2022) 0.0708 0.0092 0.1205 EDGE (Chen et al., 2023) 0.0040 0.0040 0.0008 Flowette (Ours) 0.0435 ±0.004 0.0098 ±0.0025 0.0000 ±0.0
+
+similarity at the level of local graph substructures by comparing distributions of rooted subgraphs and their pairwise distances, thereby capturing higher-order structural consistency between generated and reference molecular graphs. Let Mgen = {mi}Ni=1 denote the set of generated molecules and Mtrain the training set. 
+
+Validity. Validity measures the fraction of generated molecules that satisfy basic chemical constraints, such as permissible atom valences and bond types. Formally, 
+
+Validity = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+1[mi is chemically valid ] , (63) where 1[·] denotes the indicator function and chemical validity is assessed using RDKit sanitization rules. 
+
+Uniqueness. Uniqueness quantifies the proportion of structurally distinct molecules among valid samples, determined via canonical SMILES representations: 
+
+Uniqueness = |Unique( Mvalid gen )||M valid gen | . (64) 
+
+Novelty. Novelty measures the fraction of generated molecules that do not appear in the training set: 
+
+Novelty = 1
+
+|M valid gen |
+
+X
+
+> m∈M valid gen
+
+1[m / ∈ M train ] . (65) 
+
+Similarity to Nearest Neighbour (SNN). SNN measures how close each generated molecule is to its most similar reference molecule in fingerprint space. Let ˜ϕ(·) denote a fixed molecular fingerprint map, Mgen the set of generated molecules, and 
+
+Mref the reference (training) set. We define 
+
+SNN = 1
+
+|M gen |
+
+X
+
+> m∈M gen
+
+max 
+
+> m′∈M ref
+
+Tanimoto   ˜ϕ(m), ˜ϕ(m′), (66) where the Tanimoto similarity is computed over binary fingerprints and the maximum is taken over all reference molecules. 
+
+Scaffold Similarity 
+
+30 Flowette: Flow Matching with Graphette Priors 
+
+Scaffold similarity (Scaf.). Scaffold similarity evaluates how well the distribution of molecular scaffolds is preserved in generated samples. Let S denote the union of Bemis–Murcko scaffolds observed in the reference and generated sets. We construct scaffold count vectors 
+
+r = ( rs)s∈S , g = ( gs)s∈S ,
+
+where rs and gs denote the number of molecules containing scaffold s in the reference and generated sets, respectively (with missing entries treated as zero) (Polykovskiy et al., 2020). Scaffold similarity is defined as the cosine similarity between these count vectors: 
+
+Scaf . = ⟨r, g⟩∥r∥2 ∥g∥2
+
+. (67) This metric captures agreement between scaffold frequency distributions while being invariant to absolute dataset size. 
+
+Physicochemical KL divergence. To assess distributional fidelity at the level of physicochemical properties, we follow standard GuacaMol-style benchmarks and compare descriptor distributions between training and generated molecules. Let 
+
+D denote a fixed set of scalar descriptors, e.g. Bertz complexity, logP, molecular weight, topological polar surface area, and several integer-valued counts (H-bond donors/acceptors, rotatable bonds, aliphatic and aromatic rings) (Brown et al., 2019). For each descriptor j ∈ D and molecule x, we write dj (x) ∈ R for its value. Given a reference (training) set Xref and a generated set Xgen , we construct empirical distributions of dj under each set. For integer-valued descriptors, we estimate discrete histograms 
+
+p(j)ref (k) = 1
+
+|X ref |
+
+X
+
+> x∈X ref
+
+1{dj (x) = k}, p(j)gen (k) = 1
+
+|X gen |
+
+X
+
+> x∈X gen
+
+1{dj (x) = k},
+
+where k ranges over a finite set of bins. The KL divergence for descriptor j is then 
+
+D(j)KL = X
+
+> k
+
+p(j)ref (k) log p(j)ref (k)
+
+p(j)gen (k) . (68) For continuous-valued descriptors, we estimate densities p(j)ref (z) and p(j)gen (z) (e.g. via kernel density estimation or smoothed histograms) and define 
+
+D(j)KL =
+
+Z
+
+p(j)ref (z) log p(j)ref (z)
+
+p(j)gen (z) dz, (69) which in practice is approximated numerically. 
+
+Aggregate KL score (KL div.). The overall physicochemical KL metric aggregates these divergences across all descriptors and the internal-similarity distribution. Let J denote the index set consisting of all descriptor dimensions together with the internal-similarity term. We report either the average KL, 
+
+KL physchem = 1
+
+|J | 
+
+X
+
+> j∈J
+
+D(j)KL , (70) or the corresponding similarity score 
+
+Score physchem = 1
+
+|J | 
+
+X
+
+> j∈J
+
+exp  −D(j)KL 
+
+, (71) where smaller KL values (or larger scores) indicate closer agreement between the generated and training distributions of physicochemical descriptors and internal similarities. 
+
+Neighborhood Subgraph Pairwise Distance Kernel (NSPDK). NSPDK evaluates similarity at the level of local graph substructures by comparing distributions of rooted subgraphs and their pairwise distances. Given feature maps ϕ(·) induced by the kernel, the similarity between generated and reference sets is measured via a maximum mean discrepancy (MMD): 
+
+NSPDK = 1
+
+|M gen |
+
+X
+
+> m∈M gen
+
+ϕ(m) − 1
+
+|M train |
+
+X
+
+> m∈M train
+
+ϕ(m)
+
+> 22
+
+. (72) 31 Flowette: Flow Matching with Graphette Priors 
+
+NSPDK captures higher-order structural consistency beyond local degree statistics, making it particularly sensitive to discrepancies in functional groups and subgraph arrangements. 
+
+H.6. Hyperperameter setup for molecular graph generation 
+
+For molecular graph benchmarks, we optimize all models using the training objective defined in Eq. (8) and employ the AdamW optimizer (Loshchilov & Hutter, 2019). All models are trained for 500 epochs with a learning rate of 1e−3, hidden dimension H = 128 , batch size B = 32 , and loss weights λx = λe = 0 .5. We set the FGW trade-off parameter to α = 0 .5.For the QM9, ZINC250K, and Guacamol datasets, we use βval = 0 .5, βatom = 0 .5, and βend = 1 .0. For the MOSES dataset, we set βval = 0 .3, βatom = 0 .4, and βend = 0 .8. During sampling, Euler integration is performed with K = 200 
+
+steps. Regarding model architecture, we use L = 5 attention layers for QM9, ZINC250K, and GuacaMol, and L = 4 
+
+attention layers for MOSES. Following existing evaluation protocols (Qin et al., 2025), we generate 10000 graphs for QM9, ZINC250K, and Guacamol, and 25000 graphs for MOSES at inference time to ensure fair comparison. 
+
+H.7. Ablation Analysis of Regularization Terms 
+
+To evaluate the role of each component in the Flowette training objective, we conduct an ablation study by selectively removing its key elements. • NoReg/ only Lvel : This variant removes all regularization terms and only keeps Lvel .• NoValenceReg/ no Lval : This variant removes only the regularization term Lval .• NoAtomReg/ no Latom : This variant removes only the regularization term Latom .• NoEndReg/ no Lend : This variant removes only the regularization term Lend .• NoChemReg/ only Lvel and Lend : This variant removes both chemistry-aware regularization terms Lval and Latom .Table 6 reports an ablation study of the individual components of the Flowette training objective in Eq. (8) on QM9 and ZINC250K. Overall, the results demonstrate that each term plays a distinct and complementary role, and that strong generative performance emerges only when all components are jointly enforced. 
+
+Effect of removing regularization (NoReg). Training with Lvel alone leads to a substantial drop in validity on both datasets, indicating that unconstrained continuous transport is insufficient for molecular graph generation. While the learned flow interpolates between noise and data, finite-step integration frequently produces chemically invalid structures, highlighting the need for additional structural supervision. 
+
+Endpoint consistency (NoEndReg). Removing Lend significantly degrades validity and uniqueness, confirming that locally accurate velocity predictions do not reliably compose into globally coherent transport trajectories. Endpoint supervision is therefore critical for stabilizing continuous-time generation under finite-step solvers. 
+
+Chemistry-aware regularization. The chemistry-aware terms primarily govern feasibility and diversity. Removing valence supervision ( NoValenceReg ) causes a pronounced validity drop, especially on ZINC250K, demonstrating the importance of soft valence constraints for preventing over-bonding. In contrast, removing atom-type marginal matching ( NoAtomReg )has a milder effect on validity but consistently reduces uniqueness and novelty, indicating its role in promoting semantic diversity rather than enforcing hard constraints. Removing both terms ( NoChemReg ) yields intermediate performance, confirming that the two regularizers provide complementary signals. Overall, endpoint consistency and valence regularization are the most critical components for stable and chemically valid generation, while atom-type marginal matching primarily improves diversity. Velocity matching alone is insufficient, and strong performance emerges only when all components are jointly enforced. 32 Flowette: Flow Matching with Graphette Priors 
+
+I. Graphs generated by Flowette 
+
+Figure 2. Graphs generated by Flowette for the Tree synthetic datasets. 
+
+33 Flowette: Flow Matching with Graphette Priors 
+
+Figure 3. Graphs generated by Flowette for the SBM synthetic datasets. 
+
+34 Flowette: Flow Matching with Graphette Priors 
+
+Figure 4. Graphs generated by Flowette for the Ego-small synthetic datasets. 
+
+35 Flowette: Flow Matching with Graphette Priors 
+
+Figure 5. Graphs generated by Flowette for the ZINC250k molecular datasets. 
+
+Figure 6. Graphs generated by Flowette for the QM9 molecular datasets. 
+
+36 Flowette: Flow Matching with Graphette Priors 
+
+Figure 7. Graphs generated by Flowette for the Guacamol molecular datasets. 
+
+Figure 8. Graphs generated by Flowette for the MOSES molecular datasets. 
+
+37
