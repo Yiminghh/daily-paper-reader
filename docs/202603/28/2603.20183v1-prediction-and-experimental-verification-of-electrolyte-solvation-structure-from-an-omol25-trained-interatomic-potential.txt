@@ -1,0 +1,421 @@
+Title: Prediction and Experimental Verification of Electrolyte Solvation Structure from an OMol25-Trained Interatomic Potential
+
+URL Source: https://arxiv.org/pdf/2603.20183v1
+
+Published Time: Mon, 23 Mar 2026 01:18:05 GMT
+
+Number of Pages: 32
+
+Markdown Content:
+Prediction and Experimental Verification of Electrolyte Solvation Structure from an OMol25-Trained Interatomic Potential 
+
+Nitesh Kumar a,b , Jianwei Lai a,c,g , Casey S. Mezerkor a,d,f , Jiaqi Wang a,d , Kamila M. Wiaderek a,e , J. David Bazak a,f , Samuel M. Blau a,g,h ,∗ and Ethan J. Crumlin a,c,i † 
+
+> a
+
+Energy Storage Research Alliance, Argonne National Laboratory, Lemont, Illinois 60439, USA  
+
+> b
+
+Materials Sciences Division, Lawrence Berkeley National Laboratory, Berkeley, California, USA  
+
+> c
+
+Chemical Sciences Division, Lawrence Berkeley National Laboratory, Berkeley, California, USA  
+
+> d
+
+Department of Chemistry and Biochemistry and the Oregon Center for Electrochemistry, University of Oregon, Eugene, Oregon 97403, USA  
+
+> e
+
+X-ray Science Division, Argonne National Laboratory, Lemont, Illinois 60439, USA  
+
+> f
+
+Physical and Computational Sciences Directorate, Pacific Northwest National Laboratory, Richland, Washington 99354, USA  
+
+> g
+
+Energy Technologies Area, Lawrence Berkeley National Laboratory, Berkeley, California, USA  
+
+> h
+
+Bakar Institute of Digital Materials for the Planet, University of California, Berkeley, California, USA and  
+
+> i
+
+Advanced Light Source, Lawrence Berkeley National Laboratory, Berkeley, California, USA 
+
+(Dated: March 23, 2026) A molecular-level understanding of electrolyte solvation structure and ion–ion correlations is critical to developing next-generation battery chemistries. Atomistic simulation capabilities with sufficient accuracy, speed, and transferability to deliver reliable structural insights while avoiding arduous system-specific re-parameterization are thus highly desirable. Machine learning interatomic potentials (MLIPs) trained on large, chemically diverse datasets are revolutionizing computational chemistry, enabling molecular dynamics simulations of battery electrolytes with near-DFT accuracy over 10,000 × faster than DFT. While previous MLIP training datasets with suitable elemental cov-erage for electrolytes have been based on inorganic materials, the Open Molecules 2025 (OMol25) dataset provides large-scale molecular DFT MLIP training data with broad elemental coverage and specifically samples tens of millions of electrolyte configurations. Here, we integrate computational modeling with experimental validation to systematically assess the ability of large-scale MLIPs pre-trained on materials data or on OMol25 to accurately resolve nanoscale structural organization and ion-solvation characteristics in Na-ion battery electrolytes across diverse physicochemical conditions and compositional regimes. We find that the OMol25-trained Universal Model of Atoms (UMA-OMol) predicts experimentally measured densities and X-ray structure factors in substantially bet-ter agreement compared to state-of-the-art models trained only on inorganic materials data. Using UMA-OMol, we further analyze systematic trends in solvation structure as a function of cation iden-tity, anion chemistry, salt concentration, and solvent topology. We observe that increasing system temperature amplifies the heterogeneity within the solvation environment, perturbing cation–solvent interactions and promoting the formation of contact ion pairs (CIPs). Moreover, subtle variations in the solvent topology of glyme-based electrolytes cause pronounced changes in ion-correlations and solvation structure. The experimental agreement and microscopic insights shown here position OMol25-trained MLIPs as a practical route to predictive, high-throughput electrolyte simulations beyond the limits of classical force fields and direct DFT molecular dynamics, serving as a powerful tool for accelerating the design of next-generation Na-ion battery electrolytes and beyond. 
+
+Keywords: sodium-ion battery, machine learning interatomic potentials, MLIPs, OMol25, UMA-OMol, molecular dynamics, electrolyte structure 
+
+Accurately capturing microscopic solvation structure is crucial to predicting macroscopic properties in com-plex liquid mixtures like battery electrolytes. Predictive atomistic simulations of electrolyte solvation structure could dramatically accelerate electrolyte discovery and additive engineering via high-throughput in-silico screen-ing or by elucidating mechanistic insight that enables ra-tional chemical design.[1–4] Over the past several decades, the pursuit of chem-
+
+> ∗Electronic address: smblau@lbl.gov
+> †Electronic address: ejcrumlin@lbl.gov
+
+ically accurate molecular dynamics (MD) for complex, multicomponent systems has been constrained by a fun-damental trade-off between accuracy and scale.[5] Ab-initio MD captures the delicate interplay of covalent and non-covalent interactions with quantum-mechanical rigor, but its prohibitive computational cost limits ac-cessible length and time scales to regimes far from those relevant to mesoscale structure and transport.[6] Clas-sical and polarizable force fields, while computationally efficient, demand labor-intensive parameterization and are often anchored to a narrow domain of validity, re-lying on empirical adjustments that cannot fully capture the many-body effects, electronic polarization, and sub-tle free-energy landscapes of chemically heterogeneous 
+
+> arXiv:2603.20183v1 [physics.chem-ph] 20 Mar 2026
+
+2environments.[7] Recent advances in machine learning interatomic po-tentials (MLIPs) trained on density functional theory (DFT) data offer a compelling path forward: near-
+
+ab-initio accuracy at a fraction of the computational cost, with the flexibility to study both covalent and non-covalent structure in response to the local chemi-cal environment.[8, 9] Yet, as with any ML model, their fidelity is ultimately bounded by the size, chemical diver-sity, and consistency of the training data. While MLIPs trained on small, system-specific datasets can yield novel insight into individual systems of interest,[10–12] the time and resources required to generate DFT training data and train models is often onerous, and the result-ing trained models are not transferable. In contrast, MLIPs pre-trained on very large, diverse datasets seek to provide sufficiently accurate predictions across chemical space to obviate the need for system-specific data gener-ation and model training.[13, 14] However, widely used large-scale molecular DFT datasets like SPICE/2[15, 16] and AIMNet2 have little to no coverage of critical met-als for battery electrolytes (e.g. Li, Na, Zn) while electrolyte-specific works like BAMBOO[17] and Wang et al.[18] focus almost exclusively on Li-ion systems. Thus, the only large-scale pre-trained MLIPs with suf-ficient elemental coverage for diverse liquid electrolytes have paradoxically been those trained on crystalline ma-terial planewave DFT training data from the Materials Project[19] (MPtrj),[14] Alexandria[20] and/or Open Ma-terials 2024 (OMat24)[21, 22]. However, the recently released Open Molecules 2025 (OMol25) now provides a large-scale, high-accuracy molecular DFT dataset for training MLIPs with extensive elemental coverage and directly targets electrolytes as one of its primary areas of focus.[23] In this study, we evaluate the predictive capa-bility of large-scale, pre-trained MLIPs for describ-ing the macroscopic ensemble averaged properties and the microscopic interatomic interaction patterns that govern the structure and dynamics of next-generation Na-ion battery electrolytes. While Li-ion electrolytes have dominated consumer electronics for decades, Na-ion batteries present major advantages in cost and material availability, motivating computational discovery.[24, 25] We investigate pre-trained MLIP per-formance for simulating NaPF 6 (sodium hexafluorophos-phate), NaOTf (sodium triflate) or NaTFSI (sodium bis(trifluoromethanesulfonimide)) in ether and carbon-ate solvent matrices and under different system condi-tions such as temperature or concentration. Further, only large-scale MLIPs pre-trained on either inorganic materials DFT data or on a sufficiently diverse molec-ular dataset like OMol25 are viable for simulating such systems. We benchmark three large-scale, pre-trained MLIPs, two trained on the inorganic materials OMat24 dataset – Orb-OMat[26] and SevenNet-OMat[27] – and one trained on OMol25 – UMA-OMol[28, 29] – against experimen-tal Na-ion electrolyte density and X-ray structure factor measurements, establishing that UMA-OMol most accu-rately reproduces these macroscopic properties. We then examine the performance of UMA-OMol across varying battery operating temperatures, where Na-ion systems are compared to well-understood Li-ion systems as a baseline, followed by a systematic study of anion identity to capture the correct hierarchy of anion–cation interac-tion strengths (via coordination number) and their influ-ence on solvation structure. We further investigate the concentration dependence of NaPF 6 electrolytes, quanti-fying the shift from free-ion populations to contact and solvent-separated ion pairs and linking these structural changes to transport-relevant trends observed in exper-iment. This is followed by an investigation of solvent effects [30] on ion pairing and aggregation across six dif-ferent solvent candidates for Na-ion batteries, and subse-quent analysis of atomic-scale structuring at the graphite interface. Our results show that the OMol25-trained MLIP UMA-OMol is an efficient surrogate for first princi-ples simulations of battery electrolytes and offers broad promise for predictive modeling of complex electrochemi-cal systems, providing chemically transferable, ab-initio -level predictions of nanoscale electrolyte behavior at or-ders of magnitude reduced computational cost versus DFT-based molecular dynamics. Further, UMA-OMol shows performance superior to models trained on inor-ganic materials DFT datasets that did not include liquid-phase, electrolyte-specific structural sampling. Overall, we view OMol25-trained models as powerful first line tools for modeling battery electrolyte systems, to be com-plemented as needed by targeted electronic structure cal-culations and experimental data as model architectures continue to improve. 
+
+a. Inorganic Materials vs. OMol25 Pre-trained MLIPs It is widely accepted that the fundamental ther-modynamic property of a battery electrolyte that directly influences the structure, dynamics, and thermodynamic behavior of the system is the system density.[31, 32] Ac-curately capturing experimental densities is essential for meaningful comparison and reliable prediction of ma-terial behavior under realistic conditions. Accordingly, we measured the densities of pure solvents and Na-ion battery electrolytes across different salt types, concen-trations, and solvent environments, as well as one Li-ion and one K-ion system, and compared them with densities predicted by NPT molecular dynamics driven by UMA-OMol, Orb-OMat, and SevenNet-OMat in Fig-ure 1, and the respective numerical values are provided in Table S1. Simulations performed using the SevenNet-OMat and Orb-OMat large-scale MLIPs trained on inor-ganic materials datasets MPtrj,[14] Alexandria,[20] and OMat24[33]) exhibit substantial deviations from experi-mental densities (see Figure 1a and b). For SevenNet-OMat, the simulated densities show systematic underes-timation and significant scatter ( R2 ≈ 0.34 ), while Orb-OMat exhibits only slightly better agreement with exper-3
+
+FIG. 1: Pre-trained MLIP predicted liquid density comparisons for different organic and sodium electrolyte systems. Exper-imental densities are compared with simulated densities from two inorganic materials-trained models (a) SevenNet-OMat (b) Orb-OMat and one OMol25-trained model (c) UMA-OMol across battery electrolytes that vary in salt-type, salt-concentration, and solvent-type. Here, OTf, TFSI, and PF 6 correspond to triflate, bis(trifluoromethanesulfonimide), and hexafluorophosphate anions respectively. DME, DEGDME, PC, TEGDME, DEG, and DMC correspond to dimethoxyethane, diethylene glycol dimethyl ether (diglyme), propylene carbonate, tetraethylene glycol dimethyl ether, diethylene glycol, and dimethyl carbonate respectively. The dashed line represents the ideal parity relation between simulation and experiment. The solid line denotes the least squares linear regression fit to the simulated versus experimental densities. The shaded region indicates a ±5% envelope around the fitted regression line, highlighting the acceptable deviation window relative to the model trend. 
+
+iment ( R2 ≈ 0.45 ). Further, for both models we observed several MD simulations become unstable, causing an un-physical breaking of the simulation box and precluding the trajectory from ever reaching equilibrium. We hy-pothesize that these deficiencies stem from the absence of liquid-phase configurations and solvation environments in the inorganic training datasets, limiting the model’s ability to capture subtle intermolecular and ion–solvent correlations. In contrast, the parity plot between experimental and UMA-OMol predicted densities shows excellent agree-ment across linear and cyclic ethers, carbonates, and their 0.1 M and 1.0 M sodium salt solutions (NaPF 6,NaOTf, NaTFSI, etc.), yielding an overall coefficient 4             
+
+> FIG. 2: Residual X-ray structure factors and mean deviations for 1 M sodium salt glyme electrolytes. Panels (a), (c), (e), and (g) show the difference between simulated and experimental structure factors, i.e. the residual ∆S(Q) = Ssim (Q)−Sexp (Q)
+> for NaPF 6in dimethoxyethane (DME), NaOTf in DME, NaPF 6in diglyme (DEGDME), and NaTFSI in DME, respectively, comparing UMA-OMol (gray), Orb-OMat (orange), and SevenNet-OMat (blue) over Q= 1 to 20 Å−1. Panels (b), (d), (f), and (h) present the corresponding mean absolute deviations ⟨| ∆S(Q)|⟩ , showing that UMA-OMol systematically yields the smallest residuals, with Orb-OMat often intermediate and SevenNet-OMat often largest.
+
+of determination R2 = 0.98 . We do observe a sys-tematic shift in the UMA-OMol parity toward slightly higher values across all electrolyte systems. On av-erage, the simulated densities are about 8.5 % higher than experiment, which we attribute to the combination of known overbinding of many-body dispersion by the 
+
+ωB97M-V[34–36] density functional used to construct the OMol25 dataset and the absence of explicit long range interactions in UMA-OMol. We observed a similar be-havior for density variations with temperature, as shown in Figure S1, which compares experimental and simu-lated densities for 0.5 M NaPF 6 and LiPF 6 electrolytes in DME. Despite the systematic shift, both systems ex-hibit the expected linear thermal expansion, with den-sity decreasing as temperature increases, and our simu-lations reproduce this trend with high fidelity. On av-erage, the simulated densities are about 10 % higher than experiment for both electrolytes at different tem-peratures, reflecting a modest overestimation of solvent packing and ion associated partial molar volumes. The narrow confidence band around the parity line further demonstrates consistent transferability across chemically distinct electrolytes, highlighting that UMA-OMol accu-rately predicts both neutral and ion-containing systems without any reparameterization. The pronounced im-provement from inorganic materials trained models to UMA-OMol underscores the importance of explicitly in-corporating liquid state chemistries in the MLIP training dataset and the higher fidelity density functional acces-sible in a molecular context. We further assessed the molecular structuring pre-dicted by UMA-OMol and other models against exper-imental X-ray structure factors S(Q) for a series of 1 M sodium salt electrolytes (Figure S2-3). The data set comprises NaPF 6, NaOTf, and NaTFSI dissolved in dimethoxyethane (DME), diglyme (DEGDME), and tetraglyme (TEGDME), with each panel reporting one salt solvent combination. To quantitatively measure model accuracy, we evaluated residual structure factors 
+
+∆S(Q) = Ssim (Q) − Sexp (Q) over Q = 1 to 20 Å−1
+
+(Figure 2). UMA-OMol captures not only the dominant features of S(Q) but also the high Q oscillations that arise from bond-stretching, bond-angle fluctuations, and torsional motions of the ether chains, demonstrating an accurate short-range potential energy surface and realis-tic molecular flexibility. This fidelity is reflected in the mean absolute deviation ⟨| ∆S(Q)|⟩ , which is smallest for UMA-OMol and systematically larger for Orb-OMat and SevenNet-OMat across all electrolytes. Only four of the six systems are shown in Figure 2 because Orb-OMat and SevenNet-OMat MD simulations of NaOTf in DEGDME and NaPF6 in TEGDME were consistently unstable. 5Quantitatively, UMA-OMol shows a 10–30% improve-ment in reproducing molecular structure compared to MLIPs trained on materials data. Noticeable deviations remain in the very low Q region, where long-range density correlations dominate. These deviations are consistent with the use of a 6 Å cutoff and the absence of explicit long-range electrostatic interactions, which limits the de-scription of correlations at larger length scales. The re-duced residuals and well-resolved oscillatory features at intermediate and high Q indicate that UMA-OMol treats bonded interactions and short-range repulsion more ac-curately, which in turn leads to enhanced robustness in long molecular dynamics trajectories with minimal bond distortion and few unphysical structural instabilities. Density and X-ray structure factor results show that UMA-OMol reproduces the structural properties of bat-tery electrolytes more robustly than models trained on inorganic materials data. We now proceed to employ UMA-OMol to interrogate molecular structure across different physicochemical conditions, and variations in anion-type and solvent topology. 
+
+b. Anion Effects We compare Na + association with three common battery anions in glyme electrolytes using radial distribution functions, g(r), and running coordi-nation numbers, n(r), as these interactions directly con-trol electrolyte speciation in Na-ion batteries. Figure 3a shows Na + correlations with TFSI −, PF − 
+
+> 6
+
+, and OTf −,referenced to their central N, P, and S atoms, respec-tively, in 1 M DME electrolytes. The first solvation shell exhibits a clear hierarchy in ion pairing strength, with OTf − displaying a sharp and intense peak at r ≈ 3.4 Å(gmax ≈ 45 ), PF − 
+
+> 6
+
+showing a broader and weaker maxi-mum at a similar distance ( gmax ≈ 11 ), and TFSI − ex-hibiting only weak structuring ( gmax ≈ 4). Integration of the corresponding coordination numbers to 5 Å (Figure 3b) yields n = 3 .0 ± 0.1 for OTf −, 1.1 ± 0.1 for PF − 
+
+> 6
+
+, and 
+
+0.3 ± 0.05 for TFSI −, indicating that Na + forms substan-tially more frequent and experimentally observed stable ion paired configurations with OTf − than with the more weakly coordinating anions, as expected from previous work.[37] Atom-resolved binding analysis further supports this hierarchy. We computed Na–X radial distribution func-tions and coordination numbers for the dominant coor-dinating sites in each anion (X = O in TFSI −, F in PF − 
+
+> 6
+
+, and O in OTf −; Figure S4). Across electrolytes, the contact ion pairing signature is most pronounced for Na + binding to O in OTf −, which exhibits a very sharp first-shell peak centered near ∼ 2.3 Å, far exceeding the corresponding first-shell intensities for PF − 
+
+> 6
+
+and TFSI −,consistent with substantially stronger and more frequent direct Na +–anion interactions in NaOTf relative to the more weakly coordinating anions. Interestingly, UMA-OMol shows that solvent identity can significantly control these ion interactions. In par-ticular, for the strongly coordinating OTf − anion, a sub-stantially enhanced Na–OTf first shell peak and a steeper short-range growth in n(r) in DME than in DEGDME (Figure 3 c) demonstrates that the shorter glyme pro-motes stronger effective Na +–OTf association, whereas the longer glyme more effectively competes for Na + coor-dination and suppresses direct anion binding.[38–41] The observed solvent–anion coupling effect, where solvent topology regulates ion-pairing even for strongly binding anions such as OTf – , may enable strategic modulation of Na + solvation structure and ion-association equilibria in Na-ion battery electrolytes. 
+
+c. Temperature Effects Temperature profoundly re-organizes the solvation landscape in both Li + and Na + liquid electrolytes, but with element-specific sig-natures reflecting their distinct ionic radii and bind-ing energetics.[42, 43] To probe UMA-OMol’s capacity to capture temperature-dependent changes in solvation structure, we studied 0.5 M NaPF 6 and LiPF 6 in DME at 253K, 300K, and 353K. At 253 K, both electrolytes ex-hibit highly ordered cation solvation, evidenced by sharp first-shell peaks in the gNa −O(DME) (r) and gLi −O(DME) (r)
+
+functions at ∼2.3 Å for Na + and ∼2.0 Å for Li + (Figures S5a, S6a), 100% free ions observed in fractional anal-ysis (Figures 4a, S7a), and the complete absence of a first-shell peak in gNa −P(PF 6)(r) and gLi −P(PF 6)(r) func-tions (Figures 4b, S7b), which trace cation–anion prox-imity. These data indicate tightly bound first-shell sol-vent coordination due to reduced thermal fluctuations at low-temperature conditions, which together render CIP formation a rare-event process on the presently sam-pled timescales. We anticipate that extending the sim-ulation time or employing enhanced sampling strategies would allow occasional Na +–PF 6 – contact configurations to emerge, thereby more fully resolving the underlying free energy landscape governing ion association. As temperature rises, the ion-solvent first-shell peaks attenuate and broaden, and average coordination de-creases, signaling enhanced solvent exchange and weak-ened cation–solvent binding (Figures S5, S6). Concur-rently, the Na–P radial distribution functions reveal an emerging first-shell contact peak near 3.0–3.3 Å, with its intensity nearly doubling between 300 K and 353 K (Figure 4b). The corresponding coordination integral 
+
+nNa −P(r) confirms a monotonic rise (Figure 4c), and frac-tion analysis quantifies a significant decrease in the frac-tion of free ion (Figure 4a) and an increase in ion-paired species—from negligible at 253 K to ≈ 0.27 at 353 K (Fig-ure S8).[44, 45] Similar trends were exhibited for LiPF 6
+
+(Figure S7), with one notable difference - the Li–P radial distribution function shows a distinct double first-shell peak, indicative of both monodentate and bidentate co-ordination motifs, as expected for Li +.[46] Overall, the thermal liberation of DME from the Na +
+
+and Li + solvation shells weakens the cation cage, en-hances anion access, and shifts speciation toward contact and solvent shared ion pairs, yielding an entropy-driven reduction in the population of free Na + or Li + carri-ers despite decreasing viscosity.[45] These results show that UMA-OMol successfully captures the interplay be-tween temperature-dependent enthalpic stabilization and 6                                         
+
+> FIG. 3: Anion-dependent Na +coordination in DME from UMA-OMol simulations. (a) Radial distribution func-tions gNa −X(r)(solid lines, left axis) and running coor-dination numbers (dashed lines, right axis) nNa −X(r)for bis(trifluoromethanesulfonyl)imide (TFSI −), hexafluorophos-phate (PF 6−), and triflate (OTf −), computed relative to N, Pand Satoms of TFSI −,PF 6−and OTf −respec-tively. (b) Average coordination numbers nNa −X(5Å) in pri-mary cation coordination shell highlighting the hierarchy of ion-pairing strength across anions. (c) Radial distribution functions gNa -O(OTf) (r)and corresponding running coordina-tion numbers nNa -O(OTf) (r)for NaOTf in DME and diglyme (DEGDME) media, demonstrating that solvent identity can modulate ion interaction strength.
+
+entropic gains. 
+
+d. Concentration Effects We next examined the correlations between electrolyte concentration and the propensity of ions to remain free or to form contact ion pairs, solvent separated pairs, and larger aggregates, each of which directly influences the effective transport of charge carriers especially under an applied potential.[47] Figure S9 summarizes the effect of NaPF 6 concentration in DME on the population of free Na + ions—defined here as cations without any PF − 
+
+> 6
+
+in their primary coordination shell—and on the fraction of Na + coordinated to exactly one PF − 
+
+> 6
+
+anion, between radial distances 3−10 Å. We ob-serve an increased probability of Na +–PF − 
+
+> 6
+
+CIPs followed by an expected decrease in the fraction of free Na + ions with increasing electrolyte concentration. Further details are provided in Supplementary Information. 
+
+e. Solvent Effects Effective charge transport is strongly governed by the interactions between the charge carriers and their surrounding solvent environment.[48– 50] Therefore, we next investigated ion and solvent correlations across different solvent systems to quan-tify how variations in local solvation directly influ-ence charge transport behavior.[51] Radial distribu-tion functions and running coordination numbers pro-vided in Figure 5a-d, map how solvent identity mod-ulates NaPF 6 association in different electrolyte so-lutions. In the Na–P radial distributions (Figure 5a), the first-shell peak height decreases in the order PC ≈ THF > DMC > DME > TEGDME > DEGDME. Integration of g(r) to 10 Å (Figure 5b) confirms that PC and THF stabilize the greatest number of con-tact/aggregate ion-pairs ( nNa −P ≈ 5–6), whereas DME, DEGDME and TEGDME limit Na–PF 6 CIPs to lower values. The complementary Na–O (DME) curves (Fig-ure 5c,d) show the inverse trend, where glymes furnish the densest oxygen solvation in the primary Na + coor-dination shell. Thus, solvents with high donor number ether oxygens (DME, DEGDME, or TEGDME) most ef-fectively compete with PF − 
+
+> 6
+
+for Na + coordination, yield-ing a larger population of “free” charge-carrying Na + ions (Figure 5e), consistent with experimental trends.[52–56] Interestingly, the running coordination number pro-files show that Na–O coordination is nearly identical in DEGDME and TEGDME (Figure 5d), yet the extent of ion pairing differs substantially (Figure 5b). Figures 5e-g rationalize this behavior, demonstrating that while both solvents supply six ether oxygens to the primary solvation shell, differences in chain flexibility and local packing modulate the stabilization of contact and sol-vent shared ion pairs. Figure 5e shows that the fraction of unpaired Na + in DEGDME decays more slowly, re-maining above 65 % (of total Na +) at r = 5 Å, whereas TEGDME falls below 40 % by the same radial distance from the Na + centers. The complementary metric in Figure 5g reveals a larger population, > 20% at r = 5 Å, of NaPF 6 CIPs in TEGDME relative to DEGDME. Snapshots in Figure 5f and 5h clarify the microscopic ori-gin, where DEGDME wraps into a compact, nearly oc-tahedral chelate that sterically excludes PF 6 – , favoring solvent separated or fully dissociated Na +. In contrast, the extended TEGDME chain adopts a flexible confor-mation that coordinates Na + while leaving void space that accommodates a PF 6 – (Figure 5f,h), thereby pro-7       
+
+> FIG. 4: Temperature dependence of NaPF 6ion association in DME captured by UMA-OMol simulations. (a) Fraction of unpaired Na +ions at different temperatures. (b) Na–P (PF −
+> 6) radial distribution functions and (c) corresponding running coordination numbers at different temperatures. Error bars are obtained using the block-averaging methodology. The analysis reveals that all Na +ions are fully solvated at 253K, while at higher temperatures the cation solvation shell weakens and allows for increasing ion pair formation.
+
+moting CIP formation in the primary coordination shells. These conformational preferences demonstrate that sub-tle variations in solvent topology reshape the free-energy landscape of ion association, and that UMA-OMol cap-tures the resulting redistribution among CIPs, SSIPs, and higher aggregates, with direct consequences for lo-cal solvation structure and charge transport.[53, 57, 58] 
+
+f. Solid/Liquid Interfacial Structure To assess the capability of UMA-OMol to capture electrolyte struc-turing at the electrode interface,[59–62] we simulated a graphite/DME system containing 1 M NaPF 6 at 300 K and 353 K. A representative snapshot of the interfacial configuration is shown in Figure S10. The number den-sity profiles in Figure 6 reveal pronounced solvent and ion-layering at the graphite interface, indicating a highly ordered interfacial region. At 300 K, DME oxygen atoms form a compact adsorption layer that preferentially coor-dinates interfacial Na + ions, while PF 6 – anions exhibit weaker interfacial accumulation, consistent with solvent-mediated cation stabilization and limited anion contact with the electrode. The resulting oscillatory density pro-files of oxygen, sodium, and phosphorus reflect a struc-tured solvation environment in which Na + resides within the first solvent shell coordinated primarily by interfa-cial oxygens, as shown in Figure 6. This organization stabilizes Na + near the surface and constrains the ini-tial electron transfer pathways that may initiate SEI formation.[63] Upon increasing the temperature to 353 K, the amplitude of these density oscillations decreases and the profiles broaden, signaling enhanced thermal mo-tion, partial desolvation, and weakened ion-solvent cor-relations within the interfacial region. Such interfacial disorder is known to promote molecular exchange be-tween the interface and bulk, accelerating ion transport while simultaneously altering the accessibility and reduc-tive stability of Na + species at the electrode.[64, 65] In this work, we benchmarked state-of-the-art large-scale MLIPs trained on inorganic materials DFT (Orb-OMat and SevenNet-OMat) and on the molecular DFT OMol25 dataset (UMA-OMol) against experimental ob-servables to assess their reliability in describing the struc-ture and thermodynamics of Na-ion battery electrolytes. Starting from the macroscopic density across a diverse set of organic liquids and electrolytes, parity plots of simulated versus experimental densities show that UMA-OMol achieves near-unity correlation ( R2 > 0.98 ) with minimal systematic bias, while MLIPs trained on inor-ganic materials consistently underpredict experimental values and exhibit larger scatter. X-ray structure factors 
+
+S(Q) for 1 M NaPF 6–diglyme demonstrate that UMA-OMol captures all principal experimental features, vali-dating its accuracy in representing medium-range order-ing. Small deviations observed at low Q likely originate from long-range density correlations not captured by the MLIP given its 6 Å cutoff. Difference plots, ∆S(Q), show that UMA-OMol exhibits the smallest residuals and min-imal oscillatory behavior compared to SevenNet-OMat and Orb-OMat, confirming its superior fidelity in repro-ducing experimental scattering observables. Together, these results highlight how the chemically diverse and high-quality OMol25 molecular DFT training dataset in-creases MLIP prediction fidelity for intermolecular forces and improves thermodynamic consistency across liquid and electrolyte chemistries. Subsequent investigations using UMA-OMol to simu-late Na-ion electrolyte systems with molecular dynam-ics while varying anion identity, temperature, concen-tration, solvent, and of a solid-liquid interface revealed atomistic insights useful to battery electrolyte design. Across the anion chemistries considered, OTf − displays substantially stronger association with Na + than PF 6 –
+
+or TFSI – , with ion pairing strengths strongly modulated by solvent topology through its control over primary co-ordination shell structure and competitive solvent bind-ing. Our results demonstrate that UMA-OMol captures ion-pair hierarchies and binding strengths. Temperature-8e. 
+
+> Na -O(TEGDME)
+
+## h. 
+
+## f. 
+
+## g. 
+
+> Na -O(DEGDME)
+
+FIG. 5: Solvent effects on NaPF 6 association in 1 M sodium electrolytes from UMA-OMol simulations: (a) Na–P radial distribution functions gNa −P(r) for dimethoxyethane (DME), dimethyl-carbonate (DMC), tetrahydrofuran (THF), propylene carbonate (PC), diglyme (DEGDME), and tetraethylene glycol dimethyl ether (TEGDME). (b) Corresponding Na–P running coordination numbers nNa −P(r). (c) Na–O radial distribution functions gNa −O(r) for the same solvent series. (d) Na–O running coordination numbers nNa −O(r). The variation in peak positions and coordination behavior highlights the strong solvent dependence of Na +–PF − 
+
+> 6
+
+association and Na + solvation structure across linear glymes, cyclic ethers, and carbonate solvents. Comparison of DEGDME and TEGDME solvation of Na + in 1 M NaPF 6 electrolytes: (e) Fraction of free Na + ions versus radial cutoff distance. (g) Fraction of Na + forming CIPs. (f,h) Representative snapshots showing compact chelation by DEGDME excluding PF − 
+
+> 6
+
+versus open-chain TEGDME conformation enabling over-coordination and PF − 
+
+> 6
+
+insertion into the first solvation shell. 
+
+resolved simulations uncover the dynamic evolution of solvation and ion association. As temperature increases, Na +–O(DME) coordination weakens while Na +–P coor-dination strengthen, showing a transition from solvent-separated to contact or solvent-shared ion pairs. This structural reorganization parallels that observed in Li-based electrolytes but is more pronounced for Na due to its lower charge density and weaker solvation enthalpy. Finally, solvent topology emerges as a critical determi-nant of ionic association. Short-chain glymes (DME, diglyme) suppress NaPF 6 CIPs by stabilizing solvent-separated configurations, whereas conformationally flex-ible and extended TEGDME enhances over-coordination and ion aggregation. This solvent-dependent modulation 9      
+
+> FIG. 6: Number density profiles ( ρn) of Na +, P (PF 6 –), and O (DME) atoms along the surface normal (z) at the graphite–electrolyte interface for NaPF 6in DME at 300 K (gray) and 353 K (orange). At 300 K, pronounced solvent and ion layering is observed, with DME oxygens forming a compact interfacial layer that coordinates Na +near the elec-trode surface, while PF 6 –remains more weakly adsorbed. Elevated temperature reduces the amplitude of these oscil-lations, indicating thermal disruption of interfacial ordering and enhanced ion mobility. The inset shows a representative partial snapshot of the interfacial configuration highlighting solvent structuring adjacent to the graphite surface.
+
+of ion-pairing directly rationalizes the experimentally ob-served relationship between free-ion population and ionic conductivity. Similarly, our simulations revealed that UMA-OMol reproduces strong, temperature dependent structuring of electrolyte species at the graphite inter-face, with pronounced solvent and cation layering at room temperature that weakens at elevated temperature, driving migration of ions from the electrode-electrolyte interface to the bulk phase. OMol25 and UMA have demonstrably advanced MLIP capabilities for liquid electrolyte simulations; how-ever, there remain important areas for future improve-ment. First , while UMA-OMol substantially improves electrolyte MD stability compared to Orb-OMat and SevenNet-OMat, trajectories do still occasionally be-come unstable, even after equilibrating initial simula-tion boxes with a classical force field. Driving discovery with e.g. high-throughput screening will thus likely re-quire either MLIP architectures with improved potential energy surface smoothness[66] or an automated MLIP-MD workflow infrastructure with robust on-the-fly error handling.[67] Second , electrolyte simulations in partic-ular will benefit from MLIP architectures that go be-yond short-range graph construction cutoffs – e.g. via explicitly physics-informed approaches[68, 69] or global attention-based schemes[70, 71] – to accurately describe long-range electrostatics while still effectively scaling to tens of thousands of atoms. Third , simulating transport properties in liquid electrolytes, and even more so in poly-mer electrolytes,[72] necessitates reaching MD timescales that are out of reach for current large-scale pre-trained MLIPs. While improving GPU hardware will help, model distillation also shows great promise,[73] provided that a standardized and automated procedure can be estab-lished that marries pre-trained model accuracy with at least an order of magnitude inference speedup. Fourth , it remains unclear if range-separated hybrid DFT, as was used to construct OMol25, is sufficient to train MLIPs that predict experimental observables within chemical accuracy. It may be that electronic structure data be-yond DFT accuracy will be required for model fine-tuning, though generating such data spanning the same chemical diversity as OMol25 will require massive compu-tational resources. Finally , we see great potential in more closely marrying high-quality experimental data with MLIP-based atomistic simulations. Establishing com-prehensive experimental benchmarks with broad chem-ical diversity and varied observables that can be directly compared to atomistic simulations will quantify model accuracy as architectures and training data improve and facilitate hybrid approaches like digital twins[74] and multi-modal learning on both experimental and ab-initio data.[75, 76] 
+
+> Supplementary Information
+
+Methodology, system densities, structure factors, ra-dial distribution functions and coordination number, fraction of free ions, and raw data for all experimental measurements. 
+
+> Acknowledgments
+
+All authors acknowledge support from the En-ergy Storage Research Alliance (ESRA) (DE-AC02-06CH11357), an Energy Innovation Hub funded by the U.S. Department of Energy, Office of Science, Basic Energy Sciences. This work used computational re-sources provided by the National Energy Research Sci-entific Computing Center (NERSC), a U.S. Department of Energy Office of Science User Facility operated un-der Contract DE-AC02-05CH11231, and the Lawrencium computational cluster resource provided by the IT Di-vision at Lawrence Berkeley National Laboratory (Sup-ported by the Director, Office of Science, Office of Ba-sic Energy Sciences, of the U.S. Department of En-ergy under Contract No. DE-AC02-05CH11231). This research was performed on APS beam time award(s) (DOI: 10.46936/APS-192520/60015964) from the Ad-vanced Photon Source, a U.S. Department of Energy (DOE) Office of Science user facility operated for the DOE Office of Science by Argonne National Laboratory under Contract No. DE-AC02-06CH11357. 10 
+
+Conflicts of Interest 
+
+None. 
+
+References 
+
+[1] Schran, C.; Thiemann, F. L.; Rowe, P.; Müller, E. A.; Marsalek, O.; Michaelides, A. Machine learning poten-tials for complex aqueous systems made simple. Proceed-ings of the National Academy of Sciences 2021 , 118 ,e2110077118. [2] Kumar, N.; Clark, A. E. Adsorbate organization char-acterized by sublevelset persistent homology. Journal of Chemical Theory and Computation 2023 , 19 , 3303–3312. [3] Zhu, S.; Ramsundar, B.; Annevelink, E.; Lin, H.; Dave, A.; Guan, P.-W.; Gering, K.; Viswanathan, V. Dif-ferentiable modeling and optimization of non-aqueous Li-based battery electrolyte solutions using geometric deep learning. Nature Communications 2024 , 15 , 8649. [4] Magdău, I.-B.; Csányi, G. A predictive framework for liq-uid electrolytes takes root with BAMBOO: Molecular dy-namics. Nature Machine Intelligence 2025 , 7, 983–984. [5] Mouvet, F.; Villard, J.; Bolnykh, V.; Rothlisberger, U. Recent advances in first-principles based molecular dy-namics. Accounts of Chemical Research 2022 , 55 , 221– 230. [6] Kumar, N.; Sadhu, B.; Clark, A. E. Essential Aspects of Solvent Effects and Solution Conditions upon the Mod-eling and Simulation of Lanthanide and Actinide Com-plexes. Rare Earth Elements and Actinides: Progress in Computational Science Applications 2021 , 249–276. [7] Wildman, J.; Repiscak, P.; Paterson, M. J.; Galbraith, I. General force-field parametrization scheme for molecular dynamics simulations of conjugated materials in solution. 
+
+Journal of chemical theory and computation 2016 , 12 ,3813–3824. [8] Jacobs, R.; Morgan, D.; Attarian, S.; Meng, J.; Shen, C.; Wu, Z.; Xie, C. Y.; Yang, J. H.; Artrith, N.; Blaiszik, B.; others A practical guide to machine learning interatomic potentials–Status and future. Current Opinion in Solid State and Materials Science 2025 , 35 , 101214. [9] Batatia, I.; Kovacs, D. P.; Simm, G.; Ortner, C.; Csányi, G. MACE: Higher order equivariant message passing neural networks for fast and accurate force fields. 
+
+Advances in neural information processing systems 2022 ,
+
+35 , 11423–11436. [10] Gartner III, T. E.; Zhang, L.; Piaggi, P. M.; Car, R.; Panagiotopoulos, A. Z.; Debenedetti, P. G. Signatures of a liquid–liquid transition in an ab initio deep neu-ral network model for water. Proceedings of the National Academy of Sciences 2020 , 117 , 26040–26046. [11] Kumar, N.; Bryantsev, V. S. Structure and Dynamics of CO2 at the Air–Water Interface from Classical and Neu-ral Network Potentials. The Journal of Physical Chem-istry Letters 2025 , 16 , 5619–5626. [12] Wang, F.; Ma, Z.; Cheng, J. Accelerating computation of acidity constants and redox potentials for aqueous or-ganic redox flow batteries by machine learning potential-based molecular dynamics. Journal of the American Chemical Society 2024 , 146 , 14566–14575. [13] Batatia, I.; Benner, P.; Chiang, Y.; Elena, A. M.; Kovács, D. P.; Riebesell, J.; Advincula, X. R.; Asta, M.; Avaylon, M.; Baldwin, W. J.; others A foundation model for atomistic materials chemistry. The Journal of Chem-ical Physics 2025 , 163 .[14] Deng, B.; Zhong, P.; Jun, K.; Riebesell, J.; Han, K.; Bar-tel, C. J.; Ceder, G. CHGNet as a pretrained universal neural network potential for charge-informed atomistic modelling. Nature Machine Intelligence 2023 , 5, 1031– 1041. [15] Eastman, P. et al. SPICE, a Dataset of Drug-like Molecules and Peptides for Training Machine Learning Potentials. Scientific Data 2022 , 9, 660. [16] SPICE 2.0.x (Small-Molecule/Protein Interaction Chem-ical Energies) Dataset. Zenodo, 2024; https://zenodo. org/records/10835749 , Versioned dataset release on Zenodo (see record for exact version). [17] Gong, S. et al. A predictive machine learning force-field framework for liquid electrolyte development. Na-ture Machine Intelligence 2025 ,[18] Wang, F.; Tang, Y.-H.; Ma, Z.-B.; Jin, Y.-C.; Cheng, J. Domain oriented universal machine learning potential en-ables fast exploration of chemical space of battery elec-trolytes. Nature Communications 2025 , 17 , 1226. [19] Jain, A.; Ong, S. P.; Hautier, G.; Chen, W.; Richards, W. D.; Dacek, S.; Cholia, S.; Gunter, D.; Skin-ner, D.; Ceder, G.; Persson, K. A. Commentary: The Materials Project: A materials genome approach to ac-celerating materials innovation. APL Materials 2013 , 1,011002. [20] Schmidt, J.; Cerqueira, T. F. T.; Romero, A. H.; Loew, A.; Jäger, F.; Wang, H.-C.; Botti, S.; Marques, M. A. L. Improving machine-learning models in materials science through large datasets. Materials Today Physics 
+
+2024 , 48 , 101560. [21] Barroso-Luque, L.; Shuaibi, M.; Fu, X.; Wood, B. M.; Dzamba, M.; Gao, M.; Rizvi, A.; Zitnick, C. L.; Ulissi, Z. W. Open materials 2024 (omat24) inor-ganic materials dataset and models. arXiv preprint arXiv:2410.12771 2024 ,[22] Horton, M. K.; Huck, P.; Yang, R. X.; Munro, J. M.; Dwaraknath, S.; Ganose, A. M.; Kingsbury, R. S.; Wen, M.; Shen, J. X.; Mathis, T. S.; others Accelerated data-driven materials science with the Materials Project. 
+
+Nature Materials 2025 , 1–11. [23] Ju, S.; You, J.; Kim, G.; Park, Y.; An, H.; Han, S. Ap-plication of pretrained universal machine-learning inter-atomic potential for physicochemical simulation of liquid electrolytes in Li-ion batteries. Digital Discovery 2025 ,
+
+4, 1544–1559. [24] Hwang, J.-Y.; Myung, S.-T.; Sun, Y.-K. Sodium-ion bat-teries: present and future. Chemical Society Reviews 
+
+2017 , 46 , 3529–3614. [25] Yabuuchi, N.; Kubota, K.; Dahbi, M.; Komaba, S. Re-search development on sodium-ion batteries. Chemical reviews 2014 , 114 , 11636–11682. [26] Neumann, M.; Gin, J.; Rhodes, B.; Bennett, S.; Li, Z.; Choubisa, H.; Hussey, A.; Godwin, J. Orb: Afast, scalable neural network potential. arXiv preprint arXiv:2410.22570 2024 ,[27] Park, Y.; Kim, J.; Hwang, S.; Han, S. Scalable Parallel Algorithm for Graph Neural Network Interatomic Poten-tials in Molecular Dynamics Simulations. J. Chem. The-ory Comput. 2024 , 20 , 4857–4868. [28] Levine, D. S.; Shuaibi, M.; Spotte-Smith, E. W. C.; Taylor, M. G.; Hasyim, M. R.; Michel, K.; Batatia, I.; 11 
+
+Csányi, G.; Dzamba, M.; Eastman, P.; others The open molecules 2025 (omol25) dataset, evaluations, and mod-els. arXiv preprint arXiv:2505.08762 2025 ,[29] Wood, B. M.; Dzamba, M.; Fu, X.; Gao, M.; Shuaibi, M.; Barroso-Luque, L.; Abdelmaqsoud, K.; Gharakhanyan, V.; Kitchin, J. R.; Levine, D. S.; others UMA: A Family of Universal Models for Atoms. arXiv preprint arXiv:2506.23971 2025 ,[30] Kumar, N.; Bryantsev, V. S.; Roy, S. The Role of Nonequilibrium Solvent Effects in Enhancing Direct CO2 Capture at the Air–Aqueous Amino Acid Interface. Jour-nal of the American Chemical Society 2024 , 147 , 1411– 1415. [31] Hansen, J.-P.; McDonald, I. R. Theory of Simple Liq-uids: With Applications to Soft Matter , 4th ed.; Aca-demic Press, 2013. [32] Han, S. A salient effect of density on the dynamics of non-aqueous electrolytes. Scientific Reports 2017 , 7, 46718. [33] Barroso-Luque, L.; Shuaibi, M.; Fu, X.; Wood, B. M.; Dzamba, M.; Gao, M.; Rizvi, A.; Zitnick, C. L.; Ulissi, Z. W. Open Materials 2024 (OMat24) Inorganic Materials Dataset and Models. 2024. [34] Mardirossian, N.; Head-Gordon, M. ωB97M-V: A combi-natorially optimized, range-separated hybrid, meta-GGA density functional with VV10 nonlocal correlation. The Journal of Chemical Physics 2016 , 144 , 214110. [35] Workhorse minimally-empirical dispersion-corrected density functional, with tests for weakly-bound sys-tems: r2SCAN + rVV10. 2022; See discussion of SCAN+rVV10 overbinding and compressed lattice parameters in layered solids. [36] Arulmozhiraja, S.; Reuter, K. Molecule-surface interac-tion from van der Waals-corrected semilocal density func-tionals: The example of thiophene on transition-metal surfaces. Physical Review Materials 2020 , 4, 025005. [37] Yadav, B.; Soni, C. B.; Bera, S.; Kumar, H.; Kumar, V. Direct observation of sodium dendrites to decipher the complicated behavior of electrolyte systems. Electrochim-ica Acta 2024 , 507 , 145212. [38] Geng, C.; Buchholz, D.; Kim, G.-T.; Carvalho, D. V.; Zhang, H.; Chagas, L. G.; Passerini, S. Influence of salt concentration on the properties of sodium-based elec-trolytes. Small Methods 2019 , 3, 1800208. [39] Zhang, J.; Li, J.; Wang, H.; Wang, M. Research progress of organic liquid electrolyte for sodium ion battery. Fron-tiers in Chemistry 2023 , 11 , 1253959. [40] Chen, X.; Shen, X.; Hou, T.-Z.; Zhang, R.; Peng, H.-J.; Zhang, Q. Ion-solvent chemistry-inspired cation-additive strategy to stabilize electrolytes for sodium-metal batter-ies. Chem 2020 , 6, 2242–2256. [41] Zhou, L.; Cao, Z.; Zhang, J.; Sun, Q.; Wu, Y.; Wahyudi, W.; Hwang, J.-Y.; Wang, L.; Cavallo, L.; Sun, Y.-K.; others Engineering sodium-ion solvation structure to stabilize sodium anodes: universal strategy for fast-charging and safer sodium-ion batteries. Nano Letters 2020 , 20 , 3247–3254. [42] Han, S.; Guo, Q.; Mao, H.; Hu, Z.; Lu, K.; Li, S.; Lu, Y.; Li, H.; Huang, X.; Chen, L.; others Deciphering the in-terface failure mechanism for aqueous Na-ion batteries at low temperatures. ACS Energy Letters 2024 , 9, 2276– 2285. [43] Wang, M.; Yin, L.; Zheng, M.; Liu, X.; Yang, C.; Hu, W.; Xie, J.; Sun, R.; Han, J.; You, Y.; others Temperature-responsive solvation enabled by dipole-dipole interactions towards wide-temperature sodium-ion batteries. Nature Communications 2024 , 15 , 8866. [44] Lai, J.; Guo, Y.; Lai, H.-E.; Ospina-Acevedo, F. A.; Tian, W.; Kuai, D.; Chen, D.; Balbuena, P. B.; Shi, F. Linking Solvation Equilibrium Thermodynamics to Elec-trolyte Transport Kinetics for Lithium Batteries. Jour-nal of the American Chemical Society 2025 , 147 , 14348– 14358. [45] Ringsby, A. J.; Fong, K. D.; Self, J.; Bergstrom, H. K.; McCloskey, B. D.; Persson, K. A. Transport phenomena in low temperature lithium-ion battery electrolytes. Jour-nal of The Electrochemical Society 2021 , 168 , 080501. [46] Cresce, A. V.; Russell, S. M.; Borodin, O.; Allen, J. A.; Schroeder, M. A.; Dai, M.; Peng, J.; Gobet, M. P.; Green-baum, S. G.; Rogers, R. E.; others Solvation behavior of carbonate-based electrolytes in sodium ion batteries. 
+
+Physical Chemistry Chemical Physics 2017 , 19 , 574–586. [47] Hu, J.; Ji, Y.; Zheng, G.; Huang, W.; Lin, Y.; Yang, L.; Pan, F. Influence of electrolyte structural evolution on battery applications: cationic aggregation from dilute to high concentration. Aggregate 2022 , 3, e153. [48] Tian, Z.; Zou, Y.; Liu, G.; Wang, Y.; Yin, J.; Ming, J.; Alshareef, H. N. Electrolyte solvation structure design for sodium ion batteries. Advanced science 2022 , 9, 2201207. [49] Bergstrom, H. K.; McCloskey, B. D. Ion transport in (lo-calized) high concentration electrolytes for Li-based bat-teries. ACS Energy Letters 2024 , 9, 373–380. [50] Eshetu, G. G.; Elia, G. A.; Armand, M.; Forsyth, M.; Komaba, S.; Rojo, T.; Passerini, S. Electrolytes and in-terphases in sodium-based rechargeable batteries: recent advances and perspectives. Advanced Energy Materials 
+
+2020 , 10 , 2000093. [51] Self, J.; Hahn, N. T.; Persson, K. A. Solvation effects on the dielectric constant of 1 M LiPF6 in ethylene carbon-ate: ethyl methyl carbonate 3: 7. Energy & Environmen-tal Materials 2024 , 7, e12494. [52] Gutmann, V. Empirical parameters for donor and accep-tor properties of solvents. Electrochimica Acta 1976 , 21 ,661–670. [53] Morales, D.; Ruther, R. E.; Nanda, J.; Greenbaum, S. Ion transport and association study of glyme-based elec-trolytes with lithium and sodium salts. Electrochimica Acta 2019 , 304 , 239–245. [54] Morales, D.; Chagas, L. G.; Paterno, D.; Greenbaum, S.; Passerini, S.; Suarez, S. Transport studies of NaPF 6
+
+carbonate solvents-based sodium ion electrolytes. Elec-trochimica Acta 2021 , 388 , 138062. [55] Mandai, T.; Yoshida, K.; Tsuzuki, S.; Nozawa, R.; Masu, H.; Ueno, K.; Dokko, K.; Watanabe, M. Effect of Ionic Size on Solvate Stability of Glyme-Based Sol-vate Ionic Liquids. The Journal of Physical Chemistry B 
+
+2015 , 119 , 1523–1534. [56] Ould, D. M. C.; Oswald, S.; Smith, H. E.; O’Keefe, C. A.; Song, T.; Kendrick, E.; Wright, D. S.; Grey, C. P. Proper-ties of NaPF 6 electrolytes and effect of electrolyte concen-tration on performance in sodium-ion batteries. Chemical Communications 2025 , 61 , 8516–8519. [57] Westman, K.; Dugas, R.; Jankowski, P.; Wieczorek, W.; Gachot, G.; Morcrette, M.; Irisarri, E.; Ponrouch, A.; Palacín, M. R.; Tarascon, J.-M.; others Diglyme based electrolytes for sodium-ion batteries. ACS Applied Energy Materials 2018 , 1, 2671–2680. [58] Jensen, A. C.; Au, H.; Gärtner, S.; Titirici, M.-M.; Drew, A. J. Solvation of NaPF6 in diglyme solution 12 
+
+for battery electrolytes. Batteries & Supercaps 2020 , 3,1306–1310. [59] Finney, A. R.; McPherson, I. J.; Unwin, P. R.; Sal-valaglio, M. Electrochemistry, ion adsorption and dynam-ics in the double layer: a study of NaCl (aq) on graphite. 
+
+Chemical science 2021 , 12 , 11166–11180. [60] Xu, Z.-L.; Yoon, G.; Park, K.-Y.; Park, H.; Tamwat-tana, O.; Joo Kim, S.; Seong, W. M.; Kang, K. Tai-loring sodium intercalation in graphite for high energy and power sodium ion batteries. Nature communications 
+
+2019 , 10 , 2598. [61] Kumar, N. Uranyl (UO22+) structuring and dynam-ics at graphene/electrolyte interface. Physical Chemistry Chemical Physics 2024 , 26 , 20799–20806. [62] Zhang, W.; Lu, Y.; Wan, L.; Zhou, P.; Xia, Y.; Yan, S.; Chen, X.; Zhou, H.; Dong, H.; Liu, K. Engineering a passivating electric double layer for high performance lithium metal batteries. Nature Communications 2022 ,
+
+13 , 2029. [63] Blau, S. M.; Patel, H. D.; Spotte-Smith, E. W. C.; Xie, X.; Dwaraknath, S.; Persson, K. A. A chemically consistent graph architecture for massive reaction net-works applied to solid-electrolyte interphase formation. 
+
+Chemical science 2021 , 12 , 4931–4939. [64] Zhang, F.; He, B.; Xin, Y.; Zhu, T.; Zhang, Y.; Wang, S.; Li, W.; Yang, Y.; Tian, H. Emerging chemistry for wide-temperature sodium-ion batteries. Chemical Re-views 2024 , 124 , 4778–4821. [65] Schott, C. M.; Schneider, P. M.; Song, K.-T.; Yu, H.; Gotz, R.; Haimerl, F.; Gubanova, E.; Zhou, J.; Schmidt, T. O.; Zhang, Q.; others How to assess and predict electrical double layer properties. Implications for electrocatalysis. Chemical Reviews 2024 , 124 , 12391– 12462. [66] Liu, R.; Qu, E.; Kreiman, T.; Blau, S. M.; Krish-napriyan, A. S. From Evaluation to Design: Using Po-tential Energy Surface Smoothness Metrics to Guide Machine Learning Interatomic Potential Architectures. 
+
+arXiv preprint arXiv:2602.04861 2026 ,[67] Blau, S.; Spotte-Smith, E. W. C.; Wood, B.; Dwarak-nath, S.; Persson, K. Accurate, automated density func-tional theory for complex molecules using on-the-fly error correction. 2020 ,[68] Unke, O. T.; Meuwly, M. PhysNet: A neural network for predicting energies, forces, dipole moments, and par-tial charges. Journal of chemical theory and computation 
+
+2019 , 15 , 3678–3693. [69] King, D. S.; Kim, D.; Zhong, P.; Cheng, B. Machine learning of charges and long-range interactions from ener-gies and forces. Nature Communications 2025 , 16 , 8763. [70] Qu, E.; Krishnapriyan, A. The importance of being scal-able: Improving the speed and accuracy of neural net-work interatomic potentials across chemical domains. Ad-vances in Neural Information Processing Systems 2024 ,
+
+37 , 139030–139053. [71] Qu, E.; Wood, B. M.; Krishnapriyan, A. S.; Ulissi, Z. W. A recipe for scalable attention-based MLIPs: unlocking long-range accuracy with all-to-all node attention. 2026; 
+
+https://arxiv.org/abs/2603.06567 .[72] Levine, D. S.; Liesen, N.; Chua, L.; Diffenderfer, J.; In-golfsson, H.; Kroonblawd, M. P.; Kumar, N.; Maiti, A.; Mohottalalage, S. S.; Shuaibi, M.; others The Open Poly-mers 2026 (OPoly26) Dataset and Evaluations. arXiv preprint arXiv:2512.23117 2025 ,[73] Amin, I.; Raja, S.; Krishnapriyan, A. Towards fast, specialized machine learning force fields: Distilling foundation models via energy hessians. arXiv preprint arXiv:2501.09009 2025 ,[74] Qian, J.; Jana, A.; Menon, S.; Bogdan, A. E.; Ham-lyn, R.; Mahl, J.; Crumlin, E. J. Digital Twin for Chem-ical Science: a case study on water interactions on the Ag (111) surface. Nature Computational Science 2025 ,
+
+5, 793–800. [75] Gumber, S.; Alzate-Vargas, L.; Nebgen, B. T.; van Vee-len, A.; Kadvani, S.; Gibson, T.; Messerly, R. Going be-yond density functional theory accuracy: Leveraging ex-perimental data to refine pre-trained machine learning interatomic potentials. arXiv preprint arXiv:2506.10211 
+
+2025 ,[76] Raja, S.; Amin, I.; Pedregosa, F.; Krishnapriyan, A. S. Stability-aware training of machine learning force fields with differentiable boltzmann estimators. arXiv preprint arXiv:2402.13984 2024 ,Supporting Information: Prediction and Experimental Verification of Electrolyte Solvation Structure from an OMol25-Trained Interatomic Potential 
+
+# Nitesh Kumar ,a,b Jianwei Lai ,a,c,d Casey S. Mezerkor ,a,e,f Jiaqi Wang, a,e
+
+# Kamila M. Wiaderek ,a,g J. David Bazak ,a,f Samuel M. Blau ,∗,a,d,h and Ethan J. Crumlin ∗,a,c,i
+
+> a
+
+Energy Storage Research Alliance, Argonne National Laboratory, Lemont, Illinois 60439, USA 
+
+> b
+
+Materials Sciences Division, Lawrence Berkeley National Laboratory, Berkeley, California, USA 
+
+> c
+
+Chemical Sciences Division, Lawrence Berkeley National Laboratory, Berkeley, California, USA 
+
+> d
+
+Energy Technologies Area, Lawrence Berkeley National Laboratory, Berkeley, California, USA 
+
+> e
+
+Department of Chemistry and Biochemistry and the Oregon Center for Electrochemistry, University of Oregon, Eugene, Oregon 97403, USA 
+
+> f
+
+Physical and Computational Sciences Directorate, Pacific Northwest National Laboratory, Richland, Washington 99354, USA 
+
+> g
+
+X-ray Science Division, Argonne National Laboratory, Lemont, Illinois 60439, USA 
+
+> h
+
+Bakar Institute of Digital Materials for the Planet, University of California, Berkeley, California, USA 
+
+> i
+
+Advanced Light Source, Lawrence Berkeley National Laboratory, Berkeley, California, USA 
+
+E-mail: smblau@lbl.gov; ejcrumlin@lbl.gov S-1 Methodology 
+
+# Simulation Protocol 
+
+Initial simulation coordinates were generated using Packmol .S1 A relatively large 30 ˚ A sim-ulation cell edge length was chosen to prevent any finite-size effects. Solvent molecules were added to match their experimental densities. Each system was first annealed and equili-brated in the isothermal–isobaric (NPT) ensemble using classical OPLS-AA force fields. S2,S3 
+
+These equilibrated configurations served as the starting point for the machine learning in-teratomic potential molecular dynamics (MLIP-MD) simulations. MLIP-MD simulations were performed using the Atomic Simulation Environment (ASE) framework in com-bination with different MLIP calculators. S4 Atomic interactions were modeled using the 
+
+uma-s-1p1 neural network potential, OMol task, via the FAIRChemCalculator .S5 For com-parison, the orb-v3-conservative-inf-omat model was used with the OrbCalculator ,and the SevenNet-omat model was employed with the SevenNetCalculator . MLIP-MD simulations were carried out in the NPT ensemble at 300 K and 1 bar, with periodic bound-ary conditions applied in all three spatial dimensions. Temperature was changed from 253 K to 353 K to study the temperature effects. A time step of 1 fs was used to integrate the equations of motion. Thermostat and barostat relaxation times were set to 100 fs and a pressure coupling factor of 0.1, respectively. Trajectories were saved every 10 fs, and each simulation was run for a minimum of 0.5 ns per system, where the final 0.2 ns were used for data analysis. The fraction of free and ion-paired Na + species was quantified from MD trajectories us-ing a coordination-based counting analysis of Na −P interactions. For each saved frame of the trajectory, all sodium (Na) and phosphorus (P) atoms were first identified, and pairwise Na −P distances were computed under periodic boundary conditions using the minimum-image convention to ensure accurate treatment of ions crossing the simulation box bound-aries. A continuous set of radial cutoffs r ranging from 0.05 to 8.0 ˚ A in increments of 0.05 ˚ A was applied to determine the number of PF –6 anions surrounding each Na + within a given distance. For each cutoff r, the number of sodium ions having exactly one phosphorus atom within r was counted, yielding the population of Na + that forms a distinct one-to-one Na −PF 6 contact ion pair (CIP). Dividing this quantity by the total number of Na + ions in the system gives the cumulative fraction f(r) of ion-paired Na + as a function of distance. Similarly, the number of Na + with no phosphorus atom within r corresponded to the popu-lation of ”free” Na + ions that are not directly paired with a PF –6 anion within the specified cutoff. Block averaging methodology was used to obtain error bars. The X-ray total scattering structure factor S(Q) of the NaPF 6–diglyme electrolyte was computed from the MD trajectories using the TRAVIS program. S6 The simulation tra-jectory was first converted into the TRAVIS-readable format, ensuring the correct atomic numbers, masses, and scattering form factors were assigned to each element. The program evaluates the partial pair distribution functions gαβ (r) between atom types α and β, which describe the normalized probability of finding a pair of atoms separated by distance r. The total X-ray structure factor is then obtained by Fourier transformation of these pair distri-bution functions according to the Debye scattering formalism implemented in TRAVIS using formula: 
+
+S(Q) = 1 + 4π
+
+⟨b⟩2V
+
+X
+
+> α
+
+X
+
+> β
+
+cαcβbαbβ
+
+Z rmax 
+
+> 0
+
+[gαβ (r) − 1] sin (Qr )
+
+Qr r2 dr ,where Q is the scattering vector magnitude, V is the simulation cell volume, cα and cβ
+
+are the atomic concentrations, and bα and bβ are the X-ray scattering factors for the atomic species α and β. The angle brackets denote the weighted average over all atom types, where, 
+
+⟨b⟩ = P 
+
+> γ
+
+cγbγ.
+
+# Experimental Details 
+
+Densimetry 
+
+S-3 Density measurements were performed using an Anton Paar DMA 4500 M oscillating u-tube instrument, calibrated to dry air and ISO 17034-certified water, with bubble-free filling of the tube confirmed by the onboard camera system. Measurements were taken at temperatures from 273.2 K to 353.2 K in 5 K increments, regulated with the onboard Peltier elements, and dry N 2 gas was plumbed into the chamber to prevent condensation on the exterior of the tube at low temperature. The u-tube was flushed 3x rapidly with 100% ethanol between samples and the tube was fully dried with the N 2 gas pump (600 s of flushing). GxP air and water density checks were taken between variable-temperature data collection runs to confirm the calibration (followed again by ethanol flushing and complete drying before injecting the next sample). 
+
+X-ray Total Scattering Measurements 
+
+X-ray total scattering measurements were performed at the Advanced Photon Source on beamline 11-ID-B. High-energy X-rays with a wavelength of λ = 0.2099 ˚ A were used for all measurements. Electrolyte samples were loaded into 5 mm NMR tubes inside an argon-filled glovebox to prevent exposure to air and moisture. The tubes were sealed inside the glovebox using Apiezon Q sealing grease and autosampler caps to maintain an inert environment during measurement. Two-dimensional scattering patterns were collected using a PerkinElmer (PE) area detector. S7,S8 The raw detector images were azimuthally integrated using GSAS-II to obtain one-dimensional scattering intensity profiles I(Q) as a function of momentum transfer. S9,S10 An empty tube background and instrument background were measured under identical experimental conditions and subtracted during the data reduction procedure. The integrated data were subsequently processed using xPDFsuite. S11 Standard corrections were applied, including background subtraction, container scattering removal, Compton scattering correction, and normalization to obtain the total X-ray structure factor 
+
+S(Q). The resulting structure factors were used for comparison with simulated scattering patterns generated from molecular dynamics trajectories. The experimental configuration provided a usable momentum transfer range up to approximately Q ≈ 21.5 ˚ A−1, enabling S-4 characterization of short- and intermediate-range structural correlations in the electrolyte solutions. 
+
+# Results and Discussion 
+
+Table S1: Comparison of simulated densities (g/cm 3) from UMA-OMol, SevenNet-OMat, and Orb-OMat models against experimental values at 298.2 K. System UMA-OMol SevenNet-OMat Orb-OMat Expt. 
+
+Pure Solvents 
+
+Pure DME 0.957 0.777 0.781 0.861 Pure DEGDME 1.042 0.840 0.893 0.939 Pure TEGDME 1.108 — — 1.006 Pure PC 1.258 0.949 1.182 1.199 Pure DEG 1.213 1.021 0.893 1.113 Pure DMC 1.157 0.943 1.383 1.063 
+
+0.1 M Electrolytes 
+
+0.1 M NaOTf in DME 0.966 — — 0.873 0.1 M NaPF6 in DME 0.969 — — 0.873 0.1 M NaOTf in DEGDME 1.056 — — 0.950 0.1 M NaPF6 in DEGDME 1.045 — — 0.952 0.1 M NaOTf in TEGDME 1.119 — — 1.016 0.1 M NaPF6 in TEGDME 1.116 — — 1.014 0.1 M NaOTf in PC 1.272 — — 1.207 0.1 M NaPF6 in PC 1.267 — — 1.206 
+
+0.5 M Electrolytes 
+
+0.5 M LiPF6 in DME 1.031 — — 0.909 
+
+1.0 M Electrolytes 
+
+1.0 M KPF6 in DME 1.064 — — 1.001 1.0 M NaOTf in DME 1.077 0.896 0.620 0.980 1.0 M NaPF6 in DME 1.106 0.910 0.940 0.995 1.0 M NaTFSI in DME 1.146 0.983 0.938 1.055 1.0 M NaOTf in DEGDME 1.148 — — 1.047 1.0 M NaPF6 in DEGDME 1.166 0.670 0.982 1.059 1.0 M NaOTf in TEGDME 1.219 — — 1.106 1.0 M NaPF6 in TEGDME 1.214 — — 1.115 1.0 M NaOTf in PC 1.372 — — 1.277 1.0 M NaPF6 in PC 1.377 1.024 1.261 1.291 S-5 Table S2: Density (g/cm 3) of 0.5 M LiPF 6 and NaPF 6 in DME: simulation (UMA) vs. experiment. Temperature 0.5 M LiPF 6/DME 0.5 M NaPF 6/DME (K) Sim. Exp. Sim. Exp. 253 1.075 — 1.080 —273.15 1.067 0.952 1.059 0.962 278.15 — 0.946 — 0.957 283.15 — 0.941 — 0.951 288.15 — 0.936 — 0.946 293.15 — 0.930 — 0.940 298.15 — 0.924 — 0.935 300 1.031 — 1.043 —303.15 — 0.919 — 0.929 308.15 — 0.913 — 0.923 313.15 — 0.907 — 0.918 318.15 — 0.901 — 0.912 323.15 1.010 0.895 1.011 0.906 328.15 — 0.889 — 0.900 333.15 — 0.883 — 0.895 338.15 — 0.877 — 0.889 343.15 — 0.871 — 0.883 348.15 — 0.865 — 0.877 353.15 0.971 0.859 0.993 0.871 S-6 Table S3: Experimental structure factors S(Q) for 1 M Na-ion electrolyte systems. 
+
+Q (˚ A−1)NaPF 6/DME NaPF 6/DEGDME NaPF 6/TEGDME NaOTf/DME NaOTf/DEGDME NaTFSI/DME 1.2070 1.2698 1.1661 0.9872 1.1006 0.9404 1.0697 1.4028 2.2848 2.5381 2.4992 2.1618 2.4536 1.7924 1.5986 2.8286 2.9435 2.9030 2.4155 2.6462 2.0700 1.7945 1.3930 1.3499 1.3029 1.5942 1.5139 1.3370 1.9903 0.6862 0.6596 0.6763 1.0588 0.9466 0.9394 2.1861 0.4710 0.4724 0.5076 0.8230 0.7300 0.8146 2.3819 0.4440 0.4738 0.5022 0.7161 0.6704 0.8112 2.5777 0.4998 0.5590 0.5608 0.6826 0.6920 0.8601 2.7735 0.6174 0.6997 0.7039 0.7548 0.7977 0.9570 2.9693 0.7699 0.8572 0.8924 0.8932 0.9417 1.0292 3.1651 0.9102 0.9689 0.9880 0.9466 0.9855 1.0140 3.3609 0.9971 1.0037 0.9755 0.9025 0.9191 0.9397 3.5568 1.0373 0.9920 0.9261 0.8223 0.8123 0.8373 3.7526 1.0349 0.9607 0.8918 0.7528 0.7222 0.7331 3.9484 1.0005 0.9238 0.8861 0.7302 0.6878 0.6692 4.1442 0.9632 0.8968 0.8987 0.7637 0.7159 0.6611 4.3400 0.9363 0.8860 0.9230 0.8381 0.7917 0.7148 4.5358 0.9310 0.9006 0.9575 0.9240 0.8930 0.8224 4.7316 0.9423 0.9335 0.9914 0.9938 0.9891 0.9426 4.9274 0.9738 0.9869 1.0384 1.0745 1.0932 1.0529 5.1232 1.0398 1.0697 1.1047 1.1780 1.2042 1.1550 
+
+Continued on next page 
+
+S-7 Q (˚ A−1)NaPF 6/DME NaPF 6/DEGDME NaPF 6/TEGDME NaOTf/DME NaOTf/DEGDME NaTFSI/DME 5.3191 1.1609 1.1876 1.1991 1.3035 1.3219 1.2981 5.5149 1.3019 1.3084 1.3047 1.4085 1.4178 1.4671 5.7107 1.3987 1.3805 1.3662 1.4297 1.4425 1.5218 5.9065 1.4097 1.3742 1.3509 1.3624 1.3798 1.4267 6.1023 1.3174 1.2804 1.2458 1.2317 1.2470 1.2465 6.2981 1.1407 1.1182 1.0628 1.0593 1.0676 1.0496 6.4939 0.9299 0.9299 0.8593 0.8932 0.8892 0.8865 6.6897 0.7335 0.7581 0.6844 0.7559 0.7415 0.7780 6.8855 0.5904 0.6334 0.5677 0.6636 0.6449 0.7199 7.0814 0.5095 0.5618 0.5116 0.6167 0.5948 0.6980 7.2772 0.4928 0.5443 0.5131 0.6080 0.5839 0.6935 7.4730 0.5336 0.5769 0.5812 0.6454 0.6222 0.7112 7.6688 0.6241 0.6536 0.6890 0.7091 0.6908 0.7317 7.8646 0.7544 0.7671 0.8144 0.7770 0.7680 0.7460 8.0604 0.9044 0.9017 0.9519 0.8553 0.8581 0.7810 8.2562 1.0481 1.0328 1.0793 0.9416 0.9532 0.8413 8.4520 1.1708 1.1453 1.1753 1.0158 1.0332 0.9048 8.6478 1.2490 1.2162 1.2528 1.0983 1.1150 0.9883 8.8437 1.2878 1.2501 1.2781 1.1475 1.1576 1.0508 9.0395 1.2799 1.2407 1.2701 1.1815 1.1859 1.1122 9.2353 1.2428 1.2069 1.2109 1.1676 1.1651 1.1347 9.4311 1.1808 1.1508 1.1401 1.1482 1.1412 1.1595 
+
+Continued on next page 
+
+S-8 Q (˚ A−1)NaPF 6/DME NaPF 6/DEGDME NaPF 6/TEGDME NaOTf/DME NaOTf/DEGDME NaTFSI/DME 9.6269 1.1089 1.0887 1.0591 1.1161 1.1033 1.1661 9.8227 1.0387 1.0286 0.9923 1.0929 1.0793 1.1736 10.0185 0.9855 0.9861 0.9544 1.0874 1.0734 1.1832 10.2143 0.9597 0.9698 0.9431 1.0933 1.0819 1.1860 10.4101 0.9472 0.9681 0.9518 1.0957 1.0867 1.1626 10.6060 0.9468 0.9753 0.9730 1.0944 1.0922 1.1319 10.8018 0.9467 0.9751 0.9817 1.0675 1.0673 1.0754 10.9976 0.9368 0.9595 0.9590 1.0048 1.0062 0.9992 11.1934 0.9232 0.9320 0.9226 0.9349 0.9315 0.9291 11.3892 0.9075 0.9028 0.8838 0.8645 0.8583 0.8677 11.5850 0.8852 0.8712 0.8555 0.8099 0.8013 0.8209 11.7808 0.8702 0.8541 0.8429 0.7846 0.7756 0.7933 11.9766 0.8564 0.8410 0.8356 0.7715 0.7625 0.7705 12.1724 0.8515 0.8395 0.8394 0.7773 0.7692 0.7599 12.3683 0.8623 0.8539 0.8502 0.7976 0.7912 0.7618 12.5641 0.8704 0.8676 0.8647 0.8239 0.8219 0.7777 12.7599 0.8895 0.8909 0.8880 0.8574 0.8568 0.8092 12.9557 0.9142 0.9202 0.9236 0.8987 0.8990 0.8574 13.1515 0.9696 0.9762 0.9740 0.9592 0.9622 0.9281 13.3473 1.0135 1.0217 1.0304 1.0206 1.0297 1.0024 13.5431 1.0750 1.0819 1.0777 1.0705 1.0803 1.0651 13.7389 1.1125 1.1162 1.1109 1.1130 1.1213 1.1141 
+
+Continued on next page 
+
+S-9 Q (˚ A−1)NaPF 6/DME NaPF 6/DEGDME NaPF 6/TEGDME NaOTf/DME NaOTf/DEGDME NaTFSI/DME 13.9347 1.1432 1.1425 1.1298 1.1411 1.1515 1.1513 14.1306 1.1337 1.1306 1.1189 1.1451 1.1445 1.1613 14.3264 1.1174 1.1095 1.0931 1.1339 1.1309 1.1565 14.5222 1.0779 1.0701 1.0572 1.1134 1.1023 1.1413 14.7180 1.0263 1.0196 1.0004 1.0668 1.0516 1.0951 14.9138 0.9790 0.9740 0.9622 1.0355 1.0192 1.0655 15.1096 0.9409 0.9382 0.9315 0.9995 0.9838 1.0244 15.3054 0.9191 0.9183 0.9105 0.9686 0.9557 0.9904 15.5012 0.9165 0.9179 0.9144 0.9564 0.9404 0.9685 15.6970 0.9177 0.9203 0.9246 0.9356 0.9293 0.9399 15.8929 0.9232 0.9267 0.9454 0.9303 0.9270 0.9268 16.0887 0.9336 0.9370 0.9380 0.8972 0.9039 0.8877 16.2845 0.9460 0.9453 0.9474 0.8953 0.9017 0.8758 16.4803 0.9486 0.9446 0.9530 0.8962 0.8988 0.8685 16.6761 0.9554 0.9483 0.9530 0.9029 0.9019 0.8734 16.8719 0.9575 0.9497 0.9395 0.8953 0.8967 0.8666 17.0677 0.9602 0.9516 0.9552 0.9181 0.9165 0.8976 17.2635 0.9736 0.9637 0.9497 0.9280 0.9254 0.9172 17.4593 0.9799 0.9729 0.9550 0.9443 0.9467 0.9461 17.6552 0.9768 0.9717 0.9687 0.9743 0.9695 0.9778 17.8510 0.9762 0.9739 0.9703 0.9881 0.9848 1.0112 18.0468 0.9855 0.9854 0.9743 1.0095 0.9999 1.0291 
+
+Continued on next page 
+
+S-10 Q (˚ A−1)NaPF 6/DME NaPF 6/DEGDME NaPF 6/TEGDME NaOTf/DME NaOTf/DEGDME NaTFSI/DME 18.2426 0.9755 0.9791 0.9812 1.0233 1.0201 1.0519 18.4384 0.9740 0.9834 0.9880 1.0355 1.0350 1.0571 18.6342 0.9877 0.9968 0.9919 1.0347 1.0385 1.0581 18.8300 0.9878 0.9980 0.9929 1.0410 1.0390 1.0478 19.0258 0.9941 1.0035 0.9990 1.0381 1.0396 1.0442 19.2217 1.0081 1.0142 0.9910 1.0107 1.0096 1.0060 19.4175 1.0059 1.0034 0.9945 1.0020 1.0028 0.9904 19.6133 1.0083 1.0014 0.9955 0.9992 0.9855 0.9873 19.8091 1.0040 0.9916 0.9781 0.9685 0.9593 0.9616 
+
+# Concentration Effects 
+
+Figure S9, Panel a shows that the free-ion fraction (within r < 5 ˚ A) decreases sharply with increasing electrolyte concentration (from 0.66 M to 3.14 M). At the lowest effective concentration (0.66 M), more than 65% of Na + remain free out to r ≈ 5 ˚ A, and this fraction only drops to zero near 8 ˚ A. At higher concentrations, competitive coordination by PF −
+
+> 6
+
+rapidly displaces solvent molecules, reducing the free-ion population to ∼10% by r = 4 ˚ A at 3.14 M. This trend reflects the increased probability of Na +–PF − 
+
+> 6
+
+contact formation as ionic strength rises, which in turn may lower the number of highly mobile, conductivity-relevant Na + carriers. Figure S9, Panel b quantifies the fraction of Na + forming exactly one Na–PF 6 contact. At short distances ( r ≲ 4 ˚ A), these correspond to CIPs, and their population grows markedly with concentration—rising from ∼0.18 at 0.66 M to ∼0.5 at 3.14 M. Beyond r ≈ 5.5–7 ˚ A, the S-11 curves capture SSIPs. At low concentration, the SSIP fraction is significant and peaks near 7 ˚ A, indicating stable, well-defined single-anion associations. As concentration increases, this SSIP peak diminishes and broadens, consistent with the formation of higher-order ion-aggregates in which Na + is coordinated to multiple PF − 
+
+> 6
+
+anions at longer-range rather than maintaining a one-to-one pairing, showing ability of OMol trained MLIP to capture concen-tration effects on ion solvation structure across a diverse concentration range. S12–S16 
+
+S-12 Figure S1: Experimental and UMA-OMol simulated densities of LiPF 6 or NaPF 6 electrolytes in DME (0.5 M initial concentration) at different temperatures. 
+
+Figure S2: Experimental and UMA-OMol simulated X-ray total scattering structure factors S(Q) for one molar sodium salts glyme electrolytes. Panels compare simulated and experi-mental S(Q) curves across different anions and solvent chain lengths. S-13 Figure S3: Experimental and Orb-OMat or SevenNet simulated X-ray total scattering struc-ture factors S(Q) for one molar sodium salt glyme electrolytes. Panels compare simulated and experimental S(Q) curves across different anions and solvent chain lengths. S-14 Figure S4: Radial distribution functions gNa-X (r) and coordination numbers nNa-X (r) for Na + interactions with the dominant coordinating heteroatoms of different anions in DME, namely O in TFSI −, F in PF − 
+
+> 6
+
+, and O in OTf −.
+
+Figure S5: (a) Radial distribution functions for Na–O(solvent) pairs across the simulated temperatures. (b) Corresponding running coordination numbers derived from the Na–O radial distributions. S-15 Figure S6: (a) Radial distribution functions for Li–O(solvent) pairs across the simulated temperatures. (b) Corresponding running coordination numbers derived from the Li–O radial distributions. 
+
+Figure S7: Temperature dependence of LiPF 6 association in DME. (a) Fraction of free Li +
+
+ions evaluated for three different simulated temperatures. (b,c) Li–P radial distribution func-tions and coordination numbers computed from UMA-OMol simulations. Error estimates are obtained through block averaging. 
+
+Figure S8: Fraction of NaPF 6 contact ion pairs in 0.5 M NaPF 6 in DME system at different temperatures. S-16 Figure S9: Effect of NaPF 6 concentration in DME on ion association from UMA-OMol simulations. (a) Fraction of free Na + ions versus radial cutoff distance at multiple molarities. (b) Fraction of Na + coordinated to exactly one PF − 
+
+> 6
+
+as a function of cutoff, separating contact ion pairs (CIPs) and solvent-separated ion pairs (SSIPs). Higher concentration shifts the equilibrium toward multi-anion aggregates, reducing free-ion fraction and likely decreasing molar conductivity. 
+
+Figure S10: Snapshot of the simulated solid–liquid interfacial system. S-17 References 
+
+(S1) Mart´ ınez, L.; Andrade, R.; Birgin, E. G.; Mart´ ınez, J. M. PACKMOL: A package for building initial configurations for molecular dynamics simulations. Journal of compu-tational chemistry 2009 , 30 , 2157–2164. (S2) Kaminski, G. A.; Friesner, R. A.; Tirado-Rives, J.; Jorgensen, W. L. Evaluation and reparametrization of the OPLS-AA force field for proteins via comparison with accu-rate quantum chemical calculations on peptides. The Journal of Physical Chemistry B 2001 , 105 , 6474–6487. (S3) Jorgensen, W. L.; Tirado-Rives, J. Potential energy functions for atomic-level simu-lations of water and organic and biomolecular systems. Proceedings of the National Academy of Sciences 2005 , 102 , 6665–6670. (S4) Larsen, A. H.; Mortensen, J. J.; Blomqvist, J.; Castelli, I. E.; Christensen, R.; Du lak, M.; Friis, J.; Groves, M. N.; Hammer, B.; Hargus, C.; others The atomic sim-ulation environment—a Python library for working with atoms. Journal of Physics: Condensed Matter 2017 , 29 , 273002. (S5) Wood, B. M.; Dzamba, M.; Fu, X.; Gao, M.; Shuaibi, M.; Barroso-Luque, L.; Abdel-maqsoud, K.; Gharakhanyan, V.; Kitchin, J. R.; Levine, D. S.; others UMA: A Family of Universal Models for Atoms. arXiv preprint arXiv:2506.23971 2025 ,(S6) Brehm, M.; Thomas, M.; Gehrke, S.; Kirchner, B. TRAVIS—A free analyzer for trajectories from molecular simulation. The Journal of chemical physics 2020 , 152 .(S7) Chupas, P. J.; Qiu, X.; Hanson, J. C.; Lee, P. L.; Grey, C. P.; Billinge, S. J. Rapid-acquisition pair distribution function (RA-PDF) analysis. Journal of Applied Crystal-lography 2003 , 36 , 1342–1347. S-18 (S8) Chupas, P. J.; Chapman, K. W.; Lee, P. L. Applications of an amorphous silicon-based area detector for high-resolution, high-sensitivity and fast time-resolved pair distribution function measurements. Journal of Applied Crystallography 2007 , 40 ,463–470. (S9) Hammersley, A.; Svensson, S.; Hanfland, M.; Fitch, A.; Hausermann, D. Two-dimensional detector software: from real detector to idealised image or two-theta scan. International Journal of High Pressure Research 1996 , 14 , 235–248. (S10) Toby, B. H.; Von Dreele, R. B. GSAS-II: the genesis of a modern open-source all purpose crystallography software package. Journal of Applied Crystallography 2013 ,
+
+46 , 544–549. (S11) Juh´ as, P.; Davis, T.; Farrow, C. L.; Billinge, S. J. PDFgetX3: a rapid and highly automatable program for processing powder diffraction data into total scattering pair distribution functions. Journal of Applied Crystallography 2013 , 46 , 560–566. (S12) Geng, C.; Buchholz, D.; Kim, G.-T.; Carvalho, D. V.; Zhang, H.; Chagas, L. G.; Passerini, S. Influence of salt concentration on the properties of sodium-based elec-trolytes. Small Methods 2019 , 3, 1800208. (S13) Dhir, S.; Jagger, B.; Maguire, A.; Pasta, M. Fundamental investigations on the ionic transport and thermodynamic properties of non-aqueous potassium-ion electrolytes. 
+
+Nature communications 2023 , 14 , 3833. (S14) Zarayeneh, N.; Kumar, N.; Kalyanaraman, A.; Clark, A. E. Dynamic community detection decouples multiple time scale behavior of complex chemical systems. Journal of Chemical Theory and Computation 2022 , 18 , 7043–7051. (S15) Monti, D.; J´ onsson, E.; Boschin, A.; Palac´ ın, M. R.; Ponrouch, A.; Johansson, P. Towards standard electrolytes for sodium-ion batteries: physical properties, ion solva-S-19 tion and ion-pairing in alkyl carbonate solvents. Physical Chemistry Chemical Physics 
+
+2020 , 22 , 22768–22777. (S16) Wahlers, J.; Fulfer, K. D.; Harding, D. P.; Kuroda, D. G.; Kumar, R.; Jorn, R. Solvation structure and concentration in glyme-based sodium electrolytes: A combined spectroscopic and computational study. The Journal of Physical Chemistry C 2016 ,
+
+120 , 17949–17959. S-20

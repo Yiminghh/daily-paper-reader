@@ -1,0 +1,2361 @@
+Title: Tackling Over-smoothing on Hypergraphs: A Ricci Flow-guided Neural Diffusion Approach
+
+URL Source: https://arxiv.org/pdf/2603.15696v1
+
+Published Time: Wed, 18 Mar 2026 00:07:18 GMT
+
+Number of Pages: 19
+
+Markdown Content:
+> 1
+
+# Tackling Over-smoothing on Hypergraphs: A Ricci Flow-guided Neural Diffusion Approach 
+
+Mengyao Zhou, Zhiheng Zhou, Xiao Han, Xingqin Qi, Guanghui Wang, Guiying Yan 
+
+This work has been submitted to the IEEE for possible publication. Copyright may be transferred without notice, after which this version may no longer be accessible. 
+
+Abstract—Hypergraph neural networks (HGNNs) have demonstrated strong capabilities in modeling complex higher-order relationships. However, existing HGNNs often suffer from over-smoothing as the number of layers increases and lack effective control over message passing among nodes. Inspired by the theory of Ricci flow in differential geometry, we theoretically establish that introducing discrete Ricci flow into hypergraph structures can effectively regulate node feature evolution and thereby alleviate over-smoothing. Building on this insight, we propose Ricci Flow-guided Hypergraph Neural Diffusion(RFHND), a novel message passing paradigm for hy-pergraphs guided by discrete Ricci flow. Specifically, RFHND is based on a PDE system that describes the continuous evolution of node features on hypergraphs and adaptively regulates the rate of information diffusion at the geometric level, preventing feature homogenization and producing high-quality node representations. Experimental results show that RFHND significantly outperforms existing methods across mul-tiple benchmark datasets and demonstrates strong robustness, while also effectively mitigating over-smoothing. Index Terms—Hypergraph Neural Networks, Over-Smoothing, Ricci Flow, Differential Equation 
+
+I. Introduction In recent years, hypergraphs have attracted widespread attention as an important tool for modeling complex systems [1], [2]. Unlike traditional graphs, which can only represent pairwise relationships between nodes, hyper-graphs can connect multiple nodes through hyperedges, naturally capturing higher-order relations [3]. This capa-bility gives hypergraphs unique expressive power in many domains such as social networks [4], [5], recommendation systems [6], [7], and biological networks [8], [9]. To fully exploit the information from hypergraph data, researchers 
+
+This work was supported by the National Natural Science Foun-dation of China (No. 12231018).(Mengyao Zhou and Zhiheng Zhou contributed equally to this work.) (Corresponding authors: Guiying Yan.) Mengyao Zhou and Guiying Yan are with the Academy of Mathe-matics and Systems Science, Chinese Academy of Sciences and also with the University of Chinese Academy of Sciences, Beijing 100190, China (e-mail: zhoumengyao@amss.ac.cn; yangy@amss.ac.cn). Zhiheng Zhou and Xingqin Qi a with the School of Mathematics and Statistics, Shandong University, Weihai, Shandong 264209, China (e-mail: zhouzhiheng@amss.ac.cn;qixingqin@sdu.edu.cn). Xiao Han is with School of Artificial Intelligence, Beihang Univer-sity, Beijing 100191,China (e-mail: hx2210@buaa.edu.cn). Guanghui Wang is with the School of Mathematics, Shan-dong University, Jinan, Shandong 250100,China (e-mail: gh-wang@sdu.edu.cn). 
+
+have proposed various hypergraph neural network meth-ods [10], achieving significant progress in tasks such as node classification [11], link prediction [12], [13], and representation learning [2]. Although existing hypergraph neural networks provide powerful tools for hypergraph learning, the problem of over-smoothing remains a key challenge [14], [15]. As the network deepens, node features tend to converge and become increasingly indistinguishable, which degrades the model’s performance [16]. Current mitigation strategies fall into two main paradigms. The first paradigm mod-ifies the network architecture by incorporating mecha-nisms such as residual connections to preserve initial node features [17], [18]. The second paradigm refines the aggregation step, often using attention mechanism to selectively weigh nodes and hyperedges, thereby pre-venting feature homogenization [19], [20]. However, while existing methods mitigate over-smoothing to some extent, most of them are essentially operator-level fixes and lack rigorous theoretical guarantees, which limits their efficacy in complex scenarios. Inspired by the work [21], which establishes a direct link between geometric curvature and over-smoothing, we identify the feature convergence in hypergraph neural networks as an unconstrained geometric evolution process, analogous to heat diffusion. This perspective motivates us to seek a mechanism from differential geometry that can intrinsically control such diffusion dynamics. Ricci flow serves precisely this purpose [22], as it describes how the metric tensor evolves according to the local curvature. Recently, its generalization, discrete Ricci flow, has proven effective for tasks on graphs [23]. However, its potential for hypergraphs remains unexplored. In this work, we generalize this evolution to hypergraph and theoretically demonstrate that the evolution constrains the diffusion of node features via local curvature, which in turn effectively mitigates over-smoothing. Motivated by the preceding theoretical insights, we propose Ricci Flow-guided Hypergraph Neural Diffu-sio(RFHND). Grounded in partial differential equations, RFHND models node feature evolution as a continuous dynamical process and adaptively regulates information diffusion based on local curvature, effectively preventing over-smoothing. The core idea of RFHND is shown in Fig. 1. Specifically, we assign weights to hyperedges proportional to the feature similarity among their nodes, enabling an adaptive flow of updates that mitigates feature homogenization. This design preserves node distinctions 
+
+> arXiv:2603.15696v1 [cs.LG] 16 Mar 2026 2
+
+## Manifold 
+
+T
+
+## Hypergraph Feature 
+
+(a) (b) (c) 
+
+Fig. 1: Ricci flow-guided evolution. (a) Evolution of the manifold geometry under Ricci flow. (b) Evolution of hyperedge weight guided by Ricci flow. (c) Evolution of node feature distributions driven by the updated hyperedge weights. while enabling efficient feature fusion, enhancing model expressiveness and stability. Finally, the efficacy of our algorithm is validated through a comprehensive series of experiments. The main contributions of this work are as follows:  
+
+> •
+
+Theoretical foundation: We introduce discrete Ricci flow to the hypergraph learning domain, theoretically proving that it mitigates over-smoothing by adap-tively controlling feature diffusion via local curvature.  
+
+> •
+
+Methodological contribution: We propose RFHND, a discrete Ricci flow–guided hypergraph neural dif-fusion method that transforms traditional message passing into an adaptive, curvature-guided diffusion process, thereby effectively preventing feature homog-enization.  
+
+> •
+
+Empirical validation: Experiments on several hyper-graph datasets demonstrate that RFHND achieves superior node classification accuracy while exhibit-ing improved stability, robustness, and a significant reduction in over-smoothing compared to existing methods. II. Related Work In this section, we review literature closely related to our work, focusing on two key areas: Hypergraph Neural Networks(HGNNs) and Over-smoothing in HGNNs. A. Hypergraph Neural Networks Hypergraph neural networks have emerged as a powerful generalization of graph neural networks (GNNs), specif-ically designed to capture complex high-order relation-ships among entities beyond pairwise connections. The development of this field was initiated by the pioneering work of the foundational HGNN model [24]. This model utilizes a spectral convolution framework on hypergraphs to aggregate information from nodes connected with the same hyperedge. Following this, a wave of message-passing-based models, such as HNHN [25], HyperGCN [26], HyperSAGE [27], and UniGNN [17] was proposed to enhance the expressive power of HGNNs. These methods extend aggregation and propagation mechanisms to accommodate heteroge-neous and weighted hyperedges, leading to significant improvements in tasks such as node classification. Mean-while, architectures like AllDeepSets [18] and AllSetTrans-former [18] abandoned spectral assumptions entirely. They instead employ permutation-invariant set functions over hyperedges to facilitate more flexible, set-level reasoning. Recent HGNN advances include more sophisticated modeling perspectives. For instance, dynamic system models like HDS [28] use ordinary differential equations (ODEs) to improve the stability and control of the learning process. Additionally, models such as KHGNN(employs a nested convolution module named HyperGINE) [29] are designed to capture long-range dependencies by extracting features from nodes, hyperedges, and the intermediate paths between them. B. Over-smoothing in HGNNs In deep hypergraph networks, node representations tend to become identical, which severely degrades model performance. Current mitigation strategies, designed to combat this issue, can be categorized into two main paradigms. Architectural Modifications. This line of work focuses on altering the network’s architecture to preserve information from earlier layers. Inspired by the effectiveness of residual connections in both CNNs and GNNs, models like UniGC-NII [17] and Deep-HGCN [18] integrate skip connections to carry initial node features forward, enabling the con-struction of much deeper and more effective HGNNs. 3
+
+FrameHGNN [14] introduces a framelet-based hypergraph convolution framework that combines low and high-pass filters with proven deep GNN techniques like residual and identity mapping, thereby maintaining discriminative signals in deep layers. Refining the Aggregation Operator. This paradigm aims to make the feature aggregation process more discerning. Instead of uniform aggregation, attention mechanisms are employed to assign different weights to nodes within a hyperedge or to different hyperedges connected to a node. For example, Hypergraph Attention Networks [19], [20] learn dynamic weights for both nodes and hyperedges, thereby effectively mitigating the issue of indiscriminate feature mixing. ED-HNN [30] suggests that employ-ing equivariant operators to distribute distinct messages across nodes helps preserve feature diversity (or node distinguishability), thereby effectively preventing the over-smoothing problem. Limitations of Existing Methods. While existing meth-ods mitigate over-smoothing to some extent, most of them rely on local framework modifications and lack rigorous theoretical guarantees, which limits their efficacy in complex scenarios. In contrast, we introduce discrete Ricci flow to globally regulate the evolution of node features, thereby effectively alleviating the over-smoothing issue. III. Preliminary A. Notations Let H = ( V, E) denote a hypergraph, where V is the vertex set containing n unique vertices and E is the edge set containing m hyperedges. The hypergraph can be represented by an incidence matrix H ∈ Rn×m where 
+
+Hij = 1 if the vertex vi ∈ V is contained in the hyperedge 
+
+ej ∈ E , otherwise 0. Let F = [ f1, f2, ... fn]T denote the node feature matrix, and fi is associated with the node vi.Similarly, let X(t) = [ x1(t), x2(t), ... xn(t)] denote the node representation evolved to time t, and X(0) = Linear (F).Each hyperedge ej ∈ E is assigned a positive time-varying weight wej (t), all the weights formulate a diagonal matrix 
+
+W (t) ∈ Rm×m. The vertex and edge degree of hypergraph can be expressed as di = ∑mj=1 Hij and dj = ∑ni=1 Hij ,all the degrees formulate the diagonal matrix Dv and De.B. Hyperedge Curvature on Weighted Hypergraph Let H denote a weighted hypergraph. Each hyperedge 
+
+e ∈ E is assigned a weight we, and a curvature value κe .Specifically, κe reflects the closeness of the nodes within the hyperedge. Several discrete notions of curvature have been extended from graphs to hypergraphs, including Forman–Ricci cur-vature κF R e [31], Ollivier–Ricci curvature κOR e [32] and Resistance curvature κRC e [33]. Notably, our method is not restricted to a specific choice of curvature measure. For the precise mathematical formulations of these curvature measures, please refer to the supplementary material. C. Dirichlet Energy The Dirichlet energy of the hypergraph H = ( V, E) is used to characterize the smoothness of features between nodes [34]. The expression is as follows [18]: 
+
+E(X(t)) = 12
+
+∑
+
+> e∈E
+
+∑
+
+> i,j ∈e
+
+1
+
+|e|
+
+(
+
+xi(t)
+
+√di
+
+− xj (t)
+
+√dj
+
+)2
+
+. (1) The equation (1) shows that a higher similarity between neighboring node features leads to an energy value closer to 0, which reflects the over-smoothing problem. D. Discrete Ricci Flow(DRF) Ricci flow, originally introduced by Hamilton in differ-ential geometry [35], evolves a Riemannian metric gij (t)
+
+according to the partial differential equation: 
+
+∂g ij (t)
+
+∂t = −2 Ric ij (g(t)) , (2) where gij (t) denotes the element of the metric tensor 
+
+g(t) and Ric ij denotes the element of the Ricci curvature tensor. This process can be regarded as a geometric heat equation, smoothing out irregularities of the manifold metric over time, and has played a fundamental role in the development of modern geometry and topology. To extend this concept to discrete structures, discrete Ricci flow has been proposed as an analogue of the continuous Ricci flow on graphs and networks [36]. The specific expression is as follows: 
+
+∂w ij (t)
+
+∂t = −κij (t)wij (t). (3) Here, wij (t) and κij (t) represent the weight and the curvature of the edge (vi, v j ) at time t. Discrete Ricci flow has found applications in diverse fields, including community detection [37], network analysis [38], graph embedding [39], and machine learning. Building upon these advances, we further generalize discrete Ricci flow to hypergraphs. The core of this generalization lies in reformulating the notions of edge weight and curvature from pairwise edges to multi-node hyperedges. The specific expression of the hypergraph Ricci flow is as follows: 
+
+∂w e(t)
+
+∂t = −κe(t)we(t). (4) Here, we(t) and κe(t) represent the weight and the curvature of the edge e at time t. By formulating discrete Ricci flow on hypergraphs, we aim to capture higher-order structures and provide a new theoretical framework for representation learning in Hypergraph. IV. Applying DRF on Hypergraph In this section, we apply discrete Ricci flow to both the hypergraph structure and its node features to construct a dynamic evolutionary system. Similar to the attribute discrete Ricci flow in [39] , we construct the attribute discrete Ricci flow on the hypergraph. Specifically, We 4
+
+define the hyperedge weights as a function of the nodes features it connects, i.e., we(t) := we(Xe(t)) , Where 
+
+Xe(t) = {xi(t)|i ∈ e} denotes the set of node features on the edge e. Then the attribute discrete Ricci flow of the hypergraph can be written as follow: 
+
+∂w e(Xe(t)) 
+
+∂t = −κe(t)we(Xe(t)) . (5) As established in III-B, the curvature of a hyperedge is jointly determined by both structural connectivity and its weight. In turn, this curvature governs the dynamic evolution of node attributes according to Equation (5). Unlike traditional heat diffusion, which models node representation propagation , Ricci flow can be viewed as heat diffusion of the metric. From now on, we define we(t)
+
+as follows: 
+
+we(t) ≡ 1
+
+αe
+
+[ 1
+
+|e|
+
+∑
+
+> i∈e,j ∈e
+
+cos (xi(t), xj (t)) 
+
+√didj
+
+] + 1 + ϵ, αe = 1
+
+|e|
+
+∑
+
+> i∈e,j ∈e
+
+1
+
+√didj
+
+.
+
+(6) Here, we(t) is a non-negative weight, ϵ is a small positive number. Furthermore, we enforce a unit norm on x(t) (i.e., 
+
+|x(t)| ≡ 1, which is crucial for maintaining stability during computation. In this case, we(t) satisfies: we(t) ∈ [ϵ, 2 + ϵ].A. Dirichlet Energy Bound By applying the attribute discrete Ricci flow on hy-pergraph, we can prove that the system’s energy value remains bounded when the node feature evolution follows the Ricci flow. This demonstrates that our method can ef-fectively prevent over-smoothing and maintain controlled feature differentiation during propagation. The specific conclusions are as follows: Theorem 1. Consider the attribute discrete Ricci flow with hyperedge weight as equation (6), and 
+
+|x(t)| ≡ 1. If H is a non-regular hypergraph, and 
+
+we(t) are monotonic on [t1, t 2] for all e in H,then the average Dirichlet energy within [t1, t 2] has following bound: 
+
+ρmax 
+
+∑
+
+> e∈E
+
+∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
++ ∑
+
+> e∈E
+
+αe
+
+
+
+≥ Et∈[t1,t 2](E(X(t))) 
+
+≥ ∑
+
+> e∈E
+
+∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
+− ∑
+
+> e∈E
+
+αe > 0,
+
+(7) Here, di denotes the degree of node i, ρmax =max e ρe and ρe denotes the ratio of the maximum to the minimum value of we(t) .As demonstrated, Theorem 1 provides crucial theoreti-cal support for addressing the over-smoothing problem in hypergraph neural networks. The theorem’s strictly pos-itive lower bound ensures that the differentiation among nodes will not completely vanish throughout the feature evolution process. This, in turn, preserves meaningful feature distinctions and prevents the excessive assimilation of node representations. The full proof is available in the supplementary material. B. Convergence Analysis Following the preceding analysis of the method’s effec-tiveness against over-smoothing, we further investigate its convergence. The specific results of this analysis are as follows: Theorem 2. Consider the attribute discrete Ricci flow with hyperedge weight as equation (6). Assume that there exists a constant L such that |κe(t2) −
+
+κe(t1)| ≥ L|we(t2) − we(t1)| holds for all arbitrary 
+
+t1, t 2. Let |κe(0) | > 0, then for any arbitrarily small positive number δ, it holds that: 
+
+min 
+
+> t∈[0 ,+∞)
+
+{
+
+t
+
+∣∣∣ |κe(t)| = δ
+
+}
+
+≤ 1
+
+Lϵ − δ ln 
+
+( 2L + δδ(2 + ϵ)
+
+)
+
+.
+
+(8) The Theorem 2 prove that the discrete Ricci flow possesses the property of exponential convergence. This implies that the hyperedge curvature can rapidly approach zero, regardless of the system’s initial state. The Theorem 2 thus provide a theoretical guarantee for the efficiency and stability of our method. The proof of Theorem 2 can be referred to [39]. V. Methodology A. Ricci Flow-guided Hypergraph Feature Diffusion As established in section IV, applying attribute discrete Ricci flow to hypergraphs yields several key advantages. The process drives the curvature of hyperedges toward uniformity while facilitating the learning of high-quality, non-smooth node representations. Moreover, the method is theoretically proven to have strong convergence properties. Inspired by these strengths, in this section we design a new hypergraph feature diffusion architecture. By expanding Equation (5) using the chain rule, we obtain: 
+
+∑
+
+> i∈e
+
+〈 ∂w e
+
+∂xi
+
+, ∂xi(t)
+
+∂t 
+
+〉
+
+= −κe(t)we(t). (9) The left side of Equation (9) contains |e| parts. To weigh these parts, we introduce several scaling functions: 
+
+〈 ∂w e
+
+∂xj
+
+, ∂xj (t)
+
+∂t 
+
+〉
+
+= λj (x1, ... x|e|)
+
+〈 ∂w e
+
+∂xi
+
+, ∂xi(t)
+
+∂t 
+
+〉
+
+. (10) Then, We focus on one side: 
+
+〈 ∂w e
+
+∂xi
+
+, ∂xi(t)
+
+∂t 
+
+〉
+
+= − κe(t)we(t)1 + ∑  
+
+> j∈e,j ̸=i
+
+λj (x1, ... x|e|) . (11) Under the the constraint of Equation (11) and |xi(t)| ≡ 
+
+1 , we minimize ∥ ∂xi(t) 
+
+> ∂t
+
+∥, which means that xi(t) always applies only the slightest change to satisfy the attribute 5
+
+discrete Ricci flow, which guarantees that the evolution of xi(t) is numerically stable. On this basis, the result-ing optimization objective can be formally expressed as follows: 
+
+min 
+
+∥∥∥∥
+
+∂xi(t)
+
+∂t 
+
+∥∥∥∥ ,
+
+s.t. 
+
+〈 ∂w e
+
+∂xi
+
+, ∂xi(t)
+
+∂t 
+
+〉
+
+= − κe(t)we(t)1 + ∑  
+
+> j∈e,j ̸=i
+
+λj (x1, ... x|e|) ,
+
+|xi(t)| = 1 .
+
+(12) Proposition 3. The optimization objective presented in Equation (12) has a closed-form solution as follows: 
+
+∂xi(t)
+
+∂t = −κ′
+
+> ie
+
+(t)
+
+∑
+
+> j∈e
+
+xj (t) − cos ( xi(t), xj (t)) xi(t)
+
+√didj
+
+ ,
+
+(13) where 
+
+κ′
+
+> ie
+
+(t) = μie 
+
+(1 − (xi(t)T mie )2)( ∑ 
+
+> i,j ∈e1
+
+√didj
+
+) , (14) 
+
+μie = − κe(t)we(t)1 + ∑  
+
+> j∈e,j ̸=i
+
+λj (x1(t), ... x|e|(t)) , (15) 
+
+mie = 1
+
+∑ 
+
+> i,j ∈e1
+
+√didj
+
+∑
+
+> j∈e
+
+xj (t)
+
+√didj
+
+ . (16) To reduce computational complexity, we select appro-priate scaling functions λj (·) such that κ′
+
+> ie
+
+(t) = κ′
+
+> je
+
+(t)
+
+holds for all i, j ∈ e. Consequently, Equation (13) can be simplified to: 
+
+∂xi(t)
+
+∂t = −κ′
+
+> e
+
+(t)
+
+∑
+
+> j∈e
+
+xj (t) − cos ( xi(t), xj (t)) xi(t)
+
+√didj
+
+ .
+
+(17) The Equation (17) defines the local influence of a single hyperedge e on node i, while a node’s representation is updated based on its entire neighborhood. Accordingly, we generalize this equation from a single hyperedge to the entire hypergraph by iterating over all hyperedges incident to node i and aggregating the corresponding information. We can rewrite Equation (17) as follows: 
+
+∂xi(t)
+
+∂t = ∑
+
+> e:i∈e
+
+−κ′
+
+> e
+
+(t)
+
+∑
+
+> j∈e
+
+xj (t) − cos ( xi(t), xj (t)) xi(t)
+
+√didj
+
+ .
+
+(18) We can rewrite the equation (18) in matrix form as follows: 
+
+∂X(t)
+
+∂t =
+
+[
+
+diag 
+
+((S(X(t)) ⊙C(X(t)) )1N
+
+)
+
+−S(X(t)) 
+
+]
+
+X(t),
+
+(19) 
+
+S(X(t)) = D− 12 
+
+> v
+
+HK ′(X(t)) HT D− 12 
+
+> v
+
+, (20) 
+
+K′(X(t)) = diag( κ′
+
+> 1
+
+(t), κ ′
+
+> 2
+
+(t)...κ ′
+
+> m
+
+(t)) , (21) 
+
+Cij (X(t)) = cos (xi(t), xj (t)) . (22) Here, H represent the incidence matrix of hypergraph, 
+
+Dv represent the vertex degree matrix. The node feature update process in Equation (18) and (19) mitigates over-smoothing via a geometry-aware adaptive mechanism. It aggregates not the raw features of neighboring nodes, but rather the feature dissimilarities between neighbor-ing and central nodes. The sign of the curvature is leveraged to dynamically modulate the direction of this aggregation: in homophilous communities with positive curvature, it reduces feature discrepancies to achieve local smoothing, whereas across heterophilous bridges with negative curvature, it amplifies these differences to pre-serve node distinctiveness. This bidirectional regulatory capacity, combining both positive and negative effects, transcends the unidirectional averaging process inherent to conventional HGNNs. By preserving the uniqueness of critical nodes, it fundamentally inhibits the convergence of all node features towards uniformity, thereby addressing the over-smoothing problem. Existence and Uniqueness of Solutions: The Equation (19) offers an innovative framework for modeling hyper-graph feature evolution. To ensure its validity, we conduct a rigorous theoretical analysis, from which we derive the following conclusion: Theorem 4. Suppose the following conditions hold: 1) For every node i, the degree of node i is strictly bounded: 0 < d min ≤ di ≤ dmax < ∞,where dmin and dmax denote the minimum and maximum node degrees of the hypergraph. 2) λj (·) is bounded on bounded sets and locally Lipschitz. 3) For every e, κe(t) and we(t) are continuously bounded. 4) For every e, 1 − (xi(t)T mie )2 ≥ ε ∈ (0 , 1] .Then, for any initial condition x(0) ∈ Rn and any T > 0, there exists a unique solution x(t) ∈
+
+C1([0 , T ], Rn) to Equation (19). Theorem 4 guarantees the reliable local evolution behav-ior of the dynamical system under study within a strict mathematical framework. Specifically, the local solution 
+
+x(t) of Equation (19) is guaranteed to exist and be continuously differentiable, which ensures that the system is well-defined in the short term. Simultaneously, the theorem guarantees the solution is unique which ensures that the system trajectory emanating from any initial condition x(0) is one-of-a-kind, thereby lending reliability to analyses and predictions based on this equation. The full proof is available in the supplementary material. B. Ricci Flow-guided Hypergraph Neural Diffusion As shown in Equation (18), the evolution of node features is tightly coupled with the aggregation weight function κ′
+
+> e
+
+(t). However, in practice, the exact computa-tion of this function for all hyperedges is computationally 6
+
+prohibitive. Therefore, to address this challenge, we pro-pose leveraging the function approximation capabilities of a neural network to fit the hyperedge function. This leads us to propose the Ricci Flow-guided Hypergraph Neural Diffusion(RFHND) model, a framework for node representation evolution inspired by Ricci flow. Based on the universal approximation theorem [40] of neural networks, we can draw the following conclusions. Theorem 5. Suppose for any j ∈ e, λj (·) is acontinuous function, When Forman-Ricci curvature 
+
+κF R , Ollivier-Ricci curvature κOR are used as the definition of hyperedge curvature in RFHND, there exists an HyperNet that can approximate the aggregation weight of RFHND κ′
+
+> e
+
+(t) with arbitrarily high precision. Proof. The goal is to demonstrate that the aggregation weight κ′
+
+> e
+
+(t) is a continuous function of the node features 
+
+X(t), which in turn allows for its approximation by a neural network. We begin with the premise that for any node j ∈ e,its associated function λj (·) is continuous. As established in the supplementary material, the curvature κe(t) is a continuous function of the node features. Similarly, the hyperedge weight we(t), defined in Equation (6), is also a continuous function of the node features. The expression of κ′
+
+> e
+
+(t) is a composition of the functions 
+
+κe(t), we(t), and λj (·) through arithmetic operations that preserve continuity (assuming a non-zero denominator). Since each of its constituent functions is continuous with respect to the node features X(t), it follows that κ′
+
+> e
+
+(t) is also a continuous function of X(t).Therefore, by the Universal Approximation Theorem, there exists a neural network with sufficient capacity that can approximate the aggregation weight κ′
+
+> e
+
+(t) from the node features with arbitrary precision. This theoretical result provides a rigorous foundation for our architectural design. It guarantees that parameteriz-ing the curvature-guided aggregation weights via neural networks (e.g., MLPs) is a valid approach. In practical implementation, we drive feature updates by numerically solving differential equations. The pseudocode for the forward propagation of RFHND is shown in Algorithm 1. To ensure the robustness of the solution process, we further derive the stability conditions for the explicit Euler method, as detailed below: Theorem 6. The explicit Euler method for the RFHND is stable if the step size τ ≤ 1  
+
+> max i
+> ∑
+> jsij
+
+.
+
+Here, sij denotes the elements of the matrix S(X(t)) .To ensure numerical stability and prevent divergence, the step size of the explicit method must be subject to specific constraints. We formally establish the rigorous form of this criterion in Theorem 6: specifically, the step size τ
+
+must be less than the reciprocal of the maximum row sum of the hypergraph edge weight matrix to guarantee the asymptotic stability of the algorithm. For the detailed mathematical proof, please refer to the supplementary material. Computational complexity. To evaluate the computa-tional efficiency of RFHDN, we analyze the time complex-ity of its forward propagation. The overall time complexity is O(nd in dout ) + T · O(m(r2din + d2
+
+> in
+
+)) , where n and m
+
+denote the number of nodes and hyperedges, respectively. 
+
+din and dout represent the dimensions of the input and output features, T indicates the number of layers, and r
+
+represents the maximum hyperedge degree. The detailed analysis is provided in the the supplementary material. Algorithm 1 Ricci Flow-guided Hypergraph Neural Diffu-sion                                                                          
+
+> Input: Hypergraph H= ( V,E)with incidence matrix H, edge index E,degree matrix Dv, features matrix F∈Rn×din , step size τ, depth T, hidden dimension d.
+> 1: X(0) ←Linear( F)
+> 2: (node_idx ,edge_idx )←E
+> 3: for t= 0 to T−1do
+> 4: Eedge ←scatter( X(t),edge_idx )
+> 5: Enode ←scatter(MLP θ1(Eedge ),edge_idx )
+> 6: Eedge ←scatter( Eedge ,edge_idx )
+> 7: K′(t)←diag(MLP θ2(Eedge ))
+> 8: Compute Matrix S(X(t)) by Eq. (20)
+> 9: F(X(t)) ←diag
+> ((S(X(t)) ⊙C(X(t)) )1N
+> )
+> −S(X(t))
+> 10: X(t+ 1) ←X(t)−τ F (X(t)) X(t)
+> 11: end for
+> 12: Y←Linear( X(T))
+> 13: Compute loss and back propagation.
+
+VI. Experiment A. Results on Benchmark Datasets Datasets. To validate the performance of RFHND, we conducted a comprehensive evaluation on a diverse collec-tion of benchmark datasets representing both academic and real-world scenarios. The academic scenarios evaluation was performed on five well-established hypergraph benchmarks from co-citation and co-authorship networks: Cora, Cite-seer, Pubmed, Cora-CA, and DBLP-CA [26]. For these datasets, node features are derived from bag-of-words representations, while labels correspond to the paper’s subject category. To assess the method’s generalizability across different domains, we also utilized several real-world datasets. These include Zoo from the UCI repository [41], the 3D vision datasets ModelNet40 [42] and NTU2012 [43], and the transaction datasets Walmart [44], the social network datasets House [45] and Senate [46]. Following prior works, hypergraph structures were constructed for all datasets, in cases where inherent node features were absent, we initialized them using Gaussian random vec-tors. For the evaluation, a consistent 50%/25%/25% split was used for the training, validation, and testing sets. To ensure robust and reliable results, the final reported 7
+
+TABLE I: Dataset Statistics Summary                                                         
+
+> Metric Cora Citeseer Pubmed Cora-CA DBLP-CA Zoo NTU2012 ModelNet40 Walmart Senate House
+> |V|2708 3312 19 177 2708 41 302 101 2012 12 311 88 860 282 1290
+> |E|1579 1079 7963 1072 22 363 43 2012 12 311 69 906 315 340
+> #features 1433 3703 500 1433 1425 16 100 100 100 100 100
+> #classes 76376767 40 11 22
+
+TABLE II: Performance comparison on academic hypergraph datasets (Mean accuracy (%) ± standard deviation), with the best results in bold, second-best and third-best are marked with an underline.                                                                                     
+
+> Models Cora Citeseer Pubmed Cora-CA DBLP-CA Rank ↓
+> HNHN 76.36 ±1.92 72.64 ±1.57 86.90 ±0.30 77.19 ±1.49 86.78 ±0.29 12 HGNN 79.39 ±1.36 72.45 ±1.16 86.44 ±0.44 82.64 ±1.65 91.03 ±0.20 8HCHA 79.14 ±1.02 72.42 ±1.42 86.41 ±0.36 82.55 ±0.97 90.92 ±0.22 11 HyperGCN 78.45 ±1.26 71.28 ±0.82 82.84 ±8.67 79.48 ±2.08 89.38 ±0.25 13 UniGCNII 78.81 ±1.05 73.05 ±2.21 88.25 ±0.40 83.60 ±1.14 91.69 ±0.19 6AllSetTransformer 78.59 ±1.47 73.08 ±1.20 88.72 ±0.37 83.63 ±1.47 91.53 ±0.23 5AllDeepSets 76.88 ±1.80 70.83 ±1.63 88.75 ±0.33 81.97 ±1.50 91.27 ±0.27 10 HAN 79.70 ±1.77 74.12 ±1.52 85.32 ±2.25 81.71 ±1.73 90.17 ±0.65 9ED-HNN 80.31 ±1.35 73.70 ±1.38 89.03 ±0.53 83.97 ±1.55 91.90 ±0.19 3HyperGINE 79.26 ±0.41 73.72 ±0.52 87.91 ±0.28 82.88 ±0.48 -11 KHGNN 80.67 ±0.76 74.80 ±1.10 88.47 ±0.47 84.25 ±0.74 -4FrameHGNN 81.51 ±0.99 74.72 ±2.10 88.73 ±0.42 85.18 ±0.69 -2RFHND 81.83 ±1.48 76.04 ±1.43 88.88 ±0.35 85.40 ±1.05 91.20 ±0.41 1
+
+TABLE III: Performance comparison on real-world hypergraph datasets (Mean accuracy (%) ± standard deviation), with the best results in bold, second-best and third-best are marked with an underline.                                                                                                   
+
+> Models Zoo NTU2012 ModelNet40 Walmart Senate House Rank ↓
+> HNHN 93.59 ±5.88 89.11 ±1.44 97.84 ±1.25 81.35 ±0.61 50.93 ±6.33 67.80 ±2.59 6HGNN 92.50 ±4.58 87.72 ±1.35 95.44 ±0.33 80.33 ±0.42 48.59 ±4.52 61.39 ±2.96 11 HCHA 93.65 ±6.15 87.48 ±1.87 94.48 ±0.28 80.33 ±0.80 48.62 ±4.41 61.36 ±2.53 10 HyperGCN N/A 56.36 ±4.86 75.89 ±5.26 81.05 ±0.59 42.45 ±3.67 48.32 ±2.93 13 UniGCNII 93.65 ±4.37 89.30 ±1.33 98.07 ±0.23 81.12 ±0.67 49.30 ±4.25 61.70 ±3.37 7AllSetTransformer 97.50 ±3.59 88.69 ±1.24 98.20 ±0.20 81.38 ±0.58 51.83 ±5.22 69.33 ±2.20 4AllDeepSets 95.39 ±4.77 88.09 ±1.52 96.98 ±0.26 81.06 ±0.54 48.17 ±5.67 67.82 ±2.40 8HAN 75.77 ±7.10 83.58 ±1.46 94.04 ±0.41 79.72 ±0.62 -62.00 ±9.09 12 ED-HNN -88.67 ±0.92 97.83 ±0.33 -64.79 ±5.14 72.45 ±2.28 5HyperGINE -88.52 ±0.42 97.61 ±0.16 ---9KHGNN -89.60 ±1.64 98.33 ±0.14 ---3FrameHGNN -89.98 ±2.02 98.41 ±0.18 -67.61 ±5.27 72.82 ±2.22 2RFHND 97.70 ±2.14 93.36 ±1.18 98.56 ±0.16 82.40 ±1.40 68.12 ±4.98 73.52 ±2.25 1
+
+performance is the aggregated outcome of 20 independent trials using different random splits. The statistical sum-mary of all datasets is available in Table I. Baselines. To evaluate the performance of RFHND, we compared it against a comprehensive set of representative hypergraph neural network baselines. This includes several methods, such as HGNN [24], which applies spectral convolution operations designed for hypergraph data. We also include HCHA [19], a method that incorporates hier-archical attention mechanisms for representation learning, and the widely-used HyperGCN [26], which extends graph convolutions to the hypergraph domain through a clique expansion strategy. Our comparison further incorporates HNHN [25], amodel noted for its novel hypergraph-specific normaliza-tion techniques, alongside UniGCNII [17], which unifies multiple hypergraph convolution paradigms with residual connections. The well-known HAN [47] model is also included as a key representative of hierarchical attention networks. Additionally, we benchmark against AllSet-Transformer and AllDeepSets [18], which adapt deep set theory to ensure permutation invariance in hypergraph learning. The evaluation is extended to more recent and special-ized architectures. The baseline set features ED-HNN [30], a method that utilizes equivariant hypergraph diffusion operators. To account for long-range dependencies, we include HyperGINE and KHGNN [29], the latter of which facilitates interactions between distant nodes via 
+
+K-hop message passing. Finally, the multi-scale approach FrameHGNN [14] is included, which integrates framelet transforms into its architecture. To ensure a fair and standardized comparative environment, all models were implemented within the PyTorch Geometric library [48]. Experiment Setting. For the RFHND model, the Adam optimizer is employed. The main hyperparameters— learning rate, weight decay, dropout rate, hidden dimen-sion, and total training epochs—are individually tuned for each dataset based on validation performance. Specif-ically, the learning rate is selected from {0.001 , 0.01 },weight decay from the range [0 .001 , 0.03] , input dropout from {0.001 , 0.01 , 0.1, 0.2, 0.3}, hidden dimension from 8
+
+TABLE IV: Model Performance On Synthetic Hypergraphs with Controlled Heterophily α.                                                                                                                       
+
+> Model α= 1 α= 2 α= 3 α= 4 α= 5 α= 6 α= 7
+> HGNN 92.58 ±0.57 87.40 ±0.89 82.32 ±0.84 77.18 ±1.08 70.06 ±1.35 69.98 ±0.85 68.41 ±1.39 HyperGCN 83.40 ±1.67 78.13 ±1.57 77.70 ±1.01 74.90 ±1.31 50.15 ±1.94 52.11 ±0.75 49.40 ±1.63 UniGCN 90.42 ±1.04 82.12 ±0.67 80.04 ±0.98 76.86 ±1.10 71.50 ±1.50 52.30 ±1.18 49.20 ±0.74 EDGNN 93.88 ±0.67 89.89 ±0.59 83.52 ±0.85 76.65 ±1.21 72.18 ±1.36 52.98 ±0.78 49.65 ±1.16 RFHND 95.63 ±0.62 90.17 ±0.67 84.21 ±0.81 77.48 ±0.98 74.26 ±1.57 73.51 ±1.07 73.46 ±1.35
+
+{16 , 32 , 64 , 128 , 256 , 512 }, and total training epochs from 
+
+{2, 3, 4}. The optimal configuration for each dataset is determined within these ranges. When applicable, a cosine learning rate scheduler (CosineLR) is adopted. We use the methods implemented by torchdiffeq [49] as the differential equation solver for RFHND. All experiments are con-ducted using a fixed random seed to ensure reproducibil-ity. Source code is available at https://gitee.com/zmy-ovo/rfhnd.git. Results. As demonstrated in Table II and Table III, the experimental results fully showcase the superior per-formance of our proposed RFHND model. By calculating the average ranking across all comparison methods, the RFHND model maintained the first position on both academic and real-world datasets, which strongly attests to its powerful generalization ability. Specifically, the RFHND model achieved State-of-the-Art performance in three out of the five academic benchmark datasets and secured an excellent second-place ranking on one of the others. This performance conclusively confirms the RFHND model’s crucial capability to effectively capture complex relationships within structured data. Further-more, the RFHND model comprehensively surpassed all comparison methods on the six real-world datasets, which span diverse application domains such as transaction networks and social network analysis. These consistent results across different dataset types collectively validate the outstanding effectiveness of the RFHND model for the hypergraph node classification task. B. Results on Synthetic Heterophilic Hypergraph Dataset Experiment Setting. To assess the capability of RFHND in handling datasets exhibiting varying degrees of struc-tural heterogeneity, we conduct experiments on syn-thetic datasets with controllable heterophily levels. These datasets are generated following the contextual hyper-graph stochastic block model [50], [51], [52]. In particular, we create two node classes, each containing 2,500 nodes, and randomly sample 1,000 hyperedges. Each hyperedge is composed of 15 nodes, among which αi nodes are drawn from class i. The heterophily level is quantified as α = min {α1, α 2}.The node features are sampled from Gaussian distribu-tions conditioned on node labels, with a standard devia-tion of 1.0. We examine both homophilic configurations (α = 1 , 2, 3 ) and heterophilic configurations ( α = 4 ∼ 7
+
+). The proposed RFHND framework is benchmarked against several baselines, including HGNN, HyperGCN, and ED-HNN. Consistent with prior studies, we employ a 50%/25%/25% partitioning of the data for training, validation, and testing. To ensure statistical reliability, all experiments are repeated over 10 random splits, and the final results are reported as averaged outcomes. Results. The results presented in Table IV indicate that the RFHND model consistently achieves superior performance compared to all baseline methods across the evaluated datasets. Its advantage is particularly ev-ident in heterophilic settings (when α >3), where the model demonstrates markedly improved robustness and generalization ability. These findings substantiate the effectiveness of the proposed architecture. C. Ablation Study In this section, we perform ablation experiments on mul-tiple datasets to assess the contribution of each submodule within our model. The detailed findings are summarized as follows. TABLE V: Ablation Study.                                        
+
+> Variants Zoo NTU2012 ModelNet40 w/o COS 97.16 ±2.90 90.04 ±1.09 96.78 ±0.27 w/o HyperNet 96.89 ±2.87 91.52 ±1.12 97.42 ±0.23 w/o C and H 96.43 ±2.90 89.79 ±1.30 96.86 ±0.27 RFHND (Full Model) 97.70 ±2.14 93.36 ±1.18 98.56 ±0.16
+
+• w/o COS: In this variant of RFHND, the cosine coefficient is removed from the node feature evolution process, so feature updates are performed without cosine-based modulation. 
+
+• w/o HyperNet: In this variant of RFHND, the Hy-perNet used to model edge curvature is replaced with a randomly generated numerical value, instead of learning curvature adaptively. 
+
+• w/o C and H: This RFHND variant excludes both the cosine coefficient in the node feature evolution process and the HyperNet used for edge curvature modeling. As shown in Table V, all variants exhibit degraded performance in label prediction, underscoring the impor-tance of these in enhancing the modeling of interaction types. Specifically, the joint removal of the COS and HyperNet modules (w/o C and H) leads to a substantially more pronounced performance drop compared to the singular ablations, underscoring the critical importance of coordination between these two modules. 9    
+
+> (a) Cora (b) Cora-CA (c) Citeseer
+> (d) Cora (e) Cora-CA (f) Citeseer
+
+Fig. 2: (a) shows the accuracy(%) with various depths on Cora. (b) shows the accuracy(%) with various depths on Cora-CA. (c) shows the accuracy(%) with various depths on Citeseer. (d) shows the dirichlet energy with various depths on Cora. (e) shows the dirichlet energy with various depths on Cora-CA. (f) shows the dirichlet energy with various depths on Citeseer. D. Over-smoothing analysis This section examines how model depth affects the performance of hypergraph neural networks. Most existing HGNNs are inherently shallow, which limits their ability to capture information from higher-order neighbors [15]. However, simply increasing the depth often leads to oversmoothing, where node representations become in-creasingly similar and eventually indistinguishable. To study this issue, we evaluated several models with different depths on Cora, Cora-CA and Citeseer datasets. Using a fixed data split, we tested layer settings of 2, 4, 10, 20, 30, and 40 to observe how performance changes as the network becomes deeper. Meanwhile, we also recorded the Dirichlet Energy across different layer configurations. Specifically, for zero layers, the energy is calculated using the initial node features, while for deeper configurations, it is calculated from the node embeddings output by the trained network. As systematically illustrated in Fig. 2, the results yield two key observations:  
+
+> •
+
+The proposed RFHND model consistently delivers superior performance across all tested layer depths. Crucially, its performance exhibits remarkable stabil-ity as the number of layers is progressively increased.  
+
+> •
+
+RFHND shows a stable Dirichlet Energy trajectory on above three datasets, while comparison methods experience a rapid energy decline as depth increases. This is consistent with our theoretical analysis in Section IV-A. E. Robustness analysis To assess the robustness of RFHND under noisy input conditions, extensive experiments are conducted consid-ering both feature-level and structure-level perturbations. The experimental configurations are as follows:  
+
+> •
+
+Feature Noise: Node features in the Citeseer dataset are perturbed using three types of noise: (a) Gaussian noise sampled from N (0 , σ 2) and scaled according to the noise rate; (b) Uniform noise drawn from 
+
+U nif (−δ, δ ), where δ is proportional to the noise rate; (c) Mask noise, in which a portion of feature values is randomly set to zero based on the noise rate.  
+
+> •
+
+Structure Noise: For the Cora-CA dataset, the hy-pergraph structure is disturbed by randomly delet-ing existing hyperedges and introducing hyperedges composed of random node subsets, with the overall perturbation controlled by the noise rate. As illustrated in Fig. 3, the proposed approach consis-tently surpasses baseline methods under all noise settings. When exposed to feature-level perturbations, RFHND demonstrates strong robustness on the Citeseer dataset, maintaining stable performance across different noise types, including Gaussian, uniform, and mask-based dis-turbances. Notably, all examined models show higher tolerance to mask noise compared with other feature perturbations, possibly because mask noise introduces 10         
+
+> " #
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> !! 
+> 
+> $ ! 
+> 
+>  
+> 
+> 
+
+(a) Gaussian Noise          
+
+> " #
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> !! 
+> 
+> $ ! 
+> 
+>  
+> 
+> 
+
+(b) Uniform Noise     
+
+> "% &
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> $"$  ! 
+> 
+> '#$
+> 
+> 
+> 
+> 
+
+(c) Mask Noise          
+
+> " #
+> 
+> 
+> 
+> 
+> 
+> 
+> !! 
+> 
+> $ ! 
+> 
+>  
+> 
+> 
+
+(d) Structure Noise 
+
+Fig. 3: (a) shows the performance on Citeseer under feature gaussian noise. (b) shows the performance on Citeseer under feature uniform noise. (c) shows the performance on Citeseer under feature mask noise. (d) shows the performance on Cora-CA under structure noise. structured sparsity rather than random distortion, allow-ing models to better adapt during training. The analysis of structural noise demonstrates compara-ble benefits on the Cora-CA dataset. Across all examined noise levels (0.1–0.4), the proposed method consistently delivers better performance. While the accuracy of all models decreases as the noise rate grows, RFHND shows only a marginal decline, reflecting its strong robustness against structural disturbances. F. Parameter analysis To assess the sensitivity of RFHND to key hyperparam-eters, an extensive analysis was performed focusing on two crucial factors: the hidden layer dimension and the step size τ . In particular, the model’s performance was evalu-ated under different configurations of hidden layer dimen-sions {16 , 32 , 64 , 128 , 256 } and step sizes {0.2, 0.5, 1, 2, 4}.Specifically, we selected three representative datasets: Zoo, NTU2012 and ModelNet40. As illustrated in Fig. 4, RFHND remains relatively stable under different hidden layers. However, when the step size becomes excessively large, the model performance deteriorates, indicating that overly large steps may cause unstable feature propagation and weaken the model’s capacity to capture fine-grained relational patterns. This is consistent with the conclusion of Theorem 6. G. Feature visualization To gain deeper insights into the dynamic changes of node representations, a feature visualization analysis was conducted on the Citeseer and Pubmed datasets. In this analysis, node features were captured at multiple time points during the ODE integration process, specifically at 
+
+t = 0 , t = 1 , and t = 2 . The obtained high-dimensional representations were then mapped onto a two-dimensional space using a dimensionality reduction method for visual-ization purposes. In the resulting visualizations, nodes are color-coded according to their corresponding class labels. As illustrated in Fig. 5, it can be seen that the node embeddings gradually form clearer and more compact clusters as time advances. This phenomenon suggests that the model progressively enhances its ability to distinguish nodes from different classes, with the representations evolving into more separable and discriminative structures throughout the integration process. VII. Conclusion In this paper, we mitigated the critical challenge of over-smoothing in hypergraph neural networks by gen-11  
+
+> (a) (b)
+
+Fig. 4: (a) shows RFHND accuracy on NTU2012 and ModelNet40 with various hidden dimensions. (b) shows RFHND accuracy on NTU2012 and ModelNet40 with various τ .    
+
+> (a) Pubmed(t=0) (b) Pubmed(t=1) (c) Pubmed(t=2)
+> (d) DBLP(t=0) (e) DBLP(t=1) (f) DBLP(t=2)
+
+Fig. 5: (a)(b)(c) show the visualization of Pubmed node features at t = 0 , t = 1 and t = 2 . (d)(e)(f) show the visualization of DBLP node features at t = 0 , t = 1 and t = 2 .eralizing Ricci flow from differential geometry to the hypergraph domain. Specifically, we proposed RFHND (Ricci Flow-guided Hypergraph Neural Diffusion), a novel message passing paradigm that leverages discrete Ricci flow to adaptively regulate information propagation. By formulating node feature evolution as a continuous PDE-based system, our method effectively controls the diffusion rate at the geometric level, thereby preventing feature homogenization. Furthermore, we provided a rigorous the-oretical analysis validating the convergence properties and approximation capabilities of our framework. Extensive experiments across multiple benchmark datasets demon-strate that RFHND significantly outperforms state-of-the-art methods and exhibits strong robustness. Ultimately, this work offers a promising geometric perspective for addressing over-smoothing, enriching the theory for high-order representation learning. References      
+
+> [1] D. Zhou, J. Huang, and B. Schölkopf, “Learning with hyper-graphs: Clustering, classification, and embedding,” Advances in neural information processing systems, vol. 19, 2006. [2] A. Antelmi, G. Cordasco, M. Polato, V. Scarano, C. Spagnuolo, and D. Yang, “A survey on hypergraph representation learning,” ACM Computing Surveys, vol. 56, no. 1, pp. 1–38, 2023. [3] C. Berge, Hypergraphs: combinatorics of finite sets. Elsevier, 1984, vol. 45. [4] V. Zlatić, G. Ghoshal, and G. Caldarelli, “Hypergraph topolog-ical quantities for tagged social networks,” Physical Review E— Statistical, Nonlinear, and Soft Matter Physics, vol. 80, no. 3, p. 036118, 2009. 12
+
+[5] J. Zhu, J. Zhu, S. Ghosh, W. Wu, and J. Yuan, “Social influence maximization in hypergraph in social networks,” IEEE Transactions on Network Science and Engineering, vol. 6, no. 4, pp. 801–811, 2018. [6] L. Xia, C. Huang, and C. Zhang, “Self-supervised hypergraph transformer for recommender systems,” in Proceedings of the 28th ACM SIGKDD conference on knowledge discovery and data mining, 2022, pp. 2100–2109. [7] J. Wang, K. Ding, L. Hong, H. Liu, and J. Caverlee, “Next-item recommendation with sequential hypergraphs,” in Proceedings of the 43rd international ACM SIGIR conference on research and development in information retrieval, 2020, pp. 1101–1110. [8] S. Feng, E. Heath, B. Jefferson, C. Joslyn, H. Kvinge, H. D. Mitchell, B. Praggastis, A. J. Eisfeld, A. C. Sims, L. B. Thackray et al., “Hypergraph models of biological networks to identify genes critical to pathogenic viral response,” BMC bioinformatics, vol. 22, no. 1, p. 287, 2021. [9] S. Klamt, U.-U. Haus, and F. Theis, “Hypergraphs and cellu-lar networks,” PLoS computational biology, vol. 5, no. 5, p. e1000385, 2009. [10] S. Kim, S. Y. Lee, Y. Gao, A. Antelmi, M. Polato, and K. Shin, “A survey on hypergraph neural networks: an in-depth and step-by-step guide,” in Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, 2024, pp. 6534–6544. [11] H. Wu and M. K. Ng, “Hypergraph convolution on nodes-hyperedges network for semi-supervised node classification,” ACM Transactions on Knowledge Discovery from Data (TKDD), vol. 16, no. 4, pp. 1–19, 2022. [12] N. Yadati, V. Nitin, M. Nimishakavi, P. Yadav, A. Louis, and P. Talukdar, “Nhp: Neural hypergraph link prediction,” in Proceedings of the 29th ACM international conference on information & knowledge management, 2020, pp. 1705–1714. [13] D. Li, Z. Xu, S. Li, and X. Sun, “Link prediction in social networks based on hypergraph,” in Proceedings of the 22nd international conference on world wide web, 2013, pp. 41–42. [14] M. Li, Y. Fang, Y. Wang, H. Feng, Y. Gu, L. Bai, and P. Lio, “Deep hypergraph neural networks with tight framelets,” in Proceedings of the AAAI Conference on Artificial Intelligence, vol. 39, no. 17, 2025, pp. 18 385–18 392. [15] G. Chen, J. Zhang, X. Xiao, and Y. Li, “Preventing over-smoothing for hypergraph neural networks,” arXiv preprint arXiv:2203.17159, 2022. [16] J. LIN, Z. YE, H. ZHAO, and L. FANG, “Deephgnn: Anovel deep hypergraph neural network,” Chinese Journal of Electronics, vol. 31, no. 5, pp. 958–968, 2022. [17] J. Huang and J. Yang, “Unignn: a unified framework for graph and hypergraph neural networks,” arXiv preprint arXiv:2105.00956, 2021. [18] E. Chien, C. Pan, J. Peng, and O. Milenkovic, “You are allset: A multiset function framework for hypergraph neural networks,” arXiv preprint arXiv:2106.13264, 2021. [19] S. Bai, F. Zhang, and P. H. Torr, “Hypergraph convolution and hypergraph attention,” Pattern Recognition, vol. 110, p. 107637, 2021. [20] C. Chen, Z. Cheng, Z. Li, and M. Wang, “Hypergraph attention networks,” in 2020 IEEE 19th International Conference on Trust, Security and Privacy in Computing and Communications (TrustCom). IEEE, 2020, pp. 1560–1565. [21] K. Nguyen, N. M. Hieu, V. D. Nguyen, N. Ho, S. Osher, and T. M. Nguyen, “Revisiting over-smoothing and over-squashing using ollivier-ricci curvature,” in International Conference on Machine Learning. PMLR, 2023, pp. 25 956–25 979. [22] B. Chow and D. Knopf, The ricci flow: An introduction: An introduction. American Mathematical Soc., 2004, vol. 1. [23] Y.-L. Yang, R. Guo, F. Luo, S.-M. Hu, and X. Gu, “Generalized discrete ricci flow,” in Computer graphics forum, vol. 28, no. 7. Wiley Online Library, 2009, pp. 2005–2014. [24] Y. Feng, H. You, Z. Zhang, R. Ji, and Y. Gao, “Hypergraph neural networks,” in Proceedings of the AAAI conference on artificial intelligence, vol. 33, no. 01, 2019, pp. 3558–3565. [25] Y. Dong, W. Sawin, and Y. Bengio, “Hnhn: Hyper-graph networks with hyperedge neurons,” arXiv preprint arXiv:2006.12278, 2020. [26] N. Yadati, M. Nimishakavi, P. Yadav, V. Nitin, A. Louis, and P. Talukdar, “Hypergcn: A new method for training graph convolutional networks on hypergraphs,” Advances in neural information processing systems, vol. 32, 2019. [27] D. Arya, D. K. Gupta, S. Rudinac, and M. Worring, “Hypersage: Generalizing inductive representation learning on hypergraphs,” arXiv preprint arXiv:2010.04558, 2020. [28] J. Yan, Y. Feng, S. Ying, and Y. Gao, “Hypergraph dynamic system,” in The twelfth international conference on learning representations, 2024. [29] L. Xie, S. Gao, J. Liu, M. Yin, and T. Jin, “K-hop hypergraph neural network: A comprehensive aggregation approach,” in Proceedings of the AAAI Conference on Artificial Intelligence, vol. 39, no. 20, 2025, pp. 21 679–21 687. [30] P. Wang, S. Yang, Y. Liu, Z. Wang, and P. Li, “Equiv-ariant hypergraph diffusion neural operators,” arXiv preprint arXiv:2207.06680, 2022. [31] W. Leal, G. Restrepo, P. F. Stadler, and J. Jost, “Forman– ricci curvature for hypergraphs,” Advances in Complex Systems, vol. 24, no. 01, p. 2150003, 2021. [32] C. Coupette, S. Dalleiger, and B. Rieck, “Ollivier-ricci cur-vature for hypergraphs: A unified framework,” arXiv preprint arXiv:2210.12048, 2022. [33] M. Eidi, A. Farzam, W. Leal, A. Samal, and J. Jost, “Edge-based analysis of networks: curvatures of graphs and hypergraphs,” Theory in biosciences, vol. 139, no. 4, pp. 337–348, 2020. [34] C. Cai and Y. Wang, “A note on over-smoothing for graph neural networks,” arXiv preprint arXiv:2006.13318, 2020. [35] R. S. Hamilton, “Three-manifolds with positive ricci curvature,” Journal of Differential geometry, vol. 17, no. 2, pp. 255–306, 1982. [36] Y. Ollivier, “Ricci curvature of markov chains on metric spaces,” Journal of Functional Analysis, vol. 256, no. 3, pp. 810–864, 2009. [37] C.-C. Ni, Y.-Y. Lin, F. Luo, and J. Gao, “Community detection on networks with ricci flow,” Scientific reports, vol. 9, no. 1, p. 9984, 2019. [38] C.-C. Ni, Y.-Y. Lin, J. Gao, and X. Gu, “Network alignment by discrete ollivier-ricci flow,” in International symposium on graph drawing and network visualization. Springer, 2018, pp. 447–462. [39] J. Chen, B. Deng, C. Chen, Z. Zheng et al., “Graph neural ricci flow: Evolving feature from a curvature perspective,” in The Thirteenth International Conference on Learning Representa-tions, 2025. [40] G. Cybenko, “Approximation by superpositions of a sigmoidal function,” Mathematics of control, signals and systems, vol. 2, no. 4, pp. 303–314, 1989. [41] D. Dua, C. Graff et al., “Uci machine learning repository, 2017,” URL http://archive. ics. uci. edu/ml, vol. 7, no. 1, p. 62, 2017. [42] Z. Wu, S. Song, A. Khosla, F. Yu, L. Zhang, X. Tang, and J. Xiao, “3d shapenets: A deep representation for volumetric shapes,” in Proceedings of the IEEE conference on computer vision and pattern recognition, 2015, pp. 1912–1920. [43] D.-Y. Chen, X.-P. Tian, Y.-T. Shen, and M. Ouhyoung, “On vi-sual similarity based 3d model retrieval,” in Computer graphics forum. Wiley Online Library, 2003, pp. 223–232. [44] I. Amburg, N. Veldt, and A. Benson, “Clustering in graphs and hypergraphs with categorical edge labels,” in Proceedings of the web conference 2020, 2020, pp. 706–717. [45] P. S. Chodrow, N. Veldt, and A. R. Benson, “Generative hy-pergraph clustering: From blockmodels to modularity,” Science Advances, vol. 7, no. 28, p. eabh1303, 2021. [46] J. H. Fowler, “Connecting the congress: A study of cosponsor-ship networks,” Political analysis, vol. 14, no. 4, pp. 456–487, 2006. [47] X. Wang, H. Ji, C. Shi, B. Wang, Y. Ye, P. Cui, and P. S. Yu, “Heterogeneous graph attention network,” in The world wide web conference, 2019, pp. 2022–2032. [48] M. Fey and J. E. Lenssen, “Fast graph representation learn-ing with pytorch geometric,” arXiv preprint arXiv:1903.02428, 2019. [49] R. T. Chen, Y. Rubanova, J. Bettencourt, and D. K. Duvenaud, “Neural ordinary differential equations,” Advances in neural information processing systems, vol. 31, 2018. [50] Y. Deshpande, S. Sen, A. Montanari, and E. Mossel, “Contex-tual stochastic block models,” Advances in Neural Information Processing Systems, vol. 31, 2018. 13 
+
+[51] D. Ghoshdastidar and A. Dukkipati, “Consistency of spectral partitioning of uniform hypergraphs under planted partition model,” Advances in Neural Information Processing Systems, vol. 27, 2014. [52] I. Chien, C.-Y. Lin, and I.-H. Wang, “Community detection in hypergraphs: Optimal statistical limit and efficient algorithms,” in International conference on artificial intelligence and statis-tics. PMLR, 2018, pp. 871–879. 1
+
+Appendix A HYPEREDGE CURVATURE ON WEIGHTED HYPERGRAPHS Discrete curvature is a key tool for analyzing the geometric properties of networks. In recent years, multiple studies have successfully generalized this concept from graph data to more complex hypergraphs. This section will focus on elaborating two definitions of curvature defined on hyperedges. A. Forman-Ricci Curvature on Hypergraphs Forman-Ricci (FR) curvature [31], first introduced on cell complexes, has now been extended to hypergraphs. The curvature characterizes the balance between a hy-peredge’s internal structure and its external connections, essentially measuring whether it functions as a community core (high curvature) or a bridge (low curvature). Acommon definition for the Forman-Ricci curvature of a hyperedge e ∈ E is given by: 
+
+κF R e = ∑
+
+> i∈e
+
+wi − we
+
+∑
+
+> k∈e,e l∼k
+
+√ wk
+
+wel
+
+, (23) where we is the weight of the hyperedge e and wi is the weight of the node i. el ∼ k represent the represents the hyperedge associated with node k. In this paper, we consider the weights of all nodes as 1. Then, the curvature expression mentioned above can be written in the following form: 
+
+κF R e = |e| − ∑
+
+> k∈e,e l∼k
+
+we
+
+√wel
+
+. (24) B. Ollivier-Ricci Curvature on Hypergraphs Ollivier-Ricci(OR) curvature [32], first introduced using optimal transport theory, has now been extended to hyper-graphs. The curvature characterizes network robustness by measuring the transport cost between local neighborhood distributions; a low cost implies a robust, community-like structure (high curvature), while a high cost indicates a fragile bridge (low curvature). To define OR curvature on a hypergraph, we first need to define a probability measure μi for each node i ∈ V .This typically represents a two-step random walk from the node. The standard definition is: 
+
+μi(j) = ∑
+
+> e⊇{ i,j }
+
+(
+
+we
+
+∑ 
+
+> i∋f
+
+wf
+
+· 1
+
+|e|
+
+)
+
+, (25) where j is a neighbor of i , and w′ 
+
+> e
+
+is the weight of the hyperedge e. The OR curvature of the hyperedge e is then defined as: 
+
+κOR e = 1 − 2
+
+|e|(|e| − 1) 
+
+∑
+
+> i,j ∈e
+
+W1(μi, μ j )
+
+d(i, j ) , (26) where W1(μi, μ j ) is the 1-Wasserstein distance between the two probability distributions, and d(i, j ) is the shortest path distance between nodes i and j in the hypergraph. Appendix B PROOF OF THEOREM 1 Lemma 7. Consider the attribute discrete Ricci flow over the interval [t1, t 2]. If the hyperedge weight 
+
+we(t) has a finite number of N extrema points within (t1, t 2), denoted by T1, . . . , T N , and we define 
+
+T0 = t1 and TN +1 = t2, then: 
+
+ρe − 1
+
+ζe
+
+Et∈[t1,t 2](|κe(t)|) > 1 − ρ−1
+
+> e
+
+t2 − t1
+
+, (27) where ζe = min 0≤i≤N (Ti+1 − Ti) represents the length of the minimum monotonic interval within 
+
+[t1, t 2], and ρe = wmax e
+
+> wmin e
+
+denotes the ratio of the max-imum to the minimum value of we(t). Specifically, if we(t) is monotonic within (t1, t 2), we have: 
+
+1min {we(t2), w e(t1)}|we(t2) − we(t1)|
+
+t2 − t1
+
+> Et∈[t1,t 2](|κe(t)|),
+
+(28) this shows that |we(t2) − we(t1)| → 0 implies 
+
+Et∈[t1,t 2](|κe(t)|) → 0.Proof. We integrate Equation (13) over an arbitrary time interval [t1, t 2]:
+
+we(t2) − we(t1) = −
+
+∫ t2
+
+> t1
+
+κe(t)we(t)dt. (29) Suppose that within [t1, t 2], the function we(t) has N
+
+extremum points. These N points divide the interval 
+
+[t1, t 2] into N + 1 adjacent monotonic sub-intervals. Given that we(t) > 0, the sign of ∂w e(t) 
+
+> ∂t
+
+is determined by κe(t).Moreover, the κe(t) sign remains non-negative or non-positive within each monotonic sub-interval. Let [Ti, T i+1 ] denote any one of these N + 1 mono-tonic sub-intervals. If κe(t) ≥ 0 for t ∈ [Ti, T i+1 ],then we(t) is monotonically decreasing, which implies 
+
+we(Ti) > w e(Ti+1 ) > 0. Therefore: 
+
+0 > −we(Ti+1 )
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt > −
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)we(t)dt > −we(Ti)
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt. 
+
+(30) If κe(t) ≤ 0 for t ∈ [Ti, T i+1 ], then we(t) is monotonically increasing, which implies we(Ti+1 ) > w e(Ti) > 0 and 
+
+− we(Ti+1 )
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt > −
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)we(t)dt > −we(Ti)
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt > 0.
+
+(31) Therefore, on any monotonic sub-interval, we have: 
+
+− we(Ti+1 )
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt > w e(Ti+1 ) − we(Ti)
+
+> −we(Ti)
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt. 
+
+(32) 2
+
+Take the absolute value of the above inequality: 
+
+max {we(Ti), w e(Ti+1 )}
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|dt > |we(Ti+1 ) − we(Ti)|
+
+> min {we(Ti), w e(Ti+1 )}
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|dt. 
+
+(33) Let 
+
+wmax  
+
+> e
+
+> max {we(Ti), w e(Ti+1 )}
+
+> min {we(Ti), w e(Ti+1 )} > w min  
+
+> e
+
+, (34) we have: 
+
+|we(Ti+1 ) − we(Ti)|
+
+wmin 
+
+> e
+
+>
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|dt > |we(Ti+1 ) − we(Ti)|
+
+wmax 
+
+> e
+
+.
+
+(35) Summing over i from 0 to N and then dividing by t2 − t1:
+
+∑Ni=0 |we(Ti+1 ) − we(Ti)|
+
+wmin  
+
+> e
+
+(t2 − t1) > 1
+
+t2 − t1
+
+∫ t2
+
+> t1
+
+|κe(t)|dt 
+
+= Et∈[t1,t 2](|κe(t)|) >
+
+∑Ni=0 |we(Ti+1 ) − we(Ti)|
+
+wmax  
+
+> e
+
+(t2 − t1) .
+
+(36) Because (N + 1)( wmax  
+
+> e
+
+− wmin  
+
+> e
+
+) > ∑Ni=0 |we(Ti+1 ) −
+
+we(Ti)| > w max  
+
+> e
+
+− wmin  
+
+> e
+
+, and ρe = wmax 
+
+> e
+> wmin
+> e
+
+:
+
+(N + 1)( ρe − 1) 
+
+t2 − t1
+
+> Et∈[t1,t 2](|κe(t)|) > 1 − ρ−1
+
+> e
+
+t2 − t1
+
+. (37) According to the definition of ζe, we have (t2 − t1) >ζe(N + 1) . Thus, the estimation of the upper bound can be replaced by ζ−1 
+
+> e
+
+(ρe − 1) > (N +1)( ρe−1)  
+
+> t2−t1
+
+. Thus, 
+
+ρe − 1
+
+ζe
+
+Et∈[t1,t 2](|κe(t)|) > 1 − ρ−1
+
+> e
+
+t2 − t1
+
+. (38) Theorem 8. Consider the attribute discrete Ricci flow with hyperedge weight as equation (6), and 
+
+|x(t)| ≡ 1. If for any e in H, we(t) has a finite number of monotonic on [t1, t 2], then the average Dirichlet energy within [t1, t 2] has following bound: 
+
+B1 ≥ Et∈[t1,t 2](E(X(t)) ≥ B2, (39) where 
+
+B1 = ( t2 − t1) ∑
+
+> e∈E
+
+(ceρeζ−1
+
+> e
+
+) − ∑
+
+> e∈E
+
+(αeϵρ e) ,B2 = ∑
+
+> e∈E
+
+(ce − (2 + ϵ) αeζ−1 
+
+> e
+
+(t2 − t1)) . (40) Here, ce = ∑
+
+> i,j ∈e
+
+( 12|e|
+
+( 1 
+
+> di
+
++ 1
+
+> dj
+
+)
+
++ (1 + ϵ) αe
+
+)
+
+, di
+
+denotes the degree of node i, ρe denotes the ratio of the maximum to the minimum value of we(t) and 
+
+ζe represents the length of the minimum monotonic interval of we(t) within [t1, t 2].Proof. As equation (1) shows 
+
+E(X(t)) = 12
+
+∑
+
+> e∈E
+
+∑
+
+> i,j ∈e
+
+1
+
+|e|
+
+(
+
+xi(t)
+
+√di
+
+− xj (t)
+
+√dj
+
+)2
+
+= 12
+
+∑
+
+> e∈E
+
+∑
+
+> i,j ∈e
+
+1
+
+|e|
+
+(
+
+1
+
+di
+
++ 1
+
+dj
+
+− 2 xi(t)T xj (t)
+
+√didj
+
+)
+
+= ∑
+
+> e∈E
+
+ ∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
++ (1 + ϵ) αe
+
+
+
+− ∑
+
+> e∈E
+
+αewe(t).
+
+(41) Here,we define ce = ∑ 
+
+> i,j ∈e12|e|
+
+( 1 
+
+> di
+
++ 1
+
+> dj
+
+)
+
++ (1 + ϵ) αe and 
+
+Ee(t) = ce − αewe(t), then the Dirichlet energy can be recorded as: 
+
+E(X(t)) = ∑
+
+> e∈E
+
+Ee = ∑
+
+> e∈E
+
+(ce − αewe(t)) . (42) Take the partial derivative of t and substitute the equation into Ricci flow: 
+
+∂E (X(t)) 
+
+∂t = ∑
+
+> e∈E
+
+(
+
+−αe
+
+∂w e(t)
+
+∂t 
+
+)
+
+= ∑
+
+> e∈E
+
+(−αe (−κe(t)we(t))) = ∑
+
+> e∈E
+
+κe(t) ( ce − Ee(t)) .
+
+(43) By transferring the above results to a hyperedge, we can obtain the following formula: 
+
+∂E e(X(t)) 
+
+∂t = κe(t)( ce − Ee(t)) . (44) Integrating the above formula within the interval [t1, t 2] :
+
+Ee(t2) − Ee(t1) = ce
+
+∫ t2
+
+> t1
+
+κe(t)dt −
+
+∫ t2
+
+> t1
+
+κe(t)Ee(t)dt. (45) Then,we consider the N extremum points of we(t) within 
+
+(t1, t 2) : T1, ..., T N . For any i, ke(t) does not change its sign within (Ti, T i+1 ), and Ee ≥ 0, so we have 
+
+| ∫ Ti+1  
+
+> Ti
+
+ke(t)Ee(t)dt | = ∫ Ti+1  
+
+> Ti
+
+|ke(t)|Ee(t)dt , so: 
+
+|Ee(Ti+1 ) − Ee(Ti)|
+
+= |ce
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt −
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)Ee(t)dt |
+
+= |ce
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)dt | − | 
+
+∫ Ti+1 
+
+> Ti
+
+κe(t)Ee(t)dt |
+
+= ce
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|dt −
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|Ee(t)dt 
+
+≈ ce
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|dt 
+
+− Et∈[t1,t 2]|κe(t)|
+
+∫ Ti+1 
+
+> Ti
+
+Ee(t)dt. 
+
+(46) 3
+
+Sum over i from 0 to N and then divide by t2 − t1:
+
+1
+
+t2 − t1
+
+> N
+
+∑
+
+> i=0
+
+|Ee(Ti+1 ) − Ee(Ti)|≥ Et∈[t1,t 2]|κe(t)| (ce − Et∈[t1,t 2](Ee(t)) ) .
+
+(47) Let ζe = min 0≤i≤N (Ti+1 −Ti) represents the length of the minimum monotonic interval within [t1, t 2], so (N +1) ζe ≤
+
+t2 − t1 and we(t) ≤ 2 + ϵ, then we have: 
+
+1
+
+t2 − t1
+
+> N
+
+∑
+
+> i=0
+
+|Ee(Ti+1 ) − Ee(Ti)|
+
+= 1
+
+t2 − t1
+
+> N
+
+∑
+
+> i=0
+
+|αewe(Ti+1 ) − αewe(Ti)|≤ αe(N + 1)(max we − min we)
+
+t2 − t1
+
+≤ ζ−1 
+
+> e
+
+αe max we(1 − ρ−1 
+
+> e
+
+)
+
+≤ (2 + ϵ)ζ−1 
+
+> e
+
+αe(1 − ρ−1 
+
+> e
+
+).
+
+(48) Here, ρe denotes the ratio of the maximum to the minimum value of we(t). Thus, we have: 
+
+(2 + ϵ)ζ−1 
+
+> e
+
+αe(1 − ρ−1 
+
+> e
+
+)
+
+≥ Et∈[t1,t 2]|κe(t)| (ce − Et∈[t1,t 2](Ee(t)) ) . (49) Then we can obtain the lower bound for Et∈[t1,t 2](Ee(t)) :
+
+Et∈[t1,t 2](Ee(t)) ≥ ce − (2 + ϵ)ζ−1 
+
+> e
+
+(1 − ρ−1 
+
+> e
+
+)αe
+
+Et∈[t1,t 2](|ke(t)|)
+
+≥ ce − (2 + ϵ) αeζ−1 
+
+> e
+
+(t2 − t1).
+
+(50) Take the sum over all edge: 
+
+Et∈[t1,t 2](E(t)) ≥ ∑
+
+> e∈E
+
+(ce − (2 + ϵ) αeζ−1 
+
+> e
+
+(t2 − t1)) . (51) Now let’s derive the upper bound of the energy value. From equation (46), we can obtained: 
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|Ee(t)dt 
+
+= ce
+
+∫ Ti+1 
+
+> Ti
+
+|κe(t)|dt − | Ee(Ti+1 ) − Ee(Ti)|.
+
+(52) Sum over i from 0 to N :
+
+∫ t2
+
+> t1
+
+|κe(t)|Ee(t)dt 
+
+= ce
+
+∫ t2
+
+> t1
+
+|κe(t)|dt −
+
+> N
+
+∑
+
+> i=0
+
+|Ee(Ti+1 ) − Ee(Ti)) |
+
+= ce
+
+∫ t2
+
+> t1
+
+|κe(t)|dt −
+
+> N
+
+∑
+
+> i=0
+
+αe|we(Ti+1 ) − we(Ti)|≤ ce
+
+∫ t2
+
+> t1
+
+|κe(t)|dt − αe| max we − min we|≤ ce
+
+∫ t2
+
+> t1
+
+|κe(t)|dt − αeϵ(ρe − 1) .
+
+(53) Divide both sides by t2 − t1:
+
+Et∈[t1,t 2] (|κe(t)|Ee(t)) 
+
+≤ ceEt∈[t1,t 2](|κe(t)|) − αeϵ(ρ−1 
+
+> e
+
+− 1) (t2 − t1) . (54) Applying Lemma 7, we obtain: 
+
+1 − ρ−1
+
+> e
+
+t2 − t1
+
+Et∈[t1,t 2](Ee(t)) 
+
+≤ ceζ−1 
+
+> e
+
+(ρe − 1) − αeϵ(ρe − 1) (t2 − t1) .
+
+(55) Due to E(t) = ∑ 
+
+> e∈E
+
+Ee(t), we can derive the upper bound as: 
+
+Et∈[t1,t 2](E(t)) ≤ (t2 − t1) ∑
+
+> e∈E
+
+(ceρeζ−1
+
+> e
+
+) − ∑
+
+> e∈E
+
+(αeϵρ e) .
+
+(56) Combining the results of Equation (51) and Equation (56), we have: 
+
+(t2 − t1) ∑
+
+> e∈E
+
+(ceρeζ−1
+
+> e
+
+) − ∑
+
+> e∈E
+
+(αeϵρ e)
+
+≥ Et∈[t1,t 2](E(t)) 
+
+≥ ∑
+
+> e∈E
+
+(ce − (2 + ϵ) αeζ−1 
+
+> e
+
+(t2 − t1)) .
+
+(57) Based on the above Theorem 8, we can draw the conclusion of Theorem 1, The specific proof is as follows: Proof. When H is a non-regular hypergraph and for all e
+
+in H, we(t) are monotonic on [t1, t 2]. So ζe = t2 − t1. The upper bound of the Theorem 8 can be written as: 
+
+(t2 − t1) ∑
+
+> e∈E
+
+(ceρeζ−1
+
+> e
+
+) − ∑
+
+> e∈E
+
+(αeϵρ e)= ( t2 − t1) ∑
+
+> e∈E
+
+ρeζ−1
+
+> e
+
+ ∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
++ (1 + ϵ) αe
+
+
+
+− ∑
+
+> e∈E
+
+(αeϵρ e)= ( t2 − t1) ∑
+
+> e∈E
+
+ρeζ−1
+
+> e
+
+ ∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
++ ∑
+
+> e∈E
+
+((t2 − t1)ρeζ−1 
+
+> e
+
+(1 + ϵ) − ϵρ e
+
+) αe
+
+= ∑
+
+> e∈E
+
+ρe
+
+ ∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+) + ∑
+
+> e∈E
+
+ρeαe
+
+≤ ρmax 
+
+∑
+
+> e∈E
+
+∑
+
+> i∈e,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
++ ∑
+
+> e∈E
+
+αe
+
+ .
+
+(58) 4
+
+Similarly, the lower bound can be written as: 
+
+∑
+
+> e∈E
+
+(ce − (2 + ϵ) αeζ−1 
+
+> e
+
+(t2 − t1))
+
+= ∑
+
+> e∈E
+
+ ∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
++ (1 + ϵ) αe
+
+
+
+− ∑
+
+> e∈E
+
+(2 + ϵ) αeζ−1 
+
+> e
+
+(t2 − t1)= ∑
+
+> e∈E
+
+ ∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+) − ∑
+
+> e∈E
+
+αe.
+
+(59) From Equation (6),we have αe = 1
+
+> |e|
+
+∑ 
+
+> i∈e,j ∈e1
+
+√didj
+
+, So 
+
+∑
+
+> i,j ∈e
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
+− αe
+
+= ∑
+
+> i,j ∈e
+
+(
+
+12|e|
+
+( 1
+
+di
+
++ 1
+
+dj
+
+)
+
+− 1
+
+|e|
+
+1
+
+√didj
+
+)
+
+≥ 0.
+
+(60) Because H is a non-regular hypergraph, so the lower bound is greater than 0. Appendix C PROOF OF Proposition 3 Proof. From the condition |xi(t)| ≡ 1, we know that 
+
+∂t∥xi(t)∥2 = 0 , which expands using the chain rule to: 
+
+2
+
+〈
+
+xi(t), ∂xi(t)
+
+∂t 
+
+〉
+
+= 0 . (61) Moreover, due to we(t) ≡ 
+
+> 1
+> αe
+
+[ 1
+
+> |e|
+
+∑ 
+
+> i∈e,j ∈ecos (xi(t),xj(t))
+
+√didj
+
+] + 1 + ϵ, we know that, for any e that i ∈ e:
+
+∂w e(t)
+
+∂xi
+
+= 1
+
+∑ 
+
+> i,j ∈e1
+
+√didj
+
+∑
+
+> j∈e
+
+xj (t)
+
+√didj
+
+ . (62) We denote ∂xi(t) 
+
+> ∂t
+
+as y. Let μie =
+
+− κe(t)we(t)1+ ∑    
+
+> j∈e,j ̸=iλj(x1(t),... x|e|(t))
+
+. Then, the original problem takes the following form: 
+
+min yT y
+
+s.t. 1
+
+∑ 
+
+> i,j ∈e1
+
+√didj
+
+∑
+
+> j∈e
+
+xj (t)T
+
+√didj
+
+ y = μie , (63) 
+
+xi(t)T y = 0 . (64) we denote 
+
+mie = 1
+
+∑ 
+
+> i,j ∈e1
+
+√didj
+
+∑
+
+> j∈e
+
+xj (t)
+
+√didj
+
+ . (65) Then consider the method of Lagrange multipliers: 
+
+∇y L(y) = 0 
+
+→ ∇y (yT y + λ(mTie y − μie ) + τ xi(t)T y) = 0 
+
+→ 2y + λm ie + τ xi(t) = 0 . (66) Left-multiplying Equation (66) by xi(t)T , and combin-ing it with Equation (66) and xi(t)T xi(t) = 1 , we get: 
+
+τ = −λxi(t)T mie . (67) Similarly, left-multiplying Equation (64) by mTie :
+
+2mTie y + λ + τ m Tie xi(t) = 0 
+
+→ 2μie + λ − λ(xi(t)T mie ) = 0 
+
+→ λ = −2μie 
+
+(1 − (xi(t)T mie )2)−1 . (68) Thus we can obtain the solution to this optimization problem: 
+
+y∗ = − λm ie + τ xi(t)2= − λm ie − λxi(t)T mie xi(t)2= − λ(I − xi(t)xi(t)T )mie 
+
+2= μie (I − xi(t)xi(t)T )mie 
+
+1 − (xi(t)T mie )2
+
+= μie [mie − cos( xi(t), m ie )xi(t)] 1 − (xi(t)T mie )2 .
+
+(69) So, 
+
+y∗ = μie 
+
+1 − (xi(t)T mie )2 [mie − cos( xi(t), m ie )xi(t)] = μie 
+
+1 − (xi(t)T mie )2
+
+ 1
+
+∑ 
+
+> i,j ∈e1
+
+√didj
+
+ ∑
+
+> i,j ∈e
+
+xj (t)
+
+√didj
+
+ − cos( xi(t), m ie )xi(t)
+
+
+
+= μie 
+
+(1 − (xi(t)T mie )2)( ∑ 
+
+> i,j ∈e1
+
+√didj
+
+)
+
+∑
+
+> j∈e
+
+xj (t)
+
+√didj
+
+ − ∑
+
+> j∈e
+
+cos( xi(t), m ie )xi(t)
+
+√didj
+
+
+
+= −κ′
+
+> ie
+
+(t)
+
+∑
+
+> j∈e
+
+xj (t) − cos ( xi(t), m ie ) xi(t)
+
+√didj
+
+ .
+
+(70) Here, κ′
+
+> ie
+
+(t) = μie     
+
+> (1−(xi(t)Tmie )2)( ∑
+> i,j ∈e1√didj)
+
+. The ∥y∥ ≥ 0
+
+always holds. Therefore, y∗ corresponds to the point of minimum y.Appendix D proof of Theorem 4 Lemma 9. C(X(t)) is locally Lipschitz continuous. Proof. Given that ∥xi∥ = 1, the gradient norm of 
+
+cos( xi, xj ) with respect to (xi, xj ) is bounded. Thus, there exists a constant LC and bounded sets such that 
+
+∥C(X(t)) − C(Y(t)) ∥F ≤ LC ∥X(t) − Y(t)∥F . (71) So, C(X(t)) is locally Lipschitz continuous. 5
+
+Lemma 10. Under the assumption of Theorem 4, the functions mie , μie , and κ′
+
+> ie
+
+(t) are bounded and Lipschitz continuous. 
+
+Proof. We prove the boundedness and Lipschitz continuity for each function based on the assumptions of Theorem 4. 1. mie is bounded and Lipschitz continuous: By the definition of mie , it can be written as a convex combination of xj :
+
+mie = ∑
+
+> j
+
+αj xj , where αj ≥ 0 and ∑
+
+> j
+
+αj = 1 . (72) From this convex combination, we immediately obtain the Lipschitz property: 
+
+∥mie (X(t)) − mie (Y(t)) ∥F ≤ ∥ X(t) − Y(t)∥F . (73) Furthermore, since the vector norm is bounded by unity, 
+
+mie is also bounded. 2. μie is bounded and Lipschitz continuous: The function 
+
+μie is defined as: 
+
+μie = − κe(t)we(t)1 + ∑  
+
+> j∈e,j ̸=i
+
+λj (x1(t), ... x|e|(t)) . (74) Since κe(t) and we(t) are bounded, and λj (·) is bounded and locally Lipschitz, μie is clearly bounded on bounded sets and locally Lipschitz. 3. κ′
+
+> ie
+
+(t) is bounded and Lipschitz continuous: The function κ′
+
+> ie
+
+(t) is given by: 
+
+κ′
+
+> ie
+
+(t) = μie 
+
+(1 − (xi(t)T mie )2)Se
+
+, (75) where Se = ∑
+
+> p,q ∈e
+
+1
+
+√dpdq
+
+∈
+
+[ |e|2
+
+dmax 
+
+, |e|2
+
+dmin 
+
+]
+
+. (76) From the result in part 2, μie is bounded and locally Lipschitz. Assumption guarantees that the denominator, 
+
+(1 − (xi(t)T mie )2)Se is bounded below by the strictly positive quantity εS e, where ε > 0. Therefore, κ′
+
+> ie
+
+(t) is the ratio of two bounded, locally Lipschitz functions whose denominator is bounded away from zero, implying κ′
+
+> ie
+
+(t)
+
+is also bounded on bounded sets and locally Lipschitz. Lemma 11. The function S(X(t)) is locally Lips-chitz continuous and bounded. Proof. The matrix S(X(t)) = D− 12 
+
+> e
+
+HK ′(X(t)) HT D− 12 
+
+> e
+
+is linear with respect to K′(X(t)) . By Lemma 10 , each diagonal element of K′(X(t)) is locally Lipschitz. There-fore, S(X(t)) is locally Lipschitz. Furthermore, S(X(t)) is bounded: 
+
+∥S(X(t)) ∥ ≤ cH max  
+
+> e
+
+|κ′
+
+> e
+
+(X(t)) | := M (t). (77) where cH is a constant independent of time t.Based on the above Lemma, we can draw the conclusion of Theorem 4, The specific proof is as follows: Proof. Let 
+
+F (X(t)) = diag 
+
+((S(X(t)) ⊙ C(X(t)) )1N
+
+)
+
+− S(X(t)) ,
+
+(78) 
+
+G(X(t)) = 
+
+[
+
+diag 
+
+((S(X(t)) ⊙C(X(t)) )1N
+
+)
+
+−S(X(t)) 
+
+]
+
+X(t).
+
+(79) Combining Lemmas 9 and 11 with the bound |C(X(t)) | ≤ 
+
+1, it follows that there exists a constant LH (t) such that the following inequality holds on the bounded set: 
+
+∥F (X(t)) − F (Y(t)) ∥ ≤ LH (t)∥X(t) − Y(t)∥, (80) 
+
+∥F (X(t)) ∥ ≤ 2∥S(X(t)) ∥ ≤ 2M (t). (81) Then, the Lipschitz continuity of G(X(t)) is established as follows: 
+
+∥G(X(t)) − G(Y(t)) ∥
+
+=∥F (X(t)) X(t) − F (Y(t)) Y(t)∥≤∥ F (X(t)) X(t) − F (Y(t)) X(t)∥
+
++ ∥F (Y(t)) X(t) − F (Y(t)) Y(t)∥≤∥ F (X(t)) − F (Y(t)) ∥∥ X(t)∥ + ∥F (Y(t)) ∥∥ X(t) − Y(t)∥≤(2 M (t) + LH (t)∥Y(t)∥)∥X(t) − Y(t)∥.
+
+(82) So, G(X(t)) is locally Lipschitz continuous. Furthermore, the linear growth bound is given by: 
+
+∥G(X(t)) ∥ ≤ ∥ F (X(t)) ∥∥ X(t)∥ ≤ 2M (t)∥X(t)∥. (83) By the Picard-Lindelöf theorem, for any initial value X(0) ,there exists a unique solution on a maximal time interval 
+
+[0 , τ ) (where τ > 0). From the growth bound (83) and Grönwall’s inequality, we obtain: 
+
+∥X(t)∥ ≤ ∥ X(0) ∥ exp 
+
+(
+
+2
+
+∫ t
+
+> 0
+
+M (s) ds 
+
+)
+
+. (84) Since M (·) is integrable on [0 , T ], the solution remains bounded on the interval. This prevents finite-time blow-up, thereby ensuring that the solution can be uniquely extended to the full interval [0 , T ].Appendix E proof of Theorem 6 Proof. Let 
+
+F (X(t)) = diag 
+
+((S(X(t)) ⊙ C(X(t)) )1N
+
+)
+
+− S(X(t)) ,
+
+(85) and the explicit Euler method updates the state X(t + 1) 
+
+based on the current state X(t). The discrete form of the update is given by: 
+
+X(t + 1) = X(t) − τ · F (X(t)) X(t), (86) where τ is the time step. Next, we expand the squared norm of the updated state: 
+
+∥X(t + 1) ∥2
+
+= ( X(t) − τ F (X(t)) X(t)) ⊤ (X(t) − τ F (X(t)) X(t)) .
+
+(87) 6
+
+This can be simplified to: 
+
+∥X(t + 1) ∥2
+
+= ∥X(t)∥2 − 2τ X(t)T F (X(t)) X(t) + τ 2∥F (X(t)) X(t)∥2.
+
+(88) For stability, we require that the norm of the updated state is not greater than the norm of the previous state, i.e., 
+
+∥X(t + 1) ∥2 ≤ ∥ X(t)∥2. (89) This implies: 
+
+−2τ X(t)T F (X(t)) X(t) + τ 2∥F (X(t)) X(t)∥2 ≤ 0. (90) We can rewrite this expression as: 
+
+τ ≤ 2X(t)T F (X(t)) X(t)
+
+∥F (X(t)) X(t)∥2 = 2X(t)⊤F (X(t)) X(t)
+
+X(t)⊤F (X(t)) 2X(t) . (91) The right side of the inequality is the Rayleigh quotient for the matrix F (X(t)) .Now, We denote the largest eigenvalue of F (X(t)) by 
+
+λmax (F (X(t))) . Since F (X(t)) is symmetric, its spectral radius satisfies λmax (F (X(t))) = ∥F (X(t)) ∥2. By the triangle inequality, we can obtain: 
+
+∥F (X(t)) ∥2
+
+≤ ∥ diag( S(X(t)) ⊙ C(X(t))) 1N ∥2 + ∥S(X(t)) ∥2
+
+= ∥(S(X(t)) ⊙ C(X(t))) 1N ∥∞ + ∥S(X(t)) ∥2.
+
+(92) Moreover, since |cij | ≤ 1,
+
+∥(S(X(t)) ⊙ C(X(t))) 1N ∥∞ ≤ max 
+
+> i
+
+∑
+
+> j
+
+|sij cij |≤ max 
+
+> i
+
+∑
+
+> j
+
+sij . (93) Similarly, since S(X(t)) is symmetric, we have 
+
+∥S(X(t)) ∥2 ≤ ∥ S(X(t)) ∥∞ = max 
+
+> i
+
+∑
+
+> j
+
+sij . (94) Combining the inequalities above yields the following bound: 
+
+λmax (F (X(t))) = ∥F (X(t)) ∥2 ≤ 2 max 
+
+> i
+
+∑
+
+> j
+
+sij . (95) According to the Equation (91), the stability condition requires τ ≤ 2  
+
+> λmax (F(X(t)))
+
+. Substituting the upper bound derived above, we conclude that a sufficient condition for stability is: 
+
+τ ≤ 1max i
+
+∑ 
+
+> j
+
+sij 
+
+. (96) Thus, the explicit Euler method for the RFHND is stable provided that this condition is met. Appendix F Analysis of computational complexity In this section, we conduct a detailed analysis of the complexity of RFHND. Let n, m, and N = ∑ 
+
+> e∈E
+
+|e|
+
+denote the number of nodes, hyperedges, and incidence pairs, respectively. din and dout represent the dimensions of the input and output features, T indicates the number of layers. The per-step computational cost consists of three main components:  
+
+> •
+
+Sparse scatter operations and matrix multiplication 
+
+S(X(t)) X(t), scaling with O(N d in ). 
+
+> •
+
+Edge-wise MLP transformations, scaling with 
+
+O(md 2
+
+> in
+
+). 
+
+> •
+
+Cosine similarity computations. We restrict similarity calculations to node pairs induced by hyperedges, resulting in O(M2din ) where M2 = ∑ 
+
+> e∈E
+
+|e|2.Consequently, the total time complexity for T steps is 
+
+O(T (N d in + M2din + md 2
+
+> in
+
+)) . When the hyperedge size is bouded ( |e| ≤ r), then N = O(mr ) and M2 = O(mr 2).This ensures the model scales linearly with the num-ber of hyperedges. Adding the complexity of the linear transformations in the input and output layers, the total complexity is 
+
+O(nd in dout ) + T · O(mr 2din + md 2
+
+> in
+
+). (97)

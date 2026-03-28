@@ -6,73 +6,73 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-03-27
-- 运行时间：2026-03-27 19:45:20 UTC
+- 最新运行日期：2026-03-28
+- 运行时间：2026-03-28 19:22:22 UTC
 - 运行状态：成功
 - 本次总论文数：17
 - 精读区：6
 - 速读区：11
 
 ### 今日简报（AI）
-今日聚焦 AI 药物研发前沿，深度解析配体结合位点预测与多尺度分子表征的最新突破。
-重点推荐 GDEGAN 等变图网络与多模型融合架构，显著提升了分子属性预测的精度与鲁棒性。
-建议关注 GlassMol 等可解释性模型，探索 AI 如何在复杂化学混合物及生物大分子改性中实现透明决策。
-- 详情：[/202603/27/README](/202603/27/README)
+今日聚焦 AI 驱动的分子科学前沿，深度解析从量子密度矩阵学习到生成式设计的 17 篇最新成果。
+重点推荐：利用机器学习重构双电子还原密度矩阵的新路径，以及具备可靠性保证的 ConfHit 分子生成框架。
+建议关注大模型知识蒸馏与热力学描述符的结合，这是提升分子属性预测外推能力的关键方向。
+- 详情：[/202603/28/README](/202603/28/README)
 
 ### 精读区论文标签
-1. [GDEGAN: Gaussian Dynamic Equivariant Graph Attention Network for Ligand Binding Site Prediction](/202603/27/2603.19817v1-gdegan-gaussian-dynamic-equivariant-graph-attention-network-for-ligand-binding-site-prediction)  
-   标签：评分：9.0/10、query:molrna
-   evidence：用于配体结合的等变图注意力网络
-2. [Multi-RF Fusion with Multi-GNN Blending for Molecular Property Prediction](/202603/27/2603.20724v1-multi-rf-fusion-with-multi-gnn-blending-for-molecular-property-prediction)  
-   标签：评分：9.0/10、query:molrna
-   evidence：用于分子性质预测的图神经网络融合
-3. [GraPHFormer: A Multimodal Graph Persistent Homology Transformer for the Analysis of Neuroscience Morphologies](/202603/27/2603.20970v1-graphformer-a-multimodal-graph-persistent-homology-transformer-for-the-analysis-of-neuroscience-morphologies)  
-   标签：评分：9.0/10、query:molrna
-   evidence：用于拓扑分析的多模态图持续同调
-4. [Riemannian Geometry Speaks Louder Than Words: From Graph Foundation Model to Next-Generation Graph Intelligence](/202603/27/2603.21601v1-riemannian-geometry-speaks-louder-than-words-from-graph-foundation-model-to-next-generation-graph-intelligence)  
-   标签：评分：9.0/10、query:molrna
-   evidence：图基础模型与黎曼几何
-5. [Permutation-Symmetrized Diffusion for Unconditional Molecular Generation](/202603/27/2603.23255v1-permutation-symmetrized-diffusion-for-unconditional-molecular-generation)  
-   标签：评分：9.0/10、query:molrna
-   evidence：商流形上的无条件分子生成扩散模型
-6. [An SO(3)-equivariant reciprocal-space neural potential for long-range interactions](/202603/27/2603.18389v1-an-so3-equivariant-reciprocal-space-neural-potential-for-long-range-interactions)  
+1. [Machine learning the two-electron reduced density matrix in molecules and condensed phases](/202603/28/2603.06882v1-machine-learning-the-two-electron-reduced-density-matrix-in-molecules-and-condensed-phases)  
    标签：评分：8.0/10、query:molrna
-   evidence：分子系统的SO(3)等变神经势能
+   evidence：分子电子结构的表示学习
+2. [ConfHit: Conformal Generative Design with Oracle Free Guarantees](/202603/28/2603.07371v1-confhit-conformal-generative-design-with-oracle-free-guarantees)  
+   标签：评分：8.0/10、query:molrna
+   evidence：具有有效性保证的药物发现符合性生成设计
+3. [Tackling Over-smoothing on Hypergraphs: A Ricci Flow-guided Neural Diffusion Approach](/202603/28/2603.15696v1-tackling-over-smoothing-on-hypergraphs-a-ricci-flow-guided-neural-diffusion-approach)  
+   标签：评分：8.0/10、query:molrna
+   evidence：超图上基于里奇流引导的神经扩散，用于处理高阶关系
+4. [Adapting a Pre-trained Single-Cell Foundation Model to Spatial Gene Expression Generation from Histology Images](/202603/28/2603.19766v1-adapting-a-pre-trained-single-cell-foundation-model-to-spatial-gene-expression-generation-from-histology-images)  
+   标签：评分：8.0/10、query:molrna
+   evidence：将单细胞基础模型应用于基因表达
+5. [Prediction and Experimental Verification of Electrolyte Solvation Structure from an OMol25-Trained Interatomic Potential](/202603/28/2603.20183v1-prediction-and-experimental-verification-of-electrolyte-solvation-structure-from-an-omol25-trained-interatomic-potential)  
+   标签：评分：8.0/10、query:molrna
+   evidence：用于表示学习的大规模分子DFT训练数据
+6. [Graph Energy Matching: Transport-Aligned Energy-Based Modeling for Graph Generation](/202603/28/2603.23398v1-graph-energy-matching-transport-aligned-energy-based-modeling-for-graph-generation)  
+   标签：评分：8.0/10、query:molrna
+   evidence：使用基于能量的模型和输运对齐方案的图生成
 
 ### 速读区论文标签
-1. [GlassMol: Interpretable Molecular Property Prediction with Concept Bottleneck Models](/202603/27/2603.01274v1-glassmol-interpretable-molecular-property-prediction-with-concept-bottleneck-models)  
+1. [Logos: An evolvable reasoning engine for rational molecular design](/202603/28/2603.09268v1-logos-an-evolvable-reasoning-engine-for-rational-molecular-design)  
    标签：评分：8.0/10、query:molrna
-   evidence：使用概念瓶颈模型进行可解释的分子性质预测
-2. [Bi-TEAM: A Unified Cross-Scale Representation Learning Framework for Chemically Modified Biomolecules](/202603/27/2603.01873v1-bi-team-a-unified-cross-scale-representation-learning-framework-for-chemically-modified-biomolecules)  
+   evidence：用于理性分子设计的分子推理模型
+2. [Thermodynamic Descriptors from Molecular Dynamics as Machine Learning Features for Extrapolable Property Prediction](/202603/28/2603.12017v2-thermodynamic-descriptors-from-molecular-dynamics-as-machine-learning-features-for-extrapolable-property-prediction)  
    标签：评分：8.0/10、query:molrna
-   evidence：化学修饰生物分子的表示学习与拓扑约束
-3. [ChemFlow:A Hierarchical Neural Network for Multiscale Representation Learning in Chemical Mixtures](/202603/27/2603.02810v1-chemflowa-hierarchical-neural-network-for-multiscale-representation-learning-in-chemical-mixtures)  
+   evidence：分子性质预测与化学发现
+3. [Generalist Large Language Models for Molecular Property Prediction: Distilling Knowledge from Specialist Models](/202603/28/2603.12344v1-generalist-large-language-models-for-molecular-property-prediction-distilling-knowledge-from-specialist-models)  
    标签：评分：8.0/10、query:molrna
-   evidence：用于分子混合物表示学习的分层图神经网络
-4. [Preserving Continuous Symmetry in Discrete Spaces: Geometric-Aware Quantization for SO(3)-Equivariant GNNs](/202603/27/2603.05343v1-preserving-continuous-symmetry-in-discrete-spaces-geometric-aware-quantization-for-so3-equivariant-gnns)  
+   evidence：将知识蒸馏至大语言模型用于分子性质预测
+4. [BERTology of Molecular Property Prediction](/202603/28/2603.13627v1-bertology-of-molecular-property-prediction)  
    标签：评分：8.0/10、query:molrna
-   evidence：用于分子模拟的SO(3)等变图神经网络
-5. [Approximate Subgraph Matching with Neural Graph Representations and Reinforcement Learning](/202603/27/2603.18314v1-approximate-subgraph-matching-with-neural-graph-representations-and-reinforcement-learning)  
+   evidence：系统研究用于分子性质预测的化学语言模型
+5. [CO-EVOLVE: Bidirectional Co-Evolution of Graph Structure and Semantics for Heterophilous Learning](/202603/28/2603.19596v1-co-evolve-bidirectional-co-evolution-of-graph-structure-and-semantics-for-heterophilous-learning)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于生物化学应用的神经图表征
-6. [From Snapshots to Symphonies: The Evolution of Protein Prediction from Static Structures to Generative Dynamics and Multimodal Interactions](/202603/27/2603.18505v1-from-snapshots-to-symphonies-the-evolution-of-protein-prediction-from-static-structures-to-generative-dynamics-and-multimodal-interactions)  
+   evidence：图结构与语义的协同演化
+6. [GIP-RAG: An Evidence-Grounded Retrieval-Augmented Framework for Interpretable Gene Interaction and Pathway Impact Analysis](/202603/28/2603.20321v1-gip-rag-an-evidence-grounded-retrieval-augmented-framework-for-interpretable-gene-interaction-and-pathway-impact-analysis)  
    标签：评分：7.0/10、query:molrna
-   evidence：包含扩散模型在内的生物分子相互作用生成框架
-7. [Bridging Crystal Structure and Material Properties via Bond-Centric Descriptors](/202603/27/2603.18876v1-bridging-crystal-structure-and-material-properties-via-bond-centric-descriptors)  
+   evidence：生物医学知识图谱与大语言模型用于基因相互作用
+7. [Diffusion Model for Manifold Data: Score Decomposition, Curvature, and Statistical Complexity](/202603/28/2603.20645v1-diffusion-model-for-manifold-data-score-decomposition-curvature-and-statistical-complexity)  
    标签：评分：7.0/10、query:molrna
-   evidence：通过描述符将原子结构映射到材料属性
-8. [BVSIMC: Bayesian Variable Selection-Guided Inductive Matrix Completion for Improved and Interpretable Drug Discovery](/202603/27/2603.18957v1-bvsimc-bayesian-variable-selection-guided-inductive-matrix-completion-for-improved-and-interpretable-drug-discovery)  
+   evidence：流形数据和几何属性的扩散模型
+8. [Cross-Granularity Representations for Biological Sequences: Insights from ESM and BiGCARP](/202603/28/2603.20825v1-cross-granularity-representations-for-biological-sequences-insights-from-esm-and-bigcarp)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于药物发现中变量选择的贝叶斯模型
-9. [sbml4md: A computational platform for System-Bath Modeling via Molecular Dynamics powered by Machine Learning](/202603/27/2603.18274v1-sbml4md-a-computational-platform-for-system-bath-modeling-via-molecular-dynamics-powered-by-machine-learning)  
+   evidence：大型生物序列模型与层次化粒度
+9. [Inference in high-dimensional logistic regression under tensor network dependence](/202603/28/2603.20082v1-inference-in-high-dimensional-logistic-regression-under-tensor-network-dependence)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于分子动力学轨迹的机器学习
-10. [Foundations of Schrödinger Bridges for Generative Modeling](/202603/27/2603.18992v1-foundations-of-schrdinger-bridges-for-generative-modeling)  
+   evidence：高维设置中的张量网络依赖和高阶依赖
+10. [End-to-End Training for Unified Tokenization and Latent Denoising](/202603/28/2603.22283v1-end-to-end-training-for-unified-tokenization-and-latent-denoising)  
    标签：评分：6.0/10、query:molrna
-   evidence：扩散模型和薛定谔桥的数学基础
-11. [Conditioning Protein Generation via Hopfield Pattern Multiplicity](/202603/27/2603.20115v1-conditioning-protein-generation-via-hopfield-pattern-multiplicity)  
+   evidence：用于生成模型的统一分词和潜空间扩散
+11. [Tiny Inference-Time Scaling with Latent Verifiers](/202603/28/2603.22492v1-tiny-inference-time-scaling-with-latent-verifiers)  
    标签：评分：6.0/10、query:molrna
-   evidence：蛋白质序列生成的条件控制
+   evidence：扩散Transformer生成器的潜空间验证器
 
 
 <div class="dpr-home-promo-card">

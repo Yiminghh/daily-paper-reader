@@ -1,86 +1,8 @@
 {
-  "generated_at": "2026-03-27T19:42:34.317252+00:00",
-  "updated_date": "20260327",
+  "generated_at": "2026-03-28T19:20:01.246362+00:00",
+  "updated_date": "20260328",
   "carryover_days": 9,
   "items": [
-    {
-      "id": "2603.20825v1",
-      "title": "Cross-Granularity Representations for Biological Sequences: Insights from ESM and BiGCARP",
-      "abstract": "Recent advances in general-purpose foundation models have stimulated the development of large biological sequence models. While natural language shows symbolic granularity (characters, words, sentences), biological sequences exhibit hierarchical granularity whose levels (nucleotides, amino acids, protein domains, genes) further encode biologically functional information. In this paper, we investigate the integration of cross-granularity knowledge from models through a case study of BiGCARP, a Pfam domain-level model for biosynthetic gene clusters, and ESM, an amino acid-level protein language model. Using representation analysis tools and a set of probe tasks, we first explain why a straightforward cross-model embedding initialization fails to improve downstream performance in BiGCARP, and show that deeper-layer embeddings capture a more contextual and faithful representation of the model's learned knowledge. Furthermore, we demonstrate that representations at different granularities encode complementary biological knowledge, and that combining them yields measurable performance gains in intermediate-level prediction tasks. Our findings highlight cross-granularity integration as a promising strategy for improving both the performance and interpretability of biological foundation models.",
-      "authors": [
-        "Hanlin Xiao",
-        "Rainer Breitling",
-        "Eriko Takano",
-        "Mauricio A. Álvarez"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-03-21T13:57:24+00:00",
-      "link": "https://arxiv.org/pdf/2603.20825v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "cross-granularity foundation models for biological sequences",
-      "llm_evidence_cn": "生物序列的跨粒度基础模型",
-      "llm_evidence": "生物序列的跨粒度基础模型",
-      "canonical_evidence": "生物序列的跨粒度基础模型",
-      "llm_tldr_en": "Investigates integrating cross-granularity knowledge in biological sequence foundation models like ESM.",
-      "llm_tldr_cn": "研究了在ESM等生物序列基础模型中整合跨粒度知识的方法。",
-      "llm_tldr": "研究了在ESM等生物序列基础模型中整合跨粒度知识的方法。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
-      "matched_requirement_id": "req-2",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.20825v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.22810v1",
-      "title": "Universal and efficient graph neural networks with dynamic attention for machine learning interatomic potentials",
-      "abstract": "The core of molecular dynamics simulation fundamentally lies in the interatomic potential. Traditional empirical potentials lack accuracy, while first-principles methods are computationally prohibitive. Machine learning interatomic potentials (MLIPs) promise near-quantum accuracy at linear cost, but existing models still face challenges in efficiency and stability. We presents Machine Learning Advances Neural Network (MLANet), an efficient and robust graph neural network framework. MLANet introduces a dual-path dynamic attention mechanism for geometry-aware message passing and a multi-perspective pooling strategy to construct comprehensive system representations. This design enables highly accurate modeling of atomic environments while achieving exceptional computational efficiency, making high-fidelity simulations more accessible. Tested across a wide range of datasets spanning diverse systems, including organic molecules (e.g., QM7, MD17), periodic inorganic materials (e.g., Li-containing crystals), two-dimensional materials (e.g., bilayer graphene, black phosphorus), surface catalytic reactions (e.g., formate decomposition), and charged systems, MLANet maintains competitive prediction accuracy while its computational cost is markedly lower than mainstream equivariant models, and it enables stable long-time molecular dynamics simulations. MLANet provides an efficient and practical tool for large-scale, high-accuracy atomic simulations.",
-      "authors": [
-        "Shuyu Bi",
-        "Zhede Zhao",
-        "Qiangchao Sun",
-        "Tao Hu",
-        "Xionggang Lu",
-        "Hongwei Cheng"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-03-24T05:14:33+00:00",
-      "link": "https://arxiv.org/pdf/2603.22810v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "graph neural networks for interatomic potentials",
-      "llm_evidence_cn": "用于原子间势能的图神经网络",
-      "llm_evidence": "用于原子间势能的图神经网络",
-      "canonical_evidence": "用于原子间势能的图神经网络",
-      "llm_tldr_en": "Introduces MLANet, a GNN with dynamic attention for accurate and efficient molecular dynamics simulation.",
-      "llm_tldr_cn": "引入MLANet，一种具有动态注意力的图神经网络，用于精确高效的分子动力学模拟。",
-      "llm_tldr": "引入MLANet，一种具有动态注意力的图神经网络，用于精确高效的分子动力学模拟。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "graph representation learning for molecular structures",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.22810v1",
-      "carry_days": 1
-    },
     {
       "id": "2603.22317v1",
       "title": "Geometric Mixture-of-Experts with Curvature-Guided Adaptive Routing for Graph Representation Learning",
@@ -104,13 +26,13 @@
         "query:MOLRNA"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "curvature-guided adaptive routing for graph representation learning",
-      "llm_evidence_cn": "曲率引导的图表示学习自适应路由",
-      "llm_evidence": "曲率引导的图表示学习自适应路由",
-      "canonical_evidence": "曲率引导的图表示学习自适应路由",
-      "llm_tldr_en": "GeoMoE uses Ollivier-Ricci Curvature to fuse node representations across diverse Riemannian spaces.",
-      "llm_tldr_cn": "GeoMoE利用Ollivier-Ricci曲率在不同的黎曼空间中融合节点表示。",
-      "llm_tldr": "GeoMoE利用Ollivier-Ricci曲率在不同的黎曼空间中融合节点表示。",
+      "llm_evidence_en": "topological heterogeneity and curvature-guided graph representation learning",
+      "llm_evidence_cn": "拓扑异质性和曲率引导的图表示学习",
+      "llm_evidence": "拓扑异质性和曲率引导的图表示学习",
+      "canonical_evidence": "拓扑异质性和曲率引导的图表示学习",
+      "llm_tldr_en": "A Geometric Mixture-of-Experts framework using Ricci curvature for adaptive graph representation learning.",
+      "llm_tldr_cn": "一种利用里奇曲率进行自适应图表示学习的几何混合专家框架。",
+      "llm_tldr": "一种利用里奇曲率进行自适应图表示学习的几何混合专家框架。",
       "llm_tags": [
         "query:molrna"
       ],
@@ -119,129 +41,6 @@
       "matched_requirement_id": "req-6",
       "selection_source": "carryover_cache",
       "paper_id": "2603.22317v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.12344v1",
-      "title": "Generalist Large Language Models for Molecular Property Prediction: Distilling Knowledge from Specialist Models",
-      "abstract": "Molecular Property Prediction (MPP) is a central task in drug discovery. While Large Language Models (LLMs) show promise as generalist models for MPP, their current performance remains below the threshold for practical adoption. We propose TreeKD, a novel knowledge distillation method that transfers complementary knowledge from tree-based specialist models into LLMs. Our approach trains specialist decision trees on functional group features, then verbalizes their learned predictive rules as natural language to enable rule-augmented context learning. This enables LLMs to leverage structural insights that are difficult to extract from SMILES strings alone. We further introduce rule-consistency, a test-time scaling technique inspired by bagging that ensembles predictions across diverse rules from a Random Forest. Experiments on 22 ADMET properties from the TDC benchmark demonstrate that TreeKD substantially improves LLM performance, narrowing the gap with SOTA specialist models and advancing toward practical generalist models for molecular property prediction.",
-      "authors": [
-        "Khiem Le",
-        "Sreejata Dey",
-        "Marcos Martínez Galindo",
-        "Vanessa Lopez",
-        "Ting Hua",
-        "Nitesh V. Chawla",
-        "Hoang Thanh Lam"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG"
-      ],
-      "published": "2026-03-12T18:06:21+00:00",
-      "link": "https://arxiv.org/pdf/2603.12344v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Distilling knowledge into LLMs for molecular property prediction",
-      "llm_evidence_cn": "将知识蒸馏至大语言模型用于分子性质预测",
-      "llm_evidence": "将知识蒸馏至大语言模型用于分子性质预测",
-      "canonical_evidence": "将知识蒸馏至大语言模型用于分子性质预测",
-      "llm_tldr_en": "TreeKD distills structural insights from specialist models into LLMs for molecular property prediction.",
-      "llm_tldr_cn": "TreeKD将专家模型的结构见解蒸馏到大语言模型中，用于分子性质预测。",
-      "llm_tldr": "TreeKD将专家模型的结构见解蒸馏到大语言模型中，用于分子性质预测。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "foundation models for molecular discovery and representation learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.12344v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.07371v1",
-      "title": "ConfHit: Conformal Generative Design with Oracle Free Guarantees",
-      "abstract": "The success of deep generative models in scientific discovery requires not only the ability to generate novel candidates but also reliable guarantees that these candidates indeed satisfy desired properties. Recent conformal-prediction methods offer a path to such guarantees, but its application to generative modeling in drug discovery is limited by budget constraints, lack of oracle access, and distribution shift. To this end, we introduce ConfHit, a distribution-free framework that provides validity guarantees under these conditions. ConfHit formalizes two central questions: (i) Certification: whether a generated batch can be guaranteed to contain at least one hit with a user-specified confidence level, and (ii) Design: whether the generation can be refined to a compact set without weakening this guarantee. ConfHit leverages weighted exchangeability between historical and generated samples to eliminate the need for an experimental oracle, constructs multiple-sample density-ratio weighted conformal p-value to quantify statistical confidence in hits, and proposes a nested testing procedure to certify and refine candidate sets of multiple generated samples while maintaining statistical guarantees. Across representative generative molecule design tasks and a broad range of methods, ConfHit consistently delivers valid coverage guarantees at multiple confidence levels while maintaining compact certified sets, establishing a principled and reliable framework for generative modeling.",
-      "authors": [
-        "Siddhartha Laghuvarapu",
-        "Ying Jin",
-        "Jimeng Sun"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.AI",
-        "stat.AP",
-        "stat.ME",
-        "stat.ML"
-      ],
-      "published": "2026-03-07T22:55:12+00:00",
-      "link": "https://arxiv.org/pdf/2603.07371v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Conformal generative design for drug discovery with validity guarantees",
-      "llm_evidence_cn": "具有有效性保证的药物发现符合性生成设计",
-      "llm_evidence": "具有有效性保证的药物发现符合性生成设计",
-      "canonical_evidence": "具有有效性保证的药物发现符合性生成设计",
-      "llm_tldr_en": "A framework providing statistical guarantees for deep generative models in drug discovery.",
-      "llm_tldr_cn": "一个为药物发现中的深度生成模型提供统计保证的框架。",
-      "llm_tldr": "一个为药物发现中的深度生成模型提供统计保证的框架。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "generative models for de novo molecular and RNA design",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.07371v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.15696v1",
-      "title": "Tackling Over-smoothing on Hypergraphs: A Ricci Flow-guided Neural Diffusion Approach",
-      "abstract": "Hypergraph neural networks (HGNNs) have demonstrated strong capabilities in modeling complex higher-order relationships. However, existing HGNNs often suffer from over-smoothing as the number of layers increases and lack effective control over message passing among nodes. Inspired by the theory of Ricci flow in differential geometry, we theoretically establish that introducing discrete Ricci flow into hypergraph structures can effectively regulate node feature evolution and thereby alleviate over-smoothing. Building on this insight, we propose Ricci Flow-guided Hypergraph Neural Diffusion(RFHND), a novel message passing paradigm for hypergraphs guided by discrete Ricci flow. Specifically, RFHND is based on a PDE system that describes the continuous evolution of node features on hypergraphs and adaptively regulates the rate of information diffusion at the geometric level, preventing feature homogenization and producing high-quality node representations. Experimental results show that RFHND significantly outperforms existing methods across multiple benchmark datasets and demonstrates strong robustness, while also effectively mitigating over-smoothing.",
-      "authors": [
-        "Mengyao Zhou",
-        "Zhiheng Zhou",
-        "Xiao Han",
-        "Xingqin Qi",
-        "Guanghui Wang",
-        "Guiying Yan"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.AI"
-      ],
-      "published": "2026-03-16T06:19:19+00:00",
-      "link": "https://arxiv.org/pdf/2603.15696v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Ricci flow-guided neural diffusion on hypergraphs for higher-order relationships",
-      "llm_evidence_cn": "超图上基于里奇流引导的神经扩散，用于处理高阶关系",
-      "llm_evidence": "超图上基于里奇流引导的神经扩散，用于处理高阶关系",
-      "canonical_evidence": "超图上基于里奇流引导的神经扩散，用于处理高阶关系",
-      "llm_tldr_en": "Proposes a Ricci flow-guided hypergraph neural diffusion method to model complex higher-order relationships.",
-      "llm_tldr_cn": "提出了一种里奇流引导的超图神经扩散方法，用于建模复杂的高阶关系。",
-      "llm_tldr": "提出了一种里奇流引导的超图神经扩散方法，用于建模复杂的高阶关系。",
-      "llm_tags": [
-        "query:molrna:composite"
-      ],
-      "matched_query_tag": "query:molrna:composite",
-      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
-      "matched_requirement_id": "req-composite-molrna",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.15696v1",
       "carry_days": 1
     },
     {
@@ -280,7 +79,7 @@
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
       "paper_id": "2603.14405v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.14792v1",
@@ -320,86 +119,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.14792v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.13627v1",
-      "title": "BERTology of Molecular Property Prediction",
-      "abstract": "Chemical language models (CLMs) have emerged as promising competitors to popular classical machine learning models for molecular property prediction (MPP) tasks. However, an increasing number of studies have reported inconsistent and contradictory results for the performance of CLMs across various MPP benchmark tasks. In this study, we conduct and analyze hundreds of meticulously controlled experiments to systematically investigate the effects of various factors, such as dataset size, model size, and standardization, on the pre-training and fine-tuning performance of CLMs for MPP. In the absence of well-established scaling laws for encoder-only masked language models, our aim is to provide comprehensive numerical evidence and a deeper understanding of the underlying mechanisms affecting the performance of CLMs for MPP tasks, some of which appear to be entirely overlooked in the literature.",
-      "authors": [
-        "Mohammad Mostafanejad",
-        "Paul Saxe",
-        "T. Daniel Crawford"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.CL"
-      ],
-      "published": "2026-03-13T22:18:22+00:00",
-      "link": "https://arxiv.org/pdf/2603.13627v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "systematic investigation of chemical language models for molecular property prediction",
-      "llm_evidence_cn": "系统研究用于分子性质预测的化学语言模型",
-      "llm_evidence": "系统研究用于分子性质预测的化学语言模型",
-      "canonical_evidence": "系统研究用于分子性质预测的化学语言模型",
-      "llm_tldr_en": "Analyzes factors affecting the performance of chemical language models in molecular property prediction tasks.",
-      "llm_tldr_cn": "系统分析了影响化学语言模型在分子性质预测任务中表现的各类因素。",
-      "llm_tldr": "系统分析了影响化学语言模型在分子性质预测任务中表现的各类因素。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "foundation models for molecular discovery and representation learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.13627v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.09268v1",
-      "title": "Logos: An evolvable reasoning engine for rational molecular design",
-      "abstract": "The discovery and design of functional molecules remain central challenges across chemistry,biology, and materials science. While recent advances in machine learning have accelerated molecular property prediction and candidate generation, existing models tend to excel either in physical fidelity without transparent reasoning, or in flexible reasoning without guarantees of chemical validity. This imbalance limits the reliability of artificial intelligence systems in real scientific design workflows.Here we present Logos, a compact molecular reasoning model that integrates multi-step logical reasoning with strict chemical consistency. Logos is trained using a staged strategy that first exposes the model to explicit reasoning examples linking molecular descriptions to structural decisions, and then progressively aligns these reasoning patterns with molecular representations. In a final training phase, chemical rules and invariants are incorporated directly into the optimization objective, guiding the model toward chemically valid outputs. Across multiple benchmark datasets, Logos achieves strong performance in both structural accuracy and chemical validity, matching or surpassing substantially larger general-purpose language models while operating with a fraction of their parameters. Beyond benchmark evaluation, the model exhibits stable behaviour in molecular optimization tasks involving multiple, potentially conflicting constraints. By explicitly exposing intermediate reasoning steps, Logos enables human inspection and assessment of the design logic underlying each generated structure. These results indicate that jointly optimizing for reasoning structure and physical consistency offers a practical pathway toward reliable and interpretable AI systems for molecular science, supporting closer integration of artificial intelligence into scientific discovery processes.",
-      "authors": [
-        "Haibin Wen",
-        "Zhe Zhao",
-        "Fanfu Wang",
-        "Tianyi Xu",
-        "Hao Zhang",
-        "Chao Yang",
-        "Ye Wei"
-      ],
-      "primary_category": "cs.AI",
-      "categories": [
-        "cs.AI"
-      ],
-      "published": "2026-03-10T06:56:35+00:00",
-      "link": "https://arxiv.org/pdf/2603.09268v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "molecular reasoning model for rational molecular design",
-      "llm_evidence_cn": "用于理性分子设计的分子推理模型",
-      "llm_evidence": "用于理性分子设计的分子推理模型",
-      "canonical_evidence": "用于理性分子设计的分子推理模型",
-      "llm_tldr_en": "Presents Logos, a molecular reasoning engine that combines logical reasoning with chemical consistency.",
-      "llm_tldr_cn": "提出 Logos，一种结合逻辑推理与化学一致性的分子推理引擎，用于理性分子设计。",
-      "llm_tldr": "提出 Logos，一种结合逻辑推理与化学一致性的分子推理引擎，用于理性分子设计。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "generative models for de novo molecular and RNA design",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.09268v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.16770v1",
@@ -437,129 +157,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.16770v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.06882v1",
-      "title": "Machine learning the two-electron reduced density matrix in molecules and condensed phases",
-      "abstract": "Machine learning is rapidly accelerating materials and chemical discovery, but most current models target energies, forces, or selected molecular properties rather than the underlying many-body electronic structure. Learning electronic-structure proxies, such as reduced density matrices, offers a path to surrogates that can predict a broad range of observables from a single ML model. Short of learning the full wavefunction, the two-electron reduced density matrix (2-RDM) is among the most information-rich, minimally lossy targets, providing direct access to expectation values of arbitrary one- and two-electron operators regardless of the strength of the underlying electron correlation. Here we show that learning the 2-RDM is a feasible goal, yielding exceptionally accurate models. We develop surrogates for correlated wavefunction methods (including configuration interaction and coupled cluster) that yield 2-RDMs with sufficient fidelity to provide direct, training-free access to energies and forces for driving energy-conserving molecular dynamics. To tackle realistic molecular condensed phases, we leverage a many-body expansion of the 2-RDM, using our ML models to supply the expansion terms and enabling ML-powered, coupled-cluster-quality electronic structure and energetics for large solvated systems. As a demonstration, we showcase a coupled-cluster-level electronic-structure calculation of glucose solvated by 500 water molecules achieved at Hartree-Fock cost. This work establishes a general framework for learning correlated electronic structure with high fidelity and deploying it to systems beyond the reach of conventional ab initio methods.",
-      "authors": [
-        "Jessica A. Martinez B.",
-        "Bhaskar Rana",
-        "Xuecheng Shao",
-        "Katarzyna Pernal",
-        "Michele Pavanello"
-      ],
-      "primary_category": "physics.chem-ph",
-      "categories": [
-        "physics.chem-ph",
-        "physics.comp-ph"
-      ],
-      "published": "2026-03-06T21:02:41+00:00",
-      "link": "https://arxiv.org/pdf/2603.06882v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "representation learning for molecular electronic structure",
-      "llm_evidence_cn": "分子电子结构的表示学习",
-      "llm_evidence": "分子电子结构的表示学习",
-      "canonical_evidence": "分子电子结构的表示学习",
-      "llm_tldr_en": "Demonstrates machine learning of the two-electron reduced density matrix for molecular property prediction.",
-      "llm_tldr_cn": "展示了通过机器学习双电子还原密度矩阵来进行分子性质预测。",
-      "llm_tldr": "展示了通过机器学习双电子还原密度矩阵来进行分子性质预测。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "foundation models for molecular discovery and representation learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.06882v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.12017v2",
-      "title": "Thermodynamic Descriptors from Molecular Dynamics as Machine Learning Features for Extrapolable Property Prediction",
-      "abstract": "The limited extrapolative power of structure-based machine learning (ML) models is a critical bottleneck in chemical discovery, particularly for industrial R&D, where navigating uncharted chemical space to find next-generation materials or drugs is paramount. These models, reliant on structural descriptors or graph neural networks (GNNs), often fail when predicting properties for molecules with novel chemotypes. Here, we introduce a physics-augmented ML framework that overcomes this limitation. Our approach replaces conventional structural inputs with thermodynamic properties such as cohesive energy, heat of vaporization, and density, derived directly from molecular dynamics (MD) simulations. While performing comparably to structure-based models on known organic compounds, our method uniquely maintains low error when extrapolating to dissimilar chemical spaces. Crucially, it accurately predicts boiling points for entire chemical classes absent from the training set, including inorganic compounds, salts, and molecules with elements such as Si, B, and Te. By learning from the intermolecular forces that govern phase transitions, our framework provides a more fundamental and generalizable strategy for molecular property prediction, enabling chemical exploration beyond established structural domains.",
-      "authors": [
-        "Nuria H. Espejo",
-        "Pablo Llombart",
-        "Andrés González de Castilla",
-        "Jorge Ramirez",
-        "Jorge R. Espinosa",
-        "Adiran Garaizar"
-      ],
-      "primary_category": "physics.chem-ph",
-      "categories": [
-        "physics.chem-ph"
-      ],
-      "published": "2026-03-12T14:59:42+00:00",
-      "link": "https://arxiv.org/pdf/2603.12017v2",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "molecular property prediction and chemical discovery",
-      "llm_evidence_cn": "分子性质预测与化学发现",
-      "llm_evidence": "分子性质预测与化学发现",
-      "canonical_evidence": "分子性质预测与化学发现",
-      "llm_tldr_en": "Uses thermodynamic descriptors from MD simulations to improve extrapolable molecular property prediction.",
-      "llm_tldr_cn": "利用分子动力学模拟的热力学描述符来提高分子性质预测的外推能力。",
-      "llm_tldr": "利用分子动力学模拟的热力学描述符来提高分子性质预测的外推能力。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "foundation models for molecular discovery and representation learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.12017v2",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.20183v1",
-      "title": "Prediction and Experimental Verification of Electrolyte Solvation Structure from an OMol25-Trained Interatomic Potential",
-      "abstract": "Machine learning interatomic potentials (MLIPs) trained on large, chemically diverse datasets are revolutionizing computational chemistry, enabling molecular dynamics simulations of battery electrolytes with near-DFT accuracy over 10,000 times faster than DFT. While previous MLIP training datasets with suitable elemental coverage for electrolytes have been based on inorganic materials, the Open Molecules 2025 (OMol25) dataset provides large-scale molecular DFT MLIP training data with broad elemental coverage and specifically samples tens of millions of electrolyte configurations. Here, we integrate computational modeling with experimental validation to systematically assess the ability of large-scale MLIPs pre-trained on materials data or on OMol25 to accurately resolve nanoscale structural organization and ion-solvation characteristics in Na-ion battery electrolytes across diverse physicochemical conditions and compositional regimes. We find that the OMol25-trained Universal Model of Atoms (UMA-OMol) predicts experimentally measured densities and X-ray structure factors in substantially better agreement compared to state-of-the-art models trained only on inorganic materials data. Using UMA-OMol, we further analyze systematic trends in solvation structure as a function of cation identity, anion chemistry, salt concentration, and solvent topology. We observe that increasing system temperature amplifies the heterogeneity within the solvation environment, perturbing cation-solvent interactions and promoting the formation of contact ion pairs (CIPs). Moreover, subtle variations in the solvent topology of glyme-based electrolytes cause pronounced changes in ion-correlations and solvation structure. The experimental agreement and microscopic insights shown here position OMol25-trained MLIPs as a practical route to predictive, high-throughput electrolyte simulations.",
-      "authors": [
-        "Nitesh Kumar",
-        "Jianwei Lai",
-        "Casey S. Mezerkor",
-        "Jiaqi Wang",
-        "Kamila M. Wiaderek",
-        "J. David Bazak",
-        "Samuel M. Blau",
-        "Ethan J. Crumlin"
-      ],
-      "primary_category": "physics.chem-ph",
-      "categories": [
-        "physics.chem-ph"
-      ],
-      "published": "2026-03-20T17:57:37+00:00",
-      "link": "https://arxiv.org/pdf/2603.20183v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "large-scale molecular DFT MLIP training data",
-      "llm_evidence_cn": "大规模分子DFT机器学习原子势训练数据",
-      "llm_evidence": "大规模分子DFT机器学习原子势训练数据",
-      "canonical_evidence": "大规模分子DFT机器学习原子势训练数据",
-      "llm_tldr_en": "Introduces OMol25, a large-scale dataset for training interatomic potentials for molecular discovery.",
-      "llm_tldr_cn": "引入OMol25，一个用于训练分子发现中原子间相互作用势的大规模数据集。",
-      "llm_tldr": "引入OMol25，一个用于训练分子发现中原子间相互作用势的大规模数据集。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "foundation models for molecular discovery and representation learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.20183v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.18389v2",
@@ -603,88 +201,7 @@
       "matched_requirement_id": "req-4",
       "selection_source": "carryover_cache",
       "paper_id": "2603.18389v2",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.19766v1",
-      "title": "Adapting a Pre-trained Single-Cell Foundation Model to Spatial Gene Expression Generation from Histology Images",
-      "abstract": "Spatial transcriptomics (ST) enables spot-level in situ expression profiling, but its high cost and limited throughput motivate predicting expression directly from HE-stained histology. Recent advances explore using score- or flow-based generative models to estimate the conditional distribution of gene expression from histology, offering a flexible alternative to deterministic regression approaches. However, most existing generative approaches omit explicit modeling of gene-gene dependencies, undermining biological coherence. Single-cell foundation models (sc-FMs), pre-trained across diverse cell populations, capture these critical gene relationships that histology alone cannot reveal. Yet, applying expression-only sc-FMs to histology-conditioned expression modeling is nontrivial due to the absence of a visual pathway, a mismatch between their pre-training and conditional ST objectives, and the scarcity of mixed-cell ST supervision. To address these challenges, we propose HINGE (HIstology-coNditioned GEneration), which retrofits a pre-trained sc-FM into a conditional expression generator while mostly preserving its learned gene relationships. We achieve this by introducing SoftAdaLN, a lightweight, identity-initialized modulation that injects layer-wise visual context into the backbone, coupled with an expression-space masked diffusion objective and a warm-start curriculum to ensure objective alignment and training stability. Evaluated on three ST datasets, ours outperforms state-of-the-art baselines on mean Pearson correlation and yields more accurate spatial marker expression patterns and higher pairwise co-expression consistency, establishing a practical route to adapt pre-trained sc-FMs for histology-conditioned spatial expression generation.",
-      "authors": [
-        "Donghai Fang",
-        "Yongheng Li",
-        "Zhen Wang",
-        "Yuansong Zeng",
-        "Wenwen Min"
-      ],
-      "primary_category": "cs.CV",
-      "categories": [
-        "cs.CV"
-      ],
-      "published": "2026-03-20T08:52:39+00:00",
-      "link": "https://arxiv.org/pdf/2603.19766v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Adapting single-cell foundation models for gene expression generation",
-      "llm_evidence_cn": "调整单细胞基础模型用于基因表达生成",
-      "llm_evidence": "调整单细胞基础模型用于基因表达生成",
-      "canonical_evidence": "调整单细胞基础模型用于基因表达生成",
-      "llm_tldr_en": "Adapts pre-trained foundation models to predict spatial gene expression using generative approaches.",
-      "llm_tldr_cn": "调整预训练基础模型，利用生成式方法预测空间基因表达。",
-      "llm_tldr": "调整预训练基础模型，利用生成式方法预测空间基因表达。",
-      "llm_tags": [
-        "query:molrna:composite"
-      ],
-      "matched_query_tag": "query:molrna:composite",
-      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
-      "matched_requirement_id": "req-composite-molrna",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.19766v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.25253v1",
-      "title": "MolQuest: A Benchmark for Agentic Evaluation of Abductive Reasoning in Chemical Structure Elucidation",
-      "abstract": "Large language models (LLMs) hold considerable potential for advancing scientific discovery, yet systematic assessment of their dynamic reasoning in real-world research remains limited. Current scientific evaluation benchmarks predominantly rely on static, single-turn Question Answering (QA) formats, which are inadequate for measuring model performance in complex scientific tasks that require multi-step iteration and experimental interaction. To address this gap, we introduce MolQuest, a novel agent-based evaluation framework for molecular structure elucidation built upon authentic chemical experimental data. Unlike existing datasets, MolQuest formalizes molecular structure elucidation as a multi-turn interactive task, requiring models to proactively plan experimental steps, integrate heterogeneous spectral sources (e.g., NMR, MS), and iteratively refine structural hypotheses. This framework systematically evaluates LLMs' abductive reasoning and strategic decision-making abilities within a vast and complex chemical space. Empirical results reveal that contemporary frontier models exhibit significant limitations in authentic scientific scenarios: notably, even state-of-the-art (SOTA) models achieve an accuracy of only approximately 50%, while the performance of most other models remains below the 30% threshold. This work provides a reproducible and extensible framework for science-oriented LLM evaluation, our findings highlight the critical gap in current LLMs' strategic scientific reasoning, setting a clear direction for future research toward AI that can actively participate in the scientific process.",
-      "authors": [
-        "Taolin Han",
-        "Shuang Wu",
-        "Jinghang Wang",
-        "Yuhao Zhou",
-        "Renquan Lv",
-        "Bing Zhao",
-        "Wei Hu"
-      ],
-      "primary_category": "cs.CL",
-      "categories": [
-        "cs.CL",
-        "cs.AI"
-      ],
-      "published": "2026-03-26T09:57:17+00:00",
-      "link": "https://arxiv.org/pdf/2603.25253v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "agentic evaluation for molecular structure elucidation",
-      "llm_evidence_cn": "分子结构阐明的智能体评估",
-      "llm_evidence": "分子结构阐明的智能体评估",
-      "canonical_evidence": "分子结构阐明的智能体评估",
-      "llm_tldr_en": "A benchmark for evaluating LLM agents in complex, multi-step molecular structure discovery tasks.",
-      "llm_tldr_cn": "一个用于评估大语言模型智能体在复杂多步分子结构发现任务中表现的基准。",
-      "llm_tldr": "一个用于评估大语言模型智能体在复杂多步分子结构发现任务中表现的基准。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "foundation models for molecular discovery and representation learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.25253v1",
-      "carry_days": 1
+      "carry_days": 2
     },
     {
       "id": "2603.20389v1",
@@ -715,13 +232,13 @@
         "query:MOLRNA"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "chemical language model for de novo molecular building block design",
-      "llm_evidence_cn": "用于从头分子构建块设计的化学语言模型",
-      "llm_evidence": "用于从头分子构建块设计的化学语言模型",
-      "canonical_evidence": "用于从头分子构建块设计的化学语言模型",
-      "llm_tldr_en": "Presents Nexerra-R1, a language model for the inverse design of organic linkers in reticular chemistry.",
-      "llm_tldr_cn": "推出Nexerra-R1，一种用于网状化学中有机连接体逆向设计的化学语言模型。",
-      "llm_tldr": "推出Nexerra-R1，一种用于网状化学中有机连接体逆向设计的化学语言模型。",
+      "llm_evidence_en": "chemical language model for de novo molecular design",
+      "llm_evidence_cn": "用于从头分子设计的化学语言模型",
+      "llm_evidence": "用于从头分子设计的化学语言模型",
+      "canonical_evidence": "用于从头分子设计的化学语言模型",
+      "llm_tldr_en": "Nexerra-R1 is a language model for the inverse design of organic linkers in reticular chemistry.",
+      "llm_tldr_cn": "Nexerra-R1 是一种用于网状化学中有机连接体逆向设计的化学语言模型。",
+      "llm_tldr": "Nexerra-R1 是一种用于网状化学中有机连接体逆向设计的化学语言模型。",
       "llm_tags": [
         "query:molrna"
       ],
@@ -730,6 +247,124 @@
       "matched_requirement_id": "req-8",
       "selection_source": "carryover_cache",
       "paper_id": "2603.20389v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.21579v1",
+      "title": "TERS-ABNet: A Deep Learning Approach for Automated Single-Molecule Structure Reconstruction with Atomic Precision from TERS Mapping",
+      "abstract": "Determining the chemical structure for a single molecule on surface from spectroscopic data represents a challenging high-dimensional inverse problem. Tip-enhanced Raman spectroscopy (TERS) enables chemically specific imaging of single molecules with sub-nanometer spatial resolution, yet reconstructing complete molecular structures from TERS maps remains difficult owing to the ambiguous vibrational signatures and reliance on expert interpretation. Here, we introduce TERS-ABNet, a deep-learning framework that formulates single-molecule structure determination from spectroscopic images as an image-to-graph inference task. Using a \"two-track\" architecture, the model jointly predicts probabilistic atom and bond maps, enabling direct construction of explicit atom-bond graphs without relying on predefined chemical rules. Trained on simulated datasets, TERS-ABNet achieves about 94% atom-type classification accuracy (with a mean coordinate error of about 0.23 Å), enabling to reliably recovering molecular connectivity and fully reconstruct single-molecule structure from its TERS maps. The framework generalizes across varying spatial resolutions and structural complexity through transfer learning, and successfully reconstructs the atomic structure of a single porphyrin molecule from experimental TERS data. This work establishes a general deep-learning strategy for inferring explicit atom-bond graph representations from high-dimensional spectroscopic imaging data, providing a new pathway towards automated molecular structure determination in nanoscale characterization.",
+      "authors": [
+        "Jie Cui",
+        "Yao Zhang",
+        "Yang Zhang",
+        "Yi Luo",
+        "Zhen-Chao Dong"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph"
+      ],
+      "published": "2026-03-23T05:02:03+00:00",
+      "link": "https://arxiv.org/pdf/2603.21579v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "image-to-graph inference for molecular structure reconstruction",
+      "llm_evidence_cn": "用于分子结构重建的图像到图推理",
+      "llm_evidence": "用于分子结构重建的图像到图推理",
+      "canonical_evidence": "用于分子结构重建的图像到图推理",
+      "llm_tldr_en": "A deep learning framework for reconstructing single-molecule structures from TERS maps using image-to-graph inference.",
+      "llm_tldr_cn": "一种利用图像到图推理从TERS映射中重建单分子结构的深度学习框架。",
+      "llm_tldr": "一种利用图像到图推理从TERS映射中重建单分子结构的深度学习框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.21579v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.24752v1",
+      "title": "Autotuning T-PaiNN: Enabling Data-Efficient GNN Interatomic Potential Development via Classical-to-Quantum Transfer Learning",
+      "abstract": "Machine-learned interatomic potentials (MLIPs), particularly graph neural network (GNN)-based models, offer a promising route to achieving near-density functional theory (DFT) accuracy at significantly reduced computational cost. However, their practical deployment is often limited by the large volumes of expensive quantum mechanical training data required. In this work, we introduce a transfer learning framework, Transfer-PaiNN (T-PaiNN), that substantially improves the data efficiency of GNN-MLIPs by leveraging inexpensive classical force field data. The approach consists of pretraining a PaiNN MLIP architecture on large-scale datasets generated from classical molecular simulations, followed by fine-tuning (dubbed autotuning) using a comparatively small DFT dataset. We demonstrate the effectiveness of autotuning T-PaiNN on both gas-phase molecular systems (QM9 dataset) and condensed-phase liquid water. Across all cases, T-PaiNN significantly outperforms models trained solely on DFT data, achieving order-of-magnitude reductions in mean absolute error while accelerating training convergence. For example, using the QM9 data set, error reductions of up to 25 times are observed in low-data regimes, while liquid water simulations show improved predictions of energies, forces, and experimentally relevant properties such as density and diffusion. These gains arise from the model's ability to learn general features of the potential energy surface from extensive classical sampling, which are subsequently refined to quantum accuracy. Overall, this work establishes transfer learning from classical force fields as a practical and computationally efficient strategy for developing high-accuracy, data-efficient GNN interatomic potentials, enabling broader application of MLIPs to complex chemical systems.",
+      "authors": [
+        "Vivienne Pelletier",
+        "Vedant Bhat",
+        "Daniel J. Rivera",
+        "Steven A. Wilson",
+        "Christopher L. Muhich"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG"
+      ],
+      "published": "2026-03-25T19:22:56+00:00",
+      "link": "https://arxiv.org/pdf/2603.24752v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "GNN-based interatomic potentials and molecular simulations",
+      "llm_evidence_cn": "基于GNN的原子间势和分子模拟",
+      "llm_evidence": "基于GNN的原子间势和分子模拟",
+      "canonical_evidence": "基于GNN的原子间势和分子模拟",
+      "llm_tldr_en": "A transfer learning framework to improve the data efficiency of GNN-based interatomic potentials for molecules.",
+      "llm_tldr_cn": "一种提高基于GNN的分子原子间势数据效率的迁移学习框架。",
+      "llm_tldr": "一种提高基于GNN的分子原子间势数据效率的迁移学习框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.24752v1",
+      "carry_days": 1
+    },
+    {
+      "id": "2603.23941v1",
+      "title": "An Efficient High-Degree, High-Order Equivariant Graph Neural Network for Direct Crystal Structure Optimization",
+      "abstract": "Crystal structure optimization is fundamental to materials modeling but remains computationally expensive when performed with density-functional theory (DFT). Machine-learning (ML) approaches offer substantial acceleration, yet existing methods face three key limitations: (i) most models operate solely on atoms and treat lattice vectors implicitly, despite their central role in structural optimization; (ii) they lack efficient mechanisms to capture high-degree angular information and higher-order geometric correlations simultaneously, which are essential for distinguishing subtle structural differences; and (iii) many pipelines are multi-stage or iterative rather than truly end-to-end, making them prone to error accumulation and limiting scalability. Here we present E$^{3}$Relax-H$^{2}$, an end-to-end high-degree, high-order equivariant graph neural network that maps an initial crystal directly to its relaxed structure. The key idea is to promote both atoms and lattice vectors to graph nodes, enabling a unified and symmetry-consistent representation of structural degrees of freedom. Building on this formulation, E$^{3}$Relax-H$^{2}$ introduces two message-passing mechanisms: (i) a high-degree, high-order message-passing module that efficiently captures high-degree angular representations and high-order many-body correlations; and (ii) a lattice-atom message-passing module that explicitly models the bidirectional coupling between lattice deformation and atomic displacement. In addition, we propose a differentiable periodicity-aware Cartesian displacement loss tailored for one-shot structure prediction under periodic boundary conditions.",
+      "authors": [
+        "Ziduo Yang",
+        "Wei Zhuo",
+        "Huiqiang Xie",
+        "Xiaoqing Liu",
+        "Lei Shen"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-03-25T05:04:03+00:00",
+      "link": "https://arxiv.org/pdf/2603.23941v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "equivariant graph neural network for crystal structure optimization",
+      "llm_evidence_cn": "用于晶体结构优化的等变图神经网络",
+      "llm_evidence": "用于晶体结构优化的等变图神经网络",
+      "canonical_evidence": "用于晶体结构优化的等变图神经网络",
+      "llm_tldr_en": "An equivariant GNN that captures high-order geometric correlations for efficient crystal optimization.",
+      "llm_tldr_cn": "一种等变图神经网络，通过捕捉高阶几何相关性实现高效的晶体结构优化。",
+      "llm_tldr": "一种等变图神经网络，通过捕捉高阶几何相关性实现高效的晶体结构优化。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "carryover_cache",
+      "paper_id": "2603.23941v1",
       "carry_days": 1
     }
   ]

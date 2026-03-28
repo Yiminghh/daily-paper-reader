@@ -1,0 +1,361 @@
+Title: Machine learning the two-electron reduced density matrix in molecules and condensed phases
+
+URL Source: https://arxiv.org/pdf/2603.06882v1
+
+Published Time: Tue, 10 Mar 2026 00:16:47 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Machine learning the two-electron reduced density matrix in molecules and condensed phases 
+
+Jessica A. Martinez B., 1, 2, ∗ Bhaskar Rana, 1, ∗ Xuecheng Shao, 3 Katarzyna Pernal, 4 and Michele Pavanello 1, †
+
+> 1
+
+Department of Physics, Rutgers University, Newark, NJ 07102, USA 
+
+> 2
+
+Department of Chemistry, Rutgers University, Newark, NJ 07102, USA 
+
+> 3
+
+Key Laboratory of Material Simulation Methods & Software of Ministry of Education, College of Physics, Jilin University, Changchun 130012, China 
+
+> 4
+
+Institute of Physics, Lodz University of Technology, Ul Wolczanska 217/221, Lodz 93-005, Poland 
+
+(Dated: March 10, 2026) Machine learning is rapidly accelerating materials and chemical discovery, but most current mod-els target energies, forces, or selected molecular properties rather than the underlying many-body electronic structure. Learning electronic-structure proxies, such as reduced density matrices, offers a path to surrogates that can predict a broad range of observables from a single ML model. Short of learning the full wavefunction, the two-electron reduced density matrix (2-RDM) is among the most information-rich, minimally lossy targets, providing direct access to expectation values of arbitrary one- and two-electron operators regardless of the strength of the underlying electron correlation. Here we show that learning the 2-RDM is a feasible goal, yielding exceptionally accurate models. We develop surrogates for correlated wavefunction methods (including configuration interaction and coupled cluster) that yield 2-RDMs with sufficient fidelity to provide direct, training-free access to energies and forces for driving energy-conserving molecular dynamics. To tackle realistic molecular condensed phases, we leverage a many-body expansion of the 2-RDM, using our ML models to supply the expansion terms and enabling ML-powered, coupled-cluster-quality electronic structure and energetics for large solvated systems. As a demonstration, we showcase a coupled-cluster-level electronic-structure calculation of glucose solvated by 500 water molecules achieved at Hartree-Fock cost. This work establishes a general framework for learning correlated electronic structure with high fidelity and deploying it to systems beyond the reach of conventional ab initio methods. 
+
+I. INTRODUCTION 
+
+Machine learning (ML) is rapidly reshaping atomistic simulation in chemistry and materials science. A ma-jor driver has been the emergence of accurate ML inter-atomic potentials and force fields [1], including increas-ingly general “foundation” models trained across broad chemical space [2, 3]. At the same time, there is growing interest in ML surrogates that target electronic-structure objects rather than only energies and forces, for exam-ple, neural-network wavefunctions [4, 5], electron den-sities [6], and reduced density matrices (RDMs) [7, 8]. Learning such objects is appealing because they can serve as central quantities from which many observables can be obtained, and can serve as platforms for developing transferable surrogate electronic-structure methods [9]. Predictive electronic-structure calculations remain a dominant computational bottleneck in computational chemistry and materials science, especially when ac-counting accurately for electron correlation is required. In common implementations, Kohn-Sham density func-tional theory (DFT) scales roughly as N 3 with sys-tem size, while correlated wavefunction methods such as coupled cluster with singles and doubles (CCSD) scale as N 6. These costs are prohibitive for realistic sys-tems and sampling demands, particularly in condensed   
+
+> ∗These authors contributed equally to this work.
+> †m.pavanello@rutgers.edu
+
+phases. Approximations can reduce cost (for example, CC2 [10] or local-correlation variants such as DLPNO-CCSD [11]) and lower-cost electronic-structure models (e.g., extended tight binding [12] or orbital-free DFT [13]) can extend accessible length and time scales. Even so, further reductions in computational cost, together with improvements in accuracy, are essential to address the complexity of chemical processes and the breadth of chemical space required for discovering new materials and chemistry. In this work, we pursue surrogate electronic-structure models aimed at predicting the structure of correlated electrons in molecular systems and molecular condensed phases. Our starting point is that predicting a single property (e.g., energy, dipole moment) is inherently lim-iting: a model trained for one observable does not auto-matically generalize to predict others. By contrast, the 2-RDM occupies a privileged position in many-electron theory [14]. It encodes one-electron probabilities and electron-pair correlations, yields the total electronic en-ergy by a simple contraction with one- and two-electron integrals (vide infra), and provides direct access to two-electron observables that are otherwise expensive to com-pute at scale, such as the electronic structure factor which is an important quantity to interpret X-ray diffraction data [15]. Recent work [16] has used variational 2-RDM calculations and Hartree–Fock as lower and upper lim-its to constrain a ML model for the energy. However, to our knowledge, the 2-RDM has never been the tar-get of ML models. Conceptually, our ML objective is to 
+
+> arXiv:2603.06882v1 [physics.chem-ph] 6 Mar 2026
+
+2learn the map connecting the external potential (equiv-alently, atom types and geometry) to the ground-state 2-RDM, motivated by the general framework in which ground-state observables are functionals of the external potential [17, 18]. Two obstacles must be overcome to make 2-RDM learning practical. First, in a one-particle basis (typ-ically Gaussian-type orbitals), the 2-RDM is a four-index tensor, and even after exploiting symmetries [19], the number of independent elements grows steeply with system size. Second, physical 2-RDMs must satisfy 
+
+N -representability conditions (which are only partially known) that render variational 2-RDM methods techni-cally demanding [20]. These challenges help explain why most ML work applied to electronic structure methods has focused on density functionals, electron densities, and 1-RDMs [7, 8, 21–23]. Short of learning the full electronic wavefunction [4, 5], a machine-learned model for the 2-RDM is among the most general electronic-structure surrogates one can aim for in chemistry and materials science. Unlike the elec-tron density or the 1-RDM, the 2-RDM provides direct access to expectation values of arbitrary one- and two-electron operators. In particular, it yields the electronic energy through simple contractions with one- and two-electron integrals, yielding energies and forces without training separate models for each observable. In this sense, accurate 2-RDM models offer a broadly transfer-able representation of the electronic structure with min-imal information loss. Our contributions are twofold. (i) We introduce an ML framework that directly targets the 2-RDM associ-ated with correlated electronic-structure methods (e.g., complete active space CI (CASCI) and CCSD), with the goal of producing 2-RDMs that are extremely close to ref-erence targets and sufficiently N -representable in prac-tice to be used “as is” for evaluating energies, atomic forces, and two-electron operators such as structure fac-tors [15]. (ii) To extend this approach to molecular con-densed phases, we propose an RDM-friendly many-body expansion of the 2-RDM and combine it with ML mod-els for the n-body terms, yielding accurate predictions at substantially reduced computational cost for large sys-tems. As a demonstration of the method, we will present a calculation of a glucose molecule solvated by 500 water molecules at the CCSD level of theory. Together, these ideas offer a practical path to surro-gate models for correlated wavefunction methods that are both predictive (via a learned 2-RDM) and scalable (via the many-body expansion) enabling applications to systems where these methods are prohibitively expensive. 
+
+II. THEORY AND BACKGROUND 
+
+The electronic Hamiltonian can be expressed as the sum of one- and two-electron operators expressed on an Select target molecule 
+
+> Maps
+> Physics-Based Hartree-Fock Generate training set Structure factors Potential energy surfaces AIMD simulations Strongly correlated systems FCI, CCSD, CASCI
+> ML models 2-RDM Prediction
+> Applications
+> Exp. value of 1- & 2-e operators
+
+FIG. 1: Depiction of the workflows for the Γ ML , Γ c
+
+> ML
+
+and ∆ ML ML models. orthogonal one-electron basis set (usually HF orbitals), ˆH = X
+
+> ps
+
+hps ˆa†
+
+> p
+
+ˆas + 12
+
+X
+
+> psqr
+
+gpsqr ˆa†
+
+> p
+
+ˆa† 
+
+> q
+
+ˆar ˆas, (1) where hps = ⟨ψp| − 12 ∇2 + vext |ψs⟩ contains the kinetic energy and the electron–nucleus attraction (external po-tential vext (r)), and gpsqr are the electron repulsion in-tegrals. The operators ˆ a† 
+
+> p
+
+and ˆ ap denote creation and annihilation operators, respectively. Given the ground-state N -electron wavefunction Ψ 0,the electronic energy is 
+
+E = ⟨Ψ0| ˆH |Ψ0⟩ = X
+
+> ps
+
+hps γps + 12
+
+X
+
+> psqr
+
+gpsqr Γpsqr , (2) where the one- and two-electron reduced density matrices (1- and 2-RDMs) are defined as 
+
+γps = ⟨Ψ0| ˆa†
+
+> p
+
+ˆas |Ψ0⟩ , Γpsqr = ⟨Ψ0| ˆa†
+
+> p
+
+ˆa† 
+
+> q
+
+ˆar ˆas |Ψ0⟩ .
+
+(3) Although the energy expression above involves both the 1- and 2-RDMs, it can be recast in two equivalent forms: 
+
+E = Tr[ KΓ] , Kpsqr = 1  
+
+> N−1
+
+hps δqr + gpsqr , (4) 
+
+E = Tr[ hγ ] + Tr[( γ ∧ γ)g] + Tr[∆ g] (5) = EHF [γ] + Tr[∆ g] . (6) where EHF denotes the Hartree–Fock energy written in terms of 1-RDMs. In the spin-restricted case, the wedge product is (γ ∧ γ)pqrs = 12 (2 γps γqr − γpq γrs ) , (7) where ∆ is called cumulant. Thus, the 2-RDM decom-poses as Γ = γ ∧ γ + ∆, and the 1-RDM is obtained from the 2-RDM via the special trace 
+
+γps = 1 
+
+> N−1
+
+X
+
+> qr
+
+Γpsqr δqr = Tr ′[Γ] . (8) 3OHH
+
+(a) (b) 
+
+> OHH
+> Training set distribution Training set distribution
+
+FIG. 2: PEC of a water molecule (FCI) as a function of the bond length of one of the OH bonds while the other is fixed at the equilibrium length. (a) Three ML models are compared. (b) the effect of purification on the 2-RDM predictions. In all panels, the distributions of training set configurations are indicated by the gray histograms. All models used the RBF kernel. For results generated with the linear kernel, see Figure S2. An important property of γ and ∆ is that they are size-extensive (see Ref. 24 and Supplementary Materials Section III.A). In contrast, the non-cumulant term γ ∧ γ
+
+is not. Suppose a zeroth-order approximation to γ is available, say γHF (e.g., from Hartree–Fock), such that γ = γHF +
+
+δγ . The 2-RDM then becomes, Γ = ( γHF + δγ ) ∧ (γHF + δγ ) + ∆ . (9) With these considerations in place, we aim to construct a machine learning model for the 2-RDM. To this end, we use the rigorous maps connecting the RDMs to the external potential vext (the electron–nucleus attraction), ΓML : vext −→ Γ (10) which we denote by Γ ML as it will be the target of a ML model. This map follows directly from the map vext → ˆH
+
+by construction. Then, solving the Schr¨ odinger equation gives ˆH → Ψ0, and from Ψ 0 one obtains the 2-RDM, Ψ0 → Γ. Thus Eq. (10) holds, and Γ is a functional of the external potential, Γ[ vext ]. This functional need not be one-to-one, as invertibility is not required for the existence of a functional dependence. We focus on the correlation energy, Ec = E − EHF , as well as the correlated part of the 2-RDM, Γ c = Γ − γHF ∧
+
+γHF . Both Ec and Γ c can be obtained through the map in Eq. (10), which may be applied in two complementary ways: Γc 
+
+> ML
+
+: vext −→ Γc, (11) ∆ML : vext −→ δγ and vext −→ ∆. (12) In the following, we present, validate, and showcase the ML models for the 2-RDM for such applications as com-puting the molecular inelastic structure factor (including vibrational effects) of small molecules. Then, we gen-eralize the surrogate ML models to approach condensed phases via a 2-RDM many-body expansion.  
+
+> III. ML MODELS
+
+Similarly to our previous work [7, 22] and related ap-proaches [6, 25, 26], the ML models used to learn the maps in Eqs. (10), (11) and (12) are based on kernel ridge regression (KRR). We consider three ML strate-gies (Γ ML , Γ c
+
+> ML
+
+, and ∆ ML ) which differ in the quantity learned and in whether a HF calculation is required at prediction time. For example, for a generic target Γ[ v] we write Γ[ v] = 
+
+> Ntrain
+
+X
+
+> k=1
+
+Bk K[vk, v ], (13) where v is the external potential at which the target is evaluated, {vk} are training external potentials, Bk are KRR coefficients, and K[vk, v ] is the kernel. We use ei-ther a linear kernel, KLIN [vk, v l] = Tr[ vkvl], or a radial basis function (RBF) kernel, 
+
+KRBF [vk, v l] = exp  −σ∥vk − vl∥2 , (14) where ∥ · ∥ denotes the Frobenius norm. The coefficients are obtained by solving the linear system ( K + αI)B = G,where G contains the training targets and K is the kernel matrix. Once trained, the three ML strategies are deployed as follows (see Figure 1). In Γ ML , a single model approxi-mating the map in Eq. (10) directly predicting the full 2-RDM at a given geometry. In Γ c
+
+> ML
+
+, we predict only the correlation part, Γ c, by exploiting the map in Eq. (11), we then perform an HF calculation at each geome-try to obtain the reference 1-RDM γHF . The full 2-RDM is then reconstructed as Γ = γHF ∧ γHF + Γ c. In ∆ ML ,we leverage the maps in Eq. (12), and like with Γ c
+
+> ML
+
+,we perform an HF calculation to obtain γHF , augment it with an ML-predicted correction δγ , and reconstruct the 40 2 4 6 8 10            
+
+> 0.0
+> 0.2
+> 0.4
+> Total energy  CCSD cML ML ML N=216 ML N=1200
+> 5.00 5.02 5.04 5.06 5.08 5.10
+> Simulation time (ps)
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> Potential energy
+
+FIG. 3: Total and potential energies in kcal/mol along an NVE trajectory for ammonia (top: total energy over 10 ps; bottom: potential energy in the interval 5.0 ps to 5.1 ps), with initial velocities sampled from a Maxwell–Boltzmann distribution at T = 300 K. The CCSD benchmark is shown in black. The 1-RDM-based ML models, γML are shown in green ( Ntrain = 216) and orange ( Ntrain = 1200). The ∆ ML model is shown as a dotted red line and Γ c 
+
+> ML
+
+as a dotted blue line (both trained with Ntrain = 216 structures). Although the potential energy is not conserved in the NVE ensemble, this short time window highlights differences in its fluctuations across models. The γML model with Ntrain = 216 exhibits a noticeable drift. All other models closely track the CCSD benchmark. full 2-RDM from γHF , δγ , and the ML-predicted ∆ using Eq. (9). Although Γ ML , Γ c 
+
+> ML
+
+and ∆ ML are rigorous, the cor-responding target quantities differ significantly in their properties, such as size extensivity and their suitability to be approximated by regression. Specifically, Γ and Γc are not size-extensive because they both contain non-cumulant terms, making them challenging learning tar-gets. To illustrate, Figure S1 shows the Pearson correla-tion coefficient for δγ , ∆ and Γ c and clearly exposes the poorer quality regression for Γ c compared to the other targets. As argued in the Supplementary Materials Sec-tion III A 1, our models are suited for learning size ex-tensive quantities. Thus, ∆ ML is expected to yield the best performance, both in terms of training efficiency and model accuracy.     
+
+> IV. RESULTS FOR SINGLE MOLECULES A. Testing ML models’ N-representability and extrapolation behavior
+
+We begin by considering in Figure 2(a) (see Figure S2 for KRR carried out with a linear kernel) the potential energy curve (PEC) of a water molecule as a function of one OH bond length, keeping the other bond frozen at the equilibrium length. The ML models were trained on structures consistent with a temperature of T=300K, which, as the histogram shows in the figure, effectively clusters the geometries around the equilibrium geometry. The PEC predicted by the ML models is close to the target, which is FCI, in the subspace of geometries over-lapping with the training set. However, they deviate when the configurations and the training set do not over-lap. Specifically, Γ ML displays large deviations both for contracted and stretched OH bond lengths. The situa-tion improves with Γ c 
+
+> ML
+
+where the inaccurate extrapo-latory behavior mostly affects the stretched geometries. Conversely, the ∆ ML method finds a good interpolative and extrapolative behavior. Clearly, the Γ ML and Γ c 
+
+> ML
+
+models are not as accu-rate as the ∆ ML model. While we expect Γ ML to strug-gle more than the other methods (as it does not rely on an Hartree-Fock result) the differences between Γ c
+
+> ML
+
+and ∆ ML are more telling of the different physical na-ture of the targets of these two models. As we have dis-cussed, we expect the ML models for δγ and ∆ to enjoy a smooth and size extensive asymptotic behavior along bond-stretch paths. This underlying physical behavior of the target quantities results in successfully extrapolative ML models. Purification can substantially influence the final results [14, 28]. Since the data in Figure 2(a) were obtained without purification, we now examine Figure 2(b). As detailed in Supplementary Materials Sections III.B and 5(a) (b) (c) 
+
+## (d) (e) (f) 
+
+FIG. 4: Effect of molecular vibrations on the electronic structure factor of gas-phase ammonia, Se(q), where q = |q|.We evaluate Se(q) using 2-RDMs predicted by the ∆ ML model for 600 randomly sampled structures consistent with temperatures of 300 K and 700 K. Reference structure factors are taken from Ref. 27. Top row: (a) total Se(q)(elastic + inelastic), (b) inelastic, and (c) elastic contributions. Bottom row: corresponding contributions to Se(q)from the correlated part of the 2-RDM. III.C, we purify the 2-RDM by (i) fitting the 1-RDM nat-ural occupations to a Fermi-Dirac form and (ii) using the fitted 1-RDM to correct the 1-RDM-dependent terms in a unitary decomposition of the 2-RDM. This procedure has little impact on the ∆ ML models but it markedly im-proves the Γ c 
+
+> ML
+
+models (see the 2-positivity conditions in Table S1 where the lowest eigenvalue for the D, G and Q matrices are reported for a water molecule in a stretched geometry). In particular, purification restores the cor-rect asymptotic behavior of the PEC for Γ c 
+
+> ML
+
+regardless of the kernel employed. Another aspect emerging from Figure 2 is the general superiority in both interpolative and extrapolative behavior of the RBF kernel compared to the linear kernel. The results presented so far are specific to water. Fig-ures S5, S4, S3 present PECs for CO 2, NH 3 and CH 3OH showing a similar behavior of the ML models considered. Hereafter, we will employ the ∆ ML model unless other-wise stated.  
+
+> B. Ab-Initio Molecular Dynamics
+
+We tested the ability of the model RDMs to drive ab-initio molecular dynamics (AIMD) simulations. In Fig-ure 3, we present total energies (kinetic plus potential) for an isolated ammonia molecule where potential energy and forces are derived from the machine learned 2-RDMs using CCSD as our target method (see Supplementary Materials Section III E for details). The stringent test consists in running separate NVE trajectories all start-ing from the same initial conditions. We then look for (1) the time of decoherence between the ML trajectories and the CCSD benchmark, and (2) energy drifts. Ideally, the trajectories should be stable and coher-ent to the CCSD benchmark for over 10k time steps. This is when we expect the rounding errors from the fi-nite machine precision of the CPU algebra to accumulate enough to have an effect. Indeed, we witness coherent trajectories for the ∆ ML and Γ c 
+
+> ML
+
+models which display a strict energy conservation (no appreciable energy drift is recorded in the 10 ps time window). We note that, as before, a purification step (see Methods section) for each MD step was applied to the Γ c 
+
+> ML
+
+RDMs while it was not required for the ∆ ML RDMs. We also test the models previously developed for the 1-RDM (where the map vext → γ is learned and then the map γ → E[γ], ∇RE is also learned), which we indicate with γML in the figure. Two γML models are considered, one using Ntrain = 216 (for which an energy drift clearly noticeable and assessed to be 12-13 K /(DOF · ps), see Table S2) and one Ntrain = 1200. We also run a stress test for the ML models. We trained them using training sets consistent with a tem-perature of T=300K and then ran AIMD trajectories with initial velocities compatible with T=400K, 500K, and 700K, see supplementary Figures S6, S7, S8. The ∆ML and Γ c 
+
+> ML
+
+models once again show strong coherence with the target CCSD trajectory and stability through-out the dynamics. In contrast, the 1-RDM model for 
+
+Ntrain = 216 retains an unacceptable drift of 12 to 13 K/(DOF · ps) across the temperature range which is ad-dressed by increasing the number of training points to 1200. Overall, this is a strong result for the 2-RDM mod-els. That is, even if they are trained at 300K, they deliver stable AIMDs for temperatures well beyond the training temperature requiring a reduced training set size com-pared to models based on the 1-RDM. Results for FCI 6(a) (b) (c) 
+
+FIG. 5: Ethylene as an example of strong correlation. (a) PEC of ethylene vs C=C bond length; (b) 1-RDM occupations; (c) energy vs HCCH dihedral angle. In all panels, the distributions of training set configurations are indicated by the gray histograms. Vertical lines in panels (a) and (b) indicate the C=C distance of three geometries added to the training set to include in the model a notion of dissociation. water are consistent with this analysis and are available in Figure S9.  
+
+> C. Structure Factors
+
+Our results include the evaluation of the electronic structure factor, Se(q), a quantity important for un-derstanding the structure of matter typically probed by scattering techniques, such as X-ray scattering. With the advent of X-ray free-electron lasers with pulse rate in the femtosecond timescale, it is now possible to ob-serve real-time chemical and photochemical reactions [29]. This, however, is only useful if electronic struc-ture factors can be accurately predicted for ground and excited electronic states of free molecules. As for any structure factor, they probe the presence of particles and particle pairs. The Fourier Transform of pair density, 
+
+ρ2(r1, r2), is invoked and the electronic structure factor is defined as Se(q) = R ρ2(r1, r2)eiq·(r2−r1)dr1dr2 +N . The pair density is directly available from the 2-RDM as fol-lows ρ2(r1, r2) = P 
+
+> psqr
+
+Γpsqr χp(r1)χs(r1)χq (r2)χr (r2), where the χ functions are AOs. The evaluation of Se(q)is problematic as obtaining accurate pair densities or the 2-RDMs is extremely costly due to the large number of Slater determinants needed to achieve high accuracy [30]. Once 2-RDMs are available, the algorithms to compute the structure factor scale like O(N 4) as described in the Supplementary Materials Section III D. As molecules are dynamical, structure factors are needed for vibrationally and electronically excited states [27, 30]. Accounting for the dependence of Se upon dis-placement from the equilibrium geometry is, in practice, a computationally even more demanding task [31]. The ML models derived here, due to their excellent extrap-olative behavior can efficiently sample the configuration space spanned by an AIMD simulation. In lieu of an AIMD, we generated a set of structures by generating random linear combinations of all normal modes with a probability of displacement consistent with a set tem-perature, using the same algorithm as the one used for generating the training set of the ML models, see the Methods section. We then proceeded to evaluate the structure factor of ammonia (see Figure 4) and water (see Figure S12) in the gas phase comparing to reference values (experiment for water [32, 33] and a high-level ab-initio simulation for ammonia [27]). Figure S11 shows that the structure factor widths are not trivially related to the RMSD of the molecular structure displacements away from the equilibrium geometry. Figure 4 shows that vibrational mode displacements cause fluctuations of up to 15% of the intensity of the cor-related part of the structure factor. Additionally, the cor-related part of the inelastic structure factor shows quan-titative changes upon vibrational displacement. Specifi-cally, the peak position acquires a spread of about 0.5 ˚A−1, which is significant, and an equally significant spread in the peak intensity. Using ML models for pre-dicting the 2-RDMS was crucial to produce data in a timely fashion. The computational bottleneck of the structure factor simulations in fact was the computation of the structure factor and not the generation of the cor-related 2-RDMs.  
+
+> D. An example of strong correlation: double-bond torsion and dissociation
+
+When stretching covalent bonds and applying a tor-sion to double bonds, the onset of strong correlation is reached as soon as occupied and virtual HF orbital ener-gies become nearly degenerate [34]. The crucial effect of such mixing is that the 1-RDM occupations drastically depart from the aufbau. In Figure 5(a) we report the potential energy curve of ethylene as a function of the C-C interatomic distance, dCC . The training set used was developed as in Supplementary Materials Section III F with the addition of three geometries at dCC =2.0, 2.5 and 3.9˚ A. The results are quite encouraging, showing that the en-ergy curve is well represented by the model whose train-ing set is closely localized at the equilibrium distance (with the exception of the additional three points at dis-sociation). The 1-RDM occupations seen in Figure 5(b) 7also show excellent behavior, tracing the reference non-aufbau occupations quite closely. Figure 5(c) shows that the excellent behavior of the ∆ML model is retained when twisting the ethene’s dou-ble bond. The figure also shows that compared with bond stretching (where we found that only a few training struc-tures in the dissociation region were needed) the training-set distribution for bond twisting must span nearly the entire [0 , 90 ◦] interval. Additional examples are given in the Supplementary Materials bond stretching in ammonia, methanol, and CO 2, see Figures S3, S4 and S5.  
+
+> E. Computational Cost
+
+The computational cost associated with the ML mod-els is given by the 2-RDM prediction and purification costs. The prediction cost is determined by the complex-ity of the KRR kernel and by the training set size. In this work, we considered linear and RBF kernels. In both cases, the cost of their evaluation is linear in the number of 2-RDM elements, which grows like O(M 4) with M the size of the GTO basis set employed. As the RBF kernel involves the evaluation of a Gaussian function its com-putational complexity is slightly higher than the linear kernel. The cost associated with purification (whenever it is required) is concentrated in the diagonalization of the predicted 1-RDM. A computation that scales cubi-cally, O(M 3). In addition there is the unavoidable cost of contracting the RDMs with the GTO matrix elements (including the electron repulsion integrals) to obtain an electronic en-ergy, and also the cost associated with the computation of atomic forces (see Supplementary Materials Section III E). As can be seen from Figure 6 for water and Figure S13 for ammonia, although the formal scaling is O(M 4), the computational cost is consistently lower than that of MP2.  
+
+> V. CONDENSED PHASES VIA RDM-BASED MANY-BODY EXPANSIONS
+
+Having access to computationally cheap and accurate molecular electronic structures is a prerequisite to being able to model condensed phases. Fragmentation meth-ods, for example, rely on ab initio solvers to compute the energy associated with each term in the n-body expan-sion of the energy. Typically, these include up to three, and even four-body energy terms [35, 36]. Many-body expansions can target quantities other than the total en-ergy, for example the correlation energy [37, 38]. Re-cently has emerged an approach to expand the electron density into many body terms [39, 40]. The density is then employed in embedding workflows (using subsystem DFT). The resulting density-based many-body method, although relatively new, suggests that basing the many-Post-Hartree Fock cost 
+
+FIG. 6: Computational cost (on a log scale) average over 10 AIMD snapshots of ∆ ML for FCI 2-RDMs of water compared against the cost of HF, MP2, CCSD, CCSD(T), and FCI. The inset shows RBF and linear kernels compared on a linear scale and split into its most important contributions: energy evaluation, prediction of the RDMs and purification (needed for the linear kernel only). All calculations are performed using a single core on the same CPU (Intel(R) Xeon(R) Platinum 8352Y CPU @ 2.20GHz). body expansion on the density rather than the energy leads to faster converging energy vs many-body order of expansion. Borrowing this idea, enabled by the ML models pre-sented, we consider evaluating the electronic structure and the energy of condensed phase systems by a many-body expansion involving the 2-RDM. The working equa-tions involve the 1-RDM and the cumulant. Namely, 
+
+γ = γHF + X
+
+> I
+
+δγ I + X
+
+> IJ
+
+δγ IJ + · · · 
+
+= γHF + X
+
+> I
+
+δγ I + δγ nadd (15) ∆ = X
+
+> I
+
+∆I + X
+
+> IJ
+
+∆IJ + · · · = X
+
+> I
+
+∆I + ∆ nadd (16) where we indicated with capital letters indices spanning the fragments. Using Eq. (9), substituting the many-body expansions above in place of the 1-RDM and cumulant, we can re-cover a many-body expanded 2-RDM. We first consider an implementation where we truncate the expansions to one-body terms and approximate the non-additive parts of both cumulant and 1-RDM (∆ nadd and δγ nadd )with MP2. We refer to this method as MB-RDM, here-after. We note that the one-body terms are easily ob-tained with our ML models exploiting the learned maps 
+
+vI → { δγ I , ∆I } where vI is the external potential of iso-lated fragment I.Like any method based on many-body expansions, MB-RDM is approximate and should be tested before widespread use. In Figure S14 we show MB-RDM total energies against CCSD for the 22 members of the S22 set [41]. Clearly, MB-RDM outperforms MP2 by one to three orders of magnitude. The RMSE of the total energies predicted by MB-RDM against CCSD is 1.3 kcal/mol, a 8very good result in comparison to MP2’s RMSE of 33 kcal/mol. We note that by construction, the MB-RDM errors for the interaction energies mirror the RMSE for the total energy. We have determined that MB-RDM successfully ap-proximates CCSD while requiring only an MP2-like com-putational cost, owing to the need to evaluate the non-additive RDMs. We now turn to solvated systems, since accurately modeling the energetics of processes in solu-tion is known to require very large models [42], even when implicit solvation is employed [43]. 
+
+FIG. 7: Glucose solvated by 15 water molecules. Panel (a) error in the total electronic energy of HF, MP2 and MB-RDM compared against CCSD. Panel (b) electron density difference of MB-RDM and MP2 against CCSD. Solvated systems are exactly the target of MB-RDM which can leverage ML models for the small solvent molecules such that the many-body expansion is com-pletely delegated to ML and carried out with a very low computational cost. We first test MB-RDM on a sol-vated glucose molecule, (CH 2O) 6, in 15 water molecules which is a minimal model for the first solvation shell [44] small enough that a full-system CCSD calculation is still feasible, and large enough that MB-RDM can be applied achieving substantial computational savings. Panel (a) of Figure 7 shows that the deviation of the total electronic energy per fragment (16 fragments in to-tal) against CCSD is 1.41 kcal/mol for MB-RDM in line with the results from the S22 set. HF and MP2, in-stead, deliver much worse total energies deviating by 195 and 7 kcal/mol, respectively. A similar result is apparent when comparing the electron densities differences against CCSD for MP2 and MB-RDM, see panel (b) of the figure. Clearly, the reason why MB-RDM yields more accurate energies is rooted in its more accurate electronic struc-ture compared to MP2. A key question remains about scaling: can MB-RDM’s wall time be kept low for very large systems? The MB-RDM formulation in Eqs. (15) and (16) requires HF and MP2 solutions for the full system (the former to compute 
+
+γHF and the latter to obtain the nonadditive RDMs). While HF carries at most a quartic cost, MP2 is more expensive, even in its most computationally amenable formulations due to a large prefactor compared to HF [45]. Borrowing the Walter Kohn idea that electronic correlation is “near sighted” [46], we posit that the non-additive cumulant is short ranged. Evidence of this is the quantitatively small contribution of many-body dis-persion in systems with gap with few exceptions [47, 48]. To approach very large systems, we modify Eqs. (15) and (16) as follows: the solute interacts with an inner shell of solvent molecules (region A) where non-additive (many-body) cumulant and correlated 1-RDMs are in-cluded, and an outer solvation shell (region B) where only one-body correlated 1-RDMs and cumulants are consid-ered, see panel (a) of Figure 8. Figure 8 unsurprisingly shows that this modified MB-RDM exhibits a more favorable scaling with system size than MP2 for solvated systems; asymptotically, we ex-pect this MB-RDM to approach HF-like scaling. For smaller clusters, such as the 101-fragment system in panel (b), the dominant MB-RDM cost arises from the monomer CCSD calculations, in particular the glucose monomer. By contrast, when region C is enlarged to 485 water molecules (panel (c)), the overall cost is dom-inated by the HF calculation on the full system. Re-placing the monomer calculations (one-body RDMs) with ML surrogates therefore yields a substantial reduction of computational cost. Although we have not yet trained an ML model for glucose, our recent mean-field 1-RDM models already demonstrate feasibility for molecules of comparable size [22]. These results suggest that an ML-accelerated MB expansion of the RDMs for this system in its entirety, including the solute, is a realistic next step and should retain high accuracy while merely requiring mean-field cost.  
+
+> VI. CONCLUSIONS
+
+In this work we introduced a machine-learning frame-work that directly targets the two-electron reduced den-sity matrix (2-RDM) of correlated electronic-structure 9
+
+FIG. 8: MB-RDM for very large systems. (a) The full system is partitioned into regions: G (glucose) and solvent regions A/B. Regions A/B define where many-body (non-additive) contributions to the cumulant and the correlated 1-RDM are treated at the MP2 level or neglected, respectively. (b,c) Computational-cost breakdown for MB-RDM for glucose solvated in water, where A is the first solvation shell (15 water molecules) and B is the remaining solvent: 85 water molecules in (b) and 485 water molecules in (c). For (b) and (c) both MP2 and CCSD costs are estimated. methods. The overarching goal is to replace expensive correlated wavefunction calculations with a surrogate ML model that preserves access to many observables, not only energies, but also forces and expectation values of one- and two-electron operators. Building on the func-tional dependence of ground-state observables on the ex-ternal potential, we explored three complementary learn-ing strategies that all yield the 2-RDM: direct learning of the full 2-RDM (Γ ML ), learning of the correlated part of the 2-RDM (Γ c
+
+> ML
+
+), and learning of the correlated part of the 1-RDM, δγ , together with the cumulant, ∆ (∆ ML ). Across the molecular tests considered here, the ∆ ML 
+
+strategy consistently provided the most accurate and ro-bust predictions, reflecting the smoother and physically well-behaved asymptotic structure of its learning targets. The ∆ ML models closely reproduce dissociation curves for small molecules (including H2O, NH 3, methanol, CO 2, and ethene), matching correlated wavefunction references even in extrapolative regimes where the tested structures lie well outside the configuration space spanned by the training set. Importantly, regimes of strong correlation (such as bond breaking and torsion of ethene’s double bond) are also recovered quantitatively, both in terms of energetics and natural-orbital occupa-tions. Beyond static tests, we demonstrated that ∆ ML can drive stable ab initio molecular dynamics trajectories with excellent energy conservation and long coherence times relative to CCSD benchmarks, even under “stress tests” in which trajectories are initialized at tempera-tures substantially above those used to generate train-ing data. This robustness is especially encouraging for condensed-phase applications where broad sampling of configuration space is unavoidable. In addition, because the 2-RDM yields direct access to the pair-density, we leveraged the ML models to compute vibrationally broad-ened electronic structure factors, illustrating how learn-ing an electronic-structure object can enable efficient, high-throughput evaluation of experimentally relevant two-electron observables that would otherwise be pro-hibitively expensive to obtain with traditional correlated wavefunction methods. While the ML models presented here are already use-ful as drop-in surrogates for correlated RDMs, they also provide a route to shifting the computational bottle-neck away from expensive solvers of correlated wave-function methods. We demonstrated this in the context of condensed-phase chemistry via an RDM-based many-body expansion (MB-RDM), in which monomer corre-lated 1-RDMs and cumulants can be replaced by ML surrogates. For a range of noncovalent complexes and solvated clusters, MB-RDM yields CCSD-quality ener-getics and electronic structure (as probed by the electron density) when compared against full-system CCSD cal-culations, while retaining a substantially more favorable computational cost. Several future directions emerge naturally from the present study. First, it will be important to reduce the formal O(M 4) cost associated with storing and con-tracting the cumulant, for example by employing den-sity fitting/RI for the pair density and/or Cholesky-like (or other low-rank) decompositions of the 2-RDM. While conceptually straightforward, such developments may re-quire adapting the learning targets so that the ML mod-els directly predict the corresponding factorized repre-sentations. Second, alternative mean-field reference 1-RDMs may further improve accuracy and broaden ap-plicability. For example, replacing γHF with a DFT ref-erence, such as γPBE obtained with the PBE exchange-correlation functional [49], is a promising direction, par-ticularly for periodic systems. The advances presented here provide a foundation for learning 1- and 2-RDMs and for bringing correlated wave-function accuracy into regimes that are currently inacces-sible to traditional ab initio solvers. 10  
+
+> VII. METHODS
+
+Training sets are consistent with geometry displace-ments accessible at T=300K, with Ntrain = 27 for CO 2
+
+and H 2O, 216 for NH 3, and 5184 for CH 3OH. We re-fer to Supplementary Materials Section III F. KRR is applied using either a linear or an RBF kernel. For the linear/RBF kernel, a regularization parameter of 
+
+α = 0 .0045 /0.0 is used for all models. In the case of CO 2, the RBF kernel is employed with a length scale of 
+
+σ = 1 .0 × 10 −5 while the others use Scikit-learn ’s de-fault value of 1  
+
+> M2
+
+with M being the size of the AO basis set. Whenever 2-RDM purification is considered (always required for the Γ c 
+
+> ML
+
+models), we first perform a unitary decomposition as in Ref. 50. We then enforce the correct normalization by replacing the trace of the 2-RDM with 
+
+N (N − 1), and we replace every occurrence of the 1-RDM with a purified 1-RDM. The 1-RDM purification is carried out by fitting the natural occupations to a Fermi-Dirac distribution, which has been shown to yield highly accurate 1-RDMs [7, 51]. Additional details are provided in the Supplementary Materials Sections III.B and III.C. Ab initio molecular dynamics (AIMD) simulations are performed through an API to the Atomic Simulation En-vironment (ASE) [52]. We employ the velocity Verlet integrator with a 0.5 fs time step in the microcanoni-cal (NVE) ensemble. Initial momenta are drawn from a Maxwell-Boltzmann distribution at the target tempera-tures. The 1-RDM–based machine learning models, γML ,use KRR with an RBF kernel. For the map vext → γ, no regularization is applied ( α = 0). For the map γ → F , an RBF kernel with length scale σ = 1 .0×10 −5 is employed, also with α = 0. The 2-RDM learning methods developed in this work have been integrated into the all-Python QMLearn pack-age, available on GitHub [53]. QMLearn was originally developed for ML models of 1-RDMs; the present work required two key extensions: (1) additional quantum-mechanical solvers (engines) to support the workflows in Fig. 1 based on the 2-RDM, including the evaluation of total energies and analytic energy gradients; and (2) expanded QM utilities, including unitary-decomposition-based purification and the Fourier transform of the pair density derived from the 2-RDM to compute structure factors. QMLearn employs PySCF [54] to compute all ref-erence quantities in a Gaussian-type orbital basis set (6-31G ∗ throughout), including external potentials, target 1- and 2-RDMs, and Hartree-Fock (HF) 1-RDMs. For H 2O we use Full CI (FCI), while the remaining molecules are treated with Complete Active Space Configuration Interaction (CASCI, or FOMO-CASCI for bond dissociation) using active spaces (# orbitals, # electrons) of (8,17) for NH 3, (10,16) for CO 2, and (12,12) for ethylene and methanol. We also report models for H 2O and NH 3 at the Coupled Cluster Singles and Doubles (CCSD) level in the same basis set. We note that to generate the reference results for the bond dissociation of ethene, we employed FOMO-CASCI [55]. The active spaces for points at dissociation were generated with the maximum overlap method to be as consistent as possible with the CAS used for the training structures residing near the equilibrium geometry. The data (including databases of the models in hdf5 files), jupyter notebooks, input files and raw outputs for all results presented in this paper are available at the Zenodo repository under DOI: 10.5281/zenodo.18894170. 
+
+> ACKNOWLEDGMENTS
+
+This material is based upon work supported by the US National Science Foundation under Grants No. CHE-2154760, OAC-1931473.                 
+
+> [1] J. Behler and M. Parrinello, Generalized neural-network representation of high-dimensional potential-energy sur-faces, Physical review letters 98 , 146401 (2007). [2] I. Batatia, P. Benner, Y. Chiang, A. M. Elena, D. P. Kov´ acs, J. Riebesell, X. R. Advincula, M. Asta, M. Avay-lon, W. J. Baldwin, et al. , A foundation model for atom-istic materials chemistry, The Journal of chemical physics
+> 163 (2025). [3] M. Rezaee, S. Ekrami, and S. M. Hashemianzadeh, Com-paring ani-2x, ani-1ccx neural networks, force field, and dft methods for predicting conformational potential en-ergy of organic molecules, Scientific Reports 14 , 11791 (2024). [4] J. Hermann, J. Spencer, K. Choo, A. Mezzacapo, W. M. C. Foulkes, D. Pfau, G. Carleo, and F. No´ e, Ab initio quantum chemistry with neural-network wavefunc-tions, Nature Reviews Chemistry 7, 692 (2023). [5] D. Pfau, S. Axelrod, H. Sutterud, I. von Glehn, and J. S. Spencer, Accurate computation of quantum ex-cited states with neural networks, Science 385 , eadn0137 (2024). [6] M. Bogojeski, L. Vogt-Maranto, M. E. Tuckerman, K.-R. M¨ uller, and K. Burke, Quantum chemical accuracy from density functional approximations via machine learning, Nature Communications 11 , 5223 (2020). [7] X. Shao, L. Paetow, M. E. Tuckerman, and M. Pavanello, Machine learning electronic structure methods based on the one-electron reduced density matrix, Nature Com-munications 14 , 6281 (2023). [8] S. Hazra, U. Patil, and S. Sanvito, Predicting the one-particle density matrix with machine learning, Journal of Chemical Theory and Computation 20 , 4569 (2024). [9] O. A. Von Lilienfeld and K. Burke, Retrospective on a decade of machine learning for chemical discovery, Nature
+
+11 
+
+Communications 11 , 4895 (2020). [10] C. H¨ attig, Geometry optimizations with the coupled-cluster model cc2 using the resolution-of-the-identity ap-proximation, The Journal of chemical physics 118 , 7751 (2003). [11] M. Saitow, U. Becker, C. Riplinger, E. F. Valeev, and F. Neese, A new near-linear scaling, efficient and accu-rate, open-shell domain-based local pair natural orbital coupled cluster singles and doubles theory, The Journal of chemical physics 146 (2017). [12] C. Bannwarth, E. Caldeweyher, S. Ehlert, A. Hansen, P. Pracht, J. Seibert, S. Spicher, and S. Grimme, Ex-tended tight-binding quantum chemistry methods, Wi-ley Interdisciplinary Reviews: Computational Molecular Science 11 , e1493 (2021). [13] W. Mi, K. Luo, S. Trickey, and M. Pavanello, Orbital-free density functional theory: An attractive electronic struc-ture method for large-scale first-principles simulations, Chemical Reviews 123 , 12039 (2023). [14] D. A. Mazziotti, Two-Electron Reduced Density Matrix as the Basic Variable in Many-Electron Quantum Chem-istry and Physics, Chemical Reviews 112 , 244 (2012). [15] T. Northey, N. Zotev, and A. Kirrander, Ab Initio Cal-culation of Molecular Diffraction, Journal of Chemical Theory and Computation 10 , 4911 (2014). [16] L. H. Delgado-Granados, L. M. Sager-Smith, K. Tri-fonova, and D. A. Mazziotti, Machine Learning of Two-Electron Reduced Density Matrices for Many-Body Problems, The Journal of Physical Chemistry Letters , 2231 (2025). [17] P. Hohenberg and W. Kohn, Inhomogeneous Electron Gas, Physical Review 136 , B864 (1964). [18] T. L. Gilbert, Hohenberg-Kohn theorem for nonlocal ex-ternal potentials, Physical Review B 12 , 2111 (1975). [19] D. A. Mazziotti, ed., Reduced-Density-Matrix Mechan-ics: With Application to Many-Electron Atoms and Molecules , 1st ed., Advances in Chemical Physics, Vol. 134 (Wiley, 2007). [20] A. Eugene DePrince, Variational determination of the two-electron reduced density matrix: A tutorial review, WIREs Computational Molecular Science 14 , e1702 (2024). [21] R. Remme, T. Kaczun, T. Ebert, C. A. Gehrig, D. Geng, G. Gerhartz, M. K. Ickler, M. V. Klockow, P. Lippmann, J. S. Schmidt, et al. , Stable and accurate orbital-free den-sity functional theory powered by machine learning, Jour-nal of the American Chemical Society 147 , 28851 (2025). [22] B. Rana, N. Viot, J. A. Martinez B, X. Shao, P. Ramos, and M. Pavanello, Learning the one-electron reduced density matrix at scf convergence thresholds, Journal of Chemical Theory and Computation 21 , 12652 (2025). [23] R. Akashi, M. Sogal, and K. Burke, Can machines learn density functionals? past, present, and future of ml in dft, arXiv preprint arXiv:2503.01709 (2025). [24] W. Kutzelnigg and D. Mukherjee, Cumulant expansion of the reduced density matrices, The Journal of Chemical Physics 110 , 2800 (1999). [25] F. Brockherde, L. Vogt, L. Li, M. E. Tuckerman, K. Burke, and K.-R. M¨ uller, Bypassing the Kohn-Sham equations with machine learning, Nature Communica-tions 8, 872 (2017). [26] Y. Bai, L. Vogt-Maranto, M. E. Tuckerman, and W. J. Glover, Machine learning the Hohenberg-Kohn map for molecular excited states, Nature Communications 13 ,7044 (2022). [27] N. Zotev, A. Moreno Carrascosa, M. Simmermacher, and A. Kirrander, Excited Electronic States in Total Isotropic Scattering from Molecules, Journal of Chemical Theory and Computation 16 , 2594 (2020). [28] E. Canc` es and K. Pernal, Projected gradient algorithms for hartree-fock and density matrix functional theory cal-culations, The Journal of chemical physics 128 (2008). [29] L. Ma, N. Goff, A. M. Carrascosa, S. Nelson, M. Liang, X. Cheng, H. Yong, I. Gabalski, L. Huang, S. W. Crane, 
+
+et al. , Quantitative x-ray scattering of free molecules, Journal of Physics B: Atomic, Molecular and Optical Physics 57 , 205602 (2024). [30] J. P. Coe, A. Moreno Carrascosa, M. Simmermacher, A. Kirrander, and M. J. Paterson, Efficient Computation of Two-Electron Reduced Density Matrices via Selected Configuration Interaction, Journal of Chemical Theory and Computation 18 , 6690 (2022). [31] A. Moreno Carrascosa, H. Yong, D. L. Crittenden, P. M. Weber, and A. Kirrander, Ab Initio Calculation of Total X-ray Scattering from Molecules, Journal of Chemical Theory and Computation 15 , 2836 (2019). [32] L. C. Gallington, S. K. Wilke, S. Kohara, and C. J. Ben-more, Review of Current Software for Analyzing Total X-ray Scattering Data from Liquids, Quantum Beam Sci-ence 7, 20 (2023). [33] K. Amann-Winkel, M.-C. Bellissent-Funel, L. E. Bove, T. Loerting, A. Nilsson, A. Paciaroni, D. Schlesinger, and L. Skinner, X-ray and Neutron Scattering of Water, Chemical Reviews 116 , 7570 (2016). [34] C. A. Coulson and I. Fischer, Xxxiv. notes on the molecu-lar orbital treatment of the hydrogen molecule, The Lon-don, Edinburgh, and Dublin Philosophical Magazine and Journal of Science 40 , 386 (1949). [35] J. M. Herbert, Fantasy versus reality in fragment-based quantum chemistry, The Journal of Chemical Physics 
+
+151 , 170901 (2019). [36] F. Paesani, R. Rashmi, H. Agnew, X. Zhu, E. F. Bull-Vulpe, and R. Zhou, From potentials to properties: Data-driven many-body simulations of water and aqueous sys-tems, Annual Review of Physical Chemistry 77 .[37] S. S. Khire and S. R. Gadre, Pragmatic Many-Body Ap-proach for Economic MP2 Energy Estimation of Molec-ular Clusters, The Journal of Physical Chemistry A 123 ,5005 (2019). [38] S. S. Khire and S. R. Gadre, Development and testing of an algorithm for efficient mp2/ccsd (t) energy estimation of molecular clusters with the 2–body approach, Journal of Computational Chemistry 44 , 261 (2023). [39] D. Schmitt-Monreal and C. R. Jacob, Frozen-density embedding-based many-body expansions, International Journal of Quantum Chemistry 120 , e26228 (2020). [40] K. Focke and C. R. Jacob, Coupled-Cluster Density-Based Many-Body Expansion, The Journal of Physical Chemistry A 127 , 9139 (2023). [41] P. Hobza, Calculations on noncovalent interactions and databases of benchmark interaction energies, Accounts of chemical research 45 , 663 (2012). [42] J. A. Martinez B, L. Paetow, J. T¨ olle, X. Shao, P. Ramos, J. Neugebauer, and M. Pavanello, Which physical phe-nomena determine the ionization potential of liquid wa-ter?, The Journal of Physical Chemistry B 127 , 5470 (2023). [43] M. P. Coons and J. M. Herbert, Quantum chemistry in 12 
+
+arbitrary dielectric environments: Theory and implemen-tation of nonequilibrium poisson boundary conditions and application to compute vertical ionization energies at the air/water interface, The Journal of chemical physics 
+
+148 (2018). [44] X. Chen, J. A. Martinez B, X. Shao, M. Riera Riambau, O. Andreussi, F. Paesani, and M. Pavanello, Density-functionalized qm/mm delivers chemical accuracy for sol-vated systems, Journal of Chemical Theory and Compu-tation 21 , 10340 (2025). [45] N. Mardirossian, J. D. McClain, and G. K. Chan, Lower-ing of the complexity of quantum chemistry methods by choice of representation, The Journal of chemical physics 
+
+148 (2018). [46] E. Prodan and W. Kohn, Nearsightedness of electronic matter, Proceedings of the National Academy of Sciences 
+
+102 , 11635 (2005). [47] A. Ruzsinszky, J. P. Perdew, J. Tao, G. I. Csonka, and J. M. Pitarke, Van der waals coefficients for nanostruc-tures: fullerenes defy conventional wisdom, Physical re-view letters 109 , 233203 (2012). [48] J. Hermann, R. A. DiStasio Jr, and A. Tkatchenko, First-principles models for van der waals interactions in molecules and materials: Concepts, theory, and applica-tions, Chemical Reviews 117 , 4714 (2017). [49] J. P. Perdew, K. Burke, and M. Ernzerhof, Generalized gradient approximation made simple, Physical review let-ters 77 , 3865 (1996). [50] D. A. Mazziotti, Purification of correlated reduced den-sity matrices, Physical Review E 65 , 026704 (2002). [51] J. A. Martinez B, X. Shao, K. Jiang, and M. Pavanello, Entropy is a good approximation to the electronic (static) correlation energy, The Journal of Chemical Physics 159 ,191102 (2023). [52] A. H. Larsen, J. J. Mortensen, J. Blomqvist, I. E. Castelli, R. Christensen, M. Dulak, J. Friis, M. N. Groves, B. Hammer, C. Hargus, et al. , The atomic sim-ulation environment—a python library for working with atoms, Journal of Physics: Condensed Matter 29 , 273002 (2017). [53] X. Shao, J. Martinez, B. Rana, and M. Pavanello, QM-Learn: A quantum machine learning electronic struc-ture method, Available at https://github.com/Quantum-MultiScale/QMLearn (2026). [54] Q. Sun, T. C. Berkelbach, N. S. Blunt, G. H. Booth, S. Guo, Z. Li, J. Liu, J. D. McClain, E. R. Sayfutyarova, S. Sharma, S. Wouters, and G. K.-L. Chan, PySCF: the Python-based simulations of chemistry framework (2017), https://onlinelibrary.wiley.com/doi/pdf/10.1002/wcms.1340. [55] P. Slav´ ıˇ cek and T. J. Mart´ ınez, Ab initio floating occu-pation molecular orbital-complete active space configu-ration interaction: An efficient approximation to casscf, The Journal of chemical physics 132 (2010).
