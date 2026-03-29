@@ -1,76 +1,37 @@
 {
-  "generated_at": "2026-03-28T19:20:01.246362+00:00",
-  "updated_date": "20260328",
+  "generated_at": "2026-03-29T19:20:25.808751+00:00",
+  "updated_date": "20260329",
   "carryover_days": 9,
   "items": [
     {
-      "id": "2603.22317v1",
-      "title": "Geometric Mixture-of-Experts with Curvature-Guided Adaptive Routing for Graph Representation Learning",
-      "abstract": "Graph-structured data typically exhibits complex topological heterogeneity, making it difficult to model accurately within a single Riemannian manifold. While emerging mixed-curvature methods attempt to capture such diversity, they often rely on implicit, task-driven routing that lacks fundamental geometric grounding. To address this challenge, we propose a Geometric Mixture-of-Experts framework (GeoMoE) that adaptively fuses node representations across diverse Riemannian spaces to better accommodate multi-scale topological structures. At its core, GeoMoE leverages Ollivier-Ricci Curvature (ORC) as an intrinsic geometric prior to orchestrate the collaboration of specialized experts. Specifically, we design a graph-aware gating network that assigns node-specific fusion weights, regularized by a curvature-guided alignment loss to ensure interpretable and geometry-consistent routing. Additionally, we introduce a curvature-aware contrastive objective that promotes geometric discriminability by constructing positive and negative pairs according to curvature consistency. Extensive experiments on six benchmark datasets demonstrate that GeoMoE outperforms state-of-the-art baselines across diverse graph types.",
+      "id": "2603.25237v1",
+      "title": "Deep learning of committor and explainable artificial intelligence analysis for identifying reaction coordinates",
+      "abstract": "In complex molecular systems, the reaction coordinate (RC) that characterizes transition pathways is essential to understand underlying molecular mechanisms. This review surveys a framework for identifying the RC by applying deep learning to the committor, which provides the most reliable measure of the progress along a transition path. The inputs to the neural network are collective variables (CVs) expressed as functions of atomic coordinates of the system, and the corresponding RC is predicted as the output by training the network on the committor as the learning target. Because deep learning models typically operate in a black-box manner, it is difficult to determine which input variables govern the predictions. The incorporation of eXplainable Artificial Intelligence (XAI) techniques enables quantitative assessment of the contributions of individual input variables to the predictions. This approach allows the identification of CVs that play dominant roles and demonstrates that the committor distribution on the surface using important CVs is separated by well-defined boundaries. The framework provides an explainable deep learning strategy for assigning a molecular mechanism from the RC and is applicable to a wide range of complex molecular systems.",
       "authors": [
-        "Haifang Cao",
-        "Yu Wang",
-        "Timing Li",
-        "Xinjie Yao",
-        "Pengfei Zhu"
+        "Toshifumi Mori",
+        "Kei-ichi Okazaki",
+        "Kang Kim",
+        "Nobuyuki Matubayasi"
       ],
-      "primary_category": "cs.LG",
+      "primary_category": "physics.chem-ph",
       "categories": [
-        "cs.LG",
-        "cs.AI"
+        "physics.chem-ph",
+        "cond-mat.soft"
       ],
-      "published": "2026-03-20T06:09:01+00:00",
-      "link": "https://arxiv.org/pdf/2603.22317v1",
+      "published": "2026-03-26T09:42:08+00:00",
+      "link": "https://arxiv.org/pdf/2603.25237v1",
       "tags": [
         "keyword:MOLRNA",
         "query:MOLRNA"
       ],
       "llm_score": 8.0,
-      "llm_evidence_en": "topological heterogeneity and curvature-guided graph representation learning",
-      "llm_evidence_cn": "拓扑异质性和曲率引导的图表示学习",
-      "llm_evidence": "拓扑异质性和曲率引导的图表示学习",
-      "canonical_evidence": "拓扑异质性和曲率引导的图表示学习",
-      "llm_tldr_en": "A Geometric Mixture-of-Experts framework using Ricci curvature for adaptive graph representation learning.",
-      "llm_tldr_cn": "一种利用里奇曲率进行自适应图表示学习的几何混合专家框架。",
-      "llm_tldr": "一种利用里奇曲率进行自适应图表示学习的几何混合专家框架。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "topological deep learning for RNA and molecules",
-      "matched_requirement_id": "req-6",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.22317v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.14405v1",
-      "title": "ES-Merging: Biological MLLM Merging via Embedding Space Signals",
-      "abstract": "Biological multimodal large language models (MLLMs) have emerged as powerful foundation models for scientific discovery. However, existing models are specialized to a single modality, limiting their ability to solve inherently cross-modal scientific problems. While model merging is an efficient method to combine the different modalities into a unified MLLM, existing methods rely on input-agnostic parameter space heuristics that fail to faithfully capture modality specialization. To overcome this limitation, we propose a representation-aware merging framework that estimates merging coefficients from embedding space signals. We first design a probe input that consists of different modality tokens and forward it through each specialized MLLM to obtain layer-wise embedding responses that reflect modality-specific representation changes. We then estimate complementary merging coefficients at two granularities from the embedding space: layer-wise coefficients from coarse-grained signals and element-wise coefficients from fine-grained signals, which are jointly combined for robust coefficient estimation. Experiments on interactive effect prediction benchmarks show that our method outperforms existing merging methods and even surpasses task-specific fine-tuned models, establishing that embedding space signals provide a principled and effective foundation for cross-modal MLLM merging.",
-      "authors": [
-        "Wonbin Lee",
-        "Dongki Kim",
-        "Sung Ju Hwang"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.AI"
-      ],
-      "published": "2026-03-15T14:38:32+00:00",
-      "link": "https://arxiv.org/pdf/2603.14405v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "biological multimodal large language models as foundation models",
-      "llm_evidence_cn": "作为基础模型的生物多模态大语言模型",
-      "llm_evidence": "作为基础模型的生物多模态大语言模型",
-      "canonical_evidence": "作为基础模型的生物多模态大语言模型",
-      "llm_tldr_en": "ES-Merging proposes a representation-aware framework to merge specialized biological foundation models.",
-      "llm_tldr_cn": "ES-Merging 提出了一种表示感知框架，用于合并专门的生物基础模型。",
-      "llm_tldr": "ES-Merging 提出了一种表示感知框架，用于合并专门的生物基础模型。",
+      "llm_evidence_en": "deep learning for identifying reaction coordinates in complex molecular systems",
+      "llm_evidence_cn": "用于识别复杂分子系统反应坐标的深度学习",
+      "llm_evidence": "用于识别复杂分子系统反应坐标的深度学习",
+      "canonical_evidence": "用于识别复杂分子系统反应坐标的深度学习",
+      "llm_tldr_en": "Reviews deep learning frameworks for identifying reaction coordinates in molecular transition pathways.",
+      "llm_tldr_cn": "综述了用于识别分子转变路径中反应坐标的深度学习框架。",
+      "llm_tldr": "综述了用于识别分子转变路径中反应坐标的深度学习框架。",
       "llm_tags": [
         "query:molrna"
       ],
@@ -78,293 +39,7 @@
       "matched_query_text": "foundation models for molecular discovery and representation learning",
       "matched_requirement_id": "req-3",
       "selection_source": "carryover_cache",
-      "paper_id": "2603.14405v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2603.14792v1",
-      "title": "LaPro-DTA: Latent Dual-View Drug Representations and Salient Protein Feature Extraction for Generalizable Drug--Target Affinity Prediction",
-      "abstract": "Drug--target affinity prediction is pivotal for accelerating drug discovery, yet existing methods suffer from significant performance degradation in realistic cold-start scenarios (unseen drugs/targets/pairs), primarily driven by overfitting to training instances and information loss from irrelevant target sequences. In this paper, we propose LaPro-DTA, a framework designed to achieve robust and generalizable DTA prediction. To tackle overfitting, we devise a latent dual-view drug representation mechanism. It synergizes an instance-level view to capture fine-grained substructures with stochastic perturbation and a distribution-level view to distill generalized chemical scaffolds via semantic remapping, thereby enforcing the model to learn transferable structural rules rather than memorizing specific samples. To mitigate information loss, we introduce a salient protein feature extraction strategy using pattern-aware top-$k$ pooling, which effectively filters background noise and isolates high-response bioactive regions. Furthermore, a cross-view multi-head attention mechanism fuses these purified features to model comprehensive interactions. Extensive experiments on benchmark datasets demonstrate that LaPro-DTA significantly outperforms state-of-the-art methods, achieving an 8\\% MSE reduction on the Davis dataset in the challenging unseen-drug setting, while offering interpretable insights into binding mechanisms.",
-      "authors": [
-        "Zihan Dun",
-        "Liuyi Xu",
-        "An-Yang Lu",
-        "Shuang Li",
-        "Yining Qian"
-      ],
-      "primary_category": "cs.LG",
-      "categories": [
-        "cs.LG",
-        "cs.AI"
-      ],
-      "published": "2026-03-16T03:46:51+00:00",
-      "link": "https://arxiv.org/pdf/2603.14792v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Latent dual-view drug representations for drug-target affinity prediction",
-      "llm_evidence_cn": "用于药物-靶点亲和力预测的潜双视图药物表示",
-      "llm_evidence": "用于药物-靶点亲和力预测的潜双视图药物表示",
-      "canonical_evidence": "用于药物-靶点亲和力预测的潜双视图药物表示",
-      "llm_tldr_en": "Proposes a dual-view representation mechanism to capture fine-grained molecular substructures for DTA prediction.",
-      "llm_tldr_cn": "提出一种双视图表示机制，捕捉细粒度分子子结构以实现鲁棒的药物-靶点亲和力预测。",
-      "llm_tldr": "提出一种双视图表示机制，捕捉细粒度分子子结构以实现鲁棒的药物-靶点亲和力预测。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "graph representation learning for molecular structures",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.14792v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2603.16770v1",
-      "title": "Training a force field for proteins and small molecules from scratch",
-      "abstract": "Force fields for molecular dynamics are usually developed manually, limiting their transferability and making systematic exploration of functional forms challenging. We developed a graph neural network that assigns all force field parameters for diverse molecules using continuous atom typing. The freely-available model, called Garnet, was trained on quantum mechanical, condensed phase and protein nuclear magnetic resonance data without the use of existing parameters. The resulting force field shows comparable performance to current force fields on small molecules, folded proteins, protein complexes and disordered proteins. It shows similar results to popular approaches for relative binding free energy predictions across a range of targets. Assessing different functional forms shows that the double exponential potential is a flexible and accurate alternative to the Lennard-Jones potential. Garnet provides a platform for automated, reproducible force field discovery that brings the benefits of machine learning to classical force fields.",
-      "authors": [
-        "Alexandre Blanco-González",
-        "Thea K Schulze",
-        "Evianne Rovers",
-        "Joe G Greener"
-      ],
-      "primary_category": "q-bio.BM",
-      "categories": [
-        "q-bio.BM"
-      ],
-      "published": "2026-03-17T16:47:28+00:00",
-      "link": "https://arxiv.org/pdf/2603.16770v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "Graph neural network for protein and small molecule force fields",
-      "llm_evidence_cn": "用于蛋白质和小分子力场的图神经网络",
-      "llm_evidence": "用于蛋白质和小分子力场的图神经网络",
-      "canonical_evidence": "用于蛋白质和小分子力场的图神经网络",
-      "llm_tldr_en": "Develops a GNN-based force field for diverse molecules and proteins without manual parameterization.",
-      "llm_tldr_cn": "开发了一种基于图神经网络的力场，无需人工参数化即可应用于多种分子和蛋白质。",
-      "llm_tldr": "开发了一种基于图神经网络的力场，无需人工参数化即可应用于多种分子和蛋白质。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "graph representation learning for molecular structures",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.16770v1",
-      "carry_days": 2
-    },
-    {
-      "id": "2603.18389v2",
-      "title": "An SO(3)-equivariant reciprocal-space neural potential for long-range interactions",
-      "abstract": "Long-range electrostatic and polarization interactions play a central role in molecular and condensed-phase systems, yet remain fundamentally incompatible with locality-based machine-learning interatomic potentials. Although modern SO(3)-equivariant neural potentials achieve high accuracy for short-range chemistry, they cannot represent the anisotropic, slowly decaying multipolar correlations governing realistic materials, while existing long-range extensions either break SO(3) equivariance or fail to maintain energy-force consistency. Here we introduce EquiEwald, a unified neural interatomic potential that embeds an Ewald-inspired reciprocal-space formulation within an irreducible SO(3)-equivariant framework. By performing equivariant message passing in reciprocal space through learned equivariant k-space filters and an equivariant inverse transform, EquiEwald captures anisotropic, tensorial long-range correlations without sacrificing physical consistency. Across periodic and aperiodic benchmarks, EquiEwald captures long-range electrostatic behavior consistent with ab initio reference data and consistently improves energy and force accuracy, data efficiency, and long-range extrapolation. These results establish EquiEwald as a physically principled paradigm for long-range-capable machine-learning interatomic potentials.",
-      "authors": [
-        "Lingfeng Zhang",
-        "Taoyong Cui",
-        "Dongzhan Zhou",
-        "Lei Bai",
-        "Sufei Zhang",
-        "Luca Rossi",
-        "Mao Su",
-        "Wanli Ouyang",
-        "Pheng-Ann Heng"
-      ],
-      "primary_category": "physics.chem-ph",
-      "categories": [
-        "physics.chem-ph",
-        "cs.AI"
-      ],
-      "published": "2026-03-19T01:16:11+00:00",
-      "link": "https://arxiv.org/pdf/2603.18389v2",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "SO(3)-equivariant neural potential for molecular systems",
-      "llm_evidence_cn": "用于分子系统的SO(3)等变神经势能",
-      "llm_evidence": "用于分子系统的SO(3)等变神经势能",
-      "canonical_evidence": "用于分子系统的SO(3)等变神经势能",
-      "llm_tldr_en": "Introduces an equivariant neural potential for modeling long-range interactions in molecular systems.",
-      "llm_tldr_cn": "引入了一种等变神经势能，用于建模分子系统中的长程相互作用。",
-      "llm_tldr": "引入了一种等变神经势能，用于建模分子系统中的长程相互作用。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "graph representation learning for molecular structures",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.18389v2",
-      "carry_days": 2
-    },
-    {
-      "id": "2603.20389v1",
-      "title": "A chemical language model for reticular materials design",
-      "abstract": "Reticular chemistry has enabled the synthesis of tens of thousands of metal-organic frameworks (MOFs), yet the discovery of new materials still relies largely on intuition-driven linker design and iterative experimentation. As a result, researchers explore only a small fraction of the vast chemical space accessible to reticular materials, limiting the systematic discovery of frameworks with targeted properties. Here, we introduce Nexerra-R1, a building-block chemical language model that enables inverse design in reticular chemistry through the targeted generation of organic linkers. Rather than generating complete frameworks directly, Nexerra-R1 operates at the level of molecular building blocks, preserving the modular logic that underpins reticular synthesis. The model supports both unconstrained generation of low-connectivity linkers and scaffold-constrained design of symmetric multidentate motifs compatible with predefined nodes and topologies. We further combine linker generation with flow-guided distributional targeting to steer the generative process toward application-relevant objectives while maintaining chemical validity and assembly feasibility. The generated linkers are subsequently assembled into three-dimensional frameworks and are structurally optimized to produce candidate materials compatible with experimental synthesis. Using Nexerra-R1, we validate this strategy by rediscovering known MOFs and by proposing the experimental synthesis of a previously unreported framework, CU-525, generated entirely in silico. Together, these results establish a general inverse-design paradigm for reticular materials in which controllable chemical language modelling enables the direct translation from computational design to synthesizable frameworks.",
-      "authors": [
-        "Dhruv Menon",
-        "Vivek Singh",
-        "Xu Chen",
-        "Mohammad Reza Alizadeh Kiapi",
-        "Ivan Zyuzin",
-        "Hamish W. Macleod",
-        "Nakul Rampal",
-        "William Shepard",
-        "Omar M. Yaghi",
-        "David Fairen-Jimenez"
-      ],
-      "primary_category": "cond-mat.mtrl-sci",
-      "categories": [
-        "cond-mat.mtrl-sci",
-        "cs.LG",
-        "physics.chem-ph"
-      ],
-      "published": "2026-03-20T18:05:44+00:00",
-      "link": "https://arxiv.org/pdf/2603.20389v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "chemical language model for de novo molecular design",
-      "llm_evidence_cn": "用于从头分子设计的化学语言模型",
-      "llm_evidence": "用于从头分子设计的化学语言模型",
-      "canonical_evidence": "用于从头分子设计的化学语言模型",
-      "llm_tldr_en": "Nexerra-R1 is a language model for the inverse design of organic linkers in reticular chemistry.",
-      "llm_tldr_cn": "Nexerra-R1 是一种用于网状化学中有机连接体逆向设计的化学语言模型。",
-      "llm_tldr": "Nexerra-R1 是一种用于网状化学中有机连接体逆向设计的化学语言模型。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "generative models for de novo molecular and RNA design",
-      "matched_requirement_id": "req-8",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.20389v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.21579v1",
-      "title": "TERS-ABNet: A Deep Learning Approach for Automated Single-Molecule Structure Reconstruction with Atomic Precision from TERS Mapping",
-      "abstract": "Determining the chemical structure for a single molecule on surface from spectroscopic data represents a challenging high-dimensional inverse problem. Tip-enhanced Raman spectroscopy (TERS) enables chemically specific imaging of single molecules with sub-nanometer spatial resolution, yet reconstructing complete molecular structures from TERS maps remains difficult owing to the ambiguous vibrational signatures and reliance on expert interpretation. Here, we introduce TERS-ABNet, a deep-learning framework that formulates single-molecule structure determination from spectroscopic images as an image-to-graph inference task. Using a \"two-track\" architecture, the model jointly predicts probabilistic atom and bond maps, enabling direct construction of explicit atom-bond graphs without relying on predefined chemical rules. Trained on simulated datasets, TERS-ABNet achieves about 94% atom-type classification accuracy (with a mean coordinate error of about 0.23 Å), enabling to reliably recovering molecular connectivity and fully reconstruct single-molecule structure from its TERS maps. The framework generalizes across varying spatial resolutions and structural complexity through transfer learning, and successfully reconstructs the atomic structure of a single porphyrin molecule from experimental TERS data. This work establishes a general deep-learning strategy for inferring explicit atom-bond graph representations from high-dimensional spectroscopic imaging data, providing a new pathway towards automated molecular structure determination in nanoscale characterization.",
-      "authors": [
-        "Jie Cui",
-        "Yao Zhang",
-        "Yang Zhang",
-        "Yi Luo",
-        "Zhen-Chao Dong"
-      ],
-      "primary_category": "physics.chem-ph",
-      "categories": [
-        "physics.chem-ph"
-      ],
-      "published": "2026-03-23T05:02:03+00:00",
-      "link": "https://arxiv.org/pdf/2603.21579v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "image-to-graph inference for molecular structure reconstruction",
-      "llm_evidence_cn": "用于分子结构重建的图像到图推理",
-      "llm_evidence": "用于分子结构重建的图像到图推理",
-      "canonical_evidence": "用于分子结构重建的图像到图推理",
-      "llm_tldr_en": "A deep learning framework for reconstructing single-molecule structures from TERS maps using image-to-graph inference.",
-      "llm_tldr_cn": "一种利用图像到图推理从TERS映射中重建单分子结构的深度学习框架。",
-      "llm_tldr": "一种利用图像到图推理从TERS映射中重建单分子结构的深度学习框架。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "graph representation learning for molecular structures",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.21579v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.24752v1",
-      "title": "Autotuning T-PaiNN: Enabling Data-Efficient GNN Interatomic Potential Development via Classical-to-Quantum Transfer Learning",
-      "abstract": "Machine-learned interatomic potentials (MLIPs), particularly graph neural network (GNN)-based models, offer a promising route to achieving near-density functional theory (DFT) accuracy at significantly reduced computational cost. However, their practical deployment is often limited by the large volumes of expensive quantum mechanical training data required. In this work, we introduce a transfer learning framework, Transfer-PaiNN (T-PaiNN), that substantially improves the data efficiency of GNN-MLIPs by leveraging inexpensive classical force field data. The approach consists of pretraining a PaiNN MLIP architecture on large-scale datasets generated from classical molecular simulations, followed by fine-tuning (dubbed autotuning) using a comparatively small DFT dataset. We demonstrate the effectiveness of autotuning T-PaiNN on both gas-phase molecular systems (QM9 dataset) and condensed-phase liquid water. Across all cases, T-PaiNN significantly outperforms models trained solely on DFT data, achieving order-of-magnitude reductions in mean absolute error while accelerating training convergence. For example, using the QM9 data set, error reductions of up to 25 times are observed in low-data regimes, while liquid water simulations show improved predictions of energies, forces, and experimentally relevant properties such as density and diffusion. These gains arise from the model's ability to learn general features of the potential energy surface from extensive classical sampling, which are subsequently refined to quantum accuracy. Overall, this work establishes transfer learning from classical force fields as a practical and computationally efficient strategy for developing high-accuracy, data-efficient GNN interatomic potentials, enabling broader application of MLIPs to complex chemical systems.",
-      "authors": [
-        "Vivienne Pelletier",
-        "Vedant Bhat",
-        "Daniel J. Rivera",
-        "Steven A. Wilson",
-        "Christopher L. Muhich"
-      ],
-      "primary_category": "physics.chem-ph",
-      "categories": [
-        "physics.chem-ph",
-        "cs.LG"
-      ],
-      "published": "2026-03-25T19:22:56+00:00",
-      "link": "https://arxiv.org/pdf/2603.24752v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "GNN-based interatomic potentials and molecular simulations",
-      "llm_evidence_cn": "基于GNN的原子间势和分子模拟",
-      "llm_evidence": "基于GNN的原子间势和分子模拟",
-      "canonical_evidence": "基于GNN的原子间势和分子模拟",
-      "llm_tldr_en": "A transfer learning framework to improve the data efficiency of GNN-based interatomic potentials for molecules.",
-      "llm_tldr_cn": "一种提高基于GNN的分子原子间势数据效率的迁移学习框架。",
-      "llm_tldr": "一种提高基于GNN的分子原子间势数据效率的迁移学习框架。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "graph representation learning for molecular structures",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.24752v1",
-      "carry_days": 1
-    },
-    {
-      "id": "2603.23941v1",
-      "title": "An Efficient High-Degree, High-Order Equivariant Graph Neural Network for Direct Crystal Structure Optimization",
-      "abstract": "Crystal structure optimization is fundamental to materials modeling but remains computationally expensive when performed with density-functional theory (DFT). Machine-learning (ML) approaches offer substantial acceleration, yet existing methods face three key limitations: (i) most models operate solely on atoms and treat lattice vectors implicitly, despite their central role in structural optimization; (ii) they lack efficient mechanisms to capture high-degree angular information and higher-order geometric correlations simultaneously, which are essential for distinguishing subtle structural differences; and (iii) many pipelines are multi-stage or iterative rather than truly end-to-end, making them prone to error accumulation and limiting scalability. Here we present E$^{3}$Relax-H$^{2}$, an end-to-end high-degree, high-order equivariant graph neural network that maps an initial crystal directly to its relaxed structure. The key idea is to promote both atoms and lattice vectors to graph nodes, enabling a unified and symmetry-consistent representation of structural degrees of freedom. Building on this formulation, E$^{3}$Relax-H$^{2}$ introduces two message-passing mechanisms: (i) a high-degree, high-order message-passing module that efficiently captures high-degree angular representations and high-order many-body correlations; and (ii) a lattice-atom message-passing module that explicitly models the bidirectional coupling between lattice deformation and atomic displacement. In addition, we propose a differentiable periodicity-aware Cartesian displacement loss tailored for one-shot structure prediction under periodic boundary conditions.",
-      "authors": [
-        "Ziduo Yang",
-        "Wei Zhuo",
-        "Huiqiang Xie",
-        "Xiaoqing Liu",
-        "Lei Shen"
-      ],
-      "primary_category": "cond-mat.mtrl-sci",
-      "categories": [
-        "cond-mat.mtrl-sci"
-      ],
-      "published": "2026-03-25T05:04:03+00:00",
-      "link": "https://arxiv.org/pdf/2603.23941v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "equivariant graph neural network for crystal structure optimization",
-      "llm_evidence_cn": "用于晶体结构优化的等变图神经网络",
-      "llm_evidence": "用于晶体结构优化的等变图神经网络",
-      "canonical_evidence": "用于晶体结构优化的等变图神经网络",
-      "llm_tldr_en": "An equivariant GNN that captures high-order geometric correlations for efficient crystal optimization.",
-      "llm_tldr_cn": "一种等变图神经网络，通过捕捉高阶几何相关性实现高效的晶体结构优化。",
-      "llm_tldr": "一种等变图神经网络，通过捕捉高阶几何相关性实现高效的晶体结构优化。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "graph representation learning for molecular structures",
-      "matched_requirement_id": "req-4",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.23941v1",
+      "paper_id": "2603.25237v1",
       "carry_days": 1
     }
   ]
