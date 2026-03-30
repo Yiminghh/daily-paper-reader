@@ -1,0 +1,661 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-03-30T19:47:50.456792+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 6,
+    "deep_cap": 6,
+    "deep_selected": 6,
+    "quick_candidates": 22,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2603.25240v1",
+      "title": "Lingshu-Cell: A generative cellular world model for transcriptome modeling toward virtual cells",
+      "abstract": "Modeling cellular states and predicting their responses to perturbations are central challenges in computational biology and the development of virtual cells. Existing foundation models for single-cell transcriptomics provide powerful static representations, but they do not explicitly model the distribution of cellular states for generative simulation. Here, we introduce Lingshu-Cell, a masked discrete diffusion model that learns transcriptomic state distributions and supports conditional simulation under perturbation. By operating directly in a discrete token space that is compatible with the sparse, non-sequential nature of single-cell transcriptomic data, Lingshu-Cell captures complex transcriptome-wide expression dependencies across approximately 18,000 genes without relying on prior gene selection, such as filtering by high variability or ranking by expression level. Across diverse tissues and species, Lingshu-Cell accurately reproduces transcriptomic distributions, marker-gene expression patterns and cell-subtype proportions, demonstrating its ability to capture complex cellular heterogeneity. Moreover, by jointly embedding cell type or donor identity with perturbation, Lingshu-Cell can predict whole-transcriptome expression changes for novel combinations of identity and perturbation. It achieves leading performance on the Virtual Cell Challenge H1 genetic perturbation benchmark and in predicting cytokine-induced responses in human PBMCs. Together, these results establish Lingshu-Cell as a flexible cellular world model for in silico simulation of cell states and perturbation responses, laying the foundation for a new paradigm in biological discovery and perturbation screening.",
+      "authors": [
+        "Han Zhang",
+        "Guo-Hua Yuan",
+        "Chaohao Yuan",
+        "Tingyang Xu",
+        "Tian Bian",
+        "Hong Cheng",
+        "Wenbing Huang",
+        "Deli Zhao",
+        "Yu Rong"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM"
+      ],
+      "published": "2026-03-26T09:46:27+00:00",
+      "link": "https://arxiv.org/pdf/2603.25240v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Masked discrete diffusion model for transcriptomic state distributions",
+      "llm_evidence_cn": "用于转录组状态分布的掩码离散扩散模型",
+      "llm_evidence": "用于转录组状态分布的掩码离散扩散模型",
+      "canonical_evidence": "用于转录组状态分布的掩码离散扩散模型",
+      "llm_tldr_en": "Introduces Lingshu-Cell, a discrete diffusion model for generative cellular transcriptome modeling and simulation.",
+      "llm_tldr_cn": "引入Lingshu-Cell，一种用于生成式细胞转录组建模和模拟的离散扩散模型。",
+      "llm_tldr": "引入Lingshu-Cell，一种用于生成式细胞转录组建模和模拟的离散扩散模型。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.25760v1",
+      "title": "Topology as a Language for Emergent Organization in Complex Systems: Multiscale Structure, Higher-Order Interactions, and Early Warning Signals",
+      "abstract": "Complex systems are difficult to study not only because they are nonlinear, multiscale, and often nonstationary, but because their scientifically relevant organization is often invisible at the level of individual components, pairwise interactions, or low-order summary statistics. This review argues that topology has become valuable in complex-systems science because it provides a mathematical language for representing emergent organization when relevant structure is distributed, relational, and robust across scale. We synthesize work on persistent homology, Mapper, simplicial complexes, hypergraphs, and related operators, while distinguishing invariant-based topological methods from broader topology-inspired representations. We show how persistence formalizes multiscale stability, how higher-order models preserve collective interactions erased by pairwise graphs, and how topological approaches complement rather than replace statistics, graph theory, and geometry. We review applications in nonlinear dynamics, neuroscience, finance, ecology, materials science, and anomaly detection, emphasizing a common logic: topology turns reorganizing structure into measurable signals for regime shifts, state transitions, and early warning. Across domains, these methods are most effective when the scientific target is organizational rather than scalar, when threshold ambiguity is intrinsic to the problem, and when topology functions as a structural diagnostic or feature extractor within a broader analytic pipeline. We conclude by identifying key limitations, including representation dependence, inferential challenges, interpretability, computational scaling, and the narrowness of one-parameter workflows, and by outlining a research agenda linking topology more closely to dynamics, causality, streaming decision support, topology-aware AI, and socio-technical resilience.",
+      "authors": [
+        "Mark M. Bailey"
+      ],
+      "primary_category": "physics.soc-ph",
+      "categories": [
+        "physics.soc-ph"
+      ],
+      "published": "2026-03-25T20:31:14+00:00",
+      "link": "https://arxiv.org/pdf/2603.25760v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "topological deep learning for emergent organization in complex systems",
+      "llm_evidence_cn": "复杂系统中涌现组织的拓扑深度学习",
+      "llm_evidence": "复杂系统中涌现组织的拓扑深度学习",
+      "canonical_evidence": "复杂系统中涌现组织的拓扑深度学习",
+      "llm_tldr_en": "A review of topological methods like simplicial complexes and hypergraphs for representing complex system structures.",
+      "llm_tldr_cn": "综述了单纯复形和超图等拓扑方法在表示复杂系统结构中的应用。",
+      "llm_tldr": "综述了单纯复形和超图等拓扑方法在表示复杂系统结构中的应用。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.25980v1",
+      "title": "A Priori Sampling of Transition States with Guided Diffusion",
+      "abstract": "Transition states, the first-order saddle points on the potential energy surfaces, govern the kinetics and mechanisms of chemical reactions and conformational changes. Locating them is challenging because transition pathways are topologically complex and can proceed via an ensemble of diverse routes. Existing methods address these challenges by introducing heuristic assumptions about the pathway or reaction coordinates, which limits their applicability when a good initial guess is unavailable or when the guess precludes alternative, potentially relevant pathways. We propose to bypass such heuristic limitations by introducing ASTRA, A Priori Sampling of TRAnsition States with Guided Diffusion, which reframes the transition state search as an inference-time scaling problem for generative models. ASTRA trains a score-based diffusion model on configurations from known metastable states. Then, ASTRA guides inference toward the isodensity surface separating the basins of metastable states via a principled composition of conditional scores. A Score-Aligned Ascent (SAA) process then approximates a reaction coordinate from the difference between conditioned scores and combines it with physical forces to drive convergence onto first-order transition states. Validated on benchmarks from 2D potentials to biomolecular conformational changes and chemical reaction, ASTRA locates transition states with high precision and discovers multiple reaction pathways, enabling mechanistic studies of complex molecular systems.",
+      "authors": [
+        "Hyukjun Lim",
+        "Soojung Yang",
+        "Lucas Pinède",
+        "Miguel Steiner",
+        "Yuanqi Du",
+        "Rafael Gómez-Bombarelli"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG"
+      ],
+      "published": "2026-03-26T23:44:48+00:00",
+      "link": "https://arxiv.org/pdf/2603.25980v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Guided diffusion for chemical reaction transition states",
+      "llm_evidence_cn": "用于化学反应过渡态的引导扩散模型",
+      "llm_evidence": "用于化学反应过渡态的引导扩散模型",
+      "canonical_evidence": "用于化学反应过渡态的引导扩散模型",
+      "llm_tldr_en": "Uses guided diffusion to sample transition states in chemical reactions without heuristic assumptions.",
+      "llm_tldr_cn": "利用引导扩散模型在无启发式假设的情况下对化学反应过渡态进行采样。",
+      "llm_tldr": "利用引导扩散模型在无启发式假设的情况下对化学反应过渡态进行采样。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.26114v1",
+      "title": "DPD-Cancer: Explainable Graph-based Deep Learning for Small Molecule Anti-Cancer Activity Prediction",
+      "abstract": "Accurate drug response prediction is a critical bottleneck in computational biochemistry, limited by the challenge of modelling the interplay between molecular structure and cellular context. In cancer research, this is acute due to tumour heterogeneity and genomic variability, which hinder the identification of effective therapies. Conventional approaches often fail to capture non-linear relationships between chemical features and biological outcomes across diverse cell lines. To address this, we introduce DPD-Cancer, a deep learning method based on a Graph Attention Transformer (GAT) framework. It is designed for small molecule anti-cancer activity classification and the quantitative prediction of cell-line specific responses, specifically growth inhibition concentration (pGI50). Benchmarked against state-of-the-art methods (pdCSM-cancer, ACLPred, and MLASM), DPD-Cancer demonstrated superior performance, achieving an Area Under ROC Curve (AUC) of up to 0.87 on strictly partitioned NCI60 data and up to 0.98 on ACLPred/MLASM datasets. For pGI50 prediction across 10 cancer types and 73 cell lines, the model achieved Pearson's correlation coefficients of up to 0.72 on independent test sets. These findings confirm that attention-based mechanisms offer significant advantages in extracting meaningful molecular representations, establishing DPD-Cancer as a competitive tool for prioritising drug candidates. Furthermore, DPD-Cancer provides explainability by leveraging the attention mechanism to identify and visualise specific molecular substructures, offering actionable insights for lead optimisation. DPD-Cancer is freely available as a web server at: https://biosig.lab.uq.edu.au/dpd_cancer/.",
+      "authors": [
+        "Magnus H. Strømme",
+        "Alex G. C. de Sá",
+        "David B. Ascher"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-27T07:00:12+00:00",
+      "link": "https://arxiv.org/pdf/2603.26114v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Graph Attention Transformer for small molecule activity prediction",
+      "llm_evidence_cn": "用于小分子活性预测的图注意力Transformer",
+      "llm_evidence": "用于小分子活性预测的图注意力Transformer",
+      "canonical_evidence": "用于小分子活性预测的图注意力Transformer",
+      "llm_tldr_en": "Introduces a graph-based deep learning method for predicting small molecule anti-cancer activity.",
+      "llm_tldr_cn": "介绍了一种基于图深度学习的方法，用于预测小分子的抗癌活性。",
+      "llm_tldr": "介绍了一种基于图深度学习的方法，用于预测小分子的抗癌活性。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.23941v1",
+      "title": "An Efficient High-Degree, High-Order Equivariant Graph Neural Network for Direct Crystal Structure Optimization",
+      "abstract": "Crystal structure optimization is fundamental to materials modeling but remains computationally expensive when performed with density-functional theory (DFT). Machine-learning (ML) approaches offer substantial acceleration, yet existing methods face three key limitations: (i) most models operate solely on atoms and treat lattice vectors implicitly, despite their central role in structural optimization; (ii) they lack efficient mechanisms to capture high-degree angular information and higher-order geometric correlations simultaneously, which are essential for distinguishing subtle structural differences; and (iii) many pipelines are multi-stage or iterative rather than truly end-to-end, making them prone to error accumulation and limiting scalability. Here we present E$^{3}$Relax-H$^{2}$, an end-to-end high-degree, high-order equivariant graph neural network that maps an initial crystal directly to its relaxed structure. The key idea is to promote both atoms and lattice vectors to graph nodes, enabling a unified and symmetry-consistent representation of structural degrees of freedom. Building on this formulation, E$^{3}$Relax-H$^{2}$ introduces two message-passing mechanisms: (i) a high-degree, high-order message-passing module that efficiently captures high-degree angular representations and high-order many-body correlations; and (ii) a lattice-atom message-passing module that explicitly models the bidirectional coupling between lattice deformation and atomic displacement. In addition, we propose a differentiable periodicity-aware Cartesian displacement loss tailored for one-shot structure prediction under periodic boundary conditions.",
+      "authors": [
+        "Ziduo Yang",
+        "Wei Zhuo",
+        "Huiqiang Xie",
+        "Xiaoqing Liu",
+        "Lei Shen"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-03-25T05:04:03+00:00",
+      "link": "https://arxiv.org/pdf/2603.23941v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "equivariant graph neural network for crystal structure optimization",
+      "llm_evidence_cn": "用于晶体结构优化的等变图神经网络",
+      "llm_evidence": "用于晶体结构优化的等变图神经网络",
+      "canonical_evidence": "用于晶体结构优化的等变图神经网络",
+      "llm_tldr_en": "Develops a high-order equivariant GNN for direct crystal structure optimization and geometric correlation.",
+      "llm_tldr_cn": "开发了一种高阶等变图神经网络，用于晶体结构优化，捕捉高阶几何相关性。",
+      "llm_tldr": "开发了一种高阶等变图神经网络，用于晶体结构优化，捕捉高阶几何相关性。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2603.26378v1",
+      "title": "Generative Modeling in Protein Design: Neural Representations, Conditional Generation, and Evaluation Standards",
+      "abstract": "Generative modeling has become a central paradigm in protein research, extending machine learning beyond structure prediction toward sequence design, backbone generation, inverse folding, and biomolecular interaction modeling. However, the literature remains fragmented across representations, model classes, and task formulations, making it difficult to compare methods or identify appropriate evaluation standards. This survey provides a systematic synthesis of generative AI in protein research, organized around (i) foundational representations spanning sequence, geometric, and multimodal encodings; (ii) generative architectures including $\\mathrm{SE}(3)$-equivariant diffusion, flow matching, and hybrid predictor-generator systems; and (iii) task settings from structure prediction and de novo design to protein-ligand and protein-protein interactions. Beyond cataloging methods, we compare assumptions, conditioning mechanisms, and controllability, and we synthesize evaluation best practices that emphasize leakage-aware splits, physical validity checks, and function-oriented benchmarks. We conclude with critical open challenges: modeling conformational dynamics and intrinsically disordered regions, scaling to large assemblies while maintaining efficiency, and developing robust safety frameworks for dual-use biosecurity risks. By unifying architectural advances with practical evaluation standards and responsible development considerations, this survey aims to accelerate the transition from predictive modeling to reliable, function-driven protein engineering.",
+      "authors": [
+        "Senura Hansaja Wanasekara",
+        "Minh-Duong Nguyen",
+        "Xiaochen Liu",
+        "Nguyen H. Tran",
+        "Ken-Tye Yong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-27T13:02:16+00:00",
+      "link": "https://arxiv.org/pdf/2603.26378v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "survey of generative AI in protein research including SE(3)-equivariant diffusion and foundational representations",
+      "llm_evidence_cn": "蛋白质研究中生成式AI的综述，包括SE(3)等变扩散和基础表示",
+      "llm_evidence": "蛋白质研究中生成式AI的综述，包括SE(3)等变扩散和基础表示",
+      "canonical_evidence": "蛋白质研究中生成式AI的综述，包括SE(3)等变扩散和基础表示",
+      "llm_tldr_en": "A systematic survey of generative models and foundational representations for biomolecular design and modeling.",
+      "llm_tldr_cn": "关于生物分子设计和建模的生成模型及基础表示学习的系统性综述。",
+      "llm_tldr": "关于生物分子设计和建模的生成模型及基础表示学习的系统性综述。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2603.22821v1",
+      "title": "Cross-Slice Knowledge Transfer via Masked Multi-Modal Heterogeneous Graph Contrastive Learning for Spatial Gene Expression Inference",
+      "abstract": "While spatial transcriptomics (ST) has advanced our understanding of gene expression in tissue context, its high experimental cost limits its large-scale application. Predicting ST from pathology images is a promising, cost-effective alternative, but existing methods struggle to capture complex cross-slide spatial relationships. To address the challenge, we propose SpaHGC, a multi-modal heterogeneous graph-based model that captures both intra-slice and inter-slice spot-spot relationships from histology images. It integrates local spatial context within the target slide and cross-slide similarities computed from image embeddings extracted by a pathology foundation model. These embeddings enable inter-slice knowledge transfer, and SpaHGC further incorporates Masked Graph Contrastive Learning to enhance feature representation and transfer spatial gene expression knowledge from reference to target slides, enabling it to model complex spatial dependencies and significantly improve prediction accuracy. We conducted comprehensive benchmarking on seven matched histology-ST datasets from different platforms, tissues, and cancer subtypes. The results demonstrate that SpaHGC significantly outperforms the existing nine state-of-the-art methods across all evaluation metrics. Additionally, the predictions are significantly enriched in multiple cancer-related pathways, thereby highlighting its strong biological relevance and application potential.",
+      "authors": [
+        "Zhiceng Shi",
+        "Changmiao Wang",
+        "Jun Wan",
+        "Wenwen Min"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-24T05:49:00+00:00",
+      "link": "https://arxiv.org/pdf/2603.22821v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "heterogeneous graph contrastive learning for spatial gene expression",
+      "llm_evidence_cn": "空间基因表达的异构图对比学习",
+      "llm_evidence": "空间基因表达的异构图对比学习",
+      "canonical_evidence": "空间基因表达的异构图对比学习",
+      "llm_tldr_en": "Uses multi-modal heterogeneous graphs and foundation models to infer spatial gene expression from histology images.",
+      "llm_tldr_cn": "利用多模态异构图和基础模型，从组织学图像中推断空间基因表达。",
+      "llm_tldr": "利用多模态异构图和基础模型，从组织学图像中推断空间基因表达。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.21155v1",
+      "title": "Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs",
+      "abstract": "Text-attributed graphs (TAGs) enhance graph learning by integrating rich textual semantics and topological context for each node. While boosting expressiveness, they also expose new vulnerabilities in graph learning through text-based adversarial surfaces. Recent advances leverage diverse backbones, such as graph neural networks (GNNs) and pre-trained language models (PLMs), to capture both structural and textual information in TAGs. This diversity raises a key question: How can we design universal adversarial attacks that generalize across architectures to assess the security of TAG models? The challenge arises from the stark contrast in how different backbones-GNNs and PLMs-perceive and encode graph patterns, coupled with the fact that many PLMs are only accessible via APIs, limiting attacks to black-box settings. To address this, we propose BadGraph, a novel attack framework that deeply elicits large language models (LLMs) understanding of general graph knowledge to jointly perturb both node topology and textual semantics. Specifically, we design a target influencer retrieval module that leverages graph priors to construct cross-modally aligned attack shortcuts, thereby enabling efficient LLM-based perturbation reasoning. Experiments show that BadGraph achieves universal and effective attacks across GNN- and LLM-based reasoners, with up to a 76.3% performance drop, while theoretical and empirical analyses confirm its stealthy yet interpretable nature.",
+      "authors": [
+        "Zihui Chen",
+        "Yuling Wang",
+        "Pengfei Jiao",
+        "Kai Wu",
+        "Xiao Wang",
+        "Xiang Ao",
+        "Dalin Zhang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-03-22T10:15:22+00:00",
+      "link": "https://arxiv.org/pdf/2603.21155v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Adversarial attacks on text-attributed graphs using GNNs",
+      "llm_evidence_cn": "针对使用GNN的文本属性图的对抗攻击",
+      "llm_evidence": "针对使用GNN的文本属性图的对抗攻击",
+      "canonical_evidence": "针对使用GNN的文本属性图的对抗攻击",
+      "llm_tldr_en": "Explores universal adversarial attacks on text-attributed graphs across GNN and language model architectures.",
+      "llm_tldr_cn": "探索跨GNN和语言模型架构的文本属性图通用对抗攻击。",
+      "llm_tldr": "探索跨GNN和语言模型架构的文本属性图通用对抗攻击。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.24131v1",
+      "title": "Reservoir-Based Graph Convolutional Networks",
+      "abstract": "Message passing is a core mechanism in Graph Neural Networks (GNNs), enabling the iterative update of node embeddings by aggregating information from neighboring nodes. Graph Convolutional Networks (GCNs) exemplify this approach by adapting convolutional operations for graph structures, allowing features from adjacent nodes to be combined effectively. However, GCNs encounter challenges with complex or dynamic data. Capturing long-range dependencies often requires deeper layers, which not only increase computational costs but also lead to over-smoothing, where node embeddings become indistinguishable. To overcome these challenges, reservoir computing has been integrated into GNNs, leveraging iterative message-passing dynamics for stable information propagation without extensive parameter tuning. Despite its promise, existing reservoir-based models lack structured convolutional mechanisms, limiting their ability to accurately aggregate multi-hop neighborhood information. To address these limitations, we propose RGC-Net (Reservoir-based Graph Convolutional Network), which integrates reservoir dynamics with structured graph convolution. Key contributions include: (i) a reimagined convolutional framework with fixed random reservoir weights and a leaky integrator to enhance feature retention; (ii) a robust, adaptable model for graph classification; and (iii) an RGC-Net-powered transformer for graph generation with application to dynamic brain connectivity. Extensive experiments show that RGC-Net achieves state-of-the-art performance in classification and generative tasks, including brain graph evolution, with faster convergence and reduced over-smoothing. Source code is available at https://github.com/basiralab/RGC-Net .",
+      "authors": [
+        "Mayssa Soussia",
+        "Gita Ayu Salsabila",
+        "Mohamed Ali Mahjoub",
+        "Islem Rekik"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CV"
+      ],
+      "published": "2026-03-25T09:50:50+00:00",
+      "link": "https://arxiv.org/pdf/2603.24131v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Reservoir computing integrated into GNNs for stable message passing",
+      "llm_evidence_cn": "将储备池计算集成到GNN中以实现稳定的消息传递",
+      "llm_evidence": "将储备池计算集成到GNN中以实现稳定的消息传递",
+      "canonical_evidence": "将储备池计算集成到GNN中以实现稳定的消息传递",
+      "llm_tldr_en": "Integrates reservoir computing into GCNs to address over-smoothing and computational costs in graph learning.",
+      "llm_tldr_cn": "将储备池计算集成到GCN中，以解决图学习中的过度平滑和计算成本问题。",
+      "llm_tldr": "将储备池计算集成到GCN中，以解决图学习中的过度平滑和计算成本问题。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.21918v1",
+      "title": "Structural Concentration in Weighted Networks: A Class of Topology-Aware Indices",
+      "abstract": "This paper develops a unified framework for measuring concentration in weighted systems embedded in networks of interactions. While traditional indices such as the Herfindahl-Hirschman Index capture dispersion in weights, they neglect the topology of relationships among the elements receiving those weights. To address this limitation, we introduce a family of topology-aware concentration indices that jointly account for weight distributions and network structure. At the core of the framework lies a baseline Network Concentration Index (NCI), defined as a normalized quadratic form that measures the fraction of potential weighted interconnection realized along observed network links. Building on this foundation, we construct a flexible class of extensions that modify either the interaction structure or the normalization benchmark, including weighted, density-adjusted, null-model, degree-constrained, transformed-data, and multi-layer variants. This family of indices preserves key properties such as normalization, invariance, and interpretability, while allowing concentration to be evaluated across different dimensions of dependence, including intensity, higher-order interactions, and extreme events. Theoretical results characterize the indices and establish their relationship with classical concentration and network measures. Empirical and simulation evidence demonstrate that systems with identical weight distributions may exhibit markedly different levels of structural concentration depending on network topology, highlighting the additional information captured by the proposed framework. The approach is broadly applicable to economic, financial, and complex systems in which weighted elements interact through networks.",
+      "authors": [
+        "L. Riso",
+        "M. G. Zoia"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-03-23T12:41:12+00:00",
+      "link": "https://arxiv.org/pdf/2603.21918v1",
+      "tags": [
+        "keyword:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Topology-aware indices for weighted network structures",
+      "llm_evidence_cn": "加权网络结构的拓扑感知指标",
+      "llm_evidence": "加权网络结构的拓扑感知指标",
+      "canonical_evidence": "加权网络结构的拓扑感知指标",
+      "llm_tldr_en": "Develops a framework for topology-aware concentration indices in weighted interaction networks.",
+      "llm_tldr_cn": "开发了一个用于加权交互网络中拓扑感知集中度指标的框架。",
+      "llm_tldr": "开发了一个用于加权交互网络中拓扑感知集中度指标的框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.25253v1",
+      "title": "MolQuest: A Benchmark for Agentic Evaluation of Abductive Reasoning in Chemical Structure Elucidation",
+      "abstract": "Large language models (LLMs) hold considerable potential for advancing scientific discovery, yet systematic assessment of their dynamic reasoning in real-world research remains limited. Current scientific evaluation benchmarks predominantly rely on static, single-turn Question Answering (QA) formats, which are inadequate for measuring model performance in complex scientific tasks that require multi-step iteration and experimental interaction. To address this gap, we introduce MolQuest, a novel agent-based evaluation framework for molecular structure elucidation built upon authentic chemical experimental data. Unlike existing datasets, MolQuest formalizes molecular structure elucidation as a multi-turn interactive task, requiring models to proactively plan experimental steps, integrate heterogeneous spectral sources (e.g., NMR, MS), and iteratively refine structural hypotheses. This framework systematically evaluates LLMs' abductive reasoning and strategic decision-making abilities within a vast and complex chemical space. Empirical results reveal that contemporary frontier models exhibit significant limitations in authentic scientific scenarios: notably, even state-of-the-art (SOTA) models achieve an accuracy of only approximately 50%, while the performance of most other models remains below the 30% threshold. This work provides a reproducible and extensible framework for science-oriented LLM evaluation, our findings highlight the critical gap in current LLMs' strategic scientific reasoning, setting a clear direction for future research toward AI that can actively participate in the scientific process.",
+      "authors": [
+        "Taolin Han",
+        "Shuang Wu",
+        "Jinghang Wang",
+        "Yuhao Zhou",
+        "Renquan Lv",
+        "Bing Zhao",
+        "Wei Hu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-03-26T09:57:17+00:00",
+      "link": "https://arxiv.org/pdf/2603.25253v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "agentic evaluation for molecular structure elucidation",
+      "llm_evidence_cn": "分子结构阐明的智能体评估",
+      "llm_evidence": "分子结构阐明的智能体评估",
+      "canonical_evidence": "分子结构阐明的智能体评估",
+      "llm_tldr_en": "A benchmark for evaluating LLM agents on complex, multi-step molecular structure elucidation tasks.",
+      "llm_tldr_cn": "一个用于评估大语言模型智能体在复杂多步分子结构阐明任务中表现的基准。",
+      "llm_tldr": "一个用于评估大语言模型智能体在复杂多步分子结构阐明任务中表现的基准。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.22633v1",
+      "title": "Graph-Aware Late Chunking for Retrieval-Augmented Generation in Biomedical Literature",
+      "abstract": "Retrieval-Augmented Generation (RAG) systems for biomedical literature are typically evaluated using ranking metrics like Mean Reciprocal Rank (MRR), which measure how well the system identifies the single most relevant chunk. We argue that for full-text scientific documents, this paradigm is incomplete: it rewards retrieval precision while ignoring retrieval breadth -- the ability to surface evidence from across a document's structural sections. We propose GraLC-RAG, a framework that unifies late chunking with graph-aware structural intelligence, introducing structure-aware chunk boundary detection, UMLS knowledge graph infusion, and graph-guided hybrid retrieval. We evaluate six strategies on 2,359 IMRaD-filtered PubMed Central articles using 2,033 cross-section questions and two metric families: standard ranking metrics (MRR, Recall@k) and structural coverage metrics (SecCov@k, CS Recall). Our results expose a sharp divergence: content-similarity methods achieve the highest MRR (0.517) but always retrieve from a single section, while structure-aware methods retrieve from up to 15.6x more sections. Generation experiments show that KG-infused retrieval narrows the answer-quality gap to delta-F1 = 0.009 while maintaining 4.6x section diversity. These findings demonstrate that standard metrics systematically undervalue structural retrieval and that closing the multi-section synthesis gap is a key open problem for biomedical RAG.",
+      "authors": [
+        "Pouria Mortezaagha",
+        "Arya Rahgozar"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.IR"
+      ],
+      "published": "2026-03-23T23:22:58+00:00",
+      "link": "https://arxiv.org/pdf/2603.22633v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Graph-aware structural intelligence and knowledge graph infusion for biomedical literature",
+      "llm_evidence_cn": "生物医学文献的图感知结构智能和知识图谱注入",
+      "llm_evidence": "生物医学文献的图感知结构智能和知识图谱注入",
+      "canonical_evidence": "生物医学文献的图感知结构智能和知识图谱注入",
+      "llm_tldr_en": "Proposes a graph-aware RAG framework for biomedical literature using knowledge graph infusion.",
+      "llm_tldr_cn": "提出一种利用知识图谱注入的生物医学文献图感知检索增强生成框架。",
+      "llm_tldr": "提出一种利用知识图谱注入的生物医学文献图感知检索增强生成框架。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.25755v1",
+      "title": "KANEL: Kolmogorov-Arnold Network Ensemble Learning Enables Early Hit Enrichment in High-Throughput Virtual Screening",
+      "abstract": "Machine learning models of chemical bioactivity are increasingly used for prioritizing a small number of compounds in virtual screening libraries for experimental follow-up. In these applications, assessing model accuracy by early hit enrichment such as Positive Predicted Value (PPV) calculated for top N hits (PPV@N) is more appropriate and actionable than traditional global metrics such as AUC. We present KANEL, an ensemble workflow that combines interpretable Kolmogorov-Arnold Networks (KANs) with XGBoost, random forest, and multilayer perceptron models trained on complementary molecular representations (LillyMol descriptors, RDKit-derived descriptors, and Morgan fingerprints).",
+      "authors": [
+        "Pavel Koptev",
+        "Nikita Krainov",
+        "Konstantin Malkov",
+        "Alexander Tropsha"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG",
+        "q-bio.QM",
+        "stat.ML"
+      ],
+      "published": "2026-03-25T05:27:25+00:00",
+      "link": "https://arxiv.org/pdf/2603.25755v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "molecular representation learning for virtual screening",
+      "llm_evidence_cn": "用于虚拟筛选的分子表示学习",
+      "llm_evidence": "用于虚拟筛选的分子表示学习",
+      "canonical_evidence": "用于虚拟筛选的分子表示学习",
+      "llm_tldr_en": "Introduces KANEL, an ensemble model using Kolmogorov-Arnold Networks for molecular bioactivity prediction.",
+      "llm_tldr_cn": "引入KANEL，一种利用Kolmogorov-Arnold网络进行分子生物活性预测的集成模型。",
+      "llm_tldr": "引入KANEL，一种利用Kolmogorov-Arnold网络进行分子生物活性预测的集成模型。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.22665v1",
+      "title": "Improving LLM Predictions via Inter-Layer Structural Encoders",
+      "abstract": "The standard practice in Large Language Models (LLMs) is to base predictions on the final-layer token representations. Recent studies, however, show that intermediate layers encode substantial information, which may contain more task-relevant features than the final-layer representations alone. Importantly, it was shown that for different tasks, different layers may be optimal. In this work we introduce Inter-Layer Structural Encoders (ILSE), a powerful structural approach to learn one effective representation from the LLM's internal layer representations all together. Central to ILSE is Cayley-Encoder, a mathematically grounded geometric encoder that leverages expander Cayley graphs for efficient inter-layer information propagation. We evaluate ILSE across 13 classification and semantic similarity tasks with 9 pre-trained LLMs ranging from 14 million to 8 billion parameters. ILSE consistently outperforms baselines and existing approaches, achieving up to 44% improvement in accuracy and 25% in similarity metrics. We further show that ILSE is data-efficient in few-shot regimes and can make small LLMs competitive with substantially larger models.",
+      "authors": [
+        "Tom Ulanovski",
+        "Eyal Blyachman",
+        "Maya Bechler-Speicher"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-03-24T00:37:44+00:00",
+      "link": "https://arxiv.org/pdf/2603.22665v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "geometric encoder leveraging expander Cayley graphs",
+      "llm_evidence_cn": "利用扩展器凯莱图的几何编码器",
+      "llm_evidence": "利用扩展器凯莱图的几何编码器",
+      "canonical_evidence": "利用扩展器凯莱图的几何编码器",
+      "llm_tldr_en": "Introduces a geometric encoder using Cayley graphs to improve LLM representations via inter-layer propagation.",
+      "llm_tldr_cn": "引入一种使用凯莱图的几何编码器，通过层间传播改进大语言模型的表示。",
+      "llm_tldr": "引入一种使用凯莱图的几何编码器，通过层间传播改进大语言模型的表示。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.25857v1",
+      "title": "In-Context Molecular Property Prediction with LLMs: A Blinding Study on Memorization and Knowledge Conflicts",
+      "abstract": "The capabilities of large language models (LLMs) have expanded beyond natural language processing to scientific prediction tasks, including molecular property prediction. However, their effectiveness in in-context learning remains ambiguous, particularly given the potential for training data contamination in widely used benchmarks. This paper investigates whether LLMs perform genuine in-context regression on molecular properties or rely primarily on memorized values. Furthermore, we analyze the interplay between pre-trained knowledge and in-context information through a series of progressively blinded experiments. We evaluate nine LLM variants across three families (GPT-4.1, GPT-5, Gemini 2.5) on three MoleculeNet datasets (Delaney solubility, Lipophilicity, QM7 atomization energy) using a systematic blinding approach that iteratively reduces available information. Complementing this, we utilize varying in-context sample sizes (0-, 60-, and 1000-shot) as an additional control for information access. This work provides a principled framework for evaluating molecular property prediction under controlled information access, addressing concerns regarding memorization and exposing conflicts between pre-trained knowledge and in-context information.",
+      "authors": [
+        "Matthias Busch",
+        "Marius Tacke",
+        "Sviatlana V. Lamaka",
+        "Mikhail L. Zheludkevich",
+        "Christian J. Cyron",
+        "Christian Feiler",
+        "Roland C. Aydin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-03-26T19:27:30+00:00",
+      "link": "https://arxiv.org/pdf/2603.25857v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLMs for molecular property prediction",
+      "llm_evidence_cn": "大语言模型用于分子性质预测",
+      "llm_evidence": "大语言模型用于分子性质预测",
+      "canonical_evidence": "大语言模型用于分子性质预测",
+      "llm_tldr_en": "Investigates LLM performance and memorization in molecular property prediction tasks.",
+      "llm_tldr_cn": "研究大语言模型在分子性质预测任务中的表现及记忆效应。",
+      "llm_tldr": "研究大语言模型在分子性质预测任务中的表现及记忆效应。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.22675v1",
+      "title": "Vision-based Deep Learning Analysis of Unordered Biomedical Tabular Datasets via Optimal Spatial Cartography",
+      "abstract": "Tabular data are central to biomedical research, from liquid biopsy and bulk and single-cell transcriptomics to electronic health records and phenotypic profiling. Unlike images or sequences, however, tabular datasets lack intrinsic spatial organization: features are treated as unordered dimensions, and their relationships must be inferred implicitly by the model. This limits the ability of vision architectures to exploit local structure and higher-order feature interactions in non-spatial biomedical data. Here we introduce Dynamic Feature Mapping (Dynomap), an end-to-end deep learning framework that learns a task-optimized spatial topology of features directly from data. Dynomap jointly optimizes feature placement and prediction through a fully differentiable rendering mechanism, without relying on heuristics, predefined groupings, or external priors. By transforming high-dimensional tabular vectors into learned feature maps, Dynomap enables vision-based models to operate effectively on unordered biomedical inputs. Across multiple clinical and biological datasets, Dynomap consistently outperformed classical machine learning, modern deep tabular models, and existing vector-to-image approaches. In liquid biopsy data, Dynomap organized clinically relevant gene signatures into coherent spatial patterns and improved multiclass cancer subtype prediction accuracy by up to 18%. In a Parkinson disease voice dataset, it clustered disease-associated acoustic descriptors and improved accuracy by up to 8%. Similar gains and interpretable feature organization were observed in additional biomedical datasets. These results establish Dynomap as a general strategy for bridging tabular and vision-based deep learning and for uncovering structured, clinically relevant patterns in high-dimensional biomedical data.",
+      "authors": [
+        "Sakib Mostafa",
+        "Tarik Massoud",
+        "Maximilian Diehn",
+        "Lei Xing",
+        "Md Tauhidul Islam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-24T00:49:55+00:00",
+      "link": "https://arxiv.org/pdf/2603.22675v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "learns a task-optimized spatial topology of features directly from biomedical data",
+      "llm_evidence_cn": "直接从生物医学数据中学习任务优化的特征空间拓扑",
+      "llm_evidence": "直接从生物医学数据中学习任务优化的特征空间拓扑",
+      "canonical_evidence": "直接从生物医学数据中学习任务优化的特征空间拓扑",
+      "llm_tldr_en": "Introduces Dynomap to learn spatial topologies from unordered biomedical tabular data for deep learning analysis.",
+      "llm_tldr_cn": "引入Dynomap框架，从无序生物医学表格数据中学习空间拓扑以进行深度学习分析。",
+      "llm_tldr": "引入Dynomap框架，从无序生物医学表格数据中学习空间拓扑以进行深度学习分析。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.26110v1",
+      "title": "TurboESM: Ultra-Efficient 3-Bit KV Cache Quantization for Protein Language Models with Orthogonal Rotation and QJL Correction",
+      "abstract": "The rapid scaling of Protein Language Models (PLMs) has unlocked unprecedented accuracy in protein structure prediction and design, but the quadratic memory growth of the Key-Value (KV) cache during inference remains a prohibitive barrier for single-GPU deployment and high-throughput generation. While 8-bit quantization is now standard, 3-bit quantization remains elusive due to severe numerical outliers in activations. This paper presents TurboESM, an adaptation of Google's TurboQuant to the PLM domain. We solve the fundamental incompatibility between Rotary Position Embeddings (RoPE) and orthogonal transformations by deriving a RoPE-first rotation pipeline. We introduce a head-wise SVD calibration method tailored to the amino acid activation manifold, a dual look-up table (LUT) strategy for asymmetric K/V distributions, and a 1-bit Quantized Johnson-Lindenstrauss (QJL) residual correction. All experiments are conducted on ESM-2 650M, where our implementation achieves a 7.1x memory reduction (330 MB to 47 MB) while maintaining cosine similarity > 0.96 in autoregressive decoding across diverse protein families, including short peptides, transmembrane helices, enzyme active site fragments, and intrinsically disordered regions. We further implement a Triton-based fused decode attention kernel that eliminates intermediate dequantization memory allocations, achieving a 1.96x speedup over the PyTorch two-step path for the KV fetch operation alone; however, TurboESM incurs a prefill overhead of 21-27 ms relative to the original model due to KV quantization and packing, making it most suitable for memory-bound scenarios rather than latency-critical short-sequence workloads. Analysis reveals that PLMs exhibit sharper outlier profiles than large language models (LLMs) due to amino acid vocabulary sparsity, and our method effectively addresses these distributions.",
+      "authors": [
+        "Yue Hu",
+        "Junqing Wang",
+        "Yingchao Liu"
+      ],
+      "primary_category": "q-bio.QM",
+      "categories": [
+        "q-bio.QM"
+      ],
+      "published": "2026-03-27T06:42:56+00:00",
+      "link": "https://arxiv.org/pdf/2603.26110v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "efficiency optimization for protein language models",
+      "llm_evidence_cn": "蛋白质语言模型的效率优化",
+      "llm_evidence": "蛋白质语言模型的效率优化",
+      "canonical_evidence": "蛋白质语言模型的效率优化",
+      "llm_tldr_en": "Proposes TurboESM for efficient 3-bit quantization of protein language models to reduce memory during inference.",
+      "llm_tldr_cn": "提出 TurboESM，通过 3-bit 量化优化蛋白质语言模型的推理效率和内存占用。",
+      "llm_tldr": "提出 TurboESM，通过 3-bit 量化优化蛋白质语言模型的推理效率和内存占用。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

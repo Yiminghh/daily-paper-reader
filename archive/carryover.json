@@ -1,46 +1,6 @@
 {
-  "generated_at": "2026-03-29T19:20:25.808751+00:00",
-  "updated_date": "20260329",
+  "generated_at": "2026-03-30T19:47:50.457970+00:00",
+  "updated_date": "20260330",
   "carryover_days": 9,
-  "items": [
-    {
-      "id": "2603.25237v1",
-      "title": "Deep learning of committor and explainable artificial intelligence analysis for identifying reaction coordinates",
-      "abstract": "In complex molecular systems, the reaction coordinate (RC) that characterizes transition pathways is essential to understand underlying molecular mechanisms. This review surveys a framework for identifying the RC by applying deep learning to the committor, which provides the most reliable measure of the progress along a transition path. The inputs to the neural network are collective variables (CVs) expressed as functions of atomic coordinates of the system, and the corresponding RC is predicted as the output by training the network on the committor as the learning target. Because deep learning models typically operate in a black-box manner, it is difficult to determine which input variables govern the predictions. The incorporation of eXplainable Artificial Intelligence (XAI) techniques enables quantitative assessment of the contributions of individual input variables to the predictions. This approach allows the identification of CVs that play dominant roles and demonstrates that the committor distribution on the surface using important CVs is separated by well-defined boundaries. The framework provides an explainable deep learning strategy for assigning a molecular mechanism from the RC and is applicable to a wide range of complex molecular systems.",
-      "authors": [
-        "Toshifumi Mori",
-        "Kei-ichi Okazaki",
-        "Kang Kim",
-        "Nobuyuki Matubayasi"
-      ],
-      "primary_category": "physics.chem-ph",
-      "categories": [
-        "physics.chem-ph",
-        "cond-mat.soft"
-      ],
-      "published": "2026-03-26T09:42:08+00:00",
-      "link": "https://arxiv.org/pdf/2603.25237v1",
-      "tags": [
-        "keyword:MOLRNA",
-        "query:MOLRNA"
-      ],
-      "llm_score": 8.0,
-      "llm_evidence_en": "deep learning for identifying reaction coordinates in complex molecular systems",
-      "llm_evidence_cn": "用于识别复杂分子系统反应坐标的深度学习",
-      "llm_evidence": "用于识别复杂分子系统反应坐标的深度学习",
-      "canonical_evidence": "用于识别复杂分子系统反应坐标的深度学习",
-      "llm_tldr_en": "Reviews deep learning frameworks for identifying reaction coordinates in molecular transition pathways.",
-      "llm_tldr_cn": "综述了用于识别分子转变路径中反应坐标的深度学习框架。",
-      "llm_tldr": "综述了用于识别分子转变路径中反应坐标的深度学习框架。",
-      "llm_tags": [
-        "query:molrna"
-      ],
-      "matched_query_tag": "query:molrna",
-      "matched_query_text": "foundation models for molecular discovery and representation learning",
-      "matched_requirement_id": "req-3",
-      "selection_source": "carryover_cache",
-      "paper_id": "2603.25237v1",
-      "carry_days": 1
-    }
-  ]
+  "items": []
 }

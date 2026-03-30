@@ -1,0 +1,933 @@
+Title: Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs
+
+URL Source: https://arxiv.org/pdf/2603.21155v1
+
+Published Time: Tue, 24 Mar 2026 01:13:28 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs 
+
+# Zihui Chen ∗
+
+# Yuling Wang ∗
+
+231270002@hdu.edu.cn wangyl0612@hdu.edu.cn School of Cyberspace, Hangzhou Dianzi University Hangzhou, China 
+
+# Pengfei Jiao †
+
+School of Cyberspace, Hangzhou Dianzi University Hangzhou, China pjiao@hdu.edu.cn 
+
+# Kai Wu 
+
+Hangzhou Dianzi University Hangzhou, China wukai@hdu.edu.cn 
+
+# Xiao Wang 
+
+Beihang University Beijing, China xiao_wang@buaa.edu.cn 
+
+# Xiang Ao 
+
+Institute of Computing Technology, Chinese Academy of Sciences Beijing, China aoxiang@ict.ac.cn 
+
+# Dalin Zhang 
+
+Hangzhou Dianzi University Hangzhou, China dalinz@cs.aau.dk 
+
+## Abstract 
+
+Text-attributed graphs (TAGs) enhance graph learning by integrat-ing rich textual semantics and topological context for each node. While boosting expressiveness, they also expose new vulnerabilities in graph learning through text-based adversarial surfaces. Recent advances leverage diverse backbones, such as graph neural net-works (GNNs) and pre-trained language models (PLMs), to capture both structural and textual information in TAGs. This diversity raises a key question: How can we design universal adversarial at-tacks that generalize across architectures to assess the security of TAG models? The challenge arises from the stark contrast in how different backbones—GNNs and PLMs—perceive and encode graph patterns, coupled with the fact that many PLMs are only accessible via APIs, limiting attacks to black-box settings. To address this, we propose BadGraph , a novel attack framework that deeply elicits large language models’ (LLMs) understanding of general graph knowledge to jointly perturb both node topology and textual se-mantics. Specifically, we design a target influencer retrieval module that leverages graph priors to construct cross-modally aligned at-tack shortcuts, thereby enabling efficient LLM-based perturbation reasoning. Experiments show that BadGraph achieves universal and effective attacks across GNN- and LLM-based reasoners, with up to a 76.3% performance drop, while theoretical and empirical analyses confirm its stealthy yet interpretable nature. 
+
+## CCS Concepts 
+
+• Computing methodologies → Machine learning approaches . 
+
+> ∗Both authors contributed equally to this research.
+> †Corresponding author.
+> This work is licensed under a Creative Commons Attribution 4.0 International License.
+> WWW ’26, Dubai, United Arab Emirates
+> ©2026 Copyright held by the owner/author(s). ACM ISBN 979-8-4007-2307-0/2026/04 https://doi.org/10.1145/XXX.XXX
+
+## Keywords 
+
+Graph Machine Learning, Text-Attributed Graph Attacks 
+
+ACM Reference Format: 
+
+Zihui Chen, Yuling Wang, Pengfei Jiao, Kai Wu, Xiao Wang, Xiang Ao, and Dalin Zhang. 2026. Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs. In Proceedings of the ACM Web Conference 2026 (WWW ’26), April 13–17, 2026, Dubai, United Arab Emirates. ACM, New York, NY, USA, 12 pages. https://doi.org/10.1145/XXX. XXX 
+
+## 1 Introduction 
+
+Graph representation learning has emerged as a powerful para-digm for modeling intricate relationships among entities in complex real-world systems, such as knowledge graphs [33] and biological networks [ 27 ]. Building on this, text-attributed graphs (TAGs) en-hance each node with descriptive textual information, seamlessly integrating structural and semantic features [ 47 ]. This fusion sig-nificantly boosts the expressive power of graph representations, enabling more detailed understanding and analysis. Consequently, research on TAGs has gained strong momentum across diverse fields, including graph neural networks (GNNs) [ 55 ], natural lan-guage processing [11, 49], and recommender systems [21, 42, 50]. Bridging topological and textual knowledge through effective alignment and fusion is essential for learning on TAGs [ 23 ]. Broadly, existing efforts fall into two main paradigms: (1) GNN as a reasoner. In this paradigm, node-associated texts are first encoded into fea-ture using language models, and then propagated through the graph topology via GNN message-passing. The quality of text encoding is crucial. As a result, research has shifted from shallow methods like TF-IDF [ 17 ] to powerful large language models (LLMs) such as OFA [ 22 ] and TAPE [ 13 ]. (2) LLM as a reasoner. This paradigm reformats graph data into a format that LLMs can understand, then either prompts frozen LLMs [ 7 ] or retrains graph-specific tokeniz-ers [ 5]. The key lies in how to describe TAGs to effectively elicit LLMs’ general knowledge and reasoning abilities for graph-related tasks. Despite their success, TAGs introduce new vulnerabili-ties through the textual modality, exposing novel adversarial  
+
+> arXiv:2603.21155v1 [cs.AI] 22 Mar 2026 WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Zihui Chen et al.
+
+attack surfaces. Given the diverse backbones used for TAGs, there is an urgent need for universal, well-crafted adversarial attacks to expose vulnerabilities and mitigate potential misuse. Existing graph attackers typically perturb edges or node features under constrained budgets [ 34 , 41 ], but struggle to adapt to TAG models due to their inability to interpret and manipulate textual information. This aligns with recent findings that graph attackers are less effective in LLM-driven graph learning [ 10 , 52 ]. Further-more, embedding-based attacks are often impractical and hard to interpret. While recent efforts explore node injection attacks at the textual level [ 18 ], their effectiveness still falls short compared to tra-ditional embedding-space attacks. To address this gap, we ask: How can we design universal adversarial attacks that generalize across architectures to effectively evaluate the security of TAG models? 
+
+Despite its potential, achieving this goal remains challenging. 
+
+First, uncovering universal vulnerability patterns across both topo-logical and textual modalities is difficult. The complex interactions between these modalities, along with the diverse ways various back-bone architectures encode TAG patterns, make it challenging to identify common weaknesses. Second, the unknown architecture and parameters of target models often force attackers to operate in the more restrictive black-box setting. This is especially true for commercial LLMs deployed via APIs without internal access, where gradient-based optimization is not feasible. As a result, these constraints hinder the identification of intrinsic vulnerabilities. Recent advances show that LLMs can act as effective adversarial agents in various domains, including fake news generation [ 35 ]and recommender system [ 31 ], thanks to their ability to generate contextually relevant yet misleading content. These successes mo-tivate us to explore LLMs as powerful attackers in graph learning. In this paper, we propose BadGraph , a novel universal adversarial attack on TAG models that harnesses the deep graph reasoning ca-pabilities of LLMs to disrupt the core semantics of TAG. Specifically, we design a target influencer retrieval module to identify seman-tically dissimilar candidates, enabling the creation of a shortcut between the target node and the intended misleading label—even in black-box settings without access to internal gradients. Subse-quently, to enable a universal TAG attack, we elicit the LLM’s deep understanding of graph patterns to jointly guide topological and textual perturbations. Notably, our retrieval module facilitates LLM-based edge perturbation in a highly resource-efficient manner. The attacked TAG can be applied to any target graph learning back-bone, including both GNN-based and LLM-based reasoners. Our key contributions can be summarized as follows: 
+
+• To the best of our knowledge, this is the first universal TAG adversarial attack that generalizes across diverse graph learning models. Our findings reveal that the growing use of TAGs brings new security risks, highlighting the need for a comprehensive evaluation of model robustness. 
+
+• We propose BadGraph , a novel LLM-powered TAG attacker that efficiently leverages the adversarial capabilities of LLMs across both topological and textual modalities. 
+
+• Extensive experiments across diverse TAG backbones demon-strate that BadGraph is both effective and generalizable. More-over, the proposed Cross-Modal Shortcut Theory offers theoreti-cal insight into its stealthiness and efficacy. 
+
+## 2 Related Work 2.1 Graph Adversarial Attacks 
+
+Identifying potential vulnerabilities and enhancing the security of GNNs are essential for developing trustworthy graph learning systems [ 48 ]. Existing GNN attacks can be broadly classified into two categories: test-time evasion attacks and training-time poisoning attacks . Evasion attacks manipulate the graph structure or node fea-tures at inference time to mislead model predictions [ 28 , 38 – 40 , 57 ]. For example, Nettack proposes a greedy-based edge perturbation strategy [ 57 ], while [ 19 ] extends black-box evasion attacks to the explainability setting. In contrast, poisoning attacks perturb the graph during training to embed backdoors or degrade model ro-bustness [1, 8, 24, 37, 40, 51]. SBAC injects semantic trigger nodes to generate poisoned samples [ 8], whereas EPD quantifies pertur-bation importance and distinguishes benign augmentation from adversarial manipulation [ 24 ]. GOttack reveals the weaknesses of existing defenses by efficiently compromising GNNs through orbit-based structural manipulations [ 1 ]. However, existing works overlook the emerging text-based attack interfaces in the LLM era, which are crucial for preventing misuse of TAGs in realistic settings. 
+
+## 2.2 LLM-Generated Attacks 
+
+The utilization of LLMs [ 2, 42 ], with their human-like understand-ing and ability to generate contextually relevant yet misleading content, introduces new capabilities in adversarial attack gener-ation [ 31 , 35 ]. Understanding these new attacks is key to finding AI vulnerabilities and improving their security [ 32 ]. For example, PromptAttack shows that carefully crafted adversarial prompts can induce a target LLM to produce harmful outputs that deceive itself [ 46 ]. Similarly, PAIR leverages an attacker LLM to iteratively generate jailbreak prompts for a separate target LLM without hu-man intervention [ 4]. Attack-in-the-Chain uses chain-of-thought prompting to craft attacks against neural ranking models [ 25 ]. CheatAgent leverages an LLM agent to generate targeted adversar-ial perturbations for attacking recommender systems [ 31 ]. Recently, WTGIA explores text-level injection attacks in the graph domain and finds that their effectiveness decreases as text interpretabil-ity increases, making them less effective than embedding-based attacks [ 18 ]. This highlights the need for further research on the potential LLM-based attacks in graph learning. 
+
+## 3 Background and Preliminaries 
+
+Text-attributed Graphs. A TAG is defined as G = (𝑉 , 𝐸, 𝑆 ), where 
+
+𝑉 is the set of nodes, 𝐸 is the set of edges, and 𝑆 denotes node-level textual information. The adjacency matrix of the graph G
+
+is denoted as 𝐴 ∈ R|𝑉 | × | 𝑉 | , where 𝐴 𝑖 𝑗 = 1 if nodes 𝑣 𝑖 and 𝑣 𝑗 are connected, otherwise 𝐴 𝑖 𝑗 = 0. In this work, we focus on the node classification task on TAGs. Specifically, each node 𝑣 𝑖 corresponds to a label 𝑦 𝑖 that indicates which category the node 𝑣 𝑖 belongs to. When attacking GNNs serving as reasoners, we encode the text 
+
+𝑆 into the node feature matrix 𝑋 = {𝑥 1, . . . , 𝑥 |𝑉 | } using various encoding techniques to train the target GNNs, where 𝑥 𝑖 ∈ R𝑑 .
+
+Attacker’s Knowledge and Capability. We study a black-box eva-sion setting, i.e., the attacker has no access to model architectures, Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+parameters, training procedures, or text encoders, and is limited to test-time, architecture-agnostic universal attacks on TAGs. 
+
+Attacker’s Goal. The attacker’s objective is to generate a perturbed graph G′ = (𝐴 ′, 𝑆 ′) by modifying the adjacency 𝐴 and node text 𝑆 
+
+under a limited budget (e.g., ∥G ′ − G∥ ≤ Δ), so that the target model outputs a predefined incorrect label 𝑌 ′. We focus on the challenging setting of universal, black-box attacks, where the adversarial graph 
+
+G′ is required to transfer across heterogeneous backbones with substantial differences in architecture and inference, including (1) a GNN reasoner 𝑓 GNN    
+
+> 𝜃 (𝑘 )
+
+(𝐴, 𝑆 ) and (2) an LLM reasoner 𝑓 LLM   
+
+> 𝜃 (𝑘 )
+
+ T𝑡 (𝐴, 𝑆 ),with 𝜃 (𝑘 ) denoting the 𝑘 -th model instance and T𝑡 a task-specific prompt. Formally, given G′ = (𝐴 ′, 𝑆 ′), the attacker enforces: 
+
+𝑓 𝑚 𝜃 (𝑘 ) (𝐴 ′, 𝑆 ′) → 𝑌 ′, 𝑚 ∈ { GNN , LLM },
+
+s.t. ∥𝐴 ′ − 𝐴 ∥0 ≤ 𝑏 𝐴 , ∥𝑆 ′ − 𝑆 ∥0 ≤ 𝑏 𝑆 , (1) where 𝑏 𝐴 and 𝑏 𝑆 bound the maximum number of structural and textual edits, respectively. 
+
+## 4 Proposed Framework 
+
+In this paper, we propose BadGraph , a novel LLM-driven adver-sarial attack tailored for TAGs. BadGraph progressively guides an LLM to discover transferable perturbations over topology and text. The retrieval-then-reasoning pipeline is illustrated in Figure 1. 
+
+## 4.1 Graph-Aware Target Influencer Retrieval 
+
+To leverage LLM-based graph reasoning for constructing a per-turbed graph G′ = (𝐴 ′, 𝑆 ′), such that the target graph learning model 𝑓 𝑚 𝜃 (𝑘 ) (𝐴 ′, 𝑆 ′) is misled to produce a predefined incorrect label 
+
+𝑌 ′. The main challenges are twofold: (1) efficiency under black-box constraints—without gradient access, topology-based attacks (e.g., fake edge additions) necessitate querying all node pairs via the LLM, leading to an O( 𝑉 2) query cost; and (2) the absence of graph priors, which hinders the LLM from deriving reliable attack cues and accurately localizing effective perturbation regions. To overcome these challenges, we introduce a Target Influencer Retrieval module that narrows the search space to a compact set of 
+
+influencer nodes , thereby avoiding exhaustive pairwise prompting. The retrieved nodes act as graph-aware priors, supplying explicit shortcut paths to the incorrect label. Formally, we denote the in-fluencer of a target node 𝑣 𝑖 as 𝑣 influencer  
+
+> 𝑖
+
+, whose label 𝑦 𝑣 influencer 
+
+> 𝑖
+
+can misdirect the target model’s prediction on 𝑣 𝑖 . We then encode the input graph G into node embeddings 𝑍 ∈ R| V | × 𝑑 :
+
+𝑍 = GraphEncoder (𝐴, 𝑋 ), (2) where 𝑍 serves as a model-agnostic influencer database for retrieval. The graph encoder can be instantiated with any lightweight or expressive GNN (e.g., GCN, GAT); empirically, more expressive encoders lead to stronger and more transferable perturbations. For each target node 𝑣 𝑖 with embedding 𝑧 𝑖 , we retrieve a compact candidate influencer set I𝑣 𝑖 that are semantically distant from 𝑣 𝑖 . Let 
+
+𝑑 cos (𝑧 𝑖 , 𝑧 𝑣 ) denote cosine-based dissimilarity; the retriever selects the top-𝐾 nodes with the largest dissimilarity to 𝑣 𝑖 :
+
+I𝑣 𝑖 = Retriever  {𝑑 cos (𝑧 𝑖 , 𝑧 𝑣 )} 𝑣 ∈ V\{ 𝑣 𝑖 }, 𝐾 , (3) where I𝑣 𝑖 forms the candidate pool for subsequent LLM-driven ad-versarial perturbations. By concentrating LLM reasoning on a small, high-quality subset, our retrieval-first design drastically reduces query cost and injects graph-aware attack priors. 
+
+## 4.2 LLM-Driven Cross-Modal TAG Perturbation 
+
+LLMs have recently exhibited a surprising degree of graph rea-soning intelligence. Building on this insight, we investigate how such emergent reasoning can be harnessed to mount adversarial attacks on TAGs. A central challenge remains: the dual nature of TAGs requires that topological and textual edits be tightly aligned; directional misalignment substantially undermines attack effective-ness. To ensure cross-modal coherence, for each target node 𝑣 𝑖 with retrieved influencers I𝑣 𝑖 , we jointly generate anchor-based topo-logical and textual perturbations, forming aligned shortcuts that steer the model toward the target misleading label. 
+
+4.2.1 Universal Topology-Aware Perturbations. Topology manip-ulation is central to constructing adversarial shortcuts on TAGs. Here, the LLM is prompted to produce budget-constrained struc-tural perturbations—edge removals and additions—guided by the retrieved influencers. These topology-aware edits jointly reshape the local connectivity of the target node. 
+
+Eliciting Graph Knowledge. We first prompt the LLM to extract graph-relevant cues from limited prior information, thereby elicit-ing the LLM’s implicit knowledge of graph patterns. Specifically, for each target node 𝑣 𝑖 , we construct a structured prompt that directs the LLM to reason over its local adjacency N𝑣 𝑖 and node text 𝑆 (1) 
+
+> 𝑖
+
+:
+
+R𝑖 = Tgraph 
+
+ 𝑣 𝑖 , N𝑣 𝑖 , 𝑆 (1)
+
+> 𝑖
+
+, (4) where Tgraph (·) instructs the LLM to infer relational cues between 
+
+𝑣 𝑖 and its neighbors, yielding a reasoning summary R𝑖 that serves as the foundation for subsequent perturbation generation. 
+
+Step 1 : Analyze the target node and its neighboring set. Summarize why the nodes in the neighboring set are adjacent to the target node. Be sure to highlight the most prominent factors that guide their strong correlation. 
+
+Edge Deletion Guidance. Building upon the structural under-standing elicited in the Step 1, we guide the LLM to identify and attack a critical edge of a target node 𝑣 𝑖 via stepwise reasoning. Formally, given the 1-hop neighborhood N𝑣 𝑖 , the LLM performs a stepwise reasoning process to select the most semantically relevant neighbor as the deletion target: 
+
+𝑣 del  
+
+> 𝑖
+
+= arg max  
+
+> 𝑣 ∈ N 𝑣 𝑖
+
+LLM rel (𝑣 𝑖 , 𝑣 ). (5) The removal of edge (𝑣 𝑖 , 𝑣 del  
+
+> 𝑖
+
+) reduces the local structural reinforce-ment for 𝑣 𝑖 and weakens the evidence supporting its original label. 
+
+Step 2 : From the neighboring set, choose the node that is most relevant to the target node. Let’s break it down step by step to ensure we accurately evaluate the correlation. 
+
+Edge Insertion Guidance. To further distort the neighborhood structure, we leverage the retrieved influencer candidates I𝑣 𝑖 as potential targets for edge addition; this retrieval set provides princi-pled attack evidence—its semantic gap to 𝑣 𝑖 . The LLM analyzes the WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Zihui Chen et al. Encoder                    
+
+> Target Node
+> 1-hop Neighbors
+> Candidate Influencer
+> Attack
+> Template 1
+> Eliciting Graph
+> Knowledge
+> Attack
+> Template 2
+> LLM  Attacker
+> Influencer Node
+> Edge Deletion
+> Edge Insertion
+> AGenetic Algorithm for
+> Non -linear Information
+> Maximisation and Blind
+> Separation
+> Influencer Analysis
+> Text Modification
+> Graph -Aware Target Influencer Retrieval
+> Attacked Topology
+> Attacked Text
+> Graph Influencer Database
+> A Non -linear Information
+> Maximisation Algorithm that
+> Performs Blind Separation
+> Target Node
+> Retriever
+> Text -Attributed Graph
+> Influencer Database
+> Universal Textual -Aware Perturbations
+> Step 1
+> Step 2
+> Step 3
+> Step 1
+> Step 2
+> Graph -aware Attack P riors
+> Analysis
+> LLM  Attacker
+> Analysis
+> Universal Topology -Aware Perturbations
+> Text
+> Topology
+> Cross -Modal Influencer Alignment
+> Influencer keywords
+
+Figure 1: An overview of the proposed BadGraph framework. 
+
+semantic relationships within I𝑣 𝑖 and selects the least semantically related node as the addition target: 
+
+𝑣 add  
+
+> 𝑖
+
+= arg min  
+
+> 𝑣 ∈ I 𝑣 𝑖
+
+LLM rel (𝑣 𝑖 , 𝑣 ). (6) Adding the edge (𝑣 𝑖 , 𝑣 add  
+
+> 𝑖
+
+) introduces a misleading connection to a semantically distant node, constructing an adversarial shortcut that biases the model toward the influencer’s label. This process reduces the edge prediction complexity from O( 𝑁 2) to O( 𝑁 ), as the LLM focuses reasoning on a compact influencer set. 
+
+Step 3 : Based on the inferred prominent factors from Step 1, exclude the node from the following Candidate List that is least related to the target node and analyze why. 
+
+Unified Formulation. The resulting topology perturbation for node 𝑣 𝑖 can thus be represented as: 
+
+Δ𝐴 𝑖 = (𝑣 𝑖 , 𝑣 add  
+
+> 𝑖
+
+) ∪ (𝑣 𝑖 , 𝑣 del  
+
+> 𝑖
+
+) , ∥Δ𝐴 𝑖 ∥0 ≤ 𝑏 𝐴 𝑖 , (7) where 𝑏 𝐴 𝑖 is the topology perturbation budget. This unified formula-tion allows the LLM to perform topology attacks within a consistent reasoning framework, yielding universal and transferable topology-aware perturbations. Empirically, we set 𝑏 𝐴 𝑖 = 2, corresponding to one edge addition and one edge deletion per target node. 
+
+4.2.2 Universal Text-Aware Perturbations. LLMs have proven effec-tive at crafting adversarial text in NLP. Inspired by this, we harness LLMs’ human-like understanding of semantics and graph context to generate targeted textual perturbations for TAGs, providing a principled, text-centric adversarial interface. The main challenge is to induce model misclassification with minimal, stealthy edits: textual changes must be small yet directionally consistent with topology edits so as to form coherent cross-modal shortcuts. 
+
+Influencer Analysis Guidance. To maintain cross-modal consis-tency, we follow the same influencer 𝑣 add  
+
+> 𝑖
+
+selected in the structural attack (Eq. (6) ) as the textual perturbation source, steering each target node 𝑣 𝑖 toward the class of its influencer 𝑦 𝑣 add 
+
+> 𝑖
+
+. Formally, the LLM is prompted to extract a representative keyword from the influencer node 𝑣 add  
+
+> 𝑖
+
+:
+
+𝑘 𝑣 𝑖 = LLM key 
+
+ 𝑣 add  
+
+> 𝑖
+
+, 𝑆 𝑣 add 
+
+> 𝑖
+
+, (8) where 𝑘 𝑣 𝑖 denotes the category-indicative keyword extracted from the influencer’s text 𝑆 𝑣 add 
+
+> 𝑖
+
+, which serves as a semantic anchor for subsequent textual perturbations on 𝑣 𝑖 .
+
+Step 1 : Given the target node titled { 𝑣 add  
+
+> 𝑖
+
+}, identify one keyword that reflects its category. 
+
+Text Modification Guidance. Building on the extracted influencer keyword 𝑘 𝑣 𝑖 , we prompt the LLM to subtly revise the target node’s text so that it aligns with the influencer’s category 𝑦 𝑣 add 
+
+> 𝑖
+
+. To ensure both stealth and cross-modal coherence, two constraints are im-posed: (1) retain partial lexical content to preserve linguistic fluency and adversarial stealth; and (2) integrate the influencer keyword 
+
+𝑘 𝑣 𝑖 form Eq. (9) , ensuring directional semantic drift toward 𝑦 𝑣 add 
+
+> 𝑖
+
+.Formally, the adversarially modified text is generated as: 
+
+𝑆 ′ 
+
+> 𝑖
+
+= LLM text 
+
+ 𝑆 𝑖 , 𝑘 𝑣 𝑖 
+
+, s.t. ∥𝑆 ′ 
+
+> 𝑖
+
+− 𝑆 𝑖 ∥0 ≤ 𝑏 𝑆 𝑖 , (9) where 𝑆 𝑖 denotes the textual perturbation budget. This formulation allows the LLM to synthesize minimal yet semantically effective text edits, achieving coherent alignment between structural and textual perturbations under strict black-box constraints. 
+
+Step 2 : Given the paper P1 titled { 𝑆 𝑖 }, your task is to generate a new paper by modifying P1 title so that it meets the following requirements: 1. It must retain some of the original words from the P1 title. 2. It should include the keyword identified in Step 1 and be aligned with the target node category determined in Step 1. Departing from gradient-driven or retraining-based attacks, Bad-Graph unifies structural and textual attacks within a LLM reasoning pipeline. It achieves directionally aligned and transferable attacks at low cost, requiring only two LLM queries per target node. Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+## 5 Theoretical Foundations of BadGraph .
+
+A key question arises regarding the stealthiness of BadGraph : how can it remain effective while inducing only minimal disruption? To resolve this paradox, we establish a unified theoretical framework with two complementary components: (1) a homophily-preserving bound , explaining why BadGraph maintains stealthiness under sparse perturbations; and (2) a cross-modal shortcut theory , revealing how such subtle perturbations achieve strong attack efficacy. 
+
+## 5.1 Homophily-Preserving Bound 
+
+The adversary jointly perturbs topology and text to maximize the probability of misclassification: 
+
+max       
+
+> ∥𝐴 ′−𝐴 ∥0≤𝑏 𝐴 ,∥𝑆 ′−𝑆 ∥0≤𝑏 𝑆
+
+P
+
+
+
+𝑌 ′ | 𝐴 ′, 𝑆 ′; 𝑓 𝑚 𝜃 (𝑘 )
+
+
+
+. (10) Let 𝑥 𝑖 = Φ(𝑆 𝑖 ) denote the textual embedding, where we as-sume that the encoder Φ is 𝐿 Φ-Lipschitz continuous. A bounded textual perturbation ∥𝑆 ′ − 𝑆 ∥0 ≤ 𝑏 𝑆 𝑖 thus induces a semantic de-viation ∥𝑥 ′ 
+
+> 𝑖
+
+− 𝑥 𝑖 ∥2 ≤ 𝐿 Φ𝜏 (𝑏 𝑆 𝑖 ), where 𝜏 (𝑏 𝑆 𝑖 ) quantifies the em-bedding drift. Similarly, the relative edge perturbation ratio is 
+
+Δ𝐸 = ∥𝐴 ′ − 𝐴 ∥0/| 𝐸 | ≪ 1 . Then, following the node-centric defini-tion of homophily [6], the change in global homophily satisfies: 
+
+|𝐻 (𝐺 ′) − 𝐻 (𝐺 )| ≤ 𝐶 1Δ𝐸 + 𝐶 2𝐿 Φ𝜏 (𝑏 𝑆 ), (11) where 𝐶 1, 𝐶 2 > 0 depend on graph smoothness and the continuity of the similarity metric. Because both Δ𝐸 and 𝜏 (𝑏 𝑆 ) remain small under BadGraph ’s budget-constrained and semantically aligned perturbations, the resulting global homophily variation is provably bounded—offering a formal guarantee of stealthiness. In section 6.3.1(Observation 2) further corroborate this homophily stability. 
+
+## 5.2 Cross-Modal Shortcut Theory 
+
+Although the joint optimization (𝐴 ′∗  
+
+> 𝑖
+
+, 𝑆 ′∗  
+
+> 𝑖
+
+) is intractable under black-box constraints, a capable LLM can implicitly approximate this reasoning objective: 
+
+(𝐴 ′∗  
+
+> 𝑖
+
+, 𝑆 ′∗  
+
+> 𝑖
+
+) ≈ LLM  𝑣 𝑖 , N𝑣 𝑖 , 𝑆 (1) 
+
+> 𝑖
+
+, I𝑣 𝑖 
+
+, (12) yielding two coordinated perturbations: 
+
+• a structural shortcut 𝛿 𝐴 that connects the target node 𝑣 𝑖 to its influencer 𝑣 add  
+
+> 𝑖
+
+, and 
+
+• a textual shortcut 𝛿 𝑆 that semantically aligns 𝑆 𝑖 toward 𝑆 𝑣 add 
+
+> 𝑖
+
+,both coherently anchored on the same influencer node 𝑣 add  
+
+> 𝑖
+
+. This alignment induces a directional shift in the latent space: 
+
+𝑧 (𝑣 ′ 
+
+> 𝑖
+
+) ≈ 𝑧 (𝑣 add  
+
+> 𝑖
+
+) ⇒ 𝑓  𝑧 (𝑣 ′ 
+
+> 𝑖
+
+) → 𝑦 𝑣 add 
+
+> 𝑖
+
+,
+
+where 𝑧 (·) is the TAG encoder. By anchoring both modalities to the same influencer and label 𝑦 𝑣 add 
+
+> 𝑖
+
+, LLM-guided reasoning enforces 
+
+cross-modal coherence , allowing the structural and textual shortcuts to reinforce each other and form a unified adversarial pathway. Consequently, the joint perturbation exhibits a synergistic effect :
+
+Δjoint ≈ Δ𝛿 𝐴 ,𝛿 𝑆 > Δ𝛿 𝐴 + Δ𝛿 𝑆 , (13) This indicates that aligned cross-modal perturbations substantially outperform isolated attacks. As shown in Table 4 (Anchor Mis), dis-rupting this alignment sharply lowers success rates, underscoring the importance of cross-modal coherence for effective transfer. 
+
+## 6 Experiments 6.1 Experimental Settings 
+
+6.1.1 Datasets. We conduct extensive experiments on three TAG datasets: Cora [ 30 ], OGBN-Products, and OGBN-Arxiv [ 15 ]. More details and statistics of the dataset can be found in Appendix A.1. 
+
+6.1.2 Target Backbones. We evaluate BadGraph across two back-bone paradigms. (1) GNN Reasoners. Node texts are first encoded, then processed by GNNs [ 9 , 12 , 17 , 45 ], and the robust R-GCN [ 54 ]. 
+
+(2) LLM Reasoners. Following [ 7], LLMs are used for zero-shot node classification [16, 26], with details in Appendix A.2. 
+
+6.1.3 Baselines. We compare BadGraph against seven representa-tive graph attack baselines: RND, FLIP [ 3], STACK [ 44 ], PGD [ 29 ], NETTACK [ 57 ], SGAttack [ 20 ], and WTGIA [ 18 ]. For comparison, we assume that the attacker has no knowledge of embedding tech-nology. Additional details are provided in Appendix A.3. 
+
+6.1.4 Evaluation Metrics. Following [ 53 ], we report Accuracy as the primary metric, along with 3-Max Accuracy —the average per-formance against the three most robust defenses—and Weighted Accuracy , which weights results by defense robustness. All results are averaged over five random seeds. 
+
+## 6.2 Overall Performance 
+
+6.2.1 Attack Success Across Backbone Models in GNN-as-Reasoner Scenarios. BadGraph framework is highly flexible and can be uni-versally applied to attack any type of target TAG backbone. We first evaluate the performance of BadGraph in a black-box setting across various models in GNN-as-Reasoner scenarios. To this end, we explore three node feature encoding methods with different levels of expressiveness: TF-IDF, SBERT, and TAPE. The results are shown in Table 1, we have the following observations: (1) Compared to existing attack baselines, BadGraph achieves state-of-the-art (SOTA) performance across all target models and datasets. 
+
+These findings further highlight the effectiveness and universality of BadGraph in attacking TAG models. Notably, our method results in an accuracy drop of nearly 40% on Cora, 52% on OGBN-Arxiv, and around 30% on OGBN-Products. This performance drop is mainly due to the powerful adversarial perturbations generated by our LLM, which leverage rich graph-related knowledge to pinpoint and exploit the most vulnerable structures and texts. (2) Surprisingly, 
+
+we find that models with richer node features tend to exhibit greater robustness. While traditional structure-based attacks are generally effective against shallow features like TF-IDF, they have minimal impact on models leveraging more expressive textual repre-sentations such as SBERT and TAPE, on OGBN-Arxiv, some attacks even lead to accuracy improvements. This is because these models effectively capture the semantic information of TAGs, enabling accurate predictions even when the structural information is com-promised. (3) Single-modality attacks, whether structural or textual, are ineffective —our text-only and structure-only variants confirm this through significantly reduced performance, consistent with our cross-modal shortcut theory. 
+
+6.2.2 Attack Success Across Backbone Models in LLM-as-Reasoner Scenarios. To develop a more generalizable model, we evaluate the performance of BadGraph in LLM-as-Reasoner scenarios, where WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Zihui Chen et al. 
+
+Table 1: GNN-as-Reasoner Scenarios. Attack performance on three datasets across various target GNNs. Lower scores indicate stronger attacks. "Clean" denotes unperturbed graphs; Our-text and Our-struct correspond to text-only and structure-only variants. Best results are in bold. 
+
+Dataset Emb. Models Clean STACK PGD RND FLIP SGAttack WTGIA Our-text Our-struct BadGraph 
+
+> Cora
+> TF-IDF
+
+R-GCN 86.67 82.37 78.07 73.93 73.11 85.41 86.22 84.44 79.11 70.89 
+
+GIN 85.93 72.37 78.30 72.59 72.89 81.04 85.70 84.44 76.96 63.04 
+
+GraphSAGE 84.96 72.30 77.41 74.81 74.74 73.70 83.19 73.93 76.37 54.67 
+
+TAGCN 87.33 75.33 80.22 75.04 75.85 87.33 87.56 85.48 83.41 73.93 
+
+GCN 85.48 73.78 77.70 74.89 74.44 83.63 83.85 84.15 78.67 71.33 
+
+> SBERT
+
+R-GCN 87.33 76.37 80.30 76.00 75.93 86.30 85.93 80.30 79.11 56.67 
+
+GIN 85.70 73.85 80.15 75.33 75.93 81.04 84.96 77.70 76.00 47.04 
+
+GraphSAGE 86.00 75.93 79.48 76.00 77.56 72.44 83.33 64.30 70.15 39.93 
+
+TAGCN 88.22 78.00 80.81 76.74 75.85 88.74 87.93 79.04 83.26 51.19 
+
+GCN 87.11 77.63 80.59 79.04 77.33 86.37 86.30 80.15 78.07 56.00 
+
+> TAPE
+
+R-GCN 89.63 82.96 84.15 83.33 86.52 87.85 - 86.30 84.07 72.89 
+
+GIN 88.52 80.96 84.22 81.70 84.22 84.22 - 83.11 82.96 65.56 
+
+GraphSAGE 87.85 81.26 83.41 82.81 85.19 74.00 - 82.81 75.63 48.89 
+
+TAGCN 88.07 81.19 84.37 83.04 82.52 87.85 - 84.96 82.67 69.56 
+
+GCN 89.70 83.19 83.56 83.19 85.33 87.11 - 85.93 80.89 69.93 
+
+> Arxiv
+> TF-IDF
+
+R-GCN 67.98 65.78 62.50 61.34 60.08 - 61.30 67.46 59.42 56.56 
+
+GIN 63.14 58.76 58.16 57.82 56.24 - 48.82 59.20 51.26 41.16 
+
+GraphSAGE 61.34 56.58 55.86 55.84 54.02 - 59.44 47.32 52.90 34.90 
+
+TAGCN 68.56 63.90 64.32 63.34 62.40 - 63.24 64.92 65.66 59.02 
+
+GCN 65.40 65.58 61.02 60.88 58.57 - 64.82 64.46 61.32 58.56 
+
+> SBERT
+
+R-GCN 67.90 67.08 63.48 65.00 62.70 - 61.22 67.56 60.94 58.94 
+
+GIN 69.04 66.78 64.98 65.38 63.40 - 63.36 66.96 56.82 44.26 
+
+GraphSAGE 70.00 67.42 66.92 65.66 64.80 - 64.28 62.14 66.32 47.58 
+
+TAGCN 70.30 68.30 66.90 67.32 65.58 - 69.82 65.88 68.00 60.28 
+
+GCN 67.02 68.28 63.80 63.34 62.72 67.86 66.58 62.72 59.30 
+
+> TAPE
+
+R-GCN 70.00 75.82 66.96 69.44 68.18 - - 69.20 66.54 65.22 
+
+GIN 77.68 77.06 78.10 78.04 78.48 - - 56.42 63.62 25.22 
+
+GraphSAGE 80.82 80.44 79.84 79.90 80.12 - - 52.70 80.12 31.44 
+
+TAGCN 80.48 81.40 79.40 79.16 79.34 - - 64.42 79.80 58.62 
+
+GCN 70.24 77.92 69.36 70.58 69.86 - - 69.22 68.46 66.14 
+
+> Products
+> TF-IDF
+
+R-GCN 86.00 80.70 83.28 81.54 81.58 85.28 82.08 81.84 81.56 70.84 
+
+GIN 85.28 79.78 82.58 81.62 81.16 81.62 68.42 75.90 75.18 53.30 
+
+GraphSAGE 83.94 78.18 81.42 80.78 79.36 80.02 80.90 70.14 71.02 50.06 
+
+TAGCN 85.94 78.72 82.90 82.42 79.50 85.32 83.40 83.16 82.68 74.14 
+
+GCN 86.48 82.12 84.28 82.28 82.98 85.38 83.92 81.20 81.90 69.04 
+
+> SBERT
+
+R-GCN 87.38 82.98 86.34 84.48 84.16 86.92 80.84 86.02 84.66 79.06 
+
+GIN 86.08 81.54 84.28 83.06 82.86 84.02 83.60 84.24 80.40 71.18 
+
+GraphSAGE 87.08 82.76 85.74 84.64 84.14 83.46 81.38 80.72 73.48 58.60 
+
+TAGCN 88.08 80.40 86.42 84.82 82.30 87.60 86.34 86.72 85.26 80.28 
+
+GCN 87.26 83.66 86.20 84.18 84.26 86.86 85.66 86.36 84.04 77.58 
+
+> TAPE
+
+R-GCN 89.54 89.58 89.22 88.86 89.96 89.38 - 87.42 88.56 80.52 
+
+GIN 88.64 88.80 88.58 88.02 88.88 87.48 - 82.26 86.82 69.12 
+
+GraphSAGE 90.22 90.70 90.10 89.86 90.48 90.16 - 81.06 89.58 66.28 
+
+TAGCN 89.08 88.74 88.58 88.30 88.40 89.06 - 83.84 88.62 79.98 
+
+GCN 89.44 89.80 88.96 88.96 89.72 89.32 - 86.44 88.56 75.74 
+
+the graph structure and textual attributes are converted into prompts understandable by the LLM, and the LLM makes predictions based on its reasoning capabilities. The results are presented in Table 2. Additionally, we observed several interesting findings: (1) Bad-Graph consistently demonstrates strong destructive power against two target LLMs across all datasets , indicating its effec-tiveness in undermining the LLMs’ ability to comprehend graph patterns. Specifically, on the Cora dataset under the same perturba-tion budget, BadGraph reduces DeepSeek’s prediction accuracy by 76.3%, whereas the best-performing baseline, WTGIA, results Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 2: LLM-as-Reasoner Scenarios. Attack performance across two LLM backbones on three TAG datasets.                                                                           
+
+> Dataset Models Clean STACK PGD RND FLIP SGAttack WTGIA Our-text Our-struct BadGraph
+> Cora DeepSeek-V3 71.85 68.14 72.96 65.92 64.07 67.03 63.70 25.55 67.03 17.03
+> Mistral-7B 43.70 42.96 53.33 42.59 47.03 37.40 21.48 21.11 38.51 16.29
+> Arxiv DeepSeek-V3 64.60 60.80 60.60 61.20 58.70 -60.10 44.30 55.55 22.90
+> Mistral-7B 9.30 7.70 8.90 9.20 9.00 -7.60 4.90 4.70 2.90
+> Products DeepSeek-V3 77.10 75.90 75.00 76.50 75.60 75.80 74.10 60.20 75.20 55.80
+> Mistral-7B 12.20 9.50 10.00 9.70 8.30 12.20 9.10 8.60 12.80 7.80
+
+Table 3: Accuracy and homophily changes of deepSeek-as-Reasoner on Arxiv under varying perturbation ratios.                    
+
+> #Nodes Perturb. Ratio Acc Avg. Homo. (edge) Avg. Homo. (node) 0064.6% 0.8184 0.4257 500 0.09% 23.4% 0.8183 0.4292 1000 0.17% 22.9% 0.8182 0.4317 1500 0.26% 22.6% 0.8181 0.4316
+
+in only an 11.3% drop. This significant degradation stems from 
+
+BadGraph ’s ability to uncover the underlying principles of how LLMs interpret graph structures—and to precisely disrupt them. (2) LLM-as-Reasoner models tend to be more vulnerable to text-based attacks while exhibiting greater resilience to struc-tural perturbations. For instance, a text-only attack using Bad-Graph reduces DeepSeek’s prediction accuracy by 64%, whereas a structure-only attack leads to just a 6.3% drop. This disparity arises because LLMs primarily rely on textual information to infer graph patterns—a stark contrast to the GNN-as-Reasoner setting, where models place greater emphasis on structural semantics. Overall, irrespective of the underlying backbone, jointly attacking both text and structure consistently achieves the most impactful results. 0.2 0.0 0.2 0.4 0.6 0.8 1.0         
+
+> Homophily
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> Density
+> orig
+> WTGIA
+> (a) WTGIA 0.2 0.0 0.2 0.4 0.6 0.8 1.0
+> Homophily
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> Density
+> orig
+> BadGraph (b) BadGraph
+
+Figure 2: Edge-level homophily shift on the Cora dataset. 
+
+## 6.3 Merits of BadGraph 
+
+6.3.1 Stealthy, Localized Attacks with Homophily Stability. Obser-vation 1. BadGraph maintains global homophily stability. 
+
+We evaluate the imperceptibility of BadGraph using edge-centric homophily metrics [ 6]. As shown in Fig. 2, WTGIA causes pro-nounced shifts in homophily distributions, making it easily de-tectable by homophily-based defenses. In contrast, BadGraph intro-duces only subtle and localized distributional changes, confirming its stealthy and unnoticeable nature. This stability stems from se-mantically aligned, anchor-guided perturbations that jointly adjust topology and text while preserving the global structural context. 
+
+Observation 2. BadGraph achieves high attack effectiveness without disrupting overall graph properties. As presented in Table 3, even when the perturbation budget increases (500 → 1500 edges), node- and edge-level homophily remain nearly unchanged, whereas target node accuracy drops sharply. This demonstrates that BadGraph performs tightly localized “edge rewriting,” where each deletion is paired with an addition, maintaining structural balance while creating semantic shortcuts. Although a small frac-tion of semantically important edges may be modified ( ≤ 0.26% ), these edits are context-aware and minimally invasive, preserving the global homophily distribution. 
+
+6.3.2 Affordable Inference Cost and High Destructiveness. Obser-vation 1. BadGraph achieves efficient and low-cost attack inference. The total computational cost includes (1) the influencer retrieval module and (2) LLM API queries. The retriever has a train-ing complexity of O( 2𝐾𝑁𝑑 2), where 𝐾 is the number of attention heads, 𝑁 the number of nodes, and 𝑑 the feature dimension. Unlike conventional LLM-based edge prediction approaches that require 
+
+O( 𝑁 ) evaluations per target node, our retrieval-then-reasoning selection reduces the cost to O( 1). Moreover, BadGraph executes entirely through API calls on CPU, with an average query cost of approximately $0.0009 per node—demonstrating its practicality and scalability for real-world black-box attack scenarios. Observation 2. BadGraph delivers strong representational disruption de-spite its lightweight cost. As illustrated in Fig. 3, the T-SNE visualization reveals that BadGraph induces significantly greater boundary distortion and class entanglement than WTGIA, implying a deeper perturbation of the latent representation space. This indi-cates that even under minimal resource consumption, BadGraph 
+
+can generate substantial embedding shifts—achieving a rare balance between efficiency and destructiveness .
+
+6.3.3 Robustness to Prompt Design and LLM Variants. Observa-tion 1. BadGraph remains robust to prompt variations, while cross-modal shortcut alignment serves as the key attack guar-antee. As shown in Table 4, we evaluate multiple prompt phras-ings for generating perturbations (e.g., rewording “Summarize why [node] is adjacent to. . . ” as “Explain the likely reason for its con-nection to. . . ”). BadGraph maintains stable attack performance, with accuracy fluctuations within 3.7%, indicating low sensitivity to surface-level linguistic changes. However, replacing the shared influencer node between textual and structural attacks leads to a sharp performance drop (up to 22.66%), demonstrating that the at-tack’s effectiveness stems from semantic alignment across modalities 
+
+rather than prompt wording itself. Observation 2. BadGraph WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Zihui Chen et al. 40 20 0 20 40       
+
+> Dim-1
+> 40
+> 20
+> 0
+> 20
+> 40
+> 60
+> Dim-2
+> (a) WTGIA 40 20 020 40
+> Dim-1
+> 40
+> 20
+> 0
+> 20
+> 40
+> 60
+> Dim-2 (b) BadGraph
+
+Figure 3: T-SNE visualization illustrating embedding shifts caused by the attack on the Cora dataset. Table 4: Robustness of BadGraph under prompt variations on Cora. “Rephrasing” rewrites the prompt, and “Anchor Mis.” uses inconsistent influencers across modalities. 
+
+Method R-GCN GCN GIN GraphSAGE TAGCN Clean 87.33 87.11 85.70 86.00 88.22 Anchor Mis. 71.63 63.93 71.04 62.59 77.11 Rephrasing 58.15 58.74 50.74 39.04 54.59 
+
+BadGraph 56.67 56.00 47.04 39.93 51.19 Table 5: Robustness of BadGraph under Different Attacker LLMs on the Cora Dataset. Attacker models: LLaMA-4-17B, Qwen-Plus, and DeepSeek-V3.                               
+
+> Method GIN GraphSAGE SGCN TAGCN Qwen DeepSeek Clean 85.70 86.00 86.07 88.22 68.88 71.85 Ours-LLaMA 48.81 39.85 58.52 52.44 15.92 17.03 Ours-Qwen 48.70 39.56 55.78 55.19 17.03 19.25 Ours-DeepSeek 47.04 39.93 55.63 51.19 16.29 16.29
+
+generalizes across different attacker LLMs. We further test Bad-Graph with diverse open-source LLMs (e.g., Qwen-Plus, LLaMA-4-17B), as reported in Table 5. Across all models, BadGraph con-sistently achieves strong attack effectiveness, while larger models (e.g., Qwen-Plus) produce slightly more precise and context-aware perturbations. These results confirm that BadGraph is requiring no model-specific tuning, and can flexibly leverage the reasoning capability of emerging LLMs—underscoring its scalability and plug-and-play design for future LLM-powered TAG attacks. 
+
+6.3.4 Potential for Interpretable Attack Patterns. To demonstrate the reasonableness and interpretability of the attacks generated by BadGraph , we present a case study using DeepSeek to illus-trate the reasoning process behind structural attacks. Instead of directly crafting adversarial examples, we reformulate the attack as a harmful prompt generation task, leveraging the reasoning capabil-ities of LLMs to identify structural patterns and generate effective perturbations. Given a target node (e.g., A Non-linear Information Maximisation Algorithm that Performs Blind Separation ), the LLM produces not only potential perturbations but also natural language justifications for each modification , revealing the semantic and structural rationale behind the attack. Step 1: Analysis of the Target Node and Its Neighboring Set 
+
+Summary of Adjacency and Correlation: 
+
+The neighboring nodes are adjacent to the target node due to shared themes in unsupervised learning, information maximiza-tion, and blind source separation. The most prominent factors guiding their strong correlation are: - Information Maximization: The target node and the first neigh-boring node explicitly focus on information-theoretic approaches for blind separation. - Unsupervised Learning: All neighboring nodes address unsu-pervised methods (competitive learning, feature extraction, or classification). - Blind Separation/Deconvolution: The first neighboring node di-rectly extends the target node’s core problem (blind separation). Step 2: Most Relevant Node in the Neighboring Set 
+
+[Node] "An information-maximisation approach to blind separa-tion and blind deconvolution" 
+
+Reason: This node is the most relevant because it: 1. Shares the identical problem domain (blind separa-tion/deconvolution). 2. Builds on the same theoretical foundation (information maxi-mization). 3. Likely cites the target node as prior work or a direct extension. Step 3: Exclusion of Least Relevant Node from Candidate List 
+
+[Node, Reason for irrelevance] 
+
+"Type Inheritance in Strongly Typed Genetic Programming" 
+
+Reason: This paper discusses type systems in genetic program-ming, a niche topic far removed from the target node’s focus on information maximization and blind separation. The other candidates at least tangentially relate to optimization (closer to machine learning), but this one is purely about programming language design for GAs. 
+
+## 7 Conclusion 
+
+In this paper, we propose BadGraph, a novel method that enables LLMs to generate universal perturbations targeting both node topol-ogy and textual semantics in TAGs, all in a black-box manner. We design a target influencer retrieval module that identifies candidate influencer nodes, providing attack evidence and facilitating the construction of cross-modal adversarial shortcuts. The resulting ad-versarial graph is backbone-agnostic and transfers effectively across diverse graph learning models. Guided by a homophily-preserving bound and a cross-modal shortcut theory, we explain why Bad-Graph achieves both high attack efficacy and stealthiness. Exten-sive experiments show that it substantially degrades GNN- and LLM-based TAG backbones while producing interpretable, hard-to-detect, and cost-efficient attacks. As the first LLM-driven TAG attacker, this work lays a simple yet effective foundation for future studies, including autonomous LLM agents for adaptive attacks. 
+
+## Acknowledgments 
+
+This work was supported in part by the Zhejiang Provincial Natural Science Foundation under Grant No. LQN26F020049, in part by the Zhejiang Province Key R&D Program Project under Grant No. 2025C01023, and in part by the National Natural Science Foundation of China under Grant Nos. 62372146, 62322203, and 62172052. Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+## References 
+
+[1] Zulfikar Alom, Tran Gia Bao Ngo, Murat Kantarcioglu, and Cuneyt Gurcan Akcora. 2025. GOttack: Universal Adversarial Attacks on Graph Neural Networks via Graph Orbits Learning. In The Thirteenth International Conference on Learning Representations .[2] Tu Ao, Yanhua Yu, Yuling Wang, Yang Deng, Zirui Guo, Liang Pang, Pinghui Wang, Tat-Seng Chua, Xiao Zhang, and Zhen Cai. 2025. Lightprof: A light-weight reasoning framework for large language model on knowledge graph. In 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 39. 23424–23432. [3] Aleksandar Bojchevski and Stephan Günnemann. 2019. Adversarial attacks on node embeddings via graph poisoning. In International conference on machine learning . PMLR, 695–704. [4] Patrick Chao, Alexander Robey, Edgar Dobriban, Hamed Hassani, George J Pappas, and Eric Wong. 2023. Jailbreaking black box large language models in twenty queries. arXiv preprint arXiv:2310.08419 (2023). [5] Runjin Chen, Tong Zhao, Ajay Jaiswal, Neil Shah, and Zhangyang Wang. 2024. Llaga: Large language and graph assistant. arXiv preprint arXiv:2402.08170 (2024). [6] Yongqiang Chen, Han Yang, Yonggang Zhang, Kaili Ma, Tongliang Liu, Bo Han, and James Cheng. 2022. Understanding and Improving Graph Injection Attack by Promoting Unnoticeability. arXiv:2202.08057 [cs.LG] https://arxiv.org/abs/22 02.08057 [7] Zhikai Chen, Haitao Mao, Hang Li, Wei Jin, Hongzhi Wen, Xiaochi Wei, Shuaiqiang Wang, Dawei Yin, Wenqi Fan, Hui Liu, et al . 2024. Exploring the potential of large language models (llms) in learning on graphs. ACM SIGKDD Explorations Newsletter 25, 2 (2024), 42–61. [8] Jiazhu Dai, Zhipeng Xiong, and Chenhong Cao. 2024. A semantic backdoor attack against graph convolutional networks. Neurocomputing 600 (2024), 128133. [9] Jian Du, Shanghang Zhang, Guanhang Wu, José MF Moura, and Soummya Kar. 2017. Topology adaptive graph convolutional networks. arXiv preprint arXiv:1710.10370 (2017). [10] Kai Guo, Zewen Liu, Zhikai Chen, Hongzhi Wen, Wei Jin, Jiliang Tang, and Yi Chang. 2024. Learning on Graphs with Large Language Models (LLMs): A Deep Dive into Model Robustness. arXiv preprint arXiv:2407.12068 (2024). [11] Zirui Guo, Lianghao Xia, Yanhua Yu, Tu Ao, and Chao Huang. 2025. LightRAG: Simple and Fast Retrieval-Augmented Generation. arXiv:2410.05779 [cs.IR] https: //arxiv.org/abs/2410.05779 [12] Will Hamilton, Zhitao Ying, and Jure Leskovec. 2017. Inductive representation learning on large graphs. Advances in neural information processing systems 30 (2017). [13] Xiaoxin He, Xavier Bresson, Thomas Laurent, Adam Perold, Yann LeCun, and Bryan Hooi. 2024. Harnessing Explanations: LLM-to-LM Interpreter for Enhanced Text-Attributed Graph Representation Learning. In ICLR .[14] Zhichao Hou, Ruiqi Feng, Tyler Derr, and Xiaorui Liu. 2024. Robust graph neural networks via unbiased aggregation. Advances in Neural Information Processing Systems 37 (2024), 110097–110130. [15] Weihua Hu, Matthias Fey, Marinka Zitnik, Yuxiao Dong, Hongyu Ren, Bowen Liu, Michele Catasta, and Jure Leskovec. 2020. Open graph benchmark: Datasets for machine learning on graphs. Advances in neural information processing systems 
+
+33 (2020), 22118–22133. [16] Albert Q Jiang, Alexandre Sablayrolles, Antoine Roux, Arthur Mensch, Blanche Savary, Chris Bamford, Devendra Singh Chaplot, Diego de las Casas, Emma Bou Hanna, Florian Bressand, et al . 2024. Mixtral of experts. arXiv preprint arXiv:2401.04088 (2024). [17] Thomas N Kipf and Max Welling. 2016. Semi-supervised classification with graph convolutional networks. arXiv preprint arXiv:1609.02907 (2016). [18] Runlin Lei, Yuwei Hu, Yuchen Ren, and Zhewei Wei. 2024. Intruding with Words: Towards Understanding Graph Injection Attacks at the Text Level. arXiv preprint arXiv:2405.16405 (2024). [19] Jiate Li, Meng Pang, Yun Dong, Jinyuan Jia, and Binghui Wang. 2024. Graph neural network explanations are fragile. In Proceedings of the 41st International Conference on Machine Learning . 28551–28567. [20] Jintang Li, Tao Xie, Liang Chen, Fenfang Xie, Xiangnan He, and Zibin Zheng. 2023. Adversarial Attack on Large Scale Graph. IEEE Transactions on Knowledge & Data Engineering 35, 01 (2023), 82–95. [21] Yuhan Li, Xinni Zhang, Linhao Luo, Heng Chang, Yuxiang Ren, Irwin King, and Jia Li. 2025. G-Refer: Graph Retrieval-Augmented Large Language Model for Explainable Recommendation. In Proceedings of the ACM on Web Conference 2025 .240–251. [22] Hao Liu, Jiarui Feng, Lecheng Kong, Ningyue Liang, Dacheng Tao, Yixin Chen, and Muhan Zhang. 2023. One for all: Towards training one graph model for all classification tasks. arXiv preprint arXiv:2310.00149 (2023). [23] Jiawei Liu, Cheng Yang, Zhiyuan Lu, Junze Chen, Yibo Li, Mengmei Zhang, Ting Bai, Yuan Fang, Lichao Sun, Philip S Yu, et al . 2025. Graph Foundation Models: Concepts, Opportunities and Challenges. IEEE Transactions on Pattern Analysis and Machine Intelligence (2025). [24] Xin Liu, Yuxiang Zhang, Meng Wu, Mingyu Yan, Kun He, Wei Yan, Shirui Pan, Xiaochun Ye, and Dongrui Fan. 2025. Revisiting edge perturbation for graph neural network in graph data augmentation and attack. IEEE Transactions on Knowledge and Data Engineering (2025). [25] Yu-An Liu, Ruqing Zhang, Jiafeng Guo, Maarten de Rijke, Yixing Fan, and Xueqi Cheng. 2025. Attack-in-the-chain: bootstrapping large language models for attacks against black-box neural ranking models. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 39. 12229–12237. [26] Haoyu Lu, Wen Liu, Bo Zhang, Bingxuan Wang, Kai Dong, Bo Liu, Jingxiang Sun, Tongzheng Ren, Zhuoshu Li, Hao Yang, et al . 2024. Deepseek-vl: towards real-world vision-language understanding. arXiv preprint arXiv:2403.05525 (2024). [27] Anjun Ma, Xiaoying Wang, Jingxian Li, Cankun Wang, Tong Xiao, Yuntao Liu, Hao Cheng, Juexin Wang, Yang Li, Yuzhou Chang, et al . 2023. Single-cell bi-ological network inference using a heterogeneous graph transformer. Nature Communications 14, 1 (2023), 964. [28] Jiaqi Ma, Shuangrui Ding, and Qiaozhu Mei. 2020. Towards more practical adversarial attacks on graph neural networks. Advances in neural information processing systems 33 (2020), 4756–4766. [29] Aleksander Madry, Aleksandar Makelov, Ludwig Schmidt, Dimitris Tsipras, and Adrian Vladu. 2018. Towards Deep Learning Models Resistant to Adversarial Attacks. In International Conference on Learning Representations .[30] Andrew Kachites McCallum, Kamal Nigam, Jason Rennie, and Kristie Seymore. 2000. Automating the construction of internet portals with machine learning. 
+
+Information Retrieval 3 (2000), 127–163. [31] Liang-bo Ning, Shijie Wang, Wenqi Fan, Qing Li, Xin Xu, Hao Chen, and Feiran Huang. 2024. Cheatagent: Attacking llm-empowered recommender systems via llm agent. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining . 2284–2295. [32] Xiangyu Qi, Ashwinee Panda, Kaifeng Lyu, Xiao Ma, Subhrajit Roy, Ahmad Beirami, Prateek Mittal, and Peter Henderson. [n. d.]. Safety Alignment Should be Made More Than Just a Few Tokens Deep. In The Thirteenth International Conference on Learning Representations .[33] Diego Sanmartin. 2024. KG-RAG: Bridging the Gap Between Knowledge and Creativity. arXiv preprint arXiv:2405.12035 (2024). [34] Yu Shang, Yudong Zhang, Jiansheng Chen, Depeng Jin, and Yong Li. 2023. Trans-ferable Structure-based Adversarial Attack of Heterogeneous Graph Neural Net-work. In Proceedings of the 32nd ACM International Conference on Information and Knowledge Management . 2188–2197. [35] Yanshen Sun, Jianfeng He, Limeng Cui, Shuo Lei, and Chang-Tien Lu. 2024. Exploring the deceptive power of llm-generated fake news: A study of real-world detection challenges. arXiv preprint arXiv:2403.18249 (2024). [36] Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, et al . 2023. Llama: Open and efficient foundation language models. arXiv preprint arXiv:2302.13971 (2023). [37] Binghui Wang and Neil Zhenqiang Gong. 2019. Attacking graph-based classi-fication via manipulating the graph structure. In Proceedings of the 2019 ACM SIGSAC conference on computer and communications security . 2023–2040. [38] Binghui Wang, Youqi Li, and Pan Zhou. 2022. Bandits for structure perturbation-based black-box attacks to graph neural networks with theoretical guarantees. In 
+
+Proceedings of the IEEE/CVF conference on computer vision and pattern recognition .13379–13387. [39] Binghui Wang, Minhua Lin, Tianxiang Zhou, Pan Zhou, Ang Li, Meng Pang, Hai Li, and Yiran Chen. 2024. Efficient, direct, and restricted black-box graph evasion attacks to any-layer graph neural networks via influence function. In 
+
+Proceedings of the 17th ACM International Conference on Web Search and Data Mining . 693–701. [40] Binghui Wang, Meng Pang, and Yun Dong. 2023. Turning strengths into weak-nesses: A certified robustness inspired attack framework against graph neural networks. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition . 16394–16403. [41] Haosen Wang, Can Xu, Chenglong Shi, Pengfei Zheng, Shiming Zhang, Min-hao Cheng, and Hongyang Chen. 2024. Unsupervised Heterogeneous Graph Rewriting Attack via Node Clustering. In Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining . 3057–3068. [42] Yuling Wang, Changxin Tian, Binbin Hu, Yanhua Yu, Ziqi Liu, Zhiqiang Zhang, Jun Zhou, Liang Pang, and Xiao Wang. 2024. Can small language models be good reasoners for sequential recommendation?. In Proceedings of the ACM Web Conference 2024 . 3876–3887. [43] Felix Wu, Amauri Souza, Tianyi Zhang, Christopher Fifty, Tao Yu, and Kilian Weinberger. 2019. Simplifying graph convolutional networks. In International conference on machine learning . Pmlr, 6861–6871. [44] Jiarong Xu, Yizhou Sun, Xin Jiang, Yanhao Wang, Yang Yang, Chunping Wang, and Jiangang Lu. 2012. Query-free black-box adversarial attacks on graphs. arXiv preprint arXiv (2012). [45] Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. 2018. How powerful are graph neural networks? arXiv preprint arXiv:1810.00826 (2018). [46] Xilie Xu, Keyi Kong, Ning Liu, Lizhen Cui, Di Wang, Jingfeng Zhang, and Mohan Kankanhalli. 2023. An llm can fool itself: A prompt-based adversarial attack. 
+
+arXiv preprint arXiv:2310.13345 (2023). WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Zihui Chen et al.                          
+
+> [47] Hao Yan, Chaozhuo Li, Ruosong Long, Chao Yan, Jianan Zhao, Wenwen Zhuang, Jun Yin, Peiyan Zhang, Weihao Han, Hao Sun, et al .2023. A comprehensive study on text-attributed graphs: Benchmarking and rethinking. Advances in Neural Information Processing Systems 36 (2023), 17238–17264. [48] He Zhang, Bang Wu, Xingliang Yuan, Shirui Pan, Hanghang Tong, and Jian Pei. 2022. Trustworthy Graph Neural Networks: Aspects, Methods and Trends. (May 2022). [49] Kai Zhang, Qi Liu, Hao Qian, Biao Xiang, Qing Cui, Jun Zhou, and Enhong Chen. 2021. Eatn: An efficient adaptive transfer network for aspect-level sentiment analysis. IEEE Transactions on Knowledge and Data Engineering 35, 1 (2021), 377–389. [50] Kai Zhang, Hao Qian, Qing Cui, Qi Liu, Longfei Li, Jun Zhou, Jianhui Ma, and Enhong Chen. 2021. Multi-interactive attention network for fine-grained feature learning in ctr prediction. In Proceedings of the 14th ACM international conference on web search and data mining . 984–992. [51] Zaixi Zhang, Jinyuan Jia, Binghui Wang, and Neil Zhenqiang Gong. 2021. Back-door attacks to graph neural networks. In Proceedings of the 26th ACM symposium on access control models and technologies . 15–26. [52] Zhongjian Zhang, Xiao Wang, Huichi Zhou, Yue Yu, Mengmei Zhang, Cheng Yang, and Chuan Shi. 2024. Can Large Language Models Improve the Adversarial Robustness of Graph Neural Networks? arXiv preprint arXiv:2408.08685 (2024). [53] Qinkai Zheng, Xu Zou, Yuxiao Dong, Yukuo Cen, Da Yin, Jiarong Xu, Yang Yang, and Jie Tang. 2021. Graph robustness benchmark: Benchmarking the adversarial robustness of graph machine learning. arXiv preprint arXiv:2111.04314 (2021). [54] Dingyuan Zhu, Ziwei Zhang, Peng Cui, and Wenwu Zhu. 2019. Robust graph convolutional networks against adversarial attacks. In Proceedings of the 25th ACM SIGKDD international conference on knowledge discovery & data mining .1399–1407. [55] Yun Zhu, Haizhou Shi, Xiaotang Wang, Yongchao Liu, Yaoke Wang, Boci Peng, Chuntao Hong, and Siliang Tang. 2025. GraphCLIP: Enhancing Transferability in Graph Foundation Models for Text-Attributed Graphs. arXiv:2410.10329 [cs.LG] https://arxiv.org/abs/2410.10329 [56] Xu Zou, Qinkai Zheng, Yuxiao Dong, Xinyu Guan, Evgeny Kharlamov, Jialiang Lu, and Jie Tang. 2021. Tdgia: Effective injection attacks on graph neural networks. In Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery & Data Mining . 2461–2471. [57] Daniel Zügner, Amir Akbarnejad, and Stephan Günnemann. 2018. Adversarial attacks on neural networks for graph data. In Proceedings of the 24th ACM SIGKDD international conference on knowledge discovery & data mining . 2847–2856.
+
+## A Details of Experimental Settings A.1 Datasets 
+
+We conduct extensive experiments on three TAG datasets: Cora [ 30 ], OGBN-Arxiv, and OGBN-Products [ 15 ]. The dataset statistics are provided in Table 6, with the largest dataset containing 1,166,243 edges. We follow the data splitting scheme from [ 53 ], using the full splits for each dataset to train the target model. For the attack settings, we use the medium split as target nodes in Cora. In OGBN-Arxiv, we randomly select 1000 nodes from the medium split as target nodes, and in OGBN-Products, we randomly select 1000 nodes from the hard split. To ensure consistency and simplicity, we use minimal textual descriptions for each node in the TAG. Specifically, for the Cora and OGBN-Arxiv datasets, we extract only the paper titles as input text. For the OGBN-Products dataset, we use the product name as the textual input; if the name is unavailable, we substitute it with the product description. Each experiment is conducted five times, and the average performance and standard deviation are reported. The sources of the datasets are detailed in the footnote 1.
+
+## A.2 Target Backbones 
+
+Mistral-7B [ 16 ] and DeepSeek [ 26 ] are employed in a zero-shot manner to perform node classification based on textual descriptions and their 2-hop neighborhoods. 
+
+> 1https://github.com/XiaoxinHe/TAPE
+
+Table 6: Overview of dataset statistics. 
+
+Dataset #Nodes #Edges #Classes Cora 2,708 5,429 7Arxiv 169,343 1,166,243 40 Products (subset) 54,025 74,420 47 
+
+• GCN [17 ]: GCN is a widely used class of graph neural networks grounded in spectral graph theory. 
+
+• GIN [ 45 ]: GIN maximizes the expressive power of GNNs by using injective aggregation functions to distinguish different graph structures. 
+
+• GraphSAGE [ 12 ]: GraphSAGE samples a fixed number of neigh-bors and aggregates their features through learnable functions, enabling inductive learning on large graphs. 
+
+• TAGCN [ 9 ]: TAGCN leverages fixed-size learnable filters based on powers of the graph Laplacian to capture multi-hop neighbor-hood information efficiently in a single convolutional layer. 
+
+• SGCN [43 ]: SGCN simplifies GCN by merging multiple layers of linear transformations and nonlinear activations into a single neighborhood aggregation step. 
+
+• R-GCN [54 ]: R-GCN represents nodes as Gaussian distributions to resist adversarial noise and uses attention to downweight high-variance nodes. 
+
+• RUNG [ 14 ]: RUNG employs edge reweighting to prune suspi-cious edges, thereby enhancing the model’s robustness against adversarial attacks. 
+
+• DeepSeek [26 ]: DeepSeek adopts a 671B-parameter MoE archi-tecture with MLA and multi-token prediction, demonstrating strong performance on multilingual tasks. 
+
+• Mistral [ 16 ]: Mistral is an open-source LLM that adopts Grouped-Query Attention and Sliding Window Attention architectures, offering excellent inference efficiency. 
+
+## A.3 Baselines 
+
+• RND [ 57 ]: RND is a random attack strategy that only modifies the structure of the graph. 
+
+• FLIP [ 3]: FLIP is a deterministic approach that first ranks all nodes in ascending order according to their degrees, then flips their edges from the lower degree nodes to higher degree nodes. 
+
+• STACK [44 ]: STACK leverages a universal graph filter to unify different graph learning models, using this approximation to perform optimization-based attacks. 
+
+• PGD [ 29 ]: PGD works by adjusting inputs in multiple iterative steps towards the direction that increases model loss, thereby generating adversarial samples. 
+
+• NETTACK [57 ]: NETTACK proposes an efficient algorithm to address the discrete nature of graph data while perturbing both the graph structure and node features. 
+
+• SGAttack [ 20 ]: SGAttack is an efficient, simplified gradient-based attack that performs multi-stage perturbations on target nodes using only a small subgraph. 
+
+• WTGIA [18 ]: WTGIA is a text-level injection attack, utilizing LLMs to convert the embedding information of the fake nodes into adversarial text. Can LLMs Fool Graph Learning? Exploring Universal Adversarial Attacks on Text-Attributed Graphs WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates 
+
+Table 7: Attack Results Under RUNG Defense on the Cora Dataset. 
+
+Clean STACK PGD RND FLIP NETTACK SGAttack WTGIA BadGraph TF-IDF 86.81 79.56 82.00 80.89 78.00 86.07 87.56 87.26 62.44 
+
+SBERT 85.45 78.22 81.11 78.07 78.15 83.56 86.00 85.11 35.11 Table 8: Effectiveness of BadGraph under adversarial train-ing on the Cora. ΔAcc = Accuracy adv-trained − Accuracy vanilla .
+
+Method R-GCN GCN SGCN TAGCN Clean 86.30 85.19 87.78 87.04 BadGraph 72.59 75.19 75.19 75.56 
+
+ΔAcc +1.70 +3.86 +3.93 +1.63 
+
+## A.4 Implementation Details 
+
+We employ GNNs as the graph encoder in all experiments. Specifi-cally, GAT is used for Cora and Products, while GIN is applied to Arxiv, as defined in Eq. (1). For each target node, we retrieve 𝑘 = 5
+
+candidate influencer nodes that are semantically distant in the em-bedding space. The open-source DeepSeek-V3 2 model serves as the LLM-based attacker, with its API 3 generating both topological and textual perturbations. Throughout this paper, we use the shorthand notations: Qwen for Qwen-Plus, LLaMA for LLaMA-4-17B, and DeepSeek for DeepSeek-V3. We implement BadGraph in PyTorch 4.For target backbones we generally use the default hyperparameters from GRB [ 53 ]; when those defaults produced unreasonably low clean accuracies, we made justified adjustments to ensure fair and representative baselines. All attack methods— BadGraph and com-petitors—are evaluated under the same strict black-box setting. We implement WTGIA using the authors’ official code and adopt its best-performing variant (the TDGIA-perturbed graph after train-ing) [ 56 ]. Adversarial texts for injected fake nodes are generated by converting embeddings with LLaMA3-8B [ 36 ]. The number of injected nodes is 20, 166, and 166 for Cora, OGBN-Products, and OGBN-Arxiv, respectively. For consistency across attack settings, all other baselines use a unified configuration: Bag-of-Words (BoW) for node features, GCN as the surrogate model, and up to two edge perturbations per node. The perturbed graphs produced by these procedures are then evaluated on the same set of target models. Public implementations of the compared methods are available at the referenced repositories. 
+
+Target backbones: 
+
+• R-GCN, GCN, GIN, GraphSAGE, SGCN, TAGCN 5.
+
+• RUNG 6.
+
+• LLM4RGNN 7.
+
+Baselines: 
+
+• WTGIA 8.
+
+> 2https://github.com/deepseek-ai/DeepSeek-V3
+> 3https://api.deepseek.com
+> 4https://pytorch.org/
+> 5https://github.com/thudm/grb
+> 6https://github.com/chris-hzc/RUNG
+> 7https://github.com/zhongjian-zhang/LLM4RGNN
+> 8https://github.com/Leirunlin/Text-level-Graph-Attack
+
+Table 9: Attack performance with different encoders on the Cora dataset across various GNN encoder backbones.                          
+
+> Encoder GIN GraphSAGE SGCN TAGCN DeepSeek Clean 85.70 86.00 86.07 88.22 71.85 GCN 55.44 54.07 58.63 55.59 21.11 R-GCN 46.96 38.52 57.04 54.37 19.59 GAT 47.04 39.93 55.63 51.19 17.03
+
+• STACK, PGD, RND, FLIP 9.
+
+• SGAttack, NETTACK 10 .
+
+## A.5 Computing Environment and Resources 
+
+The experiments are conducted in a computing environment with the following specifications: 
+
+• OS: Ubuntu 22.04.3 LTS (Linux kernel 5.15.0-124-generic) 
+
+• CPU: Intel(R) Xeon(R) Platinum 8360Y CPU @ 2.40GHz 
+
+• GPU: NVIDIA GeForce RTX 4090, 24GB 
+
+## B More Experimental Results B.1 Evaluating Effectiveness Under Defense 
+
+Observation. BadGraph effectively breaks advanced defenses by exploiting cross-modal alignment vulnerabilities. We eval-uate BadGraph against two strong defenses—RUNG [ 14 ] and ad-versarial training. As shown in Table 7, BadGraph reduces RUNG’s accuracy by over 50% under the SBERT encoding, revealing its strong adversarial potency even against robust models. This degra-dation stems from semantically aligned cross-modal perturbations that mislead RUNG’s edge reweighting mechanism, causing the model to overemphasize adversarial edges and aggregate corrupted information. Moreover, as shown in Table 8, BadGraph remains effective under adversarial training, demonstrating strong transfer-ability and resilience to conventional defense strategies. Together, these results highlight that cross-modal, LLM-guided perturbations can bypass even graph defenses—empirically validating our theo-retical claims on cross-modal synergy. 
+
+## B.2 Influence of Graph Encoder Selection 
+
+Observation 1. BadGraph exhibits strong and consistent at-tack performance across diverse graph encoders. We assess the impact of encoder choice by substituting the influencer retriever with different GNNs—GCN, R-GCN, and GAT. As shown in Ta-ble 9, BadGraph consistently causes over 27% accuracy degradation across all variants, demonstrating its robustness and flexibility. This adaptability shows that BadGraph can seamlessly integrate with any expressive encoder, making it a general plug-and-play attack framework for diverse graph learning backbones. Observation 2.  
+
+> 9https://github.com/thudm/grb
+> 10 https://github.com/DSE-MSU/DeepRobust WWW ’26, April 13–17, 2026, Dubai, United Arab Emirates Zihui Chen et al.
+
+Table 10: GNN-as-Reasoner Scenarios. Comprehensive evaluation results (Average, 3-MAX, and Weighted) across all target backbones. Lower values indicate stronger attack effectiveness. "Clean" denotes unperturbed graphs, while Our-text and 
+
+Our-struct represent text-only and structure-only variants, respectively. Best results are highlighted in bold. 
+
+Dataset Emb. Metrics Clean STACK PGD RND FLIP SGAttack WTGIA Our-text Our-struct BadGraph Cora TF-IDF  Average 86.19 73.14 78.51 74.07 74.19 82.38 84.95 82.60 78.90 67.52 
+
+3-MAX 86.91 73.93 79.28 74.91 75.01 85.46 86.49 84.79 80.47 72.17 
+
+Weighted 87.03 74.61 79.72 74.85 75.36 86.14 86.84 84.90 81.85 72.51 
+
+> SBERT
+
+Average 86.74 76.57 80.32 76.93 76.58 83.53 85.28 77.01 77.02 51.07 
+
+3-MAX 87.56 77.75 80.67 78.07 77.26 87.14 86.72 80.35 80.15 56.10 
+
+Weighted 87.79 77.71 80.70 78.49 77.32 87.55 87.17 80.06 81.42 55.68 
+
+> TAPE
+
+Average 88.51 81.99 83.47 82.93 84.69 84.25 - 84.60 81.09 66.20 
+
+3-MAX 89.28 82.84 84.25 83.33 85.68 87.60 - 85.73 83.23 71.06 
+
+Weighted 89.44 82.91 84.21 83.36 85.99 87.30 - 85.91 83.39 71.46 
+
+> Arxiv
+> TF-IDF
+
+Average 65.43 62.71 60.52 59.75 58.18 - 60.38 61.56 58.07 51.27 
+
+3-MAX 67.57 65.67 62.69 61.85 60.34 - 64.24 66.13 62.13 58.33 
+
+Weighted 67.87 65.30 63.32 62.36 61.21 - 64.09 66.30 63.53 57.79 
+
+> SBERT
+
+Average 68.56 67.68 64.75 64.81 63.43 - 65.34 66.03 62.14 54.60 
+
+3-MAX 69.78 68.27 66.27 66.12 64.59 - 67.72 67.20 65.68 59.51 
+
+Weighted 69.91 68.19 66.46 66.60 65.01 - 68.60 67.25 66.55 59.25 
+
+> TAPE
+
+Average 74.84 77.76 73.30 74.11 73.88 - - 63.58 69.72 51.00 
+
+3-MAX 79.66 79.92 79.11 79.03 79.31 - - 69.31 76.13 63.57 
+
+Weighted 79.59 80.51 78.60 78.74 78.88 - - 68.55 77.81 63.47 
+
+> Products
+> TF-IDF
+
+Average 85.66 79.60 82.95 81.83 80.79 83.44 78.67 79.21 78.63 64.72 
+
+3-MAX 86.27 80.87 83.60 82.35 81.91 85.33 83.13 82.67 82.05 71.97 
+
+Weighted 86.32 81.38 83.88 82.31 82.33 85.06 83.00 82.52 81.91 72.13 
+
+> SBERT
+
+Average 87.22 82.30 85.86 84.28 83.55 85.35 81.42 85.08 81.35 73.97 
+
+3-MAX 87.64 83.13 86.32 84.65 84.19 87.13 85.20 86.49 84.65 78.97 
+
+Weighted 87.83 83.31 86.32 84.70 84.13 87.09 85.38 86.43 84.51 79.09 
+
+> TAPE
+
+Average 89.31 89.52 88.85 88.59 89.45 88.81 - 84.75 87.86 75.27 
+
+3-MAX 89.73 90.03 89.43 89.23 90.05 89.62 - 87.12 88.92 80.16 
+
+Weighted 89.94 90.33 89.72 89.48 90.20 89.80 - 86.99 89.14 79.62 R-GCN GCN GIN SGCN TAGCN GraphSAGE 
+
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> ASR  SBERT Hard
+> SBERT Medium
+
+(a) SBERT R-GCN GCN GIN SGCN TAGCN GraphSAGE  
+
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> ASR  TF-IDF Hard
+> TF-IDF Medium
+
+(b) TF-IDF 
+
+Figure 4: Attack Success Rate on OGBN-Products for different target GNNs, evaluated on two settings: Medium (medium-degree nodes) and Hard (high-degree nodes). Encoder expressiveness amplifies cross-model transferabil-ity. More expressive encoders (e.g., GAT) produce finer-grained relational embeddings, enabling more accurate influencer retrieval and directionally aligned perturbations. Consequently, BadGraph 
+
+achieves stronger and more transferable attacks across both GNN-and LLM-based reasoners. These findings confirm that encoder expressiveness enhances both the performance and generalization of LLM-driven adversarial attacks, reinforcing BadGraph ’s univer-sality across architectures and modalities. 
+
+## B.3 Low-Degree Nodes Are More Vulnerable to Adversarial Perturbations 
+
+Observation. Nodes with fewer neighbors exhibit signifi-cantly higher attack susceptibility. We analyze the relationship between node degree and adversarial vulnerability on the Products dataset under the GNN-as-Reasoner setting, comparing medium 
+
+(low-degree) and hard (high-degree) splits. As shown in Fig. 4, the Attack Success Rate (ASR) is markedly higher for the medium split, indicating that low-degree nodes are more easily compromised by adversarial perturbations. These findings highlight the necessity for defense mechanisms that explicitly account for the heightened vulnerability of low-degree nodes in TAG security scenarios. 
+
+## B.4 Additional Experimental Results. 
+
+Due to space limitations in the main paper, we omitted part of Table 1. Specifically, the detailed results for the three evaluation metrics—Average, 3-MAX, and Weighted—were excluded. Table 10 in this appendix provides the complete results across all datasets and evaluation metrics. Overall, BadGraph consistently achieves state-of-the-art performance, demonstrating strong effectiveness and generalizability under diverse settings.
