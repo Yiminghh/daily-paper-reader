@@ -1,0 +1,374 @@
+Title: Detecting Complex-Energy Braiding Topology in a Dissipative Atomic Simulator with Transformer-Based Geometric Tomography
+
+URL Source: https://arxiv.org/pdf/2603.25775v1
+
+Published Time: Mon, 30 Mar 2026 00:05:18 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Detecting Complex-Energy Braiding Topology in a Dissipative Atomic Simulator with Transformer-Based Geometric Tomography 
+
+Yang Yue, 1, 2, ∗ Nan Li, 1, 2, ∗ Xin Zhang, 3, ∗ Chenhao Wang, 1, 2 Zeming Fang, 1, 2 Zhonghua Ji, 1, 2 Liantuan Xiao, 1, 2 Suotang Jia, 1, 2 Yanting Zhao, 1, 2, † Liang Bai, 3, ‡ Ying Hu 1, 2, §
+
+> 1
+
+State Key Laboratory of Quantum Optics Technologies and Devices, Institute of Laser Spectroscopy, Shanxi University, Taiyuan 030006, China 
+
+> 2
+
+Collaborative Innovation Center of Extreme Optics, Shanxi University, Taiyuan 030006, China 
+
+> 3
+
+Institute of Intelligent Information Processing, Shanxi University, Taiyuan 030006, China 
+
+Machine learning (ML) is shaping our exploration of topological matter, whose existence is in-herently tied to the geometry of quantum states or energy spectra. In non-Hermitian systems, distinctive spectral geometry can lead to topological braiding of complex-energy bands, yet directly probing this topology-geometry interplay remains challenging. Here, we introduce a Transformer-based ML framework to capture this interplay and experimentally demonstrate it in a dissipative cold-atom simulator. Using a Bose-Einstein condensate, we engineer tunable dissipative two-level systems whose complex eigenenergies form braids. Owing to the density-dependent dissipation, the instantaneous energy braids exhibit topologically distinct structures at short and long times. The Transformer not only accurately predicts topological invariants for diverse energy braids but also, through its self-attention mechanism, autonomously highlights band crossings as the governing un-derlying geometric feature. Our work paves the way for ML-guided exploration of non-Hermitian topological phases in cold atoms and beyond. 
+
+Introduction 
+
+Machine learning (ML), an effective data-driven ap-proach in artificial intelligence, is transforming the study of topological matter by enabling automated analysis of complex quantum systems [1–6]. The global topological character of topological phases originate from the geo-metric properties of their wave function and energy spec-trum, giving rise to intriguing physics: nonlocal topo-logical invariants classify these phases into distinct cate-gories, and ensure robust properties such as quantized transport and non-Abelian quasiparticles, with poten-tial applications from semiconductor spintronics to quan-tum computation [7–10]. Recent advances demonstrate that supervised neural networks, such as convolutional neural networks (CNNs), can learn topological invari-ants from local data [11–15]. Unsupervised learning ap-proaches such as diffusion maps can classify diverse topo-logical phases without data label [16–23], ranging from symmetry-protected band insulators to disordered pho-tonic materials, even when the classification is not a pri-ori known. Moreover, ML facilitates direct detection of topological phase transitions [13–15, 21–23] from experi-mental data, including single-shot images that defy con-ventional analysis. Despite these successes, however, it remains challeng-ing to simultaneously identify topological invariants of phases and reveal their underlying geometric origins for conventional ML approaches. For instance, CNNs’ black-box nature often precludes direct geometric interpreta-tion of predicted topology, particularly without manual     
+
+> ∗These three authors contributed equally.
+> †zhaoyt@sxu.edu.cn
+> ‡bailiang@sxu.edu.cn
+> §huying@sxu.edu.cn
+
+feature engineering. Similarly, unsupervised methods typically cluster phases based on data similarities and connections, rather than learning physically meaningful geometric features in individual samples, thereby limiting deeper insights from their predictions. Yet achieving this dual capability is essential for un-derstanding and predicting observable topological phe-nomena. On the one hand, the very existence of topo-logical phases is intrinsically tied to the geometry of eigenstates and energy spectrum. A paradigmatic ex-ample is in quantum Hall systems, where Berry curva-ture, a geometric property characterizing the phase vari-ation of eigenstates across the Brillouin zone (BZ), in-tegrates to yield the topological invariant (Chern num-ber) that governs quantized Hall response [24]. Recent development of quantum geometry [25, 26] further illu-minates how the metric of eigenstates affects topologi-cal transport. Meanwhile, burgeoning research in open (non-Hermitian) systems has uncovered new topological phenomena, such as topological complex-energy braid-ing, in which the geometry of energy spectrum provides the backbone [27–35]. On the other hand, in cold-atom experiments, directly probing both topological invariant and its geometric origins remains a challenge: the former is inaccessible to local measurements; while the latter tra-ditionally relies on indirect, sophisticated methods such as momentum-resolved interferometry or quantum state tomography [36, 37] - especially demanding in dissipative settings [38–40]. To address the aforementioned challenges, in this work we present an approach based on the state-of-the-art ML technique, the Transformer [41]. Unlike CNNs or dif-fusion map methods, the Transformer leverages its self-attention mechanism to compute pairwise correlations across samples, which allows to simultaneously identify topological invariant and visualize key spots for phase 
+
+> arXiv:2603.25775v1 [cond-mat.quant-gas] 26 Mar 2026
+
+2Unlink Unknot Hopf link 
+
+> Im(E)
+
+02k
+
+cb
+
+> Re(E)
+
+a
+
+2-2 -2 2-2 -2 22Im(E) Re(E) 02k
+
+d
+
+02k-2 2Re(E) Im(E) -1 1 02k-2 2Re(E) Im(E) -2 2
+
+Trefoil 
+
+FIG. 1. Illustration of topological complex-energy braiding in energy-momentum space. The gray and blue curves denote two bands, respectively, and the star labels the exceptional point. Gluing the k = 0 and k = 2 π planes leads to different knotted structures, such as a the unlink, b the unknot, c the Hopf link, and d the Trefoil knot, distinguished by braid degree 
+
+ν = 0 , 1, 2, 3, respectively. In all plots, theoretical calculations are based on Eq. (1) with J1 = 0 .7, J2 = 1 .8, J3 = 1, and Ω = 0 .5. For parameters ( γ,m), we use a (4 .5, 1), b (2 , 1), c (0 .5, 1), and d (2 , 3). Transformer Network 
+
+> Weight Matrix
+
+0 175 0.3 loss 0.6 1.0 accuracy 0.9 prediction training validation epoch toekn rows token columns 
+
+Self-Attention 
+
+Training Results token embedding 
+
+b
+
+Topological Number Geometric Tomography Energy Band token a
+
+E(k ) Re(E) Im(E) k
+
+kRe(E) Im(E) 0E(k ) 1E(k ) nCLS prediction Transformer CNN 
+
+FIG. 2. Joint learning of complex-energy braiding topology and geometry via the self-attention of the Trans-former. a Schematics of the working principle. The complex-energy bands in the momentum space ( k ∈ [0 , 2π]) are encoded as sequential input data, where the two eigenenergies E±(k) at each k-point correspond to a feature token. The Transformer processes this sequence and outputs the topological invariant ν as a functional mapping of the input energy bands. Leveraging the unique self-attention mechanism (blue shaded region) of the Transformer, the model generates attention weight matrices that, when projected into the input data, reveal its focus on distinct regions of energy bands in classifying the bands’ braiding topology. The primary focus of attention locates the decisive moment-energy points underlying braiding topology. b Training results. Blue curves depict the prediction accuracy of Transformer on the test dataset. The green (yellow) curves show training (validation) loss. As a comparison, the prediction accuracy of CNN trained under identical conditions is shown by the brown curve. 
+
+recognition. We show how a suitably trained Transformer explicitly captures the geometry-topology connection in complex-energy braids of non-Hermitian bands, ranging from links to quite intricate knots. In particular, we experimentally construct topologi-cal complex-energy braids in an atomic simulator and demonstrate their characterization using the Trans-former. By engineering a tunable two-level dissipative system with Bose-Einstein condensates (BEC) of 87 Rb atoms, we measure their eigenvalues that form distinct braids. Different from the single-particle dissipation im-plemented in previous atomic experiments [38, 39] and trapped-ion simulations [33], the dissipation engineered in a BEC exhibits density dependence due to the collec-tive atomic response to resonant light [40, 42–45]. This results in dynamically evolving energy braids whose in-stantaneous structures in the short- and long-time limits can be topologically distinct. We find the Transformer, trained solely on simulated symmetric energy bands from a single-particle Hamiltonian, generalizes effectively to 30101-2 02-1 01-1 0130 01a1  
+
+> 02-3
+
+b1 c1 d1    
+
+> 0202-2 02-1 01-1 013-3 001
+> 02
+
+a3 
+
+b3 c3    
+
+> 02
+> -3 -1 110 -10 005-5 05001
+> -2 02
+
+a5 
+
+b5 c5 d5    
+
+> 020-4 0401-1 014-4 001-1 5
+> 02
+
+a4 
+
+b4 c4 d4     
+
+> 02
+> 5-5 05-1 015-5 0-1 010100202
+
+a2 
+
+b2 c2 d2 d3 
+
+FIG. 3. Attention-based geometric tomography of complex-energy bands. Attention weights generated from the Transformer are projected onto the test data. a1 -a5 Distribution of attention weights shown in the complex energy plane, for energy braids with distinct braiding degree ν. b1 -b5 Corresponding distribution of attention weights in the Brillouin zone (BZ). c1 -c5 Theoretically calculated distribution of |∂k ϕk | in momentum space (see text). d1 -d5 Real and imaginary parts of the complex energy bands. Dashed line denotes band crossing with extreme |∂k ϕk | in the real or imaginary component of energy bands. Test data are generated from Eq. (6) with Ω = 1; other parameters ( α, J 1, J 2, J 3, J 4, γ, m ) are a1 -d1 (0 , 0.1, 2, 1, 0, 1, 1); 
+
+a2 -d2 (0 , 2, 2, 1, 0.2, 0.5, 2); a3 -d3 (0 , 0.1, 2, 1, 0, 0.5, 2); a4 -d4 (0 , 1.5, 2, 1, 0, 1, 6); a5 -d5 (1 , 1.5, 2, 1, 0, 1, 5). 
+
+experiment. Not only does it accurately predict the topo-logical invariants for various energy braids, but, crucially, it autonomously identifies band crossings, namely inter-sections in the real or imaginary parts of the complex-energy band, as the governing geometric features through its attention weight. Our work opens a new path to ex-plore exotic topological phases in open quantum systems. It also paves a way for exploring fascinating interplay between quantum geometry and topology, where experi-mental studies remain scarce and challenging [46–48]. 
+
+Results Complex-Energy Braiding Topology 
+
+We first summarize the key aspect of complex-energy braiding topology, taking the example of a Bloch Hamil-tonian with sublattice symmetry H(k) = (1 /2)(∆ k −
+
+iΓk)σz + Ω σx. Here, k ∈ [0 , 2π] is quasimomentum, 
+
+σx,z are Pauli matrices, g is the coupling strength, ∆k = 2 J1 sin( k) + 2 J4 cos(2 k) + 2 J2 cos( mk ) and Γ k =
+
+−2J3 sin( mk )+ γ, with real parameters Ω and J1,2,3. The 
+
+H(k) exhibits two separated energy bands 
+
+E±(k) = ±p(∆ k − iΓk)2/4 + Ω 2, (1) which are symmetric around E = 0 due to the sublattice symmetry σz H(k)σz = −H(k). Since E±(k) is complex-valued, their paths wind in the complex energy plane as k
+
+varies across BZ. Owing to periodicity E±(k) = E±(k +2π), trajectories of E±(k) in the 3D energy-momentum (E-k) space thus braid into knots or links [30], such as the unlink [Fig. 1 a], the unknot [Fig. 1 b], the Hopf link [Fig. 1 c], the Trefoil knot [Fig. 1 d], and others. The topology of distinct two-band braids can be clas-sified by the braid group B2 associated with an integer topological invariant - the braid degree. Let ˜E±(k) = 
+
+E±(k) − E0(k) with E0(k) = Tr( H(k)) /2, the braid de-gree is defined as 
+
+ν =
+
+Z 2π
+
+> 0
+
+dk
+
+2πi 
+
+
+
+∂k ln ˜E+(k) + ∂k ln ˜E−(k)
+
+
+
+, (2) which is related to the phase winding ∂kϕσ (k) of Eσ (k) = 
+
+|Eσ (k)|eiϕ σ (k) (σ = ±) [27]. A nonzero ν indicates that the spectral loops in the complex energy plane encircles an exceptional point (EP), where E+(k) = E−(k) (star in Fig. 1), and the value of ν counts how many times the two bands braid in the E-k space as k traverses the BZ. For instance, different braids in Fig. 1 correspond to 
+
+ν = 0 , 1, 2, 3, respectively. 
+
+Attention-enabled joint learning of braiding topology and geometry 4a                                                                      
+
+> 000.15 101-1 0-1 002-2 -2 2
+> c1 c2 c3
+> 1-1 0100202
+> b1 b2
+> Exp.
+> -2
+> 0.15 Exp. Two-parameter fit
+> FIG. 4. Experimental setup with atomic BECs. a Level diagram. A microwave field detuned by ∆ coherently couples the hyperfine states |F= 1 , m F=−1⟩and |F= 2 , m F= 0 ⟩of 87 Rb atoms with a coupling rate Ω. A resonant optical beam is used to generate dissipation (atom loss) in the |F= 2 , m F= 0 ⟩state. The BEC is initialized in |F= 1 , m F=−1⟩. After an evolution time t, the Stern-Gerlach absorption image is taken after 10 ms time of flight. b1 (b2 ) Measured N2(1) (t)/N 0
+> as a function of time, where N0is initial atom number. The blue, yellow and green dots denote experimental data under various [∆ ′/Ω,Γ′/Ω]: [0 .16 ,0.53] when m= 1 (blue), [ −0.59 ,1.60] when m= 1 (yellow), and [1 .05 ,1.71] when m= 2 (green), respectively. Each experimental data is the average over 3 measurements. The error bars are 1 σstandard deviation. Solid curves depict simulations via Hamiltonian Hein Eq. (3) with Γ ′. Dashed curves denote two-parameter fit to the data using He(Γ 1)and He(Γ 2); see Methods and Supplementary Sec. III. c1 -c3 Measured energies in the short-time regime, shown in (Re E, Im E,
+> θ) space. Experimental data of eigenvalues are extracted from the fitted He(Γ 1) (Methods). Solid curves denote calculated eigenvalues of He(Γ ′); parameters ( J1, J 2, J 3, γ, m ) are c1 (0 ,1/4,1/4,1,1); c2 (0 ,1/2,1/4,2,1) and c3 (1 /8,1/2,1/4,2,2). In all measurements, Ω = 31 .4 kHz.
+
+We train a Transformer to jointly learn braiding topol-ogy and its geometric underpinning, as schematically il-lustrated in Fig. 2 a. The architecture details can be found in Methods and Supplementary Sec. I and Sec. II. The model is trained exclusively on symmetric spectra 
+
+E±(k) simulated from Eq. (1). The BZ is discretized into Nk = 500 uniformly spaced k-points to ensure suf-ficient momentum resolution. The input data consists of a Nk × 4 matrix representing the two complex-energy bands; each row (i.e., token) encodes the two complex eigenvalues: (Re E+(k), Im E+(k), Re E−(k), Im E−(k)) at momentum k. These energy data is fed into an embed-ding layer, which adds a learnable classification (CLS) to-ken, whose feature dimensionality is expanded from 4 to 16 dimensions. Then, the Transformer encoder employs multi-head self-attention mechanisms to compute pair-wise correlations across all k-points, enabling the CLS token to learn features in the energy bands comprehen-sively. These learned features are ultimately converted to probabilities corresponding to different braiding degrees 
+
+ν. Concurrently, the attention weight in the input data visibly highlights the key tokens essential for learning ν.The self-attention mechanism of the Transformer (Methods) fundamentally differs from CNN in capturing the nonlocal correlations essential for topological classifi-cation [Fig. 2 a]. While CNNs rely on localized receptive fields, self-attention operates on the complete set of k-points at once, enabling direct access to both topological invariant and geometric features - information often ob-scured in traditional convolutional architectures. Specif-ically, the self-attention mechanism computes attention weights that quantify the influence of each k-point on ev-ery other point within the BZ, and dynamically re-weight spectral features during classification. As shown below, this allows the model to autonomously identify topolog-ically relevant band regions without requiring a priori 
+
+feature engineering. Following standard training protocols, we split data into training (80%) and validation (20%) sets to ensure robust evaluation of generalization performance. The model is optimized via stochastic gradient descent to minimize cross-entropy loss, converging in 170 epochs, as evidenced by stabilized validation metrics in Fig. 2 b.We test the trained Transformer with unseen data (see Methods), including those in the absence of sublattice symmetry. The test results are summarized below: (1) The model demonstrates exceptional performance in predicting braiding degree ν, achieving 99.93% classi-fication accuracy [Fig. 2 b], substantially outperforming CNN under identical conditions (Supplementary Sec. I). (2) The attention heatmap in Fig. 3 indicates that band crossing is the geometric feature directly relevant to braiding topology. Figures 3 a1 -b5 present the heatmap associated with various ν, shown in the complex en-5c1 c2 c3 a2 a3 d1 d2 d3  
+
+> -1 -0.2 1.5 -1.5 -2 01.5 -1.5 2-2 0
+
+01-2 0 0 01 1 10 2 0 0 20 2 0 2 0 20-1 1-1 0-1 1-2 0-2 2-2                             
+
+> a1
+> 021
+> b
+> 2Interpolation Exp. (Single-shot)
+> FIG. 5. Experimental detection of topological and geometrical properties of energy braids in the short-time regime via a trained Transformer. a1 -a3 Single-shot measurement of complex energy Eas a function of θ∈[0 ,2π]. The plots correspond to Figs. 4 c1 -c3 , respectively, where experimental data denote eigenvalues of He(Γ 1). Solid lines are the interpolated curve passing through experimental data (see Methods and Supplementary Sec. IV). bTransformer-predicted braiding degree ν.For each set of single-shot measurement of complex eigenvalues, braiding degree νis extracted using the Transformer. The average νfrom three set of measurements is shown, and the error bar denotes standard deviation. c1 –d3
+> Attention weights projected onto the preprocessed experimental data, shown in c1 -c3 in complex energy plane, and d1 -d3 as a function of θ∈[0 ,2π]. In the top and bottom rows, dashed line denotes band crossings with extreme phase gradients.
+
+ergy plane and momentum space, respectively. To see their physical implications, we calculate |∂kϕk| with ϕk =
+
+ϕ+(k) + ϕ−(k) in the BZ [Figs. 3 c1 -c5 ] and the complex-energy band structures [Figs. 3 d1 -d5 ]. We find the at-tention peak in the momentum space [Figs. 3 b1 -b5 ] con-sistently aligns with band crossings in the real-energy or dissipation-rate bands, even for quite complex braiding patterns. Strikingly, when there are several crossings, as exemplified by Figs. 3 d1 -d4 , attention weights correctly highlight those crossings with extreme phase gradient 
+
+|∂kϕk| as being topologically relevant. This occurs even for braiding degree as high as ν = 6 (Fig. 3 a4 -d4 ), when the energy structure becomes quite complicated. This selective attention focusing demonstrates that the Trans-former learns not just global topology but also physically significant spots, thus guiding a geometric interpretation. (3) Equally remarkably, although the model is trained solely on symmetric spectra of the form in Eq. (1), it gen-eralizes well to (simulated) asymmetric spectra (Meth-ods), as illustrated by Figs. 3 a5 -d5 . This indicates that the trained Transformer learns that sublattice symmetry is irrelevant for ν, as one would expect from the for-mula (1). 
+
+Experimental demonstration in dissipative BEC 
+
+Equipped with the trained Transformer, we turn to the experimental study of complex-energy braiding based on the 87 Rb BEC with atomic density n ∼ 5.14 × 10 13 cm −3.As shown in Fig. 4 a, two ground-state hyperfine states of 87 Rb atoms, |1⟩ = |F = 1 , m F = −1⟩ and |2⟩ = |F =2, m F = 0 ⟩ is coupled by a microwave (MW) field de-tuned by ∆ ′, with strength Ω. Natural atomic loss is negligible over the relevant time scales. To introduce tunable dissipation on state |2⟩, we use a laser light at 
+
+λ = 780 nm to drive a resonant transition from |2⟩ and an electronically excited state |F ′ = 3 ⟩ with linewidth 
+
+κ = 2 π × 6.06 MHz, resulting in a loss rate Γ ′ of atomic populations in |2⟩. We have checked that the dissipation laser beam causes no visible resonance shift in |2⟩. The 6c2 c1 a2 a1 d2 d1                      
+
+> -2 02-2 2-2 001-1 001100202020-2 2-1 2Interpolation Exp. (Single-shot) 0-2 2-2
+> b
+> 01
+> b
+> FIG. 6. Long-time energy braids corresponding to the a1 unknot and a2 Hopf link shown in Fig. 5. a1 -a2
+> Long-time counterpart for the spectra in Figs. 5 a2 -a3 , re-spectively. Experimental data are eigenvalues obtained from
+> He(Γ 2); solid curve is the interpolation. bBraid degree νpre-dicted by the Transformer. For each set of single-shot mea-surement of eigenvalues obtained in long times, the Trans-former predicts a value of ν.The average νfrom three set of measurements is shown, and the error bar denotes stan-dard deviation. c1 -d2 Attention weights projected onto the preprocessed experimental data, shown in c1 –c2 the complex energy plane and d1 –d2 as a function of θ.
+
+setup effectively implements the Hamiltonian 
+
+He =
+
+ ∆′ − iΓ′
+
+2
+
+
+
+I −
+
+ ∆′ − iΓ′
+
+2
+
+
+
+σz + Ω σx. (3) In our experiment, we fix Ω = 31 .4 kHz, while inde-pendently vary ∆ ′ (by tuning the MW frequency) and Γ′ (by tuning the laser power), respectively. These pa-rameters are sampled according to the relation ∆ ′/Ω = 2J1 cos( θ) + 2 J2 cos( mθ ) and Γ ′/Ω = −2J3 sin( mθ ) + γ
+
+with the integer m and θ ∈ [0 , 2π]; see Methods. By choosing suitable coefficients J1, J 2, J 3, γ and m, we re-alize the Hamiltonian He(θ) that hosts desired energy braids. Since Eq. (3) explicitly breaks sublattice symme-try, the eigenvalues 
+
+E±(θ) = ∆′ − iΓ′
+
+2 ± δ; δ =
+
+s ∆′ − iΓ′
+
+2
+
+2
+
++ Ω 2. (4) form two asymmetric bands when θ varies in [0 , 2π], in contrast to the symmetric spectra (1). Note that the BEC is in the regime nλ 3 ≫ 1, where it exhibits collective response to resonant light [40, 42– 45]. This gives rise to a density-dependent dissipation with many-body nature (see Methods and Supplemen-tary Sec. III), in contrast to the single-particle dissipa-tion in previous experiments [30–35]. To extract the re-sulting spectral properties, we monitor the system’s de-cay dynamics over ∼ 0.15 ms. Initially, a BEC with 
+
+N0 ∼ 2.5 × 10 4 87 Rb atoms is prepared in |1⟩ at the tem-perature ∼ 50 nK (Fig. 4 a). We then sweep the bias magnetic field to 16 G over a 100-ms and wait 100-ms for stabilization. Subsequently, we switch on both Ω and the dissipation laser. After evolution time t, we measure atomic populations N1(t) and N2(t) in the two Zeeman levels |1⟩ and |2⟩, respectively, via Stern-Gerlach absorp-tion imaging; see Figs. 4 b1 -b2 .At short times, the measured dynamics remains well described by the effective Hamiltonian (3) with the con-stant dissipation rate Γ ′ (solid curves in Figs. 4 b1 -b2 ). The corresponding calculations N1(t) = e−Γ′t| cos( δt ) + 
+
+i ∆′−iΓ′ 
+
+> 2δ
+
+sin( δt )|2 and N2(t)/N 0 = Ω2 
+
+> |δ|2
+
+e−Γ′t| sin( δt )|2 ex-plain the initial decaying oscillation. At longer times, however, deviations emerge between the experiment and simulation using He(Γ ′), especially for small detun-ing (see Supplementary Information). This discrepancy stems from the density-dependent dissipation: As the condensate dilutes over time from atomic loss, the dissi-pation rate at long times may differ considerably from its initial value. To effectively model the full dynamics, we adopt a minimal, two-parameter fitting approach (Meth-ods). Namely, we use two Hamiltonians of the form in Eq. (3) but distinct dissipation rates: He(Γ 1) for 0 ≤ t < tm and He(Γ 2) for t ≥ tm, where Γ 1,2 and tm are obtained from the best fit to the data. As shown in Figs. 4 b1 -b2 
+
+and detailed in Supplementary Sec. III, this approach yields good agreement with the experiment; moreover, Γ1 ≈ Γ′ and hence follows Γ 1(θ)/Ω ≈ − 2J3 sin( mθ ) + γ,whereas Γ 2 < Γ1 and Γ 2(θ)/Ω deviates markedly from this relation. The eigenvalues of He(Γ 1) and He(Γ 2) thus allow us to reliably construct the instantaneous complex-energy braids in the short- and long-time limits, respectively. In Figs. 4 c1 -c3 , we collect the eigenvalues of He(Γ 1) to trace their trajectories in (Re( E), Im( E), θ ) space; each data is the average of 3 single-shot measurements. Since Γ1 ≈ Γ′, the resulting braids closely match the ideal forms from Eq. (4), displaying the unlink, unknot, and Hopf link, respectively. In the long-time limit, however, spectra of He(Γ 2) differ substantially from short-time configurations due to Γ 2 < Γ1 as we shall show below. Our goal is to identify not only the topological in-variant of the experimentally constructed energy braids, but also the underlying geometric features. We therefore feed the fitted spectral data into the trained Transformer. Due to the finite number of θ-points attainable from the limited resolution in varying ∆ ′ and Γ ′, the raw energy data are first preprocessed using the cubic spline inter-polation (Methods) to standardize the sequence length 7to the Transformer’s required input dimension while en-hancing smoothness. We then sequentially and uniformly sample 500 points along the interpolated curve (e.g., solid curves in Figs. 5 a1 -a3 ), including all original experimen-tal results. The resulting processed complex energies 
+
+E±(θ) are used as the input to the Transformer. Figures 5 b-d3 summarize typical ML results obtained from processed single-shot measurement data in the short-time regime. The Transformer accurately predicts braiding degree ν for various experimental braids. Even at long times, when the energy braids deviate substan-tially from their initial ideal configurations, the Trans-former correctly identifies their topology. For instance, initially topologically nontrivial braids (unknot or Hopf link, Figs. 5 a2 -a3 ) eventually evolve into the unlink structure characterized by ν = 0 (Figs. 6 a1 -c2 ), indi-cating a topological phase transition driven by the dy-namically reduced dissipation rate. Moreover, in both the short- and long-time regimes, the attention maps (Figs. 5 d1 -d3 and 6 d1 -d2 ) consistently highlight those regions near band-crossings as important for the topo-logical classification; more details can be found in Sup-plementary Sec. V. These results show that the Trans-former, though trained exclusively on the symmetric spectra derived numerically from a nearly ideal Hamil-tonian, generalizes effectively to an experimental system that breaks sublattice symmetry and hosts time-varying energy braids induced by density-dependent dissipation. In both simulated tests (Fig. 3) and experimental demonstrations (Figs. 5-6), we observe that attention peaks may slightly shift from the exact band-crossing positions. This is likely linked to the training objective of the Transformer: it is solely optimized for predicting topological invariant with high confidence, not for pre-cise detection of band-crossing point. During training, the self-attention mechanism learns to assign weight to those momentum-energy regions that are most informa-tive for a correct topological decision. Since topological invariants are inherently nonlocal, the model naturally integrates information from adjacent spectral points, dis-tributing attention weights over a neighborhood sur-rounding a band-crossing rather than precisely pinpoint-ing its location. This may cause the shift of attention peaks, and their relative prominence can depend on the specific geometry of the braid. Thus the attention map serves more as a semi-quantitative diagnostic tool that explicitly guides our insight toward spectral regions con-taining topologically relevant geometric features. We em-phasize that this dual capability - accurate topological classification combined with autonomous identification of essential parts in the braids - is a crucial advantage of the Transformer over conventional methods. Achieving more accurate local feature identification while preserving the prediction precision of nonlocal topological invariant is a challenge beyond the current architecture and will be addressed in future work. 
+
+Discussion 
+
+In summary, we experimentally realize and charac-terize topological complex-energy braiding in an atomic simulator based on dissipative BECs. By harnessing the Transformer’s self-attention mechanism, we achieve a simultaneous extraction of not only topological invari-ants of complex-energy braiding but also their governing geometric features - specifically, the band-crossing with extreme phase gradients. That is, the attention weights in the input data correctly spot the physically relevant regions underlying braiding topology. Moreover, in our experiment, tunable dissipation has a many-body nature, and features density dependence. This feature potentially makes dissipative BECs under resonant light a unique platform in the study of non-Hermitian physics, yet at the same time complicates experimental detections of topology-geometry interplay. Remarkably, the Transformer, trained exclusively on simulated, sym-metric spectra from an ideal single-particle Hamiltonian, demonstrates robust generalization to experiment. This capability of directly capturing the topology-geometry interplay with ML opens up many fascinating opportu-nities, for instance, to investigate the interplay between topology and quantum geometry, which has attracted significant recent attention, yet experimental studies remain challenging. In the future, it is interesting to explore a comprehensive microscopic description of the full dissipative dynamics of a BEC and real-time topological diagnosis. Another compelling direction is to extend this ML paradigm to explore topological phases in many-body regimes. More broadly, our work is relevant to the development of interpretable ML approaches [49–54] to facilitate experimental stud-ies of exotic topological phases in cold atoms and beyond. Recent work [55, 56] has demonstrated that ML ap-proaches for phase classifications are vulnerable to adver-sarial perturbations: adding carefully crafted noises into the original data can cause the classifiers to make wrong predictions. We expect the Transformer to share this vul-nerability. Such vulnerability, in fact, can be a generic issue for data-driven classifiers and is often linked to the geometry of the loss landscape [57], i.e., models converg-ing to flat minima typically exhibit stronger robustness compared to those converging to sharp minima. Adver-sarial training [58, 59] and refined optimization strategies can help mitigate this issue. 
+
+Methods Self-attention mechanism of the Transformer and generation of heatmap 
+
+The output of the attention mechanism [41] is given by Attention( Q, K, V ) = softmax 
+
+ QK T
+
+√dk
+
+
+
+V ≡ SV, (5) where dk is the dimension of expanded input, query Q,key K, and value V vectors result from linear transfor-mations of the input using distinct weight matrices Wq ,8
+
+Wk, and Wv . In Eq. (5), attention weights are generated from the softmax function of scaled similarities between queries and keys. These weights are then used to calcu-late a weighted sum of the value vectors (see Supplemen-tary Sec. I). To enhance feature extraction, the multi-head attention mechanism projects query ( Q), key ( K), and value ( V ) vectors into multiple subspaces, performs self-attention independently per head, and generates the outputs. The attention weight matrix S encodes the learned cor-relations between all pairs of momentum points in the BZ. Each element of matrix S quantifies the relevance of kj to ki. For geometric visualization and physical in-terpretation, we extract attention importance scores by computing column-wise averages of the attention weight matrix, yielding a weight score vector of dimensionality 1 × 500. The weights are then projected onto the en-ergy band space to generate the corresponding heatmap in Fig. 3, where weights quantitatively encode feature important for each topological invariant. 
+
+Test data for the Transformer 
+
+To validate the performance of the trained Trans-former, we use the energy spectrum distinct from Eq. (1) as the test data. Specifically, we consider 
+
+E±(k) = α
+
+ ∆′′ − iΓ′′ 
+
+2
+
+
+
+±
+
+s ∆′′ − iΓ′′ 
+
+2
+
+2
+
++ Ω 2, (6) Here, ∆ ′′ /Ω = 2 J1 cos k + 2 J2 cos mk + 2 J4 cos 2 k and Γ′′ /Ω = −2J3 sin mk + γ, in which the parameters Ji, γ
+
+(i=1, 2, 3, 4) are arbitrarily selected, m = 1 , 2..., 6, and 
+
+k ∈ [0 , 2π]. Moreover, α = 0 or α = 1 are used. The corresponding test results are illustrated in Fig. 3 and Supplementary Sec. II. 
+
+Measurement of dissipation rate 
+
+To measure the dissipation rate Γ′ induced in 
+
+|F = 2 , m F = 0 ⟩ (Fig. 4 a), we use MW π pulse to trans-fer the BEC from |F = 1 , m F = −1⟩ to |F = 2 , m F = 0 ⟩.Subsequently, the MW field is switched off while the res-onant laser is switched on, and we measure the time-dependent population N ′(t) in |F = 2 , m F = 0 ⟩. By fit-ting N ′(t) = N0e−2Γ ′t to the decay dynamics at suf-ficiently short times, we obtain Γ ′. In Supplementary Sec. III and Fig. 11, we present the measured Γ ′ as a function of the power P of the dissipation laser for vari-ous atomic densities n. We observe enhanced dissipation for increased density, especially at higher P . Moreover, for n ∼ 5.14 × 10 13 cm −3 in our experiment, Γ ′ = 0 .68 P
+
+(Supplementary Fig. 11). Thus, adjusting P allows to sample Γ ′ along the relation Γ ′/Ω = −2J3 sin( mθ ) + γ
+
+with given J3, m, γ , where each θ-point (Supplementary Fig. 13) maps to a value of P .Due to the density-dependent dissipation of conden-sate, although He(Γ ′) remains a good description for sys-tem dynamics at short times, suppressed decay dynam-ics may occur at long times. To model the full dynamics over a relatively long time scale of ∼ 0.15 ms, we exploit a minimal strategy: the two-parameter fit [40]. Specifi-cally, we use two Hamiltonians of the form (3), He(Γ 1)and He(Γ 2), to model the evolution at times 0 ≤ t < t m
+
+and t ≥ tm, respectively, with Γ 1, Γ 2 and tm to be deter-mined from the best fit to the data. In fitting, we take the initial value of Γ 1 to be ∼ Γ′, and the initial Γ 2 to be 
+
+∼ Γ′/2; for the initial value of tm, we take it to be where the data deviate from the simulation with He(Γ ′). Start-ing from these initial values, we iteratively improve the fitting parameters until the difference of the calculated and the measured dynamics are minimized in the least-square sense. As detailed in Supplementary Sec. III, the two-parameter fit generally yields good agreement with the experimental data. The collection of fitted Γ 1 and Γ 2
+
+are summarized in Supplementary Fig. 13. 
+
+Measurement of energy eigenvalues and prepara-tion of input data 
+
+By diagonalizing the Hamiltonian He of the form in Eq. (3) with Γ 1(2) , we obtain the experimental spectra corresponding to the short-time (long-time) limit. Subsequently, we process the experimentally measured data in two steps to generate the input data of E±(θ) for the trained Transformer. First, we employ a standard interpolation procedure based on cubic spline functions to convert the discrete, irregularly spaced experimental data into a continuous curve. Rather than fitting a single high-degree polynomial to all data, cubic spline interpola-tion - a widely used method in data analysis - constructs a smooth curve that passes exactly through the given discrete data points. This approach is robust, numeri-cally stable, and capable of preserving the shape of the underlying data. Specifically here, let the initial experi-mental data be denoted by [Re E±(θn), Im E±(θn)], each associated with a parameter point θn (with θn ordered by increasing magnitudes over a period [0 , 2π]. The cubic spline function is used to fit the relation between Re E±
+
+and θn, as well as between Im E± and θn. This result in curves in Figs. 5 and 6. Further details can be found in the Supplementary Sec. IV. Second, after obtaining the interpolated curve, 500 complex-energy points are sequentially sampled at positions θn = 2 πn/ 500 ( n =0, ..., 499) along the curve, including all original experi-mental data. These complex-energies are then used to generate the input data for the Transformer. 
+
+Data Availability 
+
+The experimental data generated in Figs. 4-6 have been deposited in the Zenodo database under accession code [https://doi.org/10.5281/zenodo.18538248 ]. 
+
+Code Availability 
+
+The codes that support the findings of this study are available in the Code Ocean database under acces-sion code [ https://codeocean.com/capsule/1694502/ tree ]. 
+
+References 9
+
+[1] Carrasquilla, J. & Melko, R. G. Machine learning phases of matter. Nat. Phys. 13 , 431 (2017). [2] Carleo, G. et al. Machine learning and the physical sci-ences. Rev. Mod. Phys. 91 ,045002 (2019). [3] Sch¨ uttet, K. et al. Machine Learning Meets Quan-tum Physics , volume 968 of Lecture Notes in Physics (Springer International Publishing, 2020). [4] Bharti, K., Haug, T., Vedral, V. & Kwek, L.-C. Ma-chine learning meets quantum foundations: A brief sur-vey. AVS Quantum Sci. 2, 034101 (2020). [5] Wang, H. et al. Scientific discovery in the age of artificial intelligence. Nature 620 , 47-60 (2023). [6] Lin, M.-R., Li, W.-J. & Huang, S.-M. Quaternion-based machine learning on topological quantum systems. Mach. Learn.: Sci. Technol. 4, 015032 (2023). [7] Hasan, M. Z. & Kane, C. L. Colloquium: Topological insulators. Rev. Mod. Phys. 82 , 3045 (2010). [8] Qi, X.-L. & Zhang, S.-C. Topological insulators and su-perconductors. Rev. Mod. Phys. 83 , 1057 (2011). [9] Lu, L., Joannopoulos, J. D. & Soljaˇ ci´ c, M. Topological photonics. Nat. Photon. 8, 821-829 (2014). [10] Chiu, C.-K., Teo, J. C. Y., Schnyder, A. P. & Ryu, S. Classification of topological quantum matter with sym-metries. Rev. Mod. Phys. 88 , 035005 (2016). [11] Zhang, P., Shen, H. & Zhai, H. Machine Learning Topo-logical invariants with neural networks. Phys. Rev. Lett. 
+
+120 , 066401 (2018). [12] Cong, I., Choi, S. & Lukin, M. D. Quantum convolutional neural networks. Nat. Phys. 15 , 1273-1278 (2019). [13] Rem, B. S. et al. Identifying quantum phase transitions using artificial neural networks on experimental data. 
+
+Nat. Phys. 15 , 917-920 (2019). [14] Lian, W. et al. Machine learning topological phases with a solid-state quantum simulator. Phys. Rev. Lett. 122 ,210503 (2019). [15] Zhao, E. et al. Observing a topological phase transition with deep neural networks from experimental images of ultracold atoms. Opt. Express 30 , 37786 (2022). [16] Rodriguez-Nieva, J. F. & Scheurer, M. S. Identifying topological order through unsupervised machine learn-ing. Nat. Phys. 15 , 790-795 (2019). [17] Scheurer, M. S. & Slager, R.-J. Unsupervised machine learning and band topology. Phys. Rev. Lett. 124 , 226401 (2020). [18] Yu, L.-W. & Deng, D.-L. Unsupervised learning of non-Hermitian topological phases. Phys. Rev. Lett. 126 ,240402 (2021). [19] Chen, J., Wang, Z., Tan, Y.-T., Wang, C. & Ren, J. Ma-chine learning of knot topology in non-Hermitian band braids. Commun. Phys. 7, 209 (2024). [20] Long, Y., Xue, H. & Zhang, B. Unsupervised learn-ing of topological non-Abelian braiding in non-Hermitian bands. Nat. Mach. Intell. 6, 904-910 (2024). [21] Lustig, E., Yair, O., Talmon, R. & Segev, M. Identifying topological phase transitions in experiments using mani-fold learning. Phys. Rev. Lett. 125 , 127401 (2020). [22] K¨ aming, N. et al. Unsupervised machine learning of topo-logical phase transitions from experimental data. Mach. Learn.: Sci. Technol. 2, 035037 (2021). [23] Yu, Y. et al. Experimental unsupervised learning of non-Hermitian knotted phases with solid-state spins. npj Quantum Inf. 8, 116 (2022). [24] Xiao, D., Chang, M.-C. & Niu, Q. Berry phase effects on electronic properties. Rev. Mod. Phys. 82 , 1959-2007 (2010). [25] T¨ orm¨ a, P. Essay: Where can quantum geometry lead us? 
+
+Phys. Rev. Lett. 131 ,240001 (2023). [26] Liu, T., Qiang, X.-B., Lu, H.-Z.& Xie, X. C. Quantum ge-ometry in condensed matter. Natl. Sci. Rev. 12 , nwae334 (2024). [27] Shen, H., Zhen, B. & Fu, L. Topological band theory for non-Hermitian hamiltonians. Phys. Rev. Lett. 120 ,146402 (2018). [28] Bergholtz, E. J., Budich, J. C. & Kunst, F. K. Ex-ceptional topology of non-Hermitian systems. Rev. Mod. Phys. 93 , 015005 (2021). [29] Ding, K., Fang, C. & Ma, G. Non-Hermitian topology and exceptional-point geometries. Nat. Rev. Phys. 4, 745-760 (2022). [30] Wang, K., Dutt, A., Wojcik, C. C. & Fan, S. Topological complex-energy braiding of non-Hermitian bands. Nature 
+
+598 , 59-64 (2021). [31] Patil, Y. S. S. et al. Measuring the knot of non-Hermitian degeneracies and non-commuting braids. Nature 607 ,271-275 (2022). [32] Zhang, Q. et al. Observation of Acoustic Non-Hermitian Bloch braids and associated topological phase transi-tions. Phys. Rev. Lett. 130 , 017201 (2023). [33] Cao, M.-M. et al. Probing complex-energy topology via non-Hermitian absorption spectroscopy in a trapped ion simulator. Phys. Rev. Lett. 130 , 163001 (2023). [34] Wu, Y. et al. Observation of the knot topology of non-Hermitian systems in a single spin. Phys. Rev. A 108 ,052409 (2023). [35] Rao, Z. et al. Braiding reflectionless states in non-Hermitian magnonics. Nat. Phys. 20 , 1904-1911 (2024). [36] Fl¨ aschner, N. et al. Experimental reconstruction of the Berry curvature in a Floquet Bloch band. Science 352 ,1091-1094 (2016). [37] Hauke, P., Lewenstein, M. & Eckardt, A. Tomography of band insulators from quench dynamics. Phys. Rev. Lett. 
+
+113 , 045303 (2014). [38] Li, J. et al. Observation of parity-time symmetry break-ing transitions in a dissipative Floquet system of ultra-cold atoms. Nat. Commun. 10 , 855 (2019). [39] Ren, Z. et al. Chiral control of quantum states in non-Hermitian spin-orbit-coupled fermions. Nat. Phys. 18 ,385-389 (2022). [40] Wang, C. et al. Exceptional nexus in Bose-Einstein con-densates with collective dissipation, Phys. Rev. Lett. 132 ,253401 (2024). [41] Vaswani, A. et al. Attention is all you need, Adv. Neural Inf. Process. Syst. 30 (2017). [42] You, L., Lewenstein, M. & Cooper, J. Line shapes for light scattered from Bose-Einstein condensates. Phys. Rev. A 50 , R3565-R3568 (1994). [43] Pellegrino, J. et al. Observation of Suppression of Light Scattering Induced by Dipole-Dipole Interactions in a Cold-Atom Ensemble. Phys. Rev. Lett. 113 , 133602 (2014). [44] Jenkins, S. D. et al. Collective resonance fluorescence in small and dense atom clouds: Comparison between the-10 
+
+ory and experiment. Phys. Rev. A 94 , 023842 (2016). [45] Schilder, N. J., Sauvan, C., Sortais, Y. R. P., Browaeys, A. & Greffet, J.-J. Near-Resonant Light Scattering by a Subwavelength Ensemble of Identical Atoms. Phys. Rev. Lett. 124 , 073403 (2020). [46] Tan, X. et al. Experimental measurement of the quan-tum metric tensor and related topological phase transi-tion with a superconducting qubit. Phys. Rev. Lett. 122 ,210401 (2019). [47] Cuerda, J., Taskinen, J. M., K¨ allman, N., Grabitz, L. & T¨ orm¨ a, P. Observation of quantum metric and non-Hermitian Berry curvature in a plasmonic lattice. Phys. Rev. Res. 6, L022020 (2024). [48] Kim, S. et al. Direct measurement of the quantum metric tensor in solids. Science , 388 , 1050-1054 (2025). [49] Ponte, P. & Melko, R. G. Kernel methods for inter-pretable machine learning of order parameters. Phys. Rev. B 96 , 205146 (2017). [50] Greitemann, J., Liu, K. & Pollet, L. Probing hidden spin order with interpretable machine learning. Phys. Rev. B 
+
+99 , 060404 (2019). [51] Dawid, A., Huembeli, P., Tomza, M., Lewenstein, M. & Dauphin, A. Phase detection with neural networks: in-terpreting the black box. New J. Phys. 22 , 115001 (2020). [52] Wetzel, S. J., Melko, R. G., Scott, J., Panju, M. & Ganesh, V. Discovering symmetry invariants and con-served quantities by interpreting siamese neural net-works. Phys. Rev. Res. 2, 033499 (2020). [53] Zhang, Y., Ginsparg, P. & Kim, E.-A. Interpreting ma-chine learning of topological quantum phase transitions. 
+
+Phys. Rev. Res. 2, 023283 (2020). [54] Miles, C. et al. Correlator convolutional neural networks as an interpretable architecture for image-like quantum matter data. Nat. Commun. 12 , 3905 (2021). [55] Huili, Z. et al. Experimental demonstration of adversarial examples in learning topological phases. Nat. Commun. 
+
+13 , 4993 (2022). [56] Si, J., Sirui, L. & Dong-Ling, D. Adversarial machine learning phases of matter. Quantum Front 2,15 (2023). [57] Foret, P., Kleiner, A., Mobahi, H. & Neyshabur, B. Sharpness-aware minimization for efficiently improving generalization. arXiv : 2010.01412 (2021). [58] Yuan, X., He, P., Zhu, Q. & Li, X. Adversarial Examples: Attacks and Defenses for Deep Learning. IEEE Trans. Neural Networks Learn. Syst. 30 , 2805-2824 (2019). [59] Chakraborty, A., Alam, M., Dey, V., Chattopadhyay, A. & Mukhopadhyay, D. A survey on adversarial attacks and defences. CAAI Trans. Intell. Technol. 6, 25-45 (2021). 
+
+Acknowledgments 
+
+This research is funded by the Key Project of the National Natural Science Foundation of China Joint Funds (No. U25A20197), the Na-tional Key Research and Development Program of China (No. 2022YFA1404201, No. 2022YFA1203903, No. 2022YFA1404003), the National Natural Science Foundation of China (No. 12374246, No. 12274272, No. 12504308, No. 62432006), and 111 Project (grant No. D18001). Y. H. acknowledges support by Beijing National Laboratory for Condensed Matter Physics (No. 2023BNLCMPKF001). L.B. acknowledges support by the Fundamental Research Program of Shanxi Province (No. 202303021223004). 
+
+Author contributions 
+
+Y.H., L.B., and Y.Z. jointly conceived the research idea and supervised the entire study. Y.Y. and X.Z. developed and implemented the machine learning. N.L. and Y.H. performed the theoretical calculation and anal-ysis. C.W., Z.J. and Y.Z. performed the experimental measurements related to the Bose-Einstein condensate. N.L., Y.Y. and Z.F. contributed to the processing of experimental data and validation of machine learning performance. Y.Y., N.L., X.Z. and Y.H. wrote the manuscript, Z.J., L.X., and S.J., provided critical guidance throughout the project. 
+
+Competing interests 
+
+The authors declare no competing interests.

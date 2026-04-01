@@ -1,0 +1,859 @@
+Title: CrossHGL: A Text-Free Foundation Model for Cross-Domain Heterogeneous Graph Learning
+
+URL Source: https://arxiv.org/pdf/2603.27685v1
+
+Published Time: Tue, 31 Mar 2026 01:11:25 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+> JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 1
+
+# CrossHGL: A Text-Free Foundation Model for Cross-Domain Heterogeneous Graph Learning 
+
+Xuanze Chen, Jiajun Zhou, Yadong Li, Shanqing Yu, Qi Xuan, Senior Member, IEEE 
+
+Abstract —Heterogeneous graph representation learning has attracted increasing attention, as heterogeneous graphs can model complex systems with diverse node and edge types. Despite recent progress, most existing methods have been developed in closed-world settings, in which the training and testing data share similar graph schemas and feature spaces, thereby limiting their cross-domain generalization. Recent graph foundation models have improved transferability; however, existing approaches either focus on homogeneous graphs, rely on domain-specific heterogeneous schemas, or depend on rich textual attributes for semantic alignment. Consequently, cross-domain heterogeneous graph learning in text-free and few-shot settings remains insuffi-ciently explored. To address this problem, we propose CrossHGL ,a foundation framework that explicitly preserves and transfers multi-relational structural semantics without relying on external textual supervision. Specifically, a semantic-preserving graph transformation strategy is designed to homogenize heterogeneous graphs while encoding heterogeneous interaction semantics into edge features. Based on the transformed graph, a prompt-aware multi-domain pre-training framework with a Tri-Prompt mechanism captures transferable knowledge from feature, edge, and structure perspectives through self-supervised graph con-trastive learning. For target-domain adaptation, we further develop a parameter-efficient fine-tuning strategy that freezes the pre-trained backbone and performs few-shot classification via prompt composition and prototypical learning. Experiments on downstream node-level and graph-level tasks show that 
+
+CrossHGL consistently outperforms representative pre-training & fine-tuning baselines, yielding average relative improvements of 25.1% and 7.6% in Micro-F1 for node classification and graph classification, respectively, while remaining competitive under more challenging feature-degenerated settings. 
+
+Index Terms —Graph Neural Networks, Foundation Model, Heterogeneous, Few-shot, Cross-domain 
+
+I. I NTRODUCTION 
+
+Heterogeneous graphs, characterized by diverse types of nodes and edges, have become an important data structure for modeling complex interactive systems in the real world [1]– [4]. Over the past few years, Heterogeneous Graph Neural 
+
+This work was supported in part by National Natural Science Foundation of China (No. 62503423), in part by the National Key Research and Development Program of China (No. 2025YFA1510900), in part by the Key Research and Development Program of Zhejiang Province (No. 2026C02A1233), in part by the Yangtze River Delta Science and Technology Innovation Community Joint Research Project (No. 2026ZY03003, No. 2025CSJGG01000). (Correspond-ing authors: Jiajun Zhou.) 
+
+Xuanze Chen and Yadong Li are with the Institute of Cyberspace Security, Zhejiang University of Technology, Hangzhou 310023, China, and also with the Binjiang Cyberspace Security Institute of ZJUT, Hangzhou, 310056, China (e-mail: chenxuanze@zjut.edu.cn). Jiajun Zhou, Shanqing Yu and Qi Xuan are with the Institute of Cyberspace Security, Zhejiang University of Technology, Hangzhou 310023, China, with the Binjiang Cyberspace Security Institute of ZJUT, Hangzhou, 310056, China, and with the Soovar Technologies Co., Ltd., Hangzhou 310056, China (e-mail: jjzhou@zjut.edu.cn). Schema 
+
+Mismatch 
+
+Feature 
+
+Mismatch 
+
+Relation 
+
+Mismatch 
+
+Transfer Challenge 
+
+s
+
+Source Domains    
+
+> Venue Paper Author
+> Movie Actor Director
+
+…
+
+Fig. 1. Challenges in cross-domain heterogeneous pre-training. 
+
+Networks (HGNNs) have achieved strong performance in learning expressive node and graph representations [5], [6]. Despite their effectiveness, conventional HGNNs inherently operate under a closed-world assumption, meaning they re-quire the training and testing data to share strictly identical graph schemas and feature spaces, which substantially limits their generalization to unseen domains [7]–[9]. To alleviate the heavy reliance on massive labeled data, the pre-training and fine-tuning paradigm has recently stimulated the development of graph foundation models [10]–[12]. Ex-isting studies have advanced along several main directions, including foundation models for homogeneous graphs [13], [14], foundation models for heterogeneous graphs within spe-cific domains [15], [16], and Large Language Model (LLM) enhanced heterogeneous graph foundation models [17]–[19]. However, extending foundation models to cross-domain het-erogeneous graphs without external text assistance remains challenging. A major difficulty lies in the severe heterogeneity shift across domains, where graph schemas, interaction pat-terns, and feature dimensions may differ substantially [20]. Many existing heterogeneous foundation models are still tightly coupled with specific meta-paths or predefined relation types [21], which limits their applicability in more general cross-domain settings. As illustrated in Fig. 1, when a model is pre-trained across multiple source heterogeneous graphs, schema mismatch, feature mismatch, and relation mismatch  
+
+> arXiv:2603.27685v1 [cs.LG] 29 Mar 2026 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 2
+
+naturally arise across domains, making direct cross-domain transfer considerably more difficult. Recently, several studies have attempted to unify cross-domain heterogeneous graphs by integrating LLMs [17], [18]. By aligning raw data into a shared textual semantic space, these LLM-enhanced models can alleviate structural mismatches across domains. Nevertheless, their effectiveness fundamentally depends on the availability of rich textual at-tributes. In many safety-critical and privacy-sensitive domains, such as financial transaction monitoring [22], network anomaly detection [23] and molecular property prediction [24] graph features are purely numerical, categorical, or anonymized, resulting in a text-free setting. In such scenarios, LLM-based semantic alignment is no longer applicable. Moreover, although text-free cross-domain foundation models have been explored for homogeneous graphs [25], [26], directly applying them to heterogeneous graphs usually only aligns feature spaces and simplified neighborhood structures, while failing to adequately preserve the rich multi-relational semantics embedded in heterogeneous interactions. Consequently, robust knowledge transfer for text-free heterogeneous graphs under extreme few-shot constraints remains under-explored. To address these limitations, a novel and adaptable frame-work, denoted as CrossHGL , is proposed for text-free, few-shot, cross-domain heterogeneous graph learning. Rather than relying on external textual semantics or indiscriminately flat-tening network topologies, the proposed framework explicitly decouples and transfers the inherent structural and topological semantics within graphs. The overall architecture consists of three phases. First, a semantic-preserving graph transfor-mation strategy is designed to reduce heterogeneity shifts while retaining informative interaction patterns. This phase leverages SVD-based feature alignment and automated meta-pattern mining to homogenize heterogeneous topologies while compressing multi-relational context into semantics-enriched edges. Second, a prompt-aware multi-domain pre-training mechanism is introduced. By integrating a Tri-Prompt system, including feature, edge, and structure prompts, with a shared Graph Neural Network (GNN) backbone, the framework captures transferable representations through self-supervised graph contrastive learning. Finally, a parameter-efficient fine-tuning strategy is deployed for the target domain. By freezing the pre-trained backbone, the framework employs an attention-based prompt composition to adapt prior knowledge to novel domains, enabling few-shot classification via non-parametric prototypical networks. The primary contributions of this work are consolidated as follows:  
+
+> •
+
+It proposes CrossHGL , a foundation framework for text-free, few-shot, and cross-domain learning on heterogeneous graphs, avoiding the reliance on LLMs and reducing the semantic loss caused by direct topology flattening.  
+
+> •
+
+A semantic-preserving graph transformation strategy is in-troduced, which couples SVD-based feature alignment with automated meta-pattern mining to unify disparate graph schemas into semantics-enriched homogeneous topologies.  
+
+> •
+
+A parameter-efficient Tri-Prompt architecture is devised to decouple multi-dimensional graph semantics during pre-training, alongside an attention-based prompt composition mechanism that enables few-shot adaptation on a frozen GNN backbone. Extensive experiments on diverse real-world heterogeneous graph datasets demonstrate the effec-tiveness and transferability of the proposed framework. II. R ELATED WORK 
+
+A. Foundation Models for Homogeneous Graphs 
+
+Recent years have witnessed the rapid development of graph foundation models on homogeneous graphs, where pre-training and prompt-based adaptation have become two representative paradigms. Early studies such as GPPT [10] and GraphPrompt [11] show that graph prompts can effec-tively bridge pre-training and downstream adaptation, thereby improving transferability under limited supervision. Building on this line, more recent works, such as GCOPE [25] and SAMGPT [26], further explore cross-graph or cross-domain generalization, demonstrating the promise of foundation-style learning beyond a single graph domain. Nevertheless, these methods are primarily designed for homogeneous graphs, where node and edge semantics are relatively unified. As a result, they cannot be directly extended to heterogeneous graphs, whose semantic complexity arises from diverse node types, relation types, and interaction patterns. 
+
+B. Foundation Models for Heterogeneous Graphs 
+
+To better capture heterogeneous semantics, recent studies have begun to investigate foundation models tailored for het-erogeneous graphs. Representative methods such as HePa [15] and HetGPT [27] introduce heterogeneous-aware pre-training strategies, relation-sensitive objectives, or schema-aware mod-eling mechanisms to learn transferable representations from complex multi-type graphs. In addition, HGPrompt [16] fur-ther shows that prompt-based adaptation can also be extended to heterogeneous settings, enabling more flexible downstream transfer. However, most of these approaches are still developed under fixed-schema or in-domain settings, where the relation types and semantic structures remain largely stable across training and testing. Consequently, although they are more expressive than homogeneous graph foundation models, they are not well suited for cross-domain heterogeneous transfer, where graph schemas, feature spaces, and structural semantics may differ substantially across domains. 
+
+C. LLM-enhanced Heterogeneous Graph Foundation Models 
+
+Another emerging direction incorporates large language models into heterogeneous graph learning. Methods such as HiGPT [17] and LMCH [18] leverage textual descriptions and external semantic knowledge to align heterogeneous graphs from different domains into a shared semantic space. This strategy provides a promising way to mitigate schema mis-match and improve cross-domain transferability. Nevertheless, the effectiveness of these models fundamentally depends on the availability of rich textual attributes. In many practical applications, such as financial transaction graphs, network traffic graphs, and sensor interaction graphs, node and edge attributes are numerical, categorical, or anonymized rather JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 3
+
+than textual. In such text-free settings, LLM-based semantic alignment becomes inapplicable. Therefore, existing LLM-enhanced heterogeneous graph foundation models still leave a critical gap in text-free cross-domain heterogeneous learning. Existing studies have advanced graph foundation models along three major directions, namely homogeneous graph foundation models, heterogeneous graph foundation models, and LLM-enhanced heterogeneous graph foundation models. However, homogeneous approaches fail to preserve heteroge-neous semantics, heterogeneous approaches are often limited to fixed-schema settings, and LLM-based approaches rely heavily on textual information. Therefore, a unified frame-work for text-free, few-shot, cross-domain learning on het-erogeneous graphs remains unaddressed. This gap motivates 
+
+CrossHGL , which preserves and transfers heterogeneous struc-tural semantics without relying on external textual supervision. III. P RELIMINARIES 
+
+A. Heterogeneous and Homogeneous Graphs 
+
+Heterogeneous graphs possess multiple types of nodes and edges, enabling them to model complex interactive systems in the real world, which distinguishes them from traditional homogeneous graphs that contain only a single node and edge type. Formally, we define a heterogeneous graph as 
+
+G = ( V, E, A, R, ϕ, φ, XV , XE ), where V and E denote the sets of nodes and edges, respectively; A and R represent the sets of node types and edge types. Each node v ∈ V is associated with a specific node type via a mapping function 
+
+ϕ : V → A . Similarly, each edge e ∈ E is associated with an edge type via φ : E → R . A key characteristic of a heterogeneous graph is that |A| + |R| > 2, meaning there are at least two types of nodes or edges. We denote the node feature set as XV = {Xa ∈ R|V a|× da | a ∈ A} , where 
+
+Va = {v ∈ V | ϕ(v) = a} is the set of nodes of type a,
+
+Xa is the original feature matrix for these nodes, and da
+
+is the feature dimension for type a. The edge feature set is 
+
+XE = {Xr ∈ R|E r |× dr | r ∈ R} , where Xr represents the feature matrix for edges of type r.To address the structural mismatch issues caused by het-erogeneity, we can transform the heterogeneous graph into a homogeneous counterpart. In this context, the homogeneous graph not only implies uniform node and edge types but also dictates that all nodes and edges have been projected into a unified latent feature space. We define the transformed homogeneous graph as G = ( V, E, A, XV , XE ). Here, V
+
+and E denote the transformed node and edge sets, respec-tively, and A is the adjacency matrix describing the graph connectivity. To resolve the feature dimension discrepancy (da) across different domains and node types, we employ Singular Value Decomposition (SVD) to reduce and align the original features, obtaining the aligned node feature matrix 
+
+XV ∈ R|V |× d. The aligned edge feature matrix is denoted as XE ∈ R|E|× f . Importantly, we preserve the semantic information from the original heterogeneous graph in the form of edges; thus, rich semantic features are encapsulated within the edges of the transformed homogeneous graph. 
+
+B. Graph Encoder 
+
+We adopt a Graph Neural Network (GNN) based on the message-passing mechanism as our backbone encoder. Specif-ically, we utilize a universal graph encoder fθ , parameterized by θ, to learn high-order representations of nodes. The com-putation entails stacking multiple message-passing layers. Let 
+
+h(l) 
+
+> v
+
+denote the hidden embedding of node v at the l-th layer. The update process is formulated as: 
+
+h(l) 
+
+> v
+
+= Aggr 
+
+
+
+h(l−1)  
+
+> v
+
+,
+
+n 
+
+h(l−1)  
+
+> u
+
+, euv 
+
+
+
+: u ∈ N v
+
+o
+
+; θ(l)
+
+(1) where Nv denotes the set of neighbors for node v, and euv 
+
+represents the semantic edge feature connecting nodes u and 
+
+v (which inherently corresponds to a row vector in XE ). This edge feature explicitly participates in the aggregation process, ensuring that the model leverages the original heterogeneous information preserved on the edges. The function Aggr (·; θ(l))
+
+represents the message-passing and aggregation function at the 
+
+l-th layer, governed by the learnable parameters θ(l) ∈ θ.
+
+C. Target Domain and Few-shot Classification Task 
+
+In cross-domain transfer learning, we assume the model is pre-trained on multiple source domains containing abundant unlabeled data. Following pre-training, our objective is to transfer the extracted universal knowledge to a target graph 
+
+GT with a different data distribution. To enhance framework universality, we model downstream node classification and graph classification tasks as instance-level classification . Specifically, an “instance” can refer to a single node in the target graph GT or a local subgraph obtained through multi-hop sampling centered on a specific node. For the few-shot instance classification task on the target domain, we assume the target dataset comprises |C| distinct instance categories, forming a label space Y = {1, 2, ..., |C|} .Under the stringent few-shot constraint, we can only access a small number of labeled instances, K, for each category m ∈Y in the target domain. We define this collection of |C| × K
+
+labeled samples as the training set S for the few-shot fine-tuning phase. The ultimate task of the model is to adapt the prior prompts using this extremely limited labeled set S, and to accurately predict the categories of the remaining unknown instances in the target dataset, which are strictly partitioned into a validation set and a test set. IV. M ETHOD 
+
+This section presents the technical details of CrossHGL ,which consists of three phases: semantic-preserving graph transformation, multi-domain semantic graph pre-training, and cross-domain semantic fine-tuning. First, heterogeneous graphs are converted into unified homogeneous graphs through SVD-based feature alignment and data-driven meta-pattern mining, with heterogeneous interactions preserved in semantics-enriched edges. Next, a Tri-Prompt mechanism, including feature, edge, and structure prompts, is integrated with a shared GNN backbone for self-supervised multi-domain pre-training under the Deep Graph Infomax (DGI) paradigm. Finally, for the target domain, the pre-trained backbone is JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 4实验  - 方案                               
+
+> 𝑿 𝑽𝒆𝒏𝒖𝒆
+> 𝑿 𝑨𝒖𝒕𝒉𝒐𝒓
+> 𝑿 𝑷𝒂𝒑𝒆𝒓
+> 𝑼 𝑎 𝜮 𝑎 𝑽 𝑎
+> 𝛵
+> 𝑿 𝑽 ∈ℝ|𝑽 |×𝑑
+> Meta Pattern Rank
+> Heterogeneous Graph
+> Venue Paper Author
+> Random
+> Walk
+> PAPV
+> PAP
+> PPV
+> Top -𝑲 Meta Pattern 𝑮 =(𝑉 ,𝐸 ,𝑿 𝑉 ,𝑿 𝐸 )
+> P
+> 𝒉 𝑒 𝑢𝑣 =1
+> 𝑘 ෍
+> 𝑖 =1
+> 𝑘
+> 𝑯 𝑉 [𝑛 𝑖 ]
+> AP
+> A
+> VMerge
+> 1
+> 2
+> 3
+> 4
+> 𝑷 𝑒𝑑𝑔𝑒
+> 𝑷 𝑓𝑒𝑎
+> 𝑳
+> 𝑷 𝑠𝑡𝑟
+> Shared
+> GNN 𝒇 𝜽
+> Shared
+> GNN 𝒇 𝜽
+> Shared
+> GNN 𝒇 𝜽
+> 𝑳
+> 𝒄 𝑔𝑙𝑜𝑏𝑎𝑙
+> 𝑯 𝑝𝑜𝑠
+> 𝑯 𝑛𝑒𝑔
+> 𝑿 𝑉
+> 𝑿 𝐸
+> 𝑿 𝑆ℎ𝑓
+> 𝑳
+> Shared
+> GNN 𝒇 𝜽
+> Shared
+> GNN 𝒇 𝜽
+> Shared
+> GNN 𝒇 𝜽
+> Shared the same Backbone
+> 𝓛 𝑝𝑟𝑒
+> Source Domain
+> (a) Heterogeneous Graph Transformation
+> (b) Multi -Domain Pretraining
+> (c) Cross -domain Fine -tuning
+> Shared
+> GNN 𝒇 𝜽
+> Shared
+> GNN 𝒇 𝜽
+> Shared
+> GNN 𝒇 𝜽
+> 𝑳
+> Target Domain
+> 𝑿 𝑉
+> 𝑷 𝑓𝑒𝑎
+> 𝑐𝑜𝑚𝑝
+> 𝑷 𝑓𝑒𝑎
+> 𝑜𝑝𝑒𝑛
+> ⊙
+> 𝑿 𝐸
+> 𝑷 𝑒𝑑𝑔𝑒
+> 𝑐𝑜𝑚𝑝
+> 𝑷 𝑒𝑑𝑔𝑒
+> 𝑜𝑝𝑒𝑛
+> ⊙
+> ෩𝑿 𝑉
+> ෩𝑿 𝐸
+> 𝒄 𝟏 𝒄 𝟐 𝒄 𝑚 …
+> Semantic Prototype
+> 𝑷 𝑠𝑡𝑟
+> 𝑐𝑜𝑚𝑝
+> 𝑳
+> 𝑷 𝑠𝑡𝑟
+> 𝑜𝑝𝑒𝑛
+> 𝑯 𝑞
+> 𝓛 𝑑𝑜𝑤𝑛
+> 𝒄 𝟏 𝒄 𝟐 𝒄 𝒎
+> Predict
+> Probability
+> …
+
+Fig. 2. Overview of the CrossHGL framework. The workflow consists of three phases: 1) Semantic-preserving graph transformation : each source and target heterogeneous graph is converted into a unified homogeneous graph through SVD-based feature alignment and meta-pattern mining, while heterogeneous semantics are preserved in semantics-enriched edge features; 2) Multi-domain semantic graph pre-training : a Tri-Prompt mechanism with feature, edge, and structure prompts is integrated with a shared GNN backbone to capture transferable knowledge from feature, relation, and topology perspectives through self-supervised contrastive learning; 3) Cross-domain semantic fine-tuning : the pre-trained backbone is frozen, source-domain prompts are composed with target-specific open prompts for few-shot adaptation, and the adapted representations are used for prototype-based prediction on target-domain instances. 
+
+frozen and lightweight prompt modules are adapted via prompt composition and prototype-based few-shot learning. The over-all architecture is illustrated in Fig. 2, and the complete cross-domain learning procedure is summarized in Algorithm 1. 
+
+A. Semantic-Preserving Graph Transformation 
+
+To address the issues of inconsistent node feature dimen-sions in heterogeneous graphs and the difficulty of directly adapting heterogeneous structures to a unified graph model, a semantic-preserving graph transformation strategy is proposed. This strategy maps a heterogeneous graph into a feature-aligned homogeneous graph G with semantics-enriched edges. The specific process involves the following three stages: 
+
+1) Feature Space Alignment: Nodes of different types in heterogeneous graphs typically possess varying feature dimen-sions, and some nodes may even lack features. To eliminate this feature space heterogeneity, Singular Value Decomposi-tion (SVD) is first employed to reduce the dimensionality and align the features across all node types. For each node type 
+
+a ∈ A , given its raw feature matrix Xa ∈ R|V a|× da , SVD is performed as follows: 
+
+Xa ≈ U aΣaV ⊤ 
+
+> a
+
+(2) Specifically, a unified target feature dimension d is predefined. To derive the dense representations, the matrices U a and Σa
+
+are truncated to retain only the top-d singular values and their corresponding left singular vectors, denoted as U a,d ∈
+
+R|V a|× d and Σa,d ∈ Rd×d, respectively. The dimension-reduced feature matrix ˜Xa for node type a is then computed by multiplying the truncated left singular matrix with the diagonal matrix of the top-d singular values: 
+
+˜Xa = U a,d Σa,d (3) Prior to the SVD application, a pre-processing step is executed to address dimensional deficiencies. For node types completely lacking initial attributes, one-hot vectors are em-ployed for feature initialization. Additionally, in cases where the original feature dimension falls short of the target dimen-sion (i.e., da < d ), zero-padding is applied directly to the raw feature matrix Xa to explicitly extend its dimensionality to d. Ultimately, by unifying these pre-processed features through the aforementioned SVD and truncation, a global node feature matrix XV ∈ R|V |× d is constructed, ensuring strict dimensional consistency across all nodes in the graph. 
+
+2) Data-Driven Mining of Meta-Patterns: Unlike tradi-tional methods that rely on expert knowledge to predefine meta-paths, we adopt a data-driven approach to automatically mine high-frequency meta-patterns for the target node type. Specifically, we execute constrained random walks on the het-erogeneous graph. For each target-type node, walk sequences of length L are generated. Subsequently, a sliding window of size w is applied to these sequences to systematically extract local sub-paths. To capture interaction patterns with closed-loop semantics, node type sequences within these windows where both the starting and ending node types correspond to 
+
+vtarget are filtered out as candidate meta-patterns. These can-didates are denoted as P = {P1, P 2, . . . , P m}, where Pi rep-resents a specific sequence of node types (e.g., Paper-Author-Paper). Finally, the frequencies of all candidate patterns are counted, and the Top-K key meta-patterns are selected based on their occurrence. This process not only discovers explicit relationships but also captures latent semantic dependencies. 
+
+3) Semantic Graph Homogenization: Guided by the mined meta-pattern set P, the target homogeneous graph G =(V, E, A, XV , XE ) is constructed. Specifically, the node set 
+
+V exclusively retains target-type nodes, defined as V = {v ∈JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 5
+
+Algorithm 1 Cross-domain Learning Procedure of CrossHGL  
+
+> 1:
+
+Input: Source heterogeneous graphs {G (k)}Kk=1 , target heterogeneous graph GT , target support set S. 
+
+> 2:
+
+Output: Predictions for target-domain instances.  
+
+> 3:
+
+Initialization: Initialize a shared GNN backbone fθ and source-domain Tri-Prompts {P (k) 
+
+> fea
+
+, P (k)
+
+> edge
+
+, P (k) 
+
+> str
+
+}Kk=1 . 
+
+> 4:
+
+// Phase 1: Semantic-preserving graph transformation  
+
+> 5:
+
+for each graph G ∈ {G (k)}Kk=1 ∪ {G T } do  
+
+> 6:
+
+Align type-specific node features XV into a unified feature space XV via SVD.  
+
+> 7:
+
+Mine the Top-K meta-pattern set P = {P1, . . . , P m}
+
+by constrained random walks.  
+
+> 8:
+
+Construct the transformed homogeneous graph: G =(V, E, A, XV , XE ). 
+
+> 9:
+
+end for  
+
+> 10:
+
+// Phase 2: Multi-domain semantic graph pre-training  
+
+> 11:
+
+for each source domain k = 1 to K do  
+
+> 12:
+
+Apply P (k) 
+
+> all
+
+= {P (k) 
+
+> fea
+
+, P (k)
+
+> edge
+
+, P (k) 
+
+> str
+
+} to the transformed source graph.  
+
+> 13:
+
+Construct positive, augmented, and negative views: 
+
+(XV , A, XE ), ( ˜XV , ˜A, ˜XE ), and (XShf , A, XE ). 
+
+> 14:
+
+Obtain node representations Hpos , Hneg , and graph summary cglobal using fθ . 
+
+> 15:
+
+Update fθ , P (k) 
+
+> all
+
+by minimizing contrastive loss Lpre . 
+
+> 16:
+
+end for  
+
+> 17:
+
+// Phase 3: Cross-domain semantic fine-tuning  
+
+> 18:
+
+Freeze the pre-trained backbone fθ . 
+
+> 19:
+
+Construct composed prompts P comp  
+
+> ∗
+
+and initialize target-specific open prompts P open  
+
+> ∗
+
+, where ∗ ∈ { fea , edge , str }. 
+
+> 20:
+
+Adapt target prompts on GT with the few-shot support set 
+
+S and obtain target representations Zfinal . 
+
+> 21:
+
+Compute class prototypes cm from the adapted target representations.  
+
+> 22:
+
+Predict labels for target-domain instances via prototype matching p(y = m | hq ). 
+
+> 23:
+
+return Target-domain predictions. 
+
+V | ϕ(v) = vtarget }, with aligned features XV . For each meta-pattern Pi ∈ P , a new edge (u, v ) is established in E whenever a matching path instance connects two distinct target nodes (u, v ∈ V , u̸ = v) in the original heterogeneous graph. In densely connected heterogeneous networks, multiple path instances often concurrently connect the same pair of target nodes. Let Iuv denote the set of all valid path instances connecting nodes u and v under the pattern set P. To com-prehensively preserve the rich semantic context during this topological transformation, the features of all intermediate nodes across all path instances in Iuv are simultaneously aggregated to formulate the semantic edge feature vector euv :
+
+euv = 1
+
+|I uv |
+
+X
+
+> p∈I uv
+
+ 1
+
+kpkp
+
+X
+
+> j=1
+
+XV [n(p) 
+
+> j
+
+]
+
+ (4) where kp represents the number of intermediate nodes in a specific path instance p, and n(p) 
+
+> j
+
+denotes the j-th intermediate node within that path. Subsequently, the collection of all ag-gregated edge vectors euv constitutes the semantics-enriched edge feature matrix XE for the target homogeneous graph. Through the aforementioned process, the complex hetero-geneous graph topology is transformed into a homogeneous graph containing only a single node type but highly enriched edge features. This enables a universal homogeneous graph encoder to efficiently process the graph structure while simul-taneously perceiving the complex semantic interactions of the original heterogeneous graph. 
+
+B. Multi-Domain Semantic Graph Pre-training 
+
+To enable Graph Neural Networks (GNNs) to learn univer-sal graph representations in an unsupervised setting and effec-tively utilize the previously constructed homogeneous graphs rich in meta-pattern semantics, a Tri-Prompt Graph Contrastive Pre-training Framework is proposed. The core idea of this framework is to decouple the adaptation processes of node features, graph topologies, and edge semantics. By utilizing lightweight prompts to guide a shared GNN backbone, the model captures universal knowledge from diverse perspectives and optimizes it via Local-Global Mutual Information Maxi-mization in a self-supervised manner. 
+
+1) Tri-Prompt Design: As detailed in Section IV-A, the original heterogeneous graph is uniformly transformed into a target-node homogeneous graph G = ( V, E, A, XV , XE ).Here, XV encapsulates the aligned node features, while XE
+
+acts as a rich semantic container for the intermediate heteroge-neous interactions. To fully exploit and seamlessly decouple this multi-dimensional information without altering the pre-trained backbone, the Tri-Prompt module is designed. From a functional perspective, this framework operates sequentially across two highly synergistic phases: input-level semantic filtration and layer-level topological intervention. During the initial phase of input-level semantic filtration ,both node features and edge semantics often carry universal knowledge that may contain task-irrelevant noise for a specific downstream domain. To address this, a unified element-wise modulation strategy is employed to adaptively filter and align the input spaces. Specifically, the feature prompt P fea and the semantic edge prompt P edge act as learnable dynamic filters that smoothly project the initial features into a task-specific latent space prior to deep encoding: 
+
+˜XV = XV ⊙ P fea , ˜XE = XE ⊙ P edge (5) While the modulated node feature matrix ˜XV directly serves as the initial hidden states for the GNN, the purified edge feature matrix ˜XE requires further mapping to guide struc-tural routing. Because these edge features deeply compress heterogeneous meta-paths, they are subsequently transformed into scalar attention weights αuv via a dedicated edge encoder: 
+
+αuv = σ(MLP edge (˜ euv )) , ∀(u, v ) ∈ E (6) By unifying the feature and edge prompts at the entry point of the network, this filtration phase ensures that the model selectively activates only the node attributes and interaction paths most critical to the current domain, effectively stripping away redundant background noise. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 6
+
+Subsequent to the input space calibration, the framework executes a layer-level topological intervention driven by the structure prompt P str . Operating directly on the hidden layers of the GNN, this prompt deeply intervenes in the topology-aware mechanisms of message passing. The encoder modu-lated by the structure prompt is denoted as f ′ 
+
+> θ
+
+. For the hidden state matrix H(l) produced by the l-th GNN layer, the layer-specific structure prompt matrix P (l) 
+
+> str
+
+dynamically updates the node representations through residual modulation: 
+
+Z(l) = Aggregate (H(l), A, α) (7) 
+
+H(l+1) = ReLU (( Z(l) + H(l)) ⊙ P (l) 
+
+> str
+
+) (8) Through the integration of these three orthogonal prompts, the framework achieves a highly expressive yet parameter-efficient adaptation, elegantly decoupling the initial semantic alignment from the deep structural aggregation. 
+
+2) Prompt-Aware Graph Contrastive Pre-training: Having established the tri-prompt system, the Deep Graph Infomax (DGI) paradigm is adopted to execute unified self-supervised pre-training. The entire pre-training pipeline fundamentally consists of three sequential stages: view construction, dual-path encoding, and discriminator optimization. To construct the positive and negative sample pairs required for contrastive learning, specific augmentation strategies [28] are applied in the topological and feature spaces. The positive view strictly retains the local structure and features of the orig-inal graph, denoted as the tuple (XV , A, XE ). Concurrently, an augmented view is generated by perturbing the topology through random edge dropping with probability p, yielding an augmented adjacency matrix ˜A and a corresponding edge feature subset ˜XE . To establish a contrastive baseline, a negative view is constructed by randomly shuffling the node features along the node dimension. This shuffling operation deliberately breaks the joint correspondence between the graph topology and node attributes to introduce spurious node se-mantics, yielding the shuffled feature matrix: 
+
+XShf = Shuffle (XV ) (9) The negative view thereby preserves the original topology A
+
+alongside these corrupted features. During the encoding phase, the shared GNN backbone fθ ,coupled with distinct prompt pathways, extracts three levels of graph representations corresponding to the constructed views. The positive anchor view is fed into the base backbone to acquire the genuine local context features Hpos for all nodes: 
+
+Hpos = fθ (XV , A, XE ) (10) Similarly, the negative view is input into the backbone to obtain the counterfeit node representation matrix Hneg :
+
+Hneg = fθ (XShf , A, XE ) (11) For the global graph summary, the augmented view is pro-cessed by the backbone equipped with the complete tri-prompt set, denoted collectively as P all = {P fea , P edge , P str }. A readout function R subsequently aggregates all perturbed node representations to generate the graph-level global summary: 
+
+cglobal = σ 1
+
+|V |
+
+X
+
+> i∈V
+
+h
+
+fθ
+
+ ˜XV , ˜A, ˜XE , P all 
+
+i 
+
+> i
+
+!
+
+(12) The pre-training optimization objective is to enable the global graph summary cglobal to accurately identify its gen-uine constituents (positive node vectors hpos ) and repel the misaligned counterfeit nodes (negative node vectors hneg ). To this end, a bilinear discriminator D, parameterized by a weight matrix W , is introduced to calculate the similarity scores between node-level representations and the global summary: 
+
+D(h, c) = σ(h⊤W c ) (13) The final pre-training loss function Lpre is defined as a standard Binary Cross-Entropy (BCE) loss: 
+
+Lpre = − 1
+
+|V | 
+
+> |V|
+
+X
+
+> i=1
+
+[log D(hpos ,i , cglobal ) + log(1 − D (hneg ,i , cglobal ))] 
+
+(14) Throughout the multi-domain pre-training phase, the model shares the same GNN backbone parameters across K different source domain datasets, but independently optimizes a specific set of tri-prompts {P (k) 
+
+> fea
+
+, P (k)
+
+> edge
+
+, P (k) 
+
+> str
+
+}Kk=1 for each dataset. 
+
+C. Cross-domain Semantic Fine-tuning 
+
+Upon completion of the multi-domain pre-training, the shared GNN backbone fθ learns transferable graph representations, while a prior prompt knowledge base 
+
+{P (k) 
+
+> fea
+
+, P (k)
+
+> edge
+
+, P (k) 
+
+> str
+
+}Kk=1 is obtained from the source domains. For N -way K-shot cross-domain adaptation on the target domain, the backbone parameters are kept frozen, and a Tri-Prompt Composition and Decoupled Fusion Mechanism is introduced to adapt prior knowledge to the new domain. 
+
+1) Tri-Prompt Composition Mechanism: For prompt mod-ules across all dimensions, a joint construction strategy com-bining a composed prompt and an open prompt is adopted to balance prior knowledge transfer with target domain adapta-tion. Specifically, to dynamically distill the universal knowl-edge from the K source domains, a learnable attention vector 
+
+λ ∈ RK is introduced. The normalized attention weight wk for the k-th pre-trained prompt is computed via Softmax, yielding the composed prompt P comp  
+
+> ∗
+
+for any specific prompt type 
+
+∗ ∈ { fea , edge , str } through a weighted summation: 
+
+w∗ 
+
+> k
+
+= exp( λ∗
+
+> k
+
+)
+
+PKj=1 exp( λ∗ 
+
+> j
+
+) , P comp  
+
+> ∗
+
+=
+
+> K
+
+X
+
+> k=1
+
+w∗
+
+> k
+
+P (k) 
+
+> ∗
+
+(15) Simultaneously, a task-specific open prompt P open  
+
+> ∗
+
+is randomly initialized to absorb the specific distribution of the new target domain. During the forward pass of fine-tuning, the edge semantics are first adaptively filtered. The updated edge feature matrix ˜XE is jointly modulated by the composed edge prompt and the open edge prompt: 
+
+˜XE = P comp edge (XE ) + β · P open edge (XE ) (16) where β is a learnable coefficient controlling the intensity of edge semantic fusion in the target domain. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 7
+
+Following the edge semantic modulation, the node repre-sentations are inferred through a decoupled dual-branch archi-tecture. In the feature-focused branch, the initial node features 
+
+XV are mapped using the feature prompt, and combined with the purified semantic edge features ˜XE as inputs to the frozen backbone fθ . This branch solely reshapes the external feature space to extract the feature-driven embedding matrix Zfea ,without injecting any additional structure prompts: 
+
+˜XV = P comp fea (XV ) + γfea · P open fea (XV ) (17) 
+
+Zfea = fθ ( ˜XV , A, ˜XE ) (18) Parallel to the feature branch, the structure-focused branch aims to adjust the message passing preferences under the target domain’s topology. Here, the original node features 
+
+XV are kept unchanged, and the structure prompt P str is directly injected into the frozen GNN. The final structure-driven embedding matrix Zstr is inferred jointly by the prior composed structure prompt and the open structure prompt: 
+
+Zstr = fθ (XV , A, ˜XE ; P comp str )+ γstr ·fθ (XV , A, ˜XE ; P open str )
+
+(19) where γstr dynamically balances the prior topological rules with the novel topological rules of the target domain. Finally, the comprehensive representations Zfinal is obtained through the weighted residual fusion of both branches: 
+
+Zfinal = Zfea + α · Zstr (20) where α is the branch balancing coefficient. 
+
+2) Prototype-based Classification and Robust Evaluation: 
+
+To enhance the universality of the framework, the downstream tasks are uniformly modeled as instance-level classification problems, employing non-parametric Prototypical Networks to mitigate overfitting in few-shot scenarios. After obtaining the final node representations Zfinal , a unified instance-level embedding vector hi is constructed for each target sample 
+
+i. For node classification tasks, the instance representation is directly derived from the final node embedding, such that 
+
+hi = Zfinal [i]. Conversely, for graph or subgraph classi-fication tasks, a local subgraph Gi is extracted via multi-hop sampling centered on the target node, and a readout function (e.g., mean pooling) aggregates the node represen-tations within the subgraph to yield the global representation 
+
+hi = Readout ({Zfinal [j] | j ∈ G i}).During the few-shot training phase, a support set S is constructed by randomly sampling K labeled instances for each category m. The semantic prototype vector cm for category m is then computed by averaging the embeddings of all instances belonging to the same class within S:
+
+cm = 1
+
+K
+
+X
+
+> i∈S m
+
+hi (21) For any unknown query instance hq in the test set, the cosine similarity between its normalized embedding and each cate-gory prototype cm is calculated. This similarity is converted into a prediction probability via the Softmax function: 
+
+p(y = m|hq ) = exp( sim (hq , cm)/τ )
+
+P|C| 
+
+> j=1
+
+exp( sim (hq , cj )/τ ) (22) The optimization objective for fine-tuning minimizes the cross-entropy loss on the training set. Since the backbone network is completely frozen, only the lightweight prompt parameters are updated. To eliminate the random bias introduced by few-shot sampling, an early stopping is employed on a validation set, and fine-tuning is independently repeated multiple times using different random seeds to ensure robust evaluation. V. E VALUATIONS 
+
+A. Experimental Settings 1) Datasets: Extensive experiments are conducted on four widely used real-world heterogeneous graph benchmarks for cross-domain evaluation: ACM, DBLP [29], IMDB [30], and Freebase [29]. During the feature initialization phase, any raw textual attributes associated with the nodes are directly pre-processed into pure numerical vectors. By intentionally stripping away all natural language semantics and precluding the use of LLM-based alignment, this setup forces the models to rely strictly on the inherent topological structures and relational meta-patterns for cross-domain transfer. Table I summarizes the basic statistics of the four hetero-geneous graph benchmarks. These datasets differ not only in graph scale, but also in schema complexity, as reflected by the numbers of node types and edge types. Such diversity provides a suitable testbed for evaluating the cross-domain transferability of heterogeneous graph foundation models.                           
+
+> TABLE I SUMMARY OF THE HETEROGENEOUS GRAPH DATASETS USED IN OUR CROSS -DOMAIN EVALUATION .
+> Dataset #Nodes #Node #Edges #Edge #Classes Types Types
+> ACM 10,942 4547,872 83DBLP 26,128 4239,566 64IMDB 11,616 334,212 43Freebase 180,098 81,057,688 36 7
+
+2) Baselines: To comprehensively demonstrate the superi-ority of CrossHGL , it is evaluated against ten representative state-of-the-art baselines, which are systematically catego-rized into four groups: (1) Homogeneous GNNs: GCN [31], GraphSAGE [32], and GAT [33], which inherently flatten the heterogeneous topology to perform message passing; (2) Heterogeneous GNNs: HAN [34] and Simple-HGN [35], which are representative HGNNs that account for hetero-geneity through neighborhood aggregation guided by meta-paths or edge-type-specific attention; (3) Graph Contrastive Learning: GraphCL [36] and DGI [37], which are repre-sentative self-supervised pre-training methods designed for universal graph representation learning; (4) Graph Founda-tion Models: GPPT [10], GraphPrompt [11], GCOPE [25], and SAMGPT [26], which encompass recent explorations in prompt-based graph learning. 
+
+3) Evaluation Protocol and Few-Shot Settings: To evaluate cross-domain transferability, a Leave-One-Out pre-training and fine-tuning protocol is adopted [25], [26]. Specifically, one JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 8
+
+TABLE II FEW -SHOT NODE CLASSIFICATION RESULTS : AVERAGE MICRO -F1 AND MACRO -F1 (%) ± STANDARD DEVIATION ACROSS FOUR CROSS -DOMAIN TASKS .
+
+BOLDFACE LETTERS MARK THE BEST PERFORMANCE , WHILE UNDERLINED LETTERS INDICATE THE SECOND BEST .                                                                                                                                                                                                                                                                                        
+
+> Paradigm Category Method ACM DBLP IMDB Freebase Micro-F1 Macro-F1 Micro-F1 Macro-F1 Micro-F1 Macro-F1 Micro-F1 Macro-F1 Supervised Learning Heterogeneous HAN 52.66 ±3.90 49.20 ±6.99 41.72 ±5.52 36.68 ±6.84 37.25 ±2.15 27.68 ±5.49 40.12 ±7.39 8.01 ±1.29 Simple-HGN 48.15 ±5.44 45.15 ±3.67 37.53 ±2.16 33.26 ±4.16 35.14 ±2.42 24.15 ±4.31 37.73 ±4.27 7.52 ±2.32 Homogeneous GCN 61.02 ±10.23 56.19 ±12.92 37.95 ±4.98 34.84 ±6.16 37.09 ±2.06 27.20 ±4.92 22.42 ±0.19 4.02 ±0.21 SAGE 47.83 ±5.38 46.56 ±6.10 44.01 ±5.34 41.42 ±5.82 37.67 ±1.60 30.36 ±4.15 29.21 ±0.15 7.45 ±0.03 GAT 54.10 ±6.96 46.75 ±8.28 38.50 ±4.47 33.91 ±5.20 37.24 ±2.05 31.49 ±3.81 25.95 ±0.14 5.30 ±0.02 Pre-training & Fine-tuning Contrastive GraphCL 43.20 ±6.25 37.12 ±8.78 36.73 ±6.74 33.39 ±7.21 33.88 ±3.17 27.42 ±4.51 12.51 ±5.16 10.51 ±2.36 DGI 41.16 ±4.31 34.51 ±4.15 38.22 ±2.46 34.21 ±4.42 34.02 ±4.21 27.93 ±3.25 12.87 ±3.53 11.23 ±5.32 Foundation Models GraphPrompt 33.15 ±6.52 16.24 ±9.12 30.39 ±6.24 11.65 ±4.07 27.11 ±1.35 14.22 ±3.14 12.24 ±7.76 11.42 ±4.94 GCOPE 34.12 ±1.24 27.05 ±4.46 39.91 ±6.74 35.90 ±8.27 35.98 ±1.66 25.43 ±4.62 14.42 ±3.21 12.41 ±5.25 SAMGPT 50.23 ±9.57 46.12 ±11.89 38.48 ±6.40 36.40 ±6.94 34.56 ±2.47 31.39 ±3.33 14.68 ±5.72 10.83 ±2.87
+> Ours CrossHGL 66.41 ±5.01 64.99 ±5.94 85.18 ±9.45 83.15 ±11.43 37.84 ±5.90 31.45 ±7.07 17.52 ±4.14 15.03 ±3.17
+
+TABLE III FEW -SHOT GRAPH CLASSIFICATION RESULTS . A VERAGE MICRO -F1 AND MACRO -F1 (%) ± STANDARD DEVIATION ARE REPORTED . BOLDFACE 
+
+> LETTERS MARK THE BEST PERFORMANCE
+
+, WHILE UNDERLINED LETTERS INDICATE THE SECOND BEST .                                                                                                                                                                                                                                                                                        
+
+> Paradigm Category Method ACM DBLP IMDB Freebase Micro-F1 Macro-F1 Micro-F1 Macro-F1 Micro-F1 Macro-F1 Micro-F1 Macro-F1 Supervised Learning Heterogeneous HAN 47.47 ±8.42 43.02 ±10.98 49.13 ±8.66 45.68 ±9.38 34.20 ±2.99 26.48 ±6.38 34.13 ±7.39 7.67 ±2.48 Simple-HGN 44.26 ±5.16 40.02 ±7.54 46.12 ±6.26 43.15 ±5.21 35.16 ±3.15 27.34 ±6.26 31.73 ±4.27 5.32 ±1.29 Homogeneous GCN 54.68 ±9.08 48.26 ±11.79 43.38 ±6.28 37.64 ±7.06 35.02 ±2.85 27.36 ±4.89 20.04 ±0.41 9.40 ±0.05 SAGE 42.63 ±5.59 36.44 ±8.02 47.14 ±8.32 43.64 ±9.28 35.24 ±2.52 28.80 ±5.35 26.94 ±4.41 9.87 ±2.60 GAT 42.61 ±4.17 34.01 ±5.57 44.67 ±7.53 40.61 ±8.80 34.89 ±2.63 26.89 ±5.65 21.19 ±5.75 8.78 ±0.94 Pre-training & Fine-tuning Contrastive GraphCL 43.87 ±7.13 37.56 ±9.99 39.98 ±8.22 31.20 ±8.69 35.04 ±1.79 26.38 ±5.45 12.31 ±5.76 7.92 ±2.35 DGI 40.21 ±4.26 34.66 ±6.48 36.41 ±6.51 28.12 ±4.21 34.15 ±2.16 27.33 ±6.15 11.24 ±5.53 7.43 ±1.89 Foundation Models GraphPrompt 31.16 ±5.16 14.15 ±6.16 28.56 ±4.16 11.65 ±4.07 24.16 ±4.15 13.82 ±3.25 10.83 ±5.46 9.39 ±4.75 GCOPE 33.15 ±5.26 25.16 ±3.16 35.43 ±3.17 35.90 ±8.27 34.17 ±2.83 24.42 ±3.62 11.42 ±4.16 10.11 ±4.36 SAMGPT 42.88 ±10.48 37.17 ±10.69 40.28 ±7.82 33.95 ±9.27 34.58 ±3.42 27.77 ±5.41 13.58 ±4.51 9.74 ±2.31
+> Ours CrossHGL 57.86 ±11.26 52.16 ±14.32 55.72 ±14.69 49.19 ±15.06 36.01 ±4.81 29.13 ±6.23 17.16 ±9.43 11.47 ±3.36
+
+dataset is designated exclusively as the target domain, while the remaining datasets serve as source domains for multi-domain pre-training. For downstream few-shot adaptation, K
+
+labeled nodes per category ( |C|) are randomly sampled to form the support set S (|S| = |C| × K), with the remaining nodes evenly bisected into validation ( V) and test ( T ) sets. During this phase, the pre-trained backbone is entirely frozen, and only the lightweight prompts are updated. All baselines are evaluated using the same few-shot data partitioning strategy. For the homogeneous and heterogeneous GNNs, training is performed in a fully supervised manner on the same few-shot training set used during the fine-tuning stage of pre-training, contrastive, and graph foundation model base-lines. For the remaining baselines, we follow the standard pre-training and fine-tuning paradigm: these methods are first pre-trained on the source domains under the leave-one-out protocol and then adapted to the target domain using the same few-shot training set. Furthermore, standard homogeneous GNNs, contrastive learning methods, and homogeneous foundation models are inherently designed for homogeneous structures. For these baselines, the input heterogeneous graphs are directly flattened into homogeneous topologies by ignoring node and edge type distinctions prior to execution. 
+
+B. Analysis 
+
+We answer five Research Questions ( RQ ) and demonstrate our arguments by extended experiments. 
+
+1) RQ1: Does CrossHGL surpass state-of-the-art base-lines in text-free, few-shot cross-domain heterogeneous graph learning? : We evaluate CrossHGL against diverse baseline paradigms under the extreme 1-shot cross-domain setting. The node classification results are reported in Table II, while the graph classification results are reported in Ta-ble III. Overall, the results consistently demonstrate the strong positive transferability of CrossHGL across both node-level and graph-level tasks. It is worth noting that GCN, Graph-SAGE, GAT, HAN, and Simple-HGN are supervised baselines trained directly on the target few-shot set, whereas CrossHGL ,GraphCL, DGI, GraphPrompt, GCOPE, and SAMGPT all follow the same pre-training-and-fine-tuning protocol under the leave-one-out setting. This distinction is important for interpreting the results: supervised baselines mainly reflect direct adaptation ability under scarce labels, while the latter group evaluates whether transferable cross-domain knowledge can be effectively acquired before target adaptation. For node classification, CrossHGL achieves the best results on three of the four target datasets, with the clearest gains on ACM and DBLP. On ACM, it improves over the strongest baseline, GCN, by 8.8% in Micro-F1 and 15.7% in Macro-F1. On DBLP, the advantage becomes particularly pronounced, where CrossHGL substantially outperforms both the strongest supervised baseline, GraphSAGE, and the strongest founda-tion baseline, GCOPE, by a wide margin in both Micro-F1 and Macro-F1. On IMDB, although the margin becomes JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 9
+
+smaller, CrossHGL still achieves the best Micro-F1 and the second-best Macro-F1, indicating stable transferability even when competing methods perform similarly. Overall, these results suggest that semantic-preserving transformation and Tri-Prompt adaptation enable more effective transfer of hetero-geneous structural priors than direct supervision, contrastive pre-training alone, or homogeneous flattening. A similar pattern is observed for graph classification, con-firming that the advantage of CrossHGL extends beyond node-level prediction. As shown in Table III, CrossHGL ranks first on ACM, DBLP, and IMDB in both Micro-F1 and Macro-F1. On ACM, it improves over GCN by 5.8% in Micro-F1 and 8.1% in Macro-F1. On DBLP, it surpasses HAN by 13.4% and 7.7%, respectively. On IMDB, the gains remain consistent but more modest, reaching 2.2% in Micro-F1 and 1.2% in Macro-F1 over the strongest competitor, GraphSAGE. These results indicate that CrossHGL can transfer not only node-level semantics but also graph-level structural patterns. Freebase reveals an important boundary condition. Unlike ACM, DBLP, and IMDB, this dataset is inherently feature-poor, so after one-hot initialization and SVD alignment, the target graph is reduced to a largely structural identifier space with very weak feature semantics. Under such a setting, supervised baselines can more easily overfit to local struc-tural cues in the target few-shot set, whereas pre-training-and-fine-tuning methods are required to transfer knowledge across a much larger semantic gap. This helps explain why 
+
+CrossHGL does not outperform HAN on Freebase Micro-F1, even though it still achieves the best Macro-F1 on both node classification and graph classification. Therefore, the Freebase results should be interpreted not simply as weaker overall transfer, but as evidence that class-balanced transfer under severe feature degeneration remains a challenging case for all pre-training-based paradigms. Taken together, these findings show that CrossHGL delivers consistent and often substantial improvements across both node classification and graph classification, validating the effectiveness of preserv-ing heterogeneous semantics throughout transformation, pre-training, and fine-tuning. 
+
+2) RQ2: How resilient is CrossHGL to varying degrees of data scarcity during cross-domain adaptation? : To ex-amine the robustness of CrossHGL under different levels of target-domain supervision, we conduct a K-shot analysis on ACM with K ∈ { 1, 2, . . . , 10 }. We compare CrossHGL 
+
+with representative baselines under the “pre-training and fine-tuning” paradigm, and report the Micro-F1 and Macro-F1 trends in Fig. 3. Overall, CrossHGL consistently achieves the best performance across the entire K-shot range. Its advantage is particularly evident in the extremely low-shot regime ( K ≤ 3), where only a handful of labeled nodes are available for adaptation. This suggests that CrossHGL can exploit scarce supervision more effectively than competing methods, benefiting from transferable heterogeneous priors learned during pre-training rather than relying heavily on target-domain labels. As K increases, all methods improve with more labeled data, but CrossHGL maintains a clear lead and exhibits a steady upward trend, reaching 81.06% Micro-F1 and 80.52% MicroF1(%)                                  
+
+> 10.00
+> 28.75
+> 47.50
+> 66.25
+> 85.00
+> Shot k
+> 12345678910
+> CrossHGPT GraphCL
+> GraphPrompt GCOPE
+> SAMGPT
+> MacroF1(%)
+> 10.00
+> 28.75
+> 47.50
+> 66.25
+> 85.00
+> Shot k
+> 12345678910
+> CrossHGPT GraphCL
+> GraphPrompt GCOPE
+> SAMGPT
+> 971.91 35.05 44.86 79.97 80.21
+> 10 72.49 37.12 45.12 81.05 80.52
+> 1
+> Fig. 3. Impact of sample size ( k) on ACM classification performance
+
+Micro-F1  Macro-F1  Micro-F1  Mac 
+
+3 66.41  64.99  85.18 
+
+2 65.86  63.49  85.27 
+
+1 60.65  54.45  83.49 
+
+1 61.51  56.47      
+
+> ACM
+> F1(%)
+> 50.00
+> 55.00
+> 60.00
+> 65.00
+> 70.00
+> Micro-F1
+> Macro-F1
+> DBLP
+> 75.00
+> 78.75
+> 82.50
+> 86.25
+> 90.00
+> Micro-F1
+> Macro-F1
+> IMDB
+> F1(%)
+> 25.00
+> 28.75
+> 32.50
+> 36.25
+> 40.00
+> Source
+> 321
+> Micro-F1
+> Macro-F1
+> Freebase
+> 10.00
+> 12.50
+> 15.00
+> 17.50
+> 20.00
+> Source
+> 321
+> Micro-F1
+> Macro-F1
+> Fig. 4. Performance comparison under different pre-training source set-tings. The full multi-source setting consistently achieves the best overall performance, while reducing the number of source domains leads to clear performance degradation on several target datasets.
+
+Macro-F1 at 10-shot. These results indicate that CrossHGL not only excels under extreme label scarcity, but also retains strong adaptation capability as supervision becomes less limited. In other words, preserving heterogeneous semantics during pre-training and fine-tuning yields stronger low-shot resilience and superior sample efficiency in cross-domain transfer. 
+
+3) RQ3: How important is multi-source pre-training for 
+
+CrossHGL ?: To investigate the effect of pre-training source domains, we progressively remove source datasets during pre-training while keeping the target-domain fine-tuning and evaluation protocol unchanged. Fig. 4 shows that the full multi-source setting consistently yields the strongest overall performance, confirming that CrossHGL benefits from diverse source-domain knowledge during pre-training. When only one source domain is removed, the performance drop is relatively limited, especially on DBLP, indicating that the contribution of different source domains is not uniform across target domains. This suggests that different source domains provide transfer-able structural and semantic priors with different degrees of relevance to each target dataset. When the pre-training setting is further reduced to a single source domain, the degradation becomes much more evi-dent. In particular, the average Micro-F1 drop reaches 8.03% on ACM and 1.98% on DBLP. Overall, these results show that although individual source domains contribute unevenly, JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 10 
+
+TABLE IV ABLATION STUDY RESULTS OF TRI -P ROMPT COMPONENTS ON FOUR TARGET DATASETS . B OLDFACE DENOTES THE BEST PERFORMANCE .                                                                                                                                                
+
+> Method Dataset ACM DBLP IMDB Freebase Micro-F1 Macro-F1 Micro-F1 Macro-F1 Micro-F1 Macro-F1 Micro-F1 Macro-F1 w/o Edge Prompt 64.27 ±8.60 59.40 ±10.62 85.03 ±9.60 83.06 ±11.78 36.65 ±6.14 31.37 ±7.26 15.23 ±6.08 9.69 ±2.47 w/o Structure Prompt 62.72 ±6.25 56.46 ±8.01 84.87 ±8.42 84.61 ±10.16 36.37 ±5.34 31.30 ±6.41 15.02 ±6.72 9.50 ±2.49 w/o Feature Prompt 60.85 ±6.60 54.56 ±8.22 84.92 ±8.57 84.03 ±10.74 36.75 ±5.98 31.27 ±7.18 15.11 ±5.92 9.93 ±2.46
+> CrossHGL 66.41 ±5.01 64.99 ±5.94 85.18 ±9.45 83.15 ±11.43 37.84 ±5.90 31.45 ±7.07 17.52 ±4.14 15.03 ±3.17 表格 1
+> Micro-F1 ACM DBLP IMDB Freebase
+> Flatten 61.02 37.95 37.09 22.42
+> Ours 72.04 72.87 37.29 47.72
+> Performance Comparison on GC N
+> 20.00
+> 35.00
+> 50.00
+> 65.00
+> 80.00 Flatten
+> Ours
+> ACM DBLP IMDB Freebase
+> Performance Comparison on SAGE
+> 25.00
+> 33.75
+> 42.50
+> 51.25
+> 60.00 Flatten
+> Ours
+> ACM DBLP IMDB Freebase
+> 表格 1-1
+> ACM DBLP IMDB Freebase
+> Flatten 47.83 44.01 36.67 29.21
+> Ours 49.4 56.08 38.22 40.5
+> Performance Comparison on GAT
+> 20.00
+> 33.75
+> 47.50
+> 61.25
+> 75.00 Flatten
+> Ours
+> ACM DBLP IMDB Freebase
+
+Fig. 5. Comparison between direct flattening and our semantic-preserving graph transformation on GCN, GraphSAGE, and GAT under the 1-shot supervised setting, where the remaining nodes are split into validation and test sets following the protocol used in the main results. 
+
+multi-source pre-training exposes CrossHGL to more diverse heterogeneous structures and relation patterns, enabling it to learn more transferable semantic priors and achieve better generalization on unseen target domains. 
+
+4) RQ4. Does the Tri-Prompt in CrossHGL work? :
+
+Table IV reports the ablation results of the three prompt components. Overall, the full CrossHGL achieves the best performance on all four target datasets, showing that the gains of CrossHGL arise from the complementary effects of the entire Tri-Prompt design rather than any single prompt alone. Among the three variants, removing the Feature Prompt causes the largest degradation on ACM, where Micro-F1 decreases by 8.37%. This indicates that feature-level calibration is partic-ularly important when the target graph contains informative node attributes. Meanwhile, removing the Edge Prompt or the Structure Prompt also consistently weakens performance, especially on DBLP and IMDB, indicating that both relation-aware interactions and topology-aware adaptation are impor-tant for preserving transferable heterogeneous semantics. We also observe that different datasets show different sen-sitivities to prompt removal. ACM is more affected by remov-ing the Feature Prompt, whereas DBLP and IMDB exhibit relatively consistent declines across all variants. These results suggest that the three prompts capture complementary aspects of transferable knowledge, and their joint use is necessary for robust cross-domain adaptation. 
+
+5) RQ5: How crucial is the Semantic-Preserving Graph Transformation for retaining multi-relational priors? : To validate the contribution of the graph transformation module, we compare our semantic-preserving strategy with direct flat-tening using GCN, GraphSAGE, and GAT under the same 1-shot supervised setting. Specifically, for each target dataset, we use 1-shot labeled nodes for training and split the remaining nodes into validation and test sets following the same protocol as in the main results. As shown in Fig. 5, the models equipped with our transformation consistently outperform their directly flattened counterparts across all three backbones. This result indicates that directly flattening a heterogeneous graph discards important node- and edge-type semantics, mak-ing it harder for the model to exploit transferable structural priors under scarce supervision. In contrast, our transformation preserves multi-relational information in a unified homoge-neous graph, allowing even standard homogeneous GNNs to better capture heterogeneous dependencies. These results suggest that semantic-preserving transformation provides an effective structural inductive bias for few-shot learning on heterogeneous graphs. VI. C ONCLUSIONS AND OUTLOOK 
+
+In this work, we investigate the problem of text-free, few-shot, cross-domain learning on heterogeneous graphs and propose CrossHGL , a foundation framework that explic-itly preserves and transfers heterogeneous structural seman-tics. By integrating semantic-preserving graph transforma-tion, prompt-aware multi-domain pre-training, and parameter-efficient cross-domain fine-tuning, CrossHGL effectively mit-igates heterogeneity shifts across domains without relying on external textual supervision. Extensive experiments on four real-world heterogeneous graph benchmarks demonstrate that CrossHGL consistently achieves competitive and often superior performance under extremely limited target-domain supervision. The empirical results further indicate that pre-serving multi-relational semantics during both pre-training and adaptation is important for effective knowledge transfer in het-erogeneous settings. In particular, the results of source-domain ablation, prompt ablation, and graph transformation analysis collectively support the effectiveness of the proposed design. This work suggests that semantic-preserving transformation and prompt-based adaptation offer a practical direction for JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 11 
+
+heterogeneous graph foundation models in text-free scenarios. In future work, it would be valuable to extend this framework to graph-level tasks, larger-scale graphs, and more challenging open-world scenarios, as well as to explore more efficient pre-training objectives and more general semantic alignment strategies across highly diverse domains. REFERENCES [1] C. Jin, J. Zhou, C. Xie, S. Yu, Q. Xuan, and X. Yang, “Enhanc-ing ethereum fraud detection via generative and contrastive self-supervision,” IEEE Transactions on Information Forensics and Security ,vol. 20, pp. 839–853, 2024. [2] B. Hu, C. Shi, W. X. Zhao, and P. S. Yu, “Leveraging meta-path based context for top-n recommendation with a neural co-attention model,” in Proceedings of the 24th ACM SIGKDD international conference on knowledge discovery & data mining , 2018, pp. 1531–1540. [3] C. Jin, J. Jin, J. Zhou, J. Wu, and Q. Xuan, “Heterogeneous feature augmentation for ponzi detection in ethereum,” IEEE Transactions on Circuits and Systems II: Express Briefs , vol. 69, no. 9, pp. 3919–3923, 2022. [4] Z. Liu, C. Chen, X. Yang, J. Zhou, X. Li, and L. Song, “Heterogeneous graph neural networks for malicious account detection,” in Proceedings of the 27th ACM international conference on information and knowledge management , 2018, pp. 2077–2085. [5] M. Schlichtkrull, T. N. Kipf, P. Bloem, R. Van Den Berg, I. Titov, and M. Welling, “Modeling relational data with graph convolutional networks,” in European semantic web conference . Springer, 2018, pp. 593–607. [6] Z. Hu, Y. Dong, K. Wang, and Y. Sun, “Heterogeneous graph trans-former,” in Proceedings of the web conference 2020 , 2020, pp. 2704– 2710. [7] Q. Zhang, X. Wu, Q. Yang, C. Zhang, and X. Zhang, “Few-shot heterogeneous graph learning via cross-domain knowledge transfer,” in Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , 2022, pp. 2450–2460. [8] C. Zhang, K. Ding, J. Li, X. Zhang, Y. Ye, N. V. Chawla, and H. Liu, “Few-shot learning on graphs,” in 31st International Joint Conference on Artificial Intelligence, IJCAI 2022 . International Joint Conferences on Artificial Intelligence, 2022, pp. 5662–5669. [9] Q. Dai, X.-M. Wu, J. Xiao, X. Shen, and D. Wang, “Graph transfer learning via adversarial domain adaptation with graph convolution,” 
+
+IEEE Transactions on Knowledge and Data Engineering , vol. 35, no. 5, pp. 4908–4922, 2022. [10] M. Sun, K. Zhou, X. He, Y. Wang, and X. Wang, “Gppt: Graph pre-training and prompt tuning to generalize graph neural networks,” in Proceedings of the 28th ACM SIGKDD conference on knowledge discovery and data mining , 2022, pp. 1717–1727. [11] Z. Liu, X. Yu, Y. Fang, and X. Zhang, “Graphprompt: Unifying pre-training and downstream tasks for graph neural networks,” in Proceed-ings of the ACM web conference 2023 , 2023, pp. 417–428. [12] P. Jiao, J. Ni, D. Jin, X. Guo, H. Liu, H. Chen, and Y. Bi, “Hgmp: heterogeneous graph multi-task prompt learning,” in Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence ,2025, pp. 2982–2990. [13] H. Liu, J. Feng, L. Kong, N. Liang, D. Tao, Y. Chen, and M. Zhang, “One for all: Towards training one graph model for all classification tasks,” in 12th International Conference on Learning Representations, ICLR 2024 , 2024. [14] X. Sun, H. Cheng, J. Li, B. Liu, and J. Guan, “All in one: Multi-task prompting for graph neural networks,” in Proceedings of the 29th ACM SIGKDD conference on knowledge discovery and data mining , 2023, pp. 2120–2131. [15] J. Jinghong, L. Song, J. Li, and Y. Kong, “Hepa: Heterogeneous graph prompting for all-level classification tasks,” in Proceedings of the AAAI Conference on Artificial Intelligence , vol. 39, no. 11, 2025, pp. 11 915– 11 923. [16] X. Yu, Y. Fang, Z. Liu, and X. Zhang, “Hgprompt: Bridging homo-geneous and heterogeneous graphs for few-shot prompt learning,” in 
+
+Proceedings of the AAAI conference on artificial intelligence , vol. 38, no. 15, 2024, pp. 16 578–16 586. [17] J. Tang, Y. Yang, W. Wei, L. Shi, L. Xia, D. Yin, and C. Huang, “Higpt: Heterogeneous graph language model,” in Proceedings of the 30th ACM SIGKDD conference on knowledge discovery and data mining , 2024, pp. 2842–2853. [18] J. Yang, R. Wang, C. Yang, B. Yan, Q. Zhou, Y. Juan, and C. Shi, “Harnessing language model for cross-heterogeneity graph knowledge transfer,” in Proceedings of the AAAI Conference on Artificial Intelli-gence , vol. 39, no. 12, 2025, pp. 13 026–13 034. [19] R. Jia, M. Wu, Y. Ding, J. Lu, and Y. Zhang, “Hetgcot: Heterogeneous graph-enhanced chain-of-thought llm reasoning for academic question answering,” in Findings of the Association for Computational Linguis-tics: EMNLP 2025 , 2025, pp. 15 950–15 963. [20] X. Yu, S. Ye, R. Liang, C. Zhou, H. Cheng, X. Zhang, and Y. Fang, “Evaluating progress in graph foundation models: A comprehensive benchmark and new insights,” arXiv preprint arXiv:2603.10033 , 2026. [21] Z. Xu, X. Chen, W. Pan, and Z. Ming, “Heterogeneous graph transfer learning for category-aware cross-domain sequential recommendation,” in Proceedings of the ACM on Web Conference 2025 , 2025, pp. 1951– 1962. [22] X. Huang, Y. Yang, Y. Wang, C. Wang, Z. Zhang, J. Xu, L. Chen, and M. Vazirgiannis, “Dgraph: A large-scale financial dataset for graph anomaly detection,” Advances in Neural Information Processing Sys-tems , vol. 35, pp. 22 765–22 777, 2022. [23] Y. Liu, S. Pan, Y. G. Wang, F. Xiong, L. Wang, Q. Chen, and V. C. Lee, “Anomaly detection in dynamic graphs via transformer,” IEEE Transactions on Knowledge and Data Engineering , vol. 35, no. 12, pp. 12 081–12 094, 2021. [24] Z. Ni, C. Liu, H. Wan, and X. Zhao, “Robust heterogeneous graph classification for molecular property prediction with information bottle-neck,” in Proceedings of the AAAI Conference on Artificial Intelligence ,vol. 39, no. 1, 2025, pp. 640–648. [25] H. Zhao, A. Chen, X. Sun, H. Cheng, and J. Li, “All in one and one for all: A simple yet effective method towards cross-domain graph pretraining,” in Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , 2024, pp. 4443–4454. [26] X. Yu, Z. Gong, C. Zhou, Y. Fang, and H. Zhang, “Samgpt: Text-free graph foundation model for multi-domain pre-training and cross-domain adaptation,” in Proceedings of the ACM on Web Conference 2025 , 2025, pp. 1142–1153. [27] Y. Ma, N. Yan, J. Li, M. Mortazavi, and N. V. Chawla, “Hetgpt: Harnessing the power of prompt tuning in pre-trained heterogeneous graph neural networks,” in Proceedings of the ACM Web Conference 2024 , 2024, pp. 1015–1023. [28] J. Zhou, C. Xie, S. Gong, Z. Wen, X. Zhao, Q. Xuan, and X. Yang, “Data augmentation on graphs: A technical survey,” ACM Computing Surveys , vol. 57, no. 11, pp. 1–34, 2025. [29] Q. Lv, M. Ding, Q. Liu, Y. Chen, W. Feng, S. He, C. Zhou, J. Jiang, Y. Dong, and J. Tang, “Are we really making much progress? revisiting, benchmarking and refining heterogeneous graph neural networks,” in 
+
+Proceedings of the 27th ACM SIGKDD conference on knowledge discovery & data mining , 2021, pp. 1150–1160. [30] X. Fu, J. Zhang, Z. Meng, and I. King, “Magnn: Metapath aggregated graph neural network for heterogeneous graph embedding,” in Proceed-ings of the web conference 2020 , 2020, pp. 2331–2341. [31] T. N. Kipf and M. Welling, “Semi-supervised classification with graph convolutional networks,” in International Conference on Learning Rep-resentations , 2017. [32] W. Hamilton, Z. Ying, and J. Leskovec, “Inductive representation learning on large graphs,” Advances in Neural Information Processing Systems , vol. 30, 2017. [33] P. Veliˇ ckovi´ c, G. Cucurull, A. Casanova, A. Romero, P. Lio, and Y. Bengio, “Graph attention networks,” in International Conference on Learning Representations , 2018, pp. 1–12. [34] X. Wang, H. Ji, C. Shi, B. Wang, Y. Ye, P. Cui, and P. S. Yu, “Hetero-geneous graph attention network,” in The world wide web conference ,2019, pp. 2022–2032. [35] X. Yang, M. Yan, S. Pan, X. Ye, and D. Fan, “Simple and efficient heterogeneous graph neural network,” in Proceedings of the Thirty-Seventh AAAI Conference on Artificial Intelligence and Thirty-Fifth Conference on Innovative Applications of Artificial Intelligence and Thirteenth Symposium on Educational Advances in Artificial Intelli-gence , 2023. [36] Y. You, T. Chen, Y. Sui, T. Chen, Z. Wang, and Y. Shen, “Graph con-trastive learning with augmentations,” Advances in neural information processing systems , vol. 33, pp. 5812–5823, 2020. [37] P. Velickovic, W. Fedus, W. L. Hamilton, P. Li` o, Y. Bengio, R. D. Hjelm 
+
+et al. , “Deep graph infomax.” ICLR (poster) , vol. 2, no. 3, p. 4, 2019. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 12 
+
+Xuanze Chen received the B.S. degree from Wen-zhou University, Wenzhou, China, in 2023. He is currently pursuing the Ph.D. degree with the Insti-tute of Cyberspace Security, Zhejiang University of Technology, Hangzhou, China. His current research interests include graph data mining and graph foun-dation models. 
+
+Jiajun Zhou received the Ph.D degree in control theory and engineering from Zhejiang University of Technology, Hangzhou, China, in 2023. He is currently a Postdoctoral Research Fellow with the Institute of Cyberspace Security, Zhejiang University of Technology. His current research interests include graph data mining, cyberspace security and data management. 
+
+Yadong Li received a BS degree from Tianjin University of Technology, Tianjin, China, in 2024. He is currently pursuing a Master’s degree in Control Science and Engineering at Zhejiang University of Technology. His current research interests include graph neural networks and large language models. 
+
+Shanqing Yu received the M.S. degree from the School of Computer Engineering and Science, Shanghai University, China, in 2008 and received the M.S. degree from the Graduate School of In-formation, Production and Systems, Waseda Uni-versity, Japan, in 2008, and the Ph.D. degree, in 2011, respectively. She is currently a Lecturer at the Institute of Cyberspace Security and the College of Information Engineering, Zhejiang University of Technology, Hangzhou, China. Her research inter-ests cover intelligent computation and data mining. 
+
+Qi Xuan (M’18) received the BS and PhD degrees in control theory and engineering from Zhejiang University, Hangzhou, China, in 2003 and 2008, respectively. He was a Post-Doctoral Researcher with the Department of Information Science and Electronic Engineering, Zhejiang University, from 2008 to 2010, respectively, and a Research Assistant with the Department of Electronic Engineering, City University of Hong Kong, Hong Kong, in 2010 and 2017. From 2012 to 2014, he was a Post-Doctoral Fellow with the Department of Computer Science, University of California at Davis, CA, USA. He is a senior member of the IEEE and is currently a Professor with the Institute of Cyberspace Security, College of Information Engineering, Zhejiang University of Technology, Hangzhou, China. His current research interests include network science, graph data mining, cyberspace security, machine learning, and computer vision.

@@ -6,73 +6,56 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-03-31
-- 运行时间：2026-03-31 19:49:39 UTC
+- 最新运行日期：2026-04-01
+- 运行时间：2026-04-01 19:54:43 UTC
 - 运行状态：成功
-- 本次总论文数：17
-- 精读区：6
+- 本次总论文数：11
+- 精读区：0
 - 速读区：11
 
 ### 今日简报（AI）
-今日精选 17 篇前沿论文，重点突破单细胞分析与分子生成的算法瓶颈。
-推荐关注层级层谱嵌入在单细胞测序中的应用，以及利用潜流模型实现的属性导向分子优化。
-建议优先研读两篇 9.0 分佳作，掌握几何深度学习与生成模型在生物医药领域的最新融合趋势。
-- 详情：[/202603/31/README](/202603/31/README)
+今日速览 11 篇 AI 前沿进展，涵盖空间转录组预测、DNA 模型安全及图神经网络优化。
+扩散模型在受限数据下的基因表达预测展现潜力，同时需警惕针对基因组基础模型的定向后门攻击。
+推荐生物信息学研究者关注生成式框架的应用，并同步提升对大规模生物模型安全性的重视。
+- 详情：[/202604/01/README](/202604/01/README)
 
 ### 精读区论文标签
-1. [A Hierarchical Sheaf Spectral Embedding Framework for Single-Cell RNA-seq Analysis](/202603/31/2603.26858v1-a-hierarchical-sheaf-spectral-embedding-framework-for-single-cell-rna-seq-analysis)  
-   标签：评分：9.0/10、query:molrna
-   evidence：用于RNA-seq分析的分层层束谱嵌入
-2. [Property-Guided Molecular Generation and Optimization via Latent Flows](/202603/31/2603.26889v1-property-guided-molecular-generation-and-optimization-via-latent-flows)  
-   标签：评分：9.0/10、query:molrna
-   evidence：通过潜流进行分子发现和优化的生成模型
-3. [Hierarchy-Guided Topology Latent Flow for Molecular Graph Generation](/202603/31/2603.27113v1-hierarchy-guided-topology-latent-flow-for-molecular-graph-generation)  
-   标签：评分：9.0/10、query:molrna
-   evidence：分子图与3D坐标生成模型
-4. [ChemCLIP: Bridging Organic and Inorganic Anticancer Compounds Through Contrastive Learning](/202603/31/2603.28575v1-chemclip-bridging-organic-and-inorganic-anticancer-compounds-through-contrastive-learning)  
-   标签：评分：9.0/10、query:molrna
-   evidence：对比学习用于有机和无机抗癌化合物的统一表示
-5. [Causality-Driven Disentangled Representation Learning in Multiplex Graphs](/202603/31/2603.24105v1-causality-driven-disentangled-representation-learning-in-multiplex-graphs)  
-   标签：评分：8.0/10、query:molrna
-   evidence：多层图中的解耦表示学习
-6. [ADEPT-PolyGraphMT: Automated Molecular Simulation and Multi-Task Multi-Fidelity Machine Learning for Polymer Property Generation and Prediction](/202603/31/2603.27106v1-adept-polygraphmt-automated-molecular-simulation-and-multi-task-multi-fidelity-machine-learning-for-polymer-property-generation-and-prediction)  
-   标签：评分：8.0/10、query:molrna
-   evidence：用于分子图和聚合物性质预测的图神经网络
+- 本次无精读推荐。
 
 ### 速读区论文标签
-1. [Elucidating the Design Space of Flow Matching for Cellular Microscopy](/202603/31/2603.26790v1-elucidating-the-design-space-of-flow-matching-for-cellular-microscopy)  
-   标签：评分：8.0/10、query:molrna
-   evidence：利用分子嵌入的细胞反应基础模型
-2. [What an Autonomous Agent Discovers About Molecular Transformer Design: Does It Transfer?](/202603/31/2603.28015v1-what-an-autonomous-agent-discovers-about-molecular-transformer-design-does-it-transfer)  
-   标签：评分：8.0/10、query:molrna
-   evidence：分子序列和蛋白质的 Transformer 设计
-3. [Spectral Higher-Order Neural Networks](/202603/31/2603.28420v1-spectral-higher-order-neural-networks)  
-   标签：评分：8.0/10、query:molrna
-   evidence：用于高阶耦合的光谱高阶神经网络
-4. [Fine-tuning universal machine learning potentials for transition state search in surface catalysis](/202603/31/2603.24482v1-fine-tuning-universal-machine-learning-potentials-for-transition-state-search-in-surface-catalysis)  
+1. [Central-to-Local Adaptive Generative Diffusion Framework for Improving Gene Expression Prediction in Data-Limited Spatial Transcriptomics](/202604/01/2603.26827v1-central-to-local-adaptive-generative-diffusion-framework-for-improving-gene-expression-prediction-in-data-limited-spatial-transcriptomics)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于分子发现的机器学习势能
-5. [Enabling ab initio geometry optimization of strongly correlated systems with transferable deep quantum Monte Carlo](/202603/31/2603.25381v1-enabling-ab-initio-geometry-optimization-of-strongly-correlated-systems-with-transferable-deep-quantum-monte-carlo)  
+   evidence：用于基因表达的生成式扩散框架
+2. [Poisoning the Genome: Targeted Backdoor Attacks on DNA Foundation Models](/202604/01/2603.27465v1-poisoning-the-genome-targeted-backdoor-attacks-on-dna-foundation-models)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于分子势能面探索的可迁移深度学习
-6. [Geometric Evolution Graph Convolutional Networks: Enhancing Graph Representation Learning via Ricci Flow](/202603/31/2603.26178v1-geometric-evolution-graph-convolutional-networks-enhancing-graph-representation-learning-via-ricci-flow)  
+   evidence：基因组基础模型的后门攻击
+3. [Cross-attentive Cohesive Subgraph Embedding to Mitigate Oversquashing in GNNs](/202604/01/2603.27529v1-cross-attentive-cohesive-subgraph-embedding-to-mitigate-oversquashing-in-gnns)  
    标签：评分：7.0/10、query:molrna
-   evidence：通过里奇流进行图表示学习
-7. [Making Multi-Axis Models Robust to Multiplicative Noise: How, and Why?](/202603/31/2603.26327v1-making-multi-axis-models-robust-to-multiplicative-noise-how-and-why)  
+   evidence：通过子图表示增强节点嵌入的图学习框架
+4. [Cross-attentive Cohesive Subgraph Embedding to Mitigate Oversquashing in GNNs](/202604/01/2603.27529v2-cross-attentive-cohesive-subgraph-embedding-to-mitigate-oversquashing-in-gnns)  
    标签：评分：7.0/10、query:molrna
-   evidence：单细胞RNA测序网络的图学习
-8. [Self-evolving AI agents for protein discovery and directed evolution](/202603/31/2603.27303v1-self-evolving-ai-agents-for-protein-discovery-and-directed-evolution)  
+   evidence：图表示学习与子图嵌入
+5. [CrossHGL: A Text-Free Foundation Model for Cross-Domain Heterogeneous Graph Learning](/202604/01/2603.27685v1-crosshgl-a-text-free-foundation-model-for-cross-domain-heterogeneous-graph-learning)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于蛋白质发现与设计的AI智能体
-9. [CGRL: Causal-Guided Representation Learning for Graph Out-of-Distribution Generalization](/202603/31/2603.24304v1-cgrl-causal-guided-representation-learning-for-graph-out-of-distribution-generalization)  
+   evidence：跨域异构图学习的基础模型
+6. [TMTE: Effective Multimodal Graph Learning with Task-aware Modality and Topology Co-evolution](/202604/01/2603.27723v1-tmte-effective-multimodal-graph-learning-with-task-aware-modality-and-topology-co-evolution)  
+   标签：评分：7.0/10、query:molrna
+   evidence：多模态图学习与拓扑优化
+7. [Accelerating Maximum Common Subgraph Computation by Exploiting Symmetries](/202604/01/2603.23031v1-accelerating-maximum-common-subgraph-computation-by-exploiting-symmetries)  
    标签：评分：6.0/10、query:molrna
-   evidence：图泛化的因果表示学习
-10. [Hessian-informed machine learning interatomic potential towards bridging theory and experiments](/202603/31/2603.25373v1-hessian-informed-machine-learning-interatomic-potential-towards-bridging-theory-and-experiments)  
+   evidence：用于化学信息学和生物信息学的最大公共子图
+8. [Kirchhoff-Inspired Neural Networks for Evolving High-Order Perception](/202604/01/2603.23977v1-kirchhoff-inspired-neural-networks-for-evolving-high-order-perception)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于分子性质预测的机器学习原子间势
-11. [A Boltzmann-machine-enhanced Transformer For DNA Sequence Classification](/202603/31/2603.26465v1-a-boltzmann-machine-enhanced-transformer-for-dna-sequence-classification)  
+   evidence：神经网络中的高阶感知与耦合结构
+9. [Detecting Complex-Energy Braiding Topology in a Dissipative Atomic Simulator with Transformer-Based Geometric Tomography](/202604/01/2603.25775v1-detecting-complex-energy-braiding-topology-in-a-dissipative-atomic-simulator-with-transformer-based-geometric-tomography)  
    标签：评分：6.0/10、query:molrna
-   evidence：DNA 序列分类与潜在结构发现
+   evidence：基于Transformer的拓扑物质研究框架
+10. [Gaussian Joint Embeddings For Self-Supervised Representation Learning](/202604/01/2603.26799v1-gaussian-joint-embeddings-for-self-supervised-representation-learning)  
+   标签：评分：6.0/10、query:molrna
+   evidence：用于表示学习的生成式联合建模
+11. [From Independent to Correlated Diffusion: Generalized Generative Modeling with Probabilistic Computers](/202604/01/2603.27996v1-from-independent-to-correlated-diffusion-generalized-generative-modeling-with-probabilistic-computers)  
+   标签：评分：6.0/10、query:molrna
+   evidence：具有相互作用结构的广义扩散模型
 
 
 <div class="dpr-home-promo-card">
