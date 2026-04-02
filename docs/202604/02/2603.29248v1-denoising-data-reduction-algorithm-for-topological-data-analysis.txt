@@ -1,0 +1,647 @@
+Title: Denoising data reduction algorithm for Topological Data Analysis
+
+URL Source: https://arxiv.org/pdf/2603.29248v1
+
+Published Time: Wed, 01 Apr 2026 00:30:22 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+DENOISING DATA REDUCTION ALGORITHM FOR TOPOLOGICAL DATA ANALYSIS 
+
+SEONMI CHOI, SEMIN OH, JEONG RYE PARK, AND SEUNG YEOP YANG 
+
+Abstract. Persistent homology is a central tool in topological data analysis, but its application to large and noisy datasets is often limited by computational cost and the presence of spurious topological features. Noise not only increases data size but also obscures the underlying structure of the data. In this paper, we propose the Refined Characteristic Lattice Algorithm (RCLA), a grid-based method that integrates data reduction with threshold-based denoising in a single procedure. By incorporating a threshold parameter k, RCLA removes noise while preserving the essential structure of the data in a single pass. We further provide a theoretical guarantee by proving a stability theorem under a homogeneous Poisson noise model, which bounds the bottleneck distance between the persistence diagrams of the output and the underlying shape with high probability. In addition, we introduce an automatic parameter selection method based on nearest-neighbor statistics. Experimen-tal results demonstrate that RCLA consistently outperforms existing methods, and its effectiveness is further validated on a 3D shape classification task. 
+
+1. Introduction 
+
+Persistent homology is a central tool in topological data analysis (TDA) that cap-tures topological features of data shapes, including connected components, loops, higher-dimensional voids, and related structures. It has found applications in diverse areas in-cluding genomics [24], shape analysis [19], and scientific data exploration. For general background on TDA, see [3, 12, 14, 34]. However, the direct computation of persistent homology via the Vietoris–Rips complex faces a fundamental scalability challenge: the number of simplices grows exponentially in the size of the input point cloud, making the computation prohibitively expensive for large datasets. To address this issue, various pre-processing methods have been proposed, including witness complexes [28], random projec-tion [25, 27], linear-size approximation of the Vietoris–Rips filtration [26], subsampling [6], and cluster-based data reduction [20, 21, 22]. See [23] for a comprehensive survey. In practice, observed data is often corrupted by background noise. Such noise points not only unnecessarily increase the data size but also introduce spurious features in the persistence diagram, thereby obscuring the genuine topological structure of the underlying shape. Existing data reduction methods do not distinguish between noise and signal, so noise persists in the reduced output. On the other hand, denoising methods such as adaptive DBSCAN [33], LDOF [32], and LUNAR [15] can remove noise, but they require a separate preprocessing step and offer no guarantee on how well the topological features are preserved after denoising. From a practical standpoint, it is therefore desirable to develop a single-step method that simultaneously reduces data size and removes noise, without requiring manual parameter tuning. In previous work [8], the authors introduced the Characteristic Lattice Algorithm (CLA), a grid-based data reduction method for TDA. CLA partitions the ambient space into hypercubes of side length δ and selects a representative point from each non-empty 
+
+2020 Mathematics Subject Classification. Primary: 55N31. Secondary: 62R40, 68T09. 
+
+Key words and phrases. Topological data analysis, Persistent homology, Topology-preserving data re-duction, Denoising, Stability Theorem, Poisson Point Process. 
+
+> 1
+> arXiv:2603.29248v1 [cs.CG] 31 Mar 2026
+
+S. Choi, S. Oh, J. R. Park, S. Y. Yang hypercube. The method is simple to implement and computationally efficient, and has been shown to be competitive with existing data reduction techniques in terms of both speed and accuracy. However, since CLA selects a representative from every non-empty hypercube, including those containing only noise points, noise is inevitably carried over into the reduced output. This limitation highlights the need for a method that can simul-taneously reduce data size while effectively eliminating noise, thus motivating the present work. In this paper, we propose the Refined Characteristic Lattice Algorithm (RCLA), an enhanced variant of the CLA that incorporates a threshold parameter k to discard hyper-cubes containing fewer than k points. This refinement enables simultaneous data reduction and noise removal within a single pass of the algorithm. Moreover, the grid structure un-derlying RCLA is naturally amenable to probabilistic analysis. When background noise is modeled as a Homogeneous Poisson Point Process (HPPP), the noise count in each cell becomes an independent Poisson random variable, which allows us to derive quantitative guarantees on the topological fidelity of the output. The contributions of this paper are as follows: (1) We propose RCLA, a denoising data reduction algorithm that combines grid-based data reduction with threshold-based filtering in a single pass, eliminating the need for a separate denoising step (Section 3.1). (2) We prove a stability theorem showing that, under the HPPP noise model, the bottleneck distance between the persistence diagrams of the RCLA output and the underlying shape is at most √m δ with high probability, where the confidence level is determined explicitly by the noise intensity and the grid configuration (Section 3.2). (3) We present a fully automatic procedure for selecting the parameters ( δ, k ) from the data, based on nearest-neighbor distance distributions and Bayesian estima-tion. All experiments in this paper use the default settings without manual tuning (Section 3.3). (4) We validate RCLA experimentally on synthetic data, demonstrating that it con-sistently outperforms CLA and three denoising algorithms (Adaptive DBSCAN, LDOF, and LUNAR) on the tested configurations (Section 4). We further ap-ply RCLA to a 3D shape classification task, achieving approximately 94 .5% data compression and 99 .88% classification accuracy (Section 5). The paper is organized as follows. Section 2 reviews background on persistent homology, including the bottleneck distance and the stability theorem. Section 3 introduces the RCLA algorithm, presents an automatic parameter selection procedure, and proves a stability theorem for RCLA. Section 4 presents experimental comparisons on synthetic data. Section 5 demonstrates an application to 3D shape classification. Section 6 provides concluding remarks. 2. Preliminaries 
+
+We recall the Vietoris–Rips complex, the persistent homology, and its representations via barcodes and persistence diagrams. We also introduce standard distances on persis-tence diagrams and state the stability theorem. See [12, 24] for more details. Let ( X, d X ) be a finite metric space and let ε > 0. The Vietoris–Rips complex V R ε(X, d X )is an abstract simplicial complex defined as follows: (1) The vertex set of V R ε(X, d X ) is X itself, 2Denoising data reduction algorithm for Topological Data Analysis (2) A subset {v0, v 1, . . . , v k} ⊆ X forms a k-simplex in V R ε(X, d X ) if 
+
+dX (vi, v j ) ≤ 2ε for all 0 ≤ i, j ≤ k. 
+
+Given ε < ε ′, it holds that V R ε(X, d X ) ⊆ V R ε′ (X, d X ), and the inclusion of simplicial complexes induces a simplicial map V R ε(X, d X ) −→ V R ε′ (X, d X ). Since X is finite, there exist finitely many critical values ε1 < ε 2 < · · · < ε m such that 
+
+V R ε1 (X, d X ) ⊊ V R ε2 (X, d X ) ⊊ · · · ⊊ V R εm (X, d X ).
+
+The resulting filtration {V R εi (X, d X )}mi=1 is referred to as the filtered Vietoris–Rips com-plex on X. Applying the kth persistent homology functor with coefficients in a field F
+
+yields the induced homomorphisms 
+
+P H k(V R ε1 (X, d X ); F) → P H k(V R ε2 (X, d X ); F) → · · · → P H k(V R εm (X, d X ); F).
+
+For εa < ε b, let θa,b : P H k(V R εa (X, d X ); F) → P H k(V R εb (X, d X ); F) denote the ho-momorphism induced by the inclusion V R εa (X, d X ) ,→ V R εb (X, d X ). For an element 
+
+γ ∈ P H k(V R εi (X, d X ); F), we say that γ
+
+(1) is born at εi if γ / ∈ Im( θj,i ) for all εj < ε i,(2) dies at εl > ε i if either θi,l (γ) = 0 in P H k(V R εl (X, d X ); F), or there exist εj < ε l
+
+and α ∈ P H k(V R εj (X, d X ); F) such that θi,l (γ) = θj,l (α). The half-open interval [ εi, ε l) is called the bar associated to γ, and the multiset of all such intervals in degree k is the kth barcode , denoted by Bk(X). Bars with large length εl − εi
+
+represent persistent topological features, whereas short bars are typically interpreted as noise. By associating to each bar [ a, b ) ∈ Bk(X) the point ( a, b ) ∈ R2, we obtain an equiva-lent representation of the barcode, called the persistence diagram (PD). It is denoted by 
+
+P D k(X). To quantify the effect of perturbations on persistent homology, we compare persistence diagrams via the bottleneck distance. The stability theorem is formulated with respect to this distance. For two non-empty subsets C and D of a metric space ( X, d X ), define the Hausdorff distance between C and D as 
+
+dH (C, D ) = inf {ε > 0 | D ⊆ Cε, C ⊆ Dε},
+
+where Cε and Dε denote the ε-neighborhoods of C and D, respectively. 
+
+Definition 2.1. The Gromov–Hausdorff distance between two compact metric spaces (X, d X ) and ( Y, d Y ) is given by 
+
+dGH (( X, d X ), (Y, d Y )) = inf  
+
+> θ1:X→Zθ2:Y→Z
+
+dH (θ1(X), θ 2(Y )) ,
+
+where θ1 and θ2 are isometric embeddings of ( X, d X ) and ( Y, d Y ), respectively, into a common metric space ( Z, d Z ). For intervals [ a1, b 1) and [ a2, b 2), define 
+
+d∞ ([ a1, b 1), [a2, b 2)) = max {| a1 − a2|, |b1 − b2|} , d∞ ([ a1, b 1), ∅) = b1 − a1
+
+2 .
+
+Definition 2.2. Let B1 and B2 be barcodes. The bottleneck distance between B1 and B2
+
+is defined by 
+
+dB (B1, B 2) = inf  
+
+> ϕ
+
+sup 
+
+> I∈B1
+
+d∞
+
+ I, ϕ (I),
+
+where a matching is a bijection ϕ : C1 → C2 between sub-multisets C1 ⊆ B1 and C2 ⊆ B2
+
+such that any interval not in Ci is paired with ∅.3S. Choi, S. Oh, J. R. Park, S. Y. Yang 
+
+Proposition 2.3. [5, 9] Let (X, d X ) and (Y, d Y ) be finite metric spaces. Then we have 
+
+dB (Bk(X), B k(Y )) ≤ dGH (( X, d X ), (Y, d Y )) 
+
+for all k ≥ 0.
+
+3. The Improved Characteristic Lattice Algorithm 
+
+In this section, we improve the data reduction algorithm for TDA, called a Characteristic Lattice Algorithm , abbreviated as CLA, which was introduced in [8]. 3.1. CLA and its improvement. Characteristic Lattice Algorithm is one of preprocess-ing algorithms for TDA to maintain topological features and decrease the computation time. The CLA process is designed to organize hypercubes according to a specified lattice size 
+
+δ > 0. In the case that each hypercube contains elements in a given point cloud X in Rm,the process selects a sample point within the hypercube and replaces all existing points in 
+
+X within the hypercube with the selected sample point. The algorithm ensures that the characteristics of the given data can be analyzed with reduced computation time while preserving the topological features. Although this is an appropriate preprocessing method, it would be preferable to compute persistent homology in a more efficient manner by removing noisy data. Let k be a positive integer. For the resulting data X∗ 
+
+> δ
+
+obtained from the data X by applying CLA with δ, if a hypercube contains fewer than or equal to k elements in X,then a sample point will not be selected from that hypercube. Consequently, we can derive the new dataset, denoted as X∗
+
+> δ,k
+
+, which is obtained by subtracting the points within that hypercubes from X∗ 
+
+> δ
+
+.This data reduction technique, which is an upgrade to the original CLA with additional processing, is called the Refined Characteristic Lattice Algorithm , abbreviated as RCLA, 
+
+with δ and k.⇒⇒
+
+Figure 1. The steps of the CLA and RCLA algorithms 
+
+Remark 3.1 . In the construction of X∗
+
+> δ,k
+
+, instead of selecting an arbitrary representative point from each selected cube, we may take the cube center. For every m-cube C of side length δ with |C ∩ X| ≥ k, let c(C) be the center of C. Define the resulting center-based set 
+
+Xcδ,k := { c(C) | C is an m-cube of side δ, |C ∩ X| ≥ k }.
+
+If C = Qmi=1 [jiδ, (ji + 1) δ), then c(C) =  (j1 + 12 )δ, . . . , (jm + 12 )δ.
+
+The performance of CLA in the previous work has already been compared with several other preprocessing methods in terms of computational speed and accuracy (see [8] for more details). RCLA addresses the issue of noise in the data, thereby reducing the com-putation of persistent homology and enhancing the analysis of the phase space of the data. Therefore, for this comparative analysis, we will evaluate the efficacy of RCLA approach in comparison to the original CLA. When implementing CLA in previous studies, all sample 4Denoising data reduction algorithm for Topological Data Analysis points were selected as the center of the hypercube for convenience. Similarly, the RCLA also use the center point for sample point selection. 
+
+Figure 2. Datasets preprocessed by CLA and RCLA 
+
+3.2. Stability theorem for RCLA. Let D ⊂ Rm be a bounded region (e.g., an m-dimensional rectangle). We consider a point cloud X in D consisting of shape data Xshape 
+
+and noise data Xnoise , i.e., 
+
+X = Xshape ∪ Xnoise ⊂ D .
+
+Assume that Xshape represents the underlying shape and that Xnoise follows a Homoge-neous Poisson Point Process (HPPP) with intensity λ > 0, independent of Xshape . The HPPP is a standard model for generating background noise uniformly over an ambient domain. For more details on HPPP, see [7, 30]. The purpose of applying RCLA to the observed point cloud X is to obtain a reduced set that preserves the topological features of the underlying shape component Xshape . In particular, for suitable choices of the parameters (e.g., the grid scale δ and the threshold 
+
+k), we aim to show that the persistence diagram associated with the RCLA output is close to that of Xshape with respect to a standard metric on persistence diagrams (such as the bottleneck distance). We fix a lattice scale δ > 0 and partition the ambient domain D ⊂ Rm into (half-open) 
+
+m-cubes of side length δ. Let C = {Ci}Mi=1 denote the collection, so that 
+
+• Ci ∩ Cj = ∅ for i̸ = j,
+
+• M
+
+∪ 
+
+> i=1
+
+Ci = D,
+
+• vol( Ci) = δm for each i.The following proposition quantifies the discrepancy between these two choices in terms of the bottleneck distance. 
+
+Theorem 3.2. For a point cloud X, let X∗ 
+
+> δ,k
+
+be the set obtained by applying RCLA with 
+
+δ and k. Let Xcδ,k denote the corresponding center-based set obtained by selecting cube centers as representatives. Then 
+
+dB (Bn(X∗
+
+> δ,k
+
+), B n(Xcδ,k )) ≤ 
+
+> √mδ
+> 2
+
+.
+
+Proof. When ε = 
+
+> √mδ
+> 2
+
+, it is obvious that 
+
+X∗ 
+
+> δ,k
+
+⊆ (Xcδ,k )ε and Xcδ,k ⊆ (X∗
+
+> δ,k
+
+)ε.
+
+Then we have dH
+
+ X∗
+
+> δ,k
+
+, X cδ,k 
+
+ ≤ 
+
+> √mδ
+> 2
+
+. It follows that 
+
+dGH 
+
+ X∗
+
+> δ,k
+
+, X cδ,k 
+
+ ≤
+
+> √mδ
+> 2
+
+by the definition of Gromov-Hausdorff distance. Therefore, by Proposition 2.3, 
+
+dB (Bn(X∗
+
+> δ,k
+
+), B n(Xcδ,k )) ≤ 
+
+> √mδ
+> 2
+
+.
+
+□
+
+5S. Choi, S. Oh, J. R. Park, S. Y. Yang For each m-cube C, define 
+
+Nshape (C) := |C ∩ Xshape |, Nnoise (C) := |C ∩ Xnoise |.
+
+The Poisson assumption implies 
+
+Nnoise (C) ∼ Pois( μ)where μ = λ δ m. Note that {Nnoise (Ci)}Mi=1 of D are independent. The following proposi-tion follows directly from equation (2.11) in [7]. 
+
+Proposition 3.3. The probability that an m-cube C contains at most r points of Xnoise 
+
+is given by 
+
+P(Nnoise (C) ≤ r) = FPois( μ)(r) = e−μrX
+
+> j=0
+
+μj
+
+j! ,
+
+where FPois( μ) is the cumulative distribution function of the Poisson distribution with in-tensity μ.
+
+We classify m-cubes according to their shape and noise points as follows. 
+
+Definition 3.4. Let C be an m-cube. We call C
+
+• a noise m-cube if Nshape (C) = 0 and Nnoise (C) ≥ k;
+
+• a shape m-cube if Nshape (C) > 0 and |C ∩ X| ≥ k;
+
+• an out-shape m-cube if Nshape (C) > 0 and |C ∩ X| < k .Then the sets of noise, shape, and out-shape m-cubes are denoted by Cn, Cs, and Co,respectively. If |Ci ∩ X| ≥ k, then Ci belongs to either Cn or Cs. If Nshape (Ci) > 0, then Ci belongs to either Cs or Co.
+
+Lemma 3.5. The probability that there are no noise m-cubes is given by 
+
+P(Cn = ∅) =  FPois( μ)(k − 1) |{ C:Nshape (C)=0 }| .
+
+Proof. Note that every m-cube C ∈ C with Nshape (C) > 0 is not a noise m-cube. For an 
+
+m-cube C with Nshape (C) = 0, C / ∈ C n if and only if Nnoise (C) ≤ k −1. By Proposition 3.3, 
+
+P(Nnoise (C) ≤ k − 1) = FPois( μ)(k − 1) .
+
+Since Xnoise is generated by an HPPP, the counts {Nnoise (Ci)}Mi=1 are independent. There-fore, we have 
+
+P(Cn = ∅) = Y 
+
+> C:Nshape (C)=0
+
+P Nnoise (C) ≤ k − 1
+
+=  FPois( μ)(k − 1) |{ C:Nshape (C)=0 }| .
+
+□
+
+Lemma 3.6. The probability that there are no out-shape m-cubes is given by 
+
+P(Co = ∅) = Y
+
+> C:Nshape (C)>0
+
+
+
+1 − FPois( μ)(max {0, k − Nshape (C)} − 1) 
+
+
+
+.
+
+Proof. Note that every m-cube C ∈ C with Nshape (C) = 0 is not an out-shape m-cube. For an m-cube C with Nshape (C) > 0, C / ∈ C o if and only if |C ∩ X| ≥ k.Since |C ∩ X| = Nshape (C) + Nnoise (C), then Nnoise (C) ≥ max {0, k − Nshape (C)}. Put 
+
+r(C) = max {0, k − Nshape (C)}. Therefore 
+
+P |C ∩ X| ≥ k = P Nnoise (C) ≥ r(C) = 1 − P Nnoise (C) ≤ r(C) − 1.
+
+6Denoising data reduction algorithm for Topological Data Analysis By Proposition 3.3, 
+
+P |C ∩ X| ≥ k = 1 − FPois( μ)(r(C) − 1) .
+
+Here we use the convention FPois( μ)(−1) = 0 , so that, in the case r(C) = 0, the corre-sponding factor is equal to 1. Since {Nnoise (Ci)}Mi=1 are independent, 
+
+P(Co = ∅) = Y
+
+> C:Nshape (C)>0
+
+
+
+1 − FPois( μ)
+
+ r(C) − 1
+
+.
+
+□
+
+Proposition 3.3 together with the two Lemmas 3.5 and 3.6 provides the probabilistic estimates needed under the HPPP model to establish the stability theorem. Define 
+
+α := 1 −  FPois( μ)(k − 1) |{ C:Nshape (C)=0 }| ,β := 1 − Y
+
+> C:Nshape (C)>0
+
+ 1 − FPois( μ)(rC − 1) ,
+
+where μ = λδ m and r(C) = max {0, k − Nshape (C)}.
+
+Theorem 3.7. Let X = Xshape ∪ Xnoise be a point cloud on the bounded domain D ⊂ Rm.Assume that Xnoise follows an HPPP with intensity λ > 0. Fix δ > 0 and k ∈ N, and let 
+
+X∗ 
+
+> δ,k
+
+be the result set of RCLA. Then, with probability at least 1 − (α + β), the following holds for all n ≥ 0:
+
+dB
+
+ Bn(Xshape ), B n(X∗
+
+> δ,k
+
+) ≤ √mδ. 
+
+Proof. Let En := {C n = ∅} and Eo := {C o = ∅} be the events. We bound the probabilities of these events separately. 
+
+P(En) = 1 − P(Cn̸ = ∅) = 1 − α and P(Eo) = 1 − P(Co̸ = ∅) = 1 − β
+
+Therefore, 
+
+P(En ∩ Eo) = 1 − P(Ec 
+
+> n
+
+∪ Ec
+
+> o
+
+) ≥ 1 − (P(Ec
+
+> n
+
+) + P(Ec
+
+> o
+
+)) ≥ 1 − (α + β).
+
+Applying this, we conclude that with probability at least 1 − (α + β), both En and Eo
+
+occur. Hence, with probability at least 1 − (α + β), we have 
+
+Cn = ∅ and Co = ∅.
+
+Under this condition, for every point x ∈ Xshape , there is an m-cube C obtained from X∗
+
+> δ,k
+
+such that x ∈ C. When ε = √mδ , it follows that 
+
+X∗ 
+
+> δ,k
+
+⊆ (Xshape )ε and Xshape ⊆ (X∗
+
+> δ,k
+
+)ε.
+
+Then dH (Xshape , X ∗
+
+> δ,k
+
+) ≤ √mδ . By the definition of Gromov–Hausdorff Distance, 
+
+dGH (Xshape , X ∗
+
+> δ,k
+
+) ≤ √mδ. 
+
+Hence, by Proposition 2.3, 
+
+dB (Bn(Xshape ), B n(X∗
+
+> δ,k
+
+)) ≤ √mδ. 
+
+□
+
+7S. Choi, S. Oh, J. R. Park, S. Y. Yang 3.3. Implementation of RCLA. By Section 3.2, the bottleneck distance between the persistence diagrams of the RCLA output and Xshape is bounded by √m δ for suitable (δ, k ). In practice, neither Xshape nor the noise intensity λ is known, so ( δ, k ) must be selected from the data. We describe a fully automatic procedure. We generate candidate values of δ from the nearest-neighbor distance distribution of X.For each neighborhood order q ∈ Q (default Q = {5, 8, 16 }), we compute the q-th nearest-neighbor distance for every point in X and pool all distances. From the pooled distribution, we extract the quantile range [ qlo , q hi ] (default [0 .01 , 0.70]) and generate 20 candidate values on a logarithmic grid. For each candidate δ, we estimate a conservative upper bound on the noise intensity per cell. Let M denote the number of δ-grid cells and Z0 the number of empty cells. Under the HPPP noise model, the probability that a pure-noise cell is empty is p0 = e−μ, where 
+
+μ = λ δ m. We estimate p0 using the Jeffreys prior Beta( 12 , 12 ), a standard noninformative prior for binomial proportions [13, 17]: (3.1) p0 | Z0 ∼ Beta  Z0 + 12 , M − Z0 + 12
+
+ .
+
+Taking the γ-quantile pL (default γ = 0 .05) gives a (1 − γ) credible lower bound on p0,and since − ln is monotone decreasing, an upper bound on μ:(3.2) μU (δ) = − ln pL.
+
+Given μU (δ), we choose the minimum k such that the expected number of noise-only cells surviving the threshold is bounded: (3.3) M · P(Pois( μU ) ≥ k) ≤ αfp ,
+
+where αfp (default 1 .0) bounds the per-family error rate [11, 18]; a smaller αfp tightens the stability bound of Section 3.2. For each candidate δ, we run RCLA with the corresponding k(δ) to produce repre-sentative points Xcδ,k . Candidates yielding fewer than nmin representative points (default 
+
+nmin = 50) are discarded. Among the remaining candidates, we select the δ that minimizes (3.4) J(δ) = σ(dNN ) · μ(dNN ) + η · (β0 − 1) ,
+
+where μ(dNN ) and σ(dNN ) are the mean and standard deviation of the 1-nearest-neighbor distances among the representative points, and β0 is the number of connected components in a radius graph with radius r = cr · δ (default cr = 1 .5, η = 1 .0). The first term favors dense and uniformly spaced representatives; the second penalizes fragmentation. 
+
+Remark 3.8 . The objective J(δ) is heuristic and is expected to exhibit a clear minimum: too fine a δ causes fragmentation, while too coarse a δ yields overly large spacing. Apotential failure mode arises with highly non-uniform density; in such cases, adjusting 
+
+nmin can prevent the selection of an overly aggressive δ that discards meaningful structure. The complete procedure is summarized in Algorithm 1. Table 1 lists the parameters that may be adjusted by the user. All experiments in this paper use the defaults listed below without tuning. Algorithm 1 is not the computational bottleneck of the pipeline: it involves only sort-ing and nearest-neighbor queries on the input, repeated over |∆| = 20 candidates. The persistence computation on the compressed output is the dominant cost in practice. 4. Experiments 
+
+This section presents numerical results on a synthetic dataset for evaluating CLA and RCLA. In addition, we compare RCLA with several representative denoising methods to assess its ability to suppress background noise. 8Denoising data reduction algorithm for Topological Data Analysis 
+
+Algorithm 1: Automatic ( δ, k ) Selection 
+
+Data: Point cloud X ∈ Rn×m; parameters αfp , η, n min 
+
+Result: Optimal parameters ( δ∗, k ∗) 
+
+> 1
+
+∆ ← NN quantile-based δ candidates (log-space grid, 20 values);  
+
+> 2
+
+Jbest ← ∞ ; 
+
+> 3
+
+foreach δ ∈ ∆ do  
+
+> 4
+
+M ← total number of grid cells;  
+
+> 5
+
+Z0 ← number of empty cells;  
+
+> 6
+
+μU ← − ln  Beta( Z0 + 12 , M − Z0 + 12 ).quantile( γ); 
+
+> 7
+
+k ← min {k : M · P(Pois( μU ) ≥ k) ≤ αfp }; 
+
+> 8
+
+C ← RCLA( X, δ, k );  
+
+> 9
+
+if |C| < n min then  
+
+> 10
+
+continue ; 
+
+> 11
+
+J(δ) ← σ(dNN (C)) · μ(dNN (C)) + η · (β0(C) − 1);  
+
+> 12
+
+if J(δ) < J best then  
+
+> 13
+
+Jbest ← J(δ);  
+
+> 14
+
+(δ∗, k ∗) ← (δ, k );  
+
+> 15
+
+return (δ∗, k ∗); Parameter Symbol Default Role False positive budget αfp 1.0 Max expected noise cells retained Connectivity penalty η 1.0 Weight on component count in (3.4) Radius factor cr 1.5 Radius r = cr · δ for β0
+
+Minimum centers nmin 50 Discard if fewer representatives 
+
+Table 1. User-adjustable parameters for the automatic ( δ, k ) selection. 4.1. Data. We consider a synthetic point cloud X ⊂ Rm of the form 
+
+X = Xshape ∪ Xnoise ,
+
+where Xshape is a point sample from the underlying shape and Xnoise consists of background noise points. (1) The first point cloud is generated for comparison of RCLA and CLA in Section 4.2. The shape component Xshape consists of points sampled from a circle embedded in [0 , 1] 2, while the noise component Xnoise is generated from an HPPP in the same ambient region to model background noise. We fix |Xshape | = 1000 and set 
+
+|Xnoise | = r |Xshape | where r > 0 denotes the noise ratio. Thus, the resulting dataset is X = Xshape ∪ Xnoise , as illustrated in the left data of Figure 3 with 
+
+r = 0 .1. (2) The second point cloud is constructed for the experiments in Section 4.3, where RCLA is compared with established denoising methods. We take Xshape as a point sample from a two-circle configuration in [0 , 1] 2, and we generate Xnoise from a HPPP in the same ambient region. We fix |Xshape | = 1000, allocating 85% of the points to the larger circle and the remaining 15% to the smaller circle. We set |Xnoise | = r |Xshape |, where r > 0 denotes the noise ratio. Then we obtain 
+
+X = Xshape ∪ Xnoise . The right data of Figure 3 depicts the point cloud with 
+
+r = 0 .1. 9S. Choi, S. Oh, J. R. Park, S. Y. Yang    
+
+> (1) The first point cloud (2) The second point cloud
+
+Figure 3. Point clouds with r = 0 .1.
+
+4.2. Performance Comparison with CLA. To evaluate how much more effective RCLA is at analyzing data than CLA, we quantitatively compare the two algorithms by measur-ing the bottleneck distance from the PD of each algorithm to that of Xshape .We use the first point cloud X = Xshape ∪Xnoise with r = 0 .10 introduced in Section 4.1. Figure 4 shows the graphs and the persistent diagrams of the original data X, the CLA result Xcδ , and the RCLA result Xcδ,k . From the figure, we observe that the graph obtained by CLA still contains a noticeable noise part, while the graph obtained by RCLA removes the noise effectively. 
+
+X
+
+Xshape Xcδ Xcδ,k 
+
+Figure 4. Comparison of point clouds and their persistence dia-grams. 
+
+This observation is quantitatively supported by the bottleneck distances to the H1
+
+persistence diagram of Xshape in Table 2: the distance is 0 .229107 for CLA, whereas it is only 0 .031811 for RCLA. Hence, RCLA preserves the topological features of Xshape 
+
+significantly better than CLA. Method dB
+
+CLA 0.229107 RCLA 0.031811 
+
+Table 2. Bottleneck distances between the persistence diagrams of Xshape 
+
+and those reconstructed by CLA and RCLA. 10 Denoising data reduction algorithm for Topological Data Analysis 4.3. Performance Comparison with Denoising Algorithms. We evaluate the de-noising performance of RCLA against three established algorithms: Adaptive DBSCAN, LDOF, and LUNAR. The first comparison method, Adaptive DBSCAN [33], is an im-proved version of the well-known DBSCAN algorithm. LDOF [32] is a relatively recent denoising method based on the k-nearest neighbor algorithm, while LUNAR [15] is a rep-resentative machine learning-based denoising model. These methods were employed in order to evaluate the effectiveness of RCLA in removing background noise and, at the same time, preserving the topological features of the underlying shape after denoising. Using the second point cloud X with r ∈ { 0.10 , 0.15 , 0.20 , 0.25 , 0.30 } in Section 4.1 where, we compare the ability of each algorithm to remove noise while preserving the underlying topological structure of the data. Performance is assessed via the bottleneck distance between the persistence diagram of the denoised output and that of the shape data 
+
+Xshape , where a smaller bottleneck distance indicates better preservation of topological features. For each noise ratio r, the performance of RCLA, Adaptive DBSCAN, LDOF, and LUNAR was measured across 20 random trials by computing the bottleneck distance between the H1 persistence diagram of the output of each method and that of Xshape .Figure 5 shows, for each method, the best and worst outputs among these trials, se-lected by the smallest and largest bottleneck distances, respectively. As seen in the figure, RCLA Adaptive DBSCAN LDOF LUNAR Best min( dB )
+
+Worst max( dB )
+
+Figure 5. Point clouds from each method, selected as those with the smallest and largest bottleneck distance from PD( Xshape ).
+
+RCLA consistently preserves the topology of Xshape most faithfully, whereas the other three methods occasionally succeed in removing noise but often fail to do so. To reflect this variability, the sample mean and standard deviation of the bottleneck distances are reported in Table 3. As the noise ratio increases, the performance of all methods becomes degraded, and RCLA consistently yields smaller mean values than the other algorithms for all tested noise ratios. Moreover, RCLA exhibits a substantially smaller standard deviation than all the other algorithms in every experiment, indicating that its performance is more stable. 5. Application to 3D Shape Classification 
+
+The purpose of this experiment is to evaluate whether our algorithm can effectively capture the topological features of the data and perform accurate classification even in the presence of noise. 11 S. Choi, S. Oh, J. R. Park, S. Y. Yang 
+
+r (Mean ± SD )RCLA Adaptive DBSCAN LDOF LUNAR 0.10 0.051069 ± 0.016707 0.090485 ± 0.057214 0.113232 ± 0.037354 0.054173 ± 0.045463 
+
+0.15 0.052086 ± 0.012052 0.140838 ± 0.043557 0.136611 ± 0.021376 0.071958 ± 0.045652 
+
+0.20 0.055251 ± 0.012688 0.141782 ± 0.049153 0.149163 ± 0.021195 0.079880 ± 0.040987 
+
+0.25 0.051093 ± 0.012029 0.140576 ± 0.048582 0.159430 ± 0.012704 0.094894 ± 0.038629 
+
+0.30 0.057440 ± 0.013408 0.154789 ± 0.036262 0.162117 ± 0.008935 0.134169 ± 0.035352 
+
+Table 3. Mean and standard deviation of the bottleneck distance from PD( Xshape ) for each method. 
+
+We use the 3D animal shape data from the deformation transfer dataset of Sumner and Popovi´ c [29]. In our experiments, we consider three animal classes: camel, elephant, and horse. For each class, 100 OBJ meshes are randomly selected with replacement from the available pose variations. From each mesh, a prescribed number n of surface vertices is sampled without replacement. Each point cloud is translated so that it is centered in the unit cube [0 , 1] 3, as illustrated in the first row of Figure 6, yielding three data classes: Camel, Elephant, and Horse. To simulate noise contamination with noise ratio r, we add points drawn from an HPPP with intensity λ = n × r within [0 , 1] 3 to each point cloud, as depicted in the second row of Figure 6, resulting in three additional classes: Noisy-Camel, Noisy-Elephant, and Noisy-Horse. This gives a total of six data classes. 
+
+Figure 6. Six data classes of the 3D animal data with n = 2000 
+
+and r = 0 .2We vary two parameters: n = 2000, 3000, 4000, 5000 and r = 0 .10, 0 .15, 0 .20, 0 .25, 0.30, yielding 20 experimental settings. For each class, n points are randomly sampled from each OBJ mesh, resulting in a total of 100 samples per class and 600 samples in total. Using these six data classes, we conducted classification experiments to evaluate whether RCLA can successfully distinguish the three animal classes: camel, elephant, and horse. The experiment follows the pipeline illustrated in Figure 7. In the pipeline, a point cloud is reduced via RCLA with automatic ( δ, k ) selection, and a persistence diagram is computed with Ripser [2]. For each of H0 and H1, we extract 22 descriptive statistics—mean, standard deviation, min, max, and quartiles ( Q25 , Q50 , Q75 )12 Denoising data reduction algorithm for Topological Data Analysis     
+
+> RCLA
+> (δ, k )-auto
+> Persistence Diagram
+> Feature Extraction
+> Linear SVM
+> Algorithm 1
+> nmin = 50
+> Ripser
+> 22-dim × { H0, H 1}→44-dim vector
+> C= 0 .1LOO-CV
+> Point Cloud
+> Class Label
+
+Figure 7. The pipeline for classification. 
+
+of birth b, death d, and lifetime ℓ = d−b, plus the point count and total persistence P ℓ—yielding a 44-dimensional feature vector [1] that is classified by a linear Support Vector Machine (SVM) with leave-one-out cross-validation. Table 4 reports the classification accuracy for each configuration. For all 20 settings, the accuracy remained above 99 .50%, and 9 out of 20 achieved 100 .00%. The overall mean accuracy is 99 .88%. 
+
+n r = 0 .10 r = 0 .15 r = 0 .20 r = 0 .25 r = 0 .30 2000 99.83 100.00 99.67 100.00 99.50 3000 99.83 100.00 100.00 100.00 100.00 4000 99.67 100.00 99.83 100.00 100.00 5000 99.83 99.83 100.00 99.83 99.83 
+
+Table 4. Classification accuracy ( %). 
+
+6. Conclusion 
+
+We propose RCLA, an improved version of CLA, which simultaneously performs data reduction and noise removal in point clouds. In contrast to CLA, which was originally designed for data reduction and is therefore sensitive to background noise, RCLA effec-tively handles both tasks in a single framework. The stability theorem for RCLA provides a theoretical justification for the preservation of topological features in the presence of HPPP noise. The HPPP is commonly used to model background noise that is uniformly distributed over a spatial domain. We devise Algorithm 1, which effectively determines 
+
+δ and k for data with such background noise. With this automatic parameter selection, RCLA can be applied to all experimental settings in this paper. We first compare RCLA with CLA to examine the effect of the proposed refinement using the point cloud (1) of Figure 3. As shown in Table 2, the bottleneck distance to the 
+
+H1 persistence diagram of Xshape drops from 0 .229107 for CLA to just 0 .031811 for RCLA, demonstrating that RCLA is far more effective at preserving the topological structure of the underlying shape. As the RCLA method also removes background noise, we compared its performance with several denoising algorithms of different types; the results are shown in Table 3. A smaller mean bottleneck distance indicates that the output is topologically closer to 
+
+Xshape , while a smaller standard deviation indicates greater stability across trials. In our experiments, RCLA shows both the smallest mean bottleneck distance and the smallest 13 S. Choi, S. Oh, J. R. Park, S. Y. Yang standard deviation over all noise configurations. By contrast, Adaptive DBSCAN, LDOF, and LUNAR yield larger bottleneck distances and greater variability, which is also illus-trated in Figure 5. These results indicate that RCLA recovers the topological structure of the underlying shape more effectively and more consistently than the other methods. As an application, we construct a pipeline based on RCLA for shape classification of three-dimensional dataset, including both noise-free and noisy classes. The pipeline includes the vectorization of topological summaries and the subsequent machine learning step. Table 4 reports almost perfect classification accuracy across all 20 settings, with a mean accuracy of 99 .88% ranging from 99 .50% to 100 .00%. The results demonstrate that RCLA effectively preserves the necessary topological features by removing noise, thereby distinguishing between the three animal classes even in noisy environments. 
+
+Acknowledgement 
+
+All authors equally contribute this paper. The work of Seung Yeop Yang was sup-ported by the National Research Foundation of Korea(NRF) grant funded by the Korea government(MSIT) (RS-2022-NR070839). The work of Semin Oh and Seung Yeop Yang was supported by Global - Learning & Academic research institution for Master’s ·PhD students, and Postdocs (G-LAMP) Program of the National Research Foundation of Ko-rea (NRF) grant funded by the Ministry of Education (No. RS-2023-00301914). The work of Seonmi Choi was supported by the Basic Science Research Program through the National Research Foundation of Korea(NRF) funded by the Ministry of Education (No. RS-2021-NR065036).The work of Jeong Rye Park was supported by the Basic Science Re-search Program through the National Research Foundation of Korea(NRF) funded by the Ministry of Education (No. RS-2021-NR065455). 
+
+References 
+
+[1] D. Ali, A. Asaad, M. J. Jimenez, V. Nanda, E. Paluzo-Hidalgo, and M. Soriano-Trigueros, A survey of vectorization methods in topological data analysis , IEEE Transactions on Pattern Analysis and Machine Intelligence, 45 (2023), no. 12, 14069–14080. [2] U. Bauer, Ripser: efficient computation of Vietoris-Rips persistence barcodes , J. Appl. Comput. Topol. 
+
+5 (2021), no. 3, 391–423. [3] G. Carlsson, Topology and data , Bull. Amer. Math. Soc. (N.S.), 46 (2009), no. 2, 255–308. [4] G. Carlsson and V. De Silva, Zigzag persistence , Found. Comput. Math., 10 (2010), no. 4, 367–405. [5] F. Chazal, D. Cohen-Steiner, L. J. Guibas, F. M´ emoli, and S. Y. Oudot, Gromov-Hausdorff Stable Signatures for Shapes using Persistence , Computer Graphics Forum, 28 (2009), no. 5, 1393–1403. [6] F. Chazal, B. T. Fasy, F. Lecci, B. Michel, A. Rinaldo, and L. Wasserman, Subsampling methods for persistent homology , In Proceedings of the 32nd International Conference on Machine Learning, F. Bach and D. Blei Eds. Lille, France, 37 (2015), 2143–2151. [7] S. N. Chiu, D. Stoyan, W. S. Kendall, and Joseph Mecke, Stochastic Geometry and Its Applications ,John Wiley & Sons, 2013. [8] S. Choi, J. Oh, J. R. Park, S. Y. Yang, and H. Yun, Effective data reduction algorithm for topological data analysis , Appl. Math. Comput. 495 (2025), Paper No. 129302, 14 pp. [9] D. Cohen-Steiner, H. Edelsbrunner, and J. Harer, Stability of persistence diagrams , Discrete Comput. Geom., 37 (2007), no. 1, 103–120. [10] C. Cortes and V. Vapnik, Support-vector networks , Mach. Learn., 20 (1995), no. 3, 273–297. [11] O. J. Dunn, Multiple comparisons among means , J. Amer. Statist. Assoc, 56 (1961), no. 293, 52–64. [12] H. Edelsbrunner and J. Harer, Computational topology: an introduction , American Mathematical Society, 2010. [13] A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin, Bayesian Data Analysis , 3rd ed., Chapman and Hall/CRC, 2013. [14] R. Ghrist, Barcodes: the persistent topology of data , Bull. Amer. Math. Soc. (N.S.), 45 (2008), no. 1, 61–75. [15] A. Goodge, B. Hooi, S.-K. Ng, and W. S. Ng, LUNAR: Unifying Local Outlier Detection Methods via Graph Neural Networks , Proceedings of the AAAI Conference on Artificial Intelligence, 36 (2022), no. 6, 6737–6745. 
+
+14 Denoising data reduction algorithm for Topological Data Analysis 
+
+[16] M. Gromov, Hyperbolic groups , Essays in group theory, Math. Sci. Res. Inst. Publ., 8, Springer, 1987, 75–263. [17] H. Jeffreys, Theory of Probability , 3rd ed., Clarendon Press, Oxford, 1961. [18] E. L. Lehmann and J. P. Romano, Generalizations of the familywise error rate , Ann. Statist. 33 
+
+(2005), no. 3, 1138–1154. [19] P. Y. Lum, G. Singh, A. Lehman, T. Ishkanov, M. Vejdemo-Johansson, M. Alagappan, J. Carlsson, and G. Carlsson, Extracting insights from the shape of complex data using topology , Scientific Reports, 
+
+3 (2013), Paper No. 1236, 8 pp. [20] N. O. Malott, A. M. Sens, and P. A. Wilsey, Topology Preserving Data Reduction for Computing Persistent Homology , In 2020 IEEE International Conference on Big Data, Dec. 2020, 2681–2690. [21] N. O. Malott and P. A. Wilsey, Fast computation of persistent homology with data reduction and data partitioning , In 2019 IEEE International Conference on Big Data, Dec. 2019, 880–889. [22] A. Moitra, N. Malott, and P. A. Wilsey, Cluster-based data reduction for persistent homology , In 2018 IEEE International Conference on Big Data, Dec. 2018, 327–334. [23] N. Otter, M. A. Porter, U. Tillmann, P. Grindrod, and H. A. Harrington, A roadmap for the compu-tation of persistent homology , EPJ Data Science, 6 (2017), no. 1, Paper No. 17, 38 pp. [24] R. Rabad´ an and A. J. Blumberg, Topological data analysis for genomics and evolution Topology in Biology , Cambridge University press, 2020. [25] K. N. Ramamurthy, K. R. Varshney, and J. J. Thiagarajan, Computing persistent homology under random projection , In 2014 IEEE Workshop on Statistical Signal Processing, Jun. 2014, 105–108. [26] D. R. Sheehy, Linear-size approximations to the Vietoris-Rips filtration , Discrete Comput. Geom., 49 
+
+(2013), no. 4, 778–796. [27] D. R. Sheehy, The persistent homology of distance functions under random projection , In Proceedings of the Thirtieth Annual Symposium on Computational Geometry, ser. SOCG’14. New York, NY, USA: ACM, 2014, 328–334. [28] V. de Silva and G. Carlsson, Topological estimation using witness complexes , In Eurographics Sympo-sium on Point-Based Graphics, The Eurographics Association, Goslar, 2004, 157–166. [29] R. W. Sumner and J. Popovi´ c, Deformation transfer for triangle meshes , ACM Trans. Graph. (SIG-GRAPH), 23 (2004), no. 3, 399–405. [30] H. C. Tijms, A First Course in Stochastic Models , John Wiley & Sons, Chichester, 2003. [31] L. Vietoris, ¨Uber den h¨ oheren Zusammenhang kompakter R¨ aume und eine Klasse von zusammen-hangstreuen Abbildungen , Math. Ann. 97 (1927), no. 1, 454–472. [32] K. Zhang, M. Hutter, and H. Jin, A New Local Distance-Based Outlier Detection Approach for Scat-tered Real-World Data , In Advances in Knowledge Discovery and Data Mining, Lecture Notes in Com-puter Science, 5476 , Springer, 2009, 813–822. [33] Z. Zhao, W. Zhou, D. Liang, J. Liu, and X. Lee, Denoising Method Based on Improved DBSCAN for LiDAR Point Cloud , IEEE Access, 12 (2024), 137656–137666. [34] A. Zomorodian and G. Carlsson, Computing Persistent Homology , Discrete Comput. Geom., 33 
+
+(2005), no. 2, 249–274. 
+
+Email address , Seonmi Choi: smchoi@seowon.ac.kr 
+
+Email address , Semin Oh: semin@knu.ac.kr 
+
+Email address , Jeong Rye Park: parkjr@gist.ac.kr 
+
+Email address , Seung Yeop Yang: seungyeop.yang@knu.ac.kr 
+
+Department of Mathematics Education, Seowon University, Cheongju, 28674, Republic of Korea KNU G-LAMP Research Center, KNU Institute of Basic Sciences, Kyungpook National University, Daegu, 41566, Republic of Korea Department of Mathematical Sciences, Gwangju Institute of Science and Technology, Gwangju 61005, Republic of Korea KNU G-LAMP Research Center, KNU Institute of Basic Sciences, Department of Math-ematics, Kyungpook National University, Daegu, 41566, Republic of Korea 
+
+15

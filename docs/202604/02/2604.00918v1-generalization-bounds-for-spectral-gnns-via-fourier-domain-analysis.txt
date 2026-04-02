@@ -1,0 +1,2183 @@
+Title: Generalization Bounds for Spectral GNNs via Fourier Domain Analysis
+
+URL Source: https://arxiv.org/pdf/2604.00918v1
+
+Published Time: Thu, 02 Apr 2026 01:05:43 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+Vahan A. Martirosyan 1 Daniele Malitesta 1 Hugues Talbot 1
+
+Jhony H. Giraldo 2 Fragkiskos D. Malliaros 11Universit´ e Paris-Saclay, CentraleSup´ elec, Inria, France 
+
+> 2
+
+LTCI, T´ el´ ecom Paris, Institut Polytechnique de Paris, France 
+
+## Abstract 
+
+Spectral graph neural networks learn graph filters, but their behavior with increasing depth and polynomial order is not well un-derstood. We analyze these models in the graph Fourier domain, where each layer be-comes an element-wise frequency update, separating the fixed spectrum from train-able parameters and making depth and or-der explicit. In this setting, we show that Gaussian complexity is invariant under the Graph Fourier Transform, which allows us to derive data-dependent, depth, and order-aware generalization bounds together with stability estimates. In the linear case, our bounds are tighter, and on real graphs, the data-dependent term correlates with the generalization gap across polynomial bases, highlighting practical choices that avoid fre-quency amplification across layers. 
+
+## 1 Introduction 
+
+Graph Neural Networks (GNNs) have become the leading paradigm for graph machine learning, achiev-ing state-of-the-art results on tasks ranging from node classification to link prediction (Wu et al., 2019; Zhou et al., 2020). A widely used class of these mod-els, spectral GNNs, defines graph convolutions by ap-plying filter operations in the graph’s frequency do-main (Shuman et al., 2012; Sandryhaila and Moura, 2013). Architectures such as ChebNet (Defferrard et al., 2016) and its recent advancements (Hariri et al., 
+
+Proceedings of the 29 th International Conference on Arti-ficial Intelligence and Statistics (AISTATS) 2026, Tangier, Morocco. PMLR: Volume 300. Copyright 2026 by the au-thor(s). 
+
+2025), GCNs (Kipf and Welling, 2017), and more re-cent models using Bernstein (He et al., 2021) or Jacobi polynomials (Wang and Zhang, 2022) can all be unified under a common framework of learnable polynomial graph filters (Section 4). Despite good empirical results, the theoretical princi-ples governing the generalization of GNNs remain in-complete (Garg et al., 2020; Verma and Zhang, 2019). Clarifying the conditions under which these models generalize is important for designing robust architec-tures, particularly in the transductive setting where the training and test data are not i.i.d. (Esser et al., 2021; Vasileiou et al., 2025b). The core challenge comes from the complex, non-i.i.d. nature of graph data. Unlike traditional machine learning settings, the nodes are interconnected, and in the transductive set-ting, the labeled training set and unlabeled test set are inherently dependent. This structure makes it difficult to directly apply standard learning-theoretic tools and complicates efforts to derive interpretable generalization bounds that can guide architectural de-sign. While significant research has focused on the ex-pressive power of GNNs, often relating them to the Weisfeiler-Leman test (Morris et al., 2023), under-standing why these models generalize well from a small set of labeled nodes to the rest of the graph remains an active area of research (Vasileiou et al., 2025b). In this paper, we analyze the generalization of multi-layer spectral GNNs in the transductive setting. We work in the graph Fourier domain, and by Lemma 2 the full transductive Gaussian complexity is un-changed. This basis change turns graph convolution into element-wise multiplication by the frequency re-sponse, which lets us separate graph spectrum from learnable parameters and then plug a Fourier-side complexity bound into our generalization gap theorem (Theorem 2). Our main contributions are: 
+
+• We formalize spectral GNNs with arbitrary polyno-
+
+> arXiv:2604.00918v1 [cs.LG] 1 Apr 2026 Generalization Bounds for Spectral GNNs via Fourier Domain Analysis
+
+mial bases (Section 4) and introduce the general-ized Vandermonde matrix VP (Definition 3) to rep-resent frequency responses compactly (Eq. (11)), which simplifies the analysis. 
+
+• We derive a Fourier-domain, data-dependent Gaus-sian complexity bound for deep spectral GNNs that isolates the roles of the spectrum (via VP ), basis/order, depth, and parameter norms (Sec-tion 5.2, Theorem 3). Substituting it into Theo-rem 2 yields an explicit bound on the transductive generalization gap. 
+
+• For linear spectral GNNs we prove a sharper bound that makes the depth effect explicit through the basis amplification profile (Theorem 4). 
+
+• We bound the network Jacobian norm (Theorem 5) and show the same factors that control the gap also control worst-case sensitivity. 
+
+• The first-layer term in our bound leads to a simple energy-weighted frequency regularizer (Eq. (17)) that reduces the measured generalization gap and improves accuracy with stable bases (see Table 2 and Table 1). Our results provide a principle for architectural de-sign: generalization is better when selecting polyno-mial bases that are spectrally stable and by ensuring that the learnable filters do not excessively amplify the dominant frequencies of the input signal. 
+
+## 2 Related Work 
+
+Theoretical analysis of GNN generalization has largely followed three directions: analyzing algorithmic stabil-ity, using the PAC-Bayesian framework, and adapting classical tools like the Vapnik–Chervonenkis (VC) di-mension and Rademacher complexity. 
+
+Stability, PAC-Bayesian, and Covering Num-ber Bounds. Algorithmic stability offers an alter-native view on generalization, connecting it to how much the model’s output changes when the training set is perturbed. Verma and Zhang (2019) first stud-ied this for GCNs, deriving stability-based bounds that depend on the spectral norm of the graph convolution filter. More recently, concurrent work (Liu and Wang, 2025) also uses stability to study spectral GNNs, de-riving bounds in expectation over generative models (contextual stochastic block models) for single-layer monomial filters. While both of these works are lim-ited to single-layer models, our approach evaluates ca-pacity directly on any fixed graph instance, explicitly accommodating deep, multi-layer architectures and ar-bitrary polynomial bases. Though we rely on Gaussian complexity rather than algorithmic stability, we arrive at a similar core conclusion: spectral properties are key to generalization. The PAC-Bayesian framework has also been success-fully applied. Liao et al. (2021) established general-ization bounds for GCNs and Message Passing Neural Networks (MPNNs) that depend on the spectral norms of the weight matrices and the maximum node degree. This line of work also emphasizes the role of parameter norms, a factor that appears explicitly in our bounds. Another line of work studies generalization by plac-ing a metric on the space of graphs and showing that MPNNs are Lipschitz (or uniformly continuous) with respect to this metric, which yields covering-number bounds (Vasileiou et al., 2025a). Unlike these graph-space results, we analyze a single fixed graph in the transductive setting. 
+
+VC Dimension and Rademacher Complexity. 
+
+Initial theoretical studies focused on bounding the VC dimension of GNNs. Scarselli et al. (2018) provided early bounds for a specific class of GNNs by using Pfaffian function theory. More recently, Morris et al. (2023) connected the VC dimension directly to the ex-pressive power of GNNs, showing it is related to the number of non-isomorphic graphs distinguishable by the Weisfeiler-Leman test. However, as noted by Esser et al. (2021), VC dimension-based bounds for GNNs can often be loose or even trivial, limiting their prac-tical utility for explaining generalization on a fixed graph. To obtain more informative, data-dependent bounds, some studies have turned to Rademacher complex-ity. Garg et al. (2020) derived Rademacher complex-ity bounds for graph-level prediction tasks, highlight-ing dependencies on model depth and feature dimen-sion. For the transductive (node-level) setting central to our work, El-Yaniv and Pechyony (2009) developed Transductive Rademacher Complexity (TRC), which can provide meaningful bounds where VC dimension fails. Using TRC (Esser et al., 2021) demonstrates the importance of the interaction term between the graph diffusion operator and the node features, a finding that is consistent with our data-dependent results. In our work we study the same transductive node setting, but in the graph Fourier domain, which allows for a more fine-grained decomposition of this interaction. 
+
+## 3 Preliminaries 
+
+This section provides the foundational concepts for our analysis. We first define the notation and the formal problem setup for transductive node regression. We then explain the theoretical basis for our approach to generalization, detailing the relationship between the Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+generalization gap and Gaussian complexity. Finally, we review the principles of graph Fourier analysis. 
+
+Notation and Problem Setup. We consider an undirected graph G = ( V, E ), where V is the set of 
+
+n = |V | nodes and E is the set of edges. Each node is associated with an initial feature vector. These are collected in a feature matrix H(0) ∈ Rn×d0 , where d0 is the dimensionality of the input features for each node. For our analysis, we use the normalized graph Adja-cency matrix ˆA = D−1/2AD −1/2, where A is the ad-jacency matrix and D is the degree matrix. As a real symmetric matrix, ˆA has an eigendecomposition ˆA =
+
+U ΛU ⊤. The matrix U = [ u1, . . . , un] contains the orthonormal eigenvectors, and Λ = diag( λ1, . . . , λ n)contains the corresponding real eigenvalues, −1 ≤
+
+λ1 ≤ · · · ≤ λn ≤ 1. The eigenvectors U constitute the basis for the Graph Fourier Transform (GFT) (Shu-man et al., 2012). The GFT of a graph signal x ∈ Rn
+
+is bx = U ⊤x, and its inverse is x = U bx.The task is transductive node regression, where the complete graph structure and the features H(0) for all 
+
+n nodes are accessible during training. However, the ground-truth labels, represented by a vector y ∈ Rn,are only revealed for a subset of nodes. The node set 
+
+V is partitioned into a labeled training set VL of size 
+
+m and an unlabeled test set VU of size u = n − m.A GNN is a parameterized function, denoted fθ , that maps the graph structure and node features to a vec-tor of predictions for all nodes, ˆ y = fθ (H(0) , G ) ∈ Rn.The performance of the model is measured by a loss function ℓ(·, ·). We distinguish between two key per-formance metrics: 
+
+• The empirical risk, RL(f ), is the average loss com-puted on the labeled training data. It measures how well the model fits the data it was trained on: 
+
+RL(f ) = 1
+
+m
+
+X
+
+> i∈VL
+
+ℓ(ˆ yi, y i). (1) 
+
+• The generalization error, RU (f ), is the average loss on the unlabeled data. In the transductive setting, this serves as the proxy for the true risk and mea-sures how well the model performs on unseen nodes: 
+
+RU (f ) = 1
+
+u
+
+X
+
+> i∈VU
+
+ℓ(ˆ yi, y i). (2) 
+
+Notation convention. We overload f to denote both the predictor and its output vector on all n nodes; when context is clear we drop the arguments and write 
+
+f ∈ Rn, with fi meaning the prediction at node i
+
+(i.e., ( f (H(0) , G )) i). In the Fourier domain we write 
+
+bf = U ⊤f and bfi for its i-th coefficient. 
+
+The Generalization Gap and Transductive Complexity. The central objective of our theoret-ical analysis is to understand and bound the general-ization gap, defined as the absolute difference |RU (f )−
+
+RL(f )|(Bartlett and Mendelson, 2002). The general-ization gap is the critical indicator of a model’s ability to learn underlying patterns versus simply memoriz-ing the training data. A large gap signifies overfitting, where the model has learned specific patterns of the training set that do not hold for the rest of the graph. The primary driver of overfitting is the complexity of the function class F = {fθ |θ ∈ Θ} from which the model is selected. To analyze this in the transductive setting, we use a specialized tool: TRC, which mea-sures a function class’s ability to fit random labels on a random partition of all n nodes. 
+
+Definition 1 (Transductive Rademacher Complexity (El-Yaniv and Pechyony, 2009)) . Let F be a class of real-valued functions over a domain of n points, let m
+
+be the number of labeled points, and let p ∈ [0 , 0.5] .Let σ = ( σ1, ..., σ n)⊤ be a vector of independent ran-dom variables, where each σi takes the value +1 or −1
+
+with probability p, and 0 with probability 1 − 2p. The Transductive Rademacher Complexity of F is defined as: 
+
+Rm,n (F) = 
+
+ 1
+
+m + 1
+
+n − m
+
+
+
+· Eσ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+σifi
+
+#
+
+. (3) The relationship between the generalization gap and TRC is fundamental. For a loss function with values in a range of width C, the gap is bounded with high probability over the random partition of labeled nodes. 
+
+Theorem 1 (Transductive Generalization Bound (El-Yaniv and Pechyony, 2009)) . With probability at least 1 − δ, for any predictor f ∈ F :
+
+RU (f ) ≤ RL(f ) + Rm,n (F)+ C1
+
+npmin {m, u }
+
+mu + C2
+
+r nmu ln( 1
+
+δ ), (4) 
+
+where u = n − m, and C1, C 2 are absolute constants. 
+
+This theorem shows that the generalization gap is con-trolled by the TRC. While TRC provides the formal framework, our analysis will derive a bound on the closely related Full Transductive Gaussian Complexity (FTGC), which is more suitable for spectral analysis due to the properties of Gaussian variables. 
+
+Definition 2 (FTGC) . The Gaussian complexity of a function class F over the entire vertex set V is: 
+
+GV (F) = Eg
+
+"
+
+sup  
+
+> f∈F
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+gifi
+
+#
+
+, (5) Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+where g1, . . . , g n ∼ N (0 , 1) are i.i.d. standard Gaus-sian variables. 
+
+The two complexity measures are linked by the fol-lowing standard result, which we prove in App. A for completeness. 
+
+Lemma 1 (TRC Bound by FTGC) . The TRC 
+
+Rm,n (F) is upper-bounded by the full transductive Gaussian complexity GV (F) as: 
+
+Rm,n (F) ≤ n2
+
+mu 
+
+r π
+
+2 · G V (F), (6) 
+
+where u = n − m. For simplicity in the main gener-alization bound, we can denote the constant pπ/ 2 as 
+
+Cgc .
+
+By substituting the result of Lemma 1 into the main generalization bound of Theorem 1, we arrive at a final bound expressed in terms of FTGC. 
+
+Theorem 2 (Generalization Gap by FTGC) . With probability at least 1 − δ, for any predictor f ∈ F :
+
+RU (f ) ≤ RL(f ) + n2Cgc 
+
+mu GV (F)+ C1
+
+npmin {m, u }
+
+mu + C2
+
+r nmu ln( 1
+
+δ ),
+
+(7) 
+
+where GV (F) is the FTGC, u = n−m, and Cgc , C 1, C 2
+
+are absolute constants. 
+
+This final theorem establishes the path for our anal-ysis. Our primary technical goal is to derive a data-dependent bound on GV (F) for spectral GNNs. This bound can then be substituted into Theorem 2 to pro-vide a generalization bound. To achieve this, we shift the entire analysis from the spatial domain to the graph Fourier domain. We will show that FTGC is invariant under this transformation, which allows us to analyze the model in a domain where the complex graph convolution operator simplifies to an element-wise product. This change of basis is the key that enables us to separate the contributions of the graph structure, the chosen filter basis, and the learnable network parameters, leading to a more interpretable bound. 
+
+Node classification. Our bounds extend to multi-class node classification. Let the predictor output log-its F ∈ Rn×C and train with a bounded, Lℓ-Lipschitz surrogate (e.g., multi-class hinge, or cross-entropy with logits clipped to [ −B, B ] so ℓ ∈ [0 , C ]). By the vector-contraction inequality for Gaussian/Rademacher com-plexities, composing with ℓ only scales the FTGC term by Lℓ (Bartlett and Mendelson, 2002). Hence, our lem-mas and theorems hold after replacing the regression loss by ℓ and RL, R U by their classification counter-parts. 
+
+## 4 A Unified Framework for Spectral GNNs 
+
+To analyze generalization for spectral GNNs, we adopt a unified formulation. Popular models such as Cheb-Net (Defferrard et al., 2016), GCN (Kipf and Welling, 2017), and BernNet (He et al., 2021) appear as special cases of a learnable polynomial filter. This formulation treats the polynomial basis as a choice of parametriza-tion, which allows us to study all these models simul-taneously and separate graph-dependent terms from learnable parameters. We define a spectral GNN with L layers for node re-gression. The input is the feature matrix H(0) ∈
+
+Rn×d0 . The propagation rule for layer l ∈ { 0, . . . , L −
+
+1} is: 
+
+H(l+1) = σ
+
+
+
+gθ(l) ( ˆA)H(l)W (l)
+
+, (8) where W (l) ∈ Rdl×dl+1 is a learnable weight matrix, 
+
+σ is a non-linear activation function, and gθ(l) ( ˆA) is a graph filter. For efficiency and localization, the filter is a K-order polynomial of the normalized adjacency matrix: 
+
+gθ(l) ( ˆA) = 
+
+> K
+
+X
+
+> k=0
+
+θ(l) 
+
+> k
+
+Pk( ˆA), (9) where {Pk}Kk=0 is a chosen polynomial basis and θ(l) ∈
+
+RK+1 are the learnable filter coefficients. The action of this filter is best understood in the Fourier domain, where it becomes a multiplier on the graph frequencies: 
+
+gθ(l) ( ˆA) = U
+
+> K
+
+X
+
+> k=0
+
+θ(l) 
+
+> k
+
+Pk(Λ)
+
+!
+
+U ⊤ = U gθ(l) (Λ)U ⊤.
+
+(10) The filter’s frequency response can be expressed com-pactly using a matrix derived from the polynomial ba-sis and the graph spectrum. 
+
+Definition 3 (Generalized Vandermonde Matrix) .
+
+For a polynomial basis {Pk}Kk=0 and normalized ad-jacency eigenvalues {λi}ni=1 , the generalized Vander-monde matrix VP ∈ Rn×(K+1) has entries: (VP )ik =
+
+Pk(λi).
+
+The vector of filter responses is VP θ(l), so gθ(l) (Λ) = diag( VP θ(l)). The GNN layer from (8) can then be written as: 
+
+H(l+1) = σ
+
+
+
+U diag( VP θ(l)) U ⊤H(l)W (l)
+
+. (11) This formulation separates the graph structure (U , VP ) from the learnable parameters ( θ(l), W (l)). App. J lists the exact polynomial bases (Chebyshev, Bernstein, Legendre, Monomial) and their properties. Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+## 5 Main Results: Generalization and Stability of Spectral GNNs 
+
+5.1 Analysis in the Graph Fourier Domain 
+
+Our goal is to bound the generalization gap by an-alyzing the complexity of the function class F =
+
+{fθ (H(0) , G )|θ ∈ Θ} that the GNN represents. We use the FTGC (Definition 2). A key insight of our anal-ysis is that this complexity is invariant to the GFT. This allows us to move the analysis from the spatial (node) domain to the simpler spectral domain. Let 
+
+bF = { bf |f ∈ F} be the function class in the Fourier domain, where bf = U ⊤f .
+
+Lemma 2 (FTGC Invariance) . The FTGC of the GNN function class is the same in the spatial and Fourier domains. That is, GV (F) = GV ( bF).
+
+A detailed proof is in the App. B. This lemma allows us to analyze the network’s behavior in the Fourier domain, where the complex graph convolu-tion becomes a simple element-wise multiplication by the filter’s frequency response. To formalize this, let 
+
+cH(l) = U ⊤H(l) be the node features at layer l in the Fourier domain. We define a transformed activation function, τ (Z) = U ⊤σ(U Z ), which encapsulates the change of basis. Using this notation, the propagation rule from (11) simplifies to: 
+
+cH(l+1) = τ
+
+
+
+diag( VP θ(l))cH(l)W (l)
+
+. (12) For our analysis to proceed, we must ensure that this transformed activation function preserves the proper-ties of the original activation σ. The following lemma confirms this. 
+
+Lemma 3 (Lipschitz Preservation of Transformed Ac-tivation) . Let σ : R → R be an α-Lipschitz function applied element-wise. Then, the transformed activa-tion τ (Z) = U ⊤σ(U Z ) is also α-Lipschitz with re-spect to the Frobenius norm ∥ · ∥ F .
+
+A detailed proof can be found in App. C. With these tools, we have established a simpler, equivalent rep-resentation of the GNN in the Fourier domain. This forms the foundation for deriving our main generaliza-tion bound in the next section. 
+
+5.2 A Data-Dependent Generalization Bound 
+
+Building on our Fourier domain framework, we now de-rive our main result: a data-dependent generalization bound. This bound connects the GNN’s generaliza-tion error to the spectral properties of the input data, offering a more detailed view than data-independent analyses (Morris et al., 2023; Scarselli et al., 2018). We begin by defining the spectral energy of the input features. 
+
+Definition 4 (Input Signal Spectral Energy) . The spectral energy of the input feature matrix H(0) ∈
+
+Rn×d0 at the graph frequency λi is the squared Frobe-nius norm of the i-th row of its GFT, cH(0) = U ⊤H(0) :
+
+E0(λi) := ∥(cH(0) )i∥22 = ∥(U ⊤H(0) )i∥22. (13) This quantity measures how much of the input signal’s “energy” is concentrated at each graph frequency. Us-ing this, we can state our main theorem. 
+
+Theorem 3 (Data-Dependent FTGC Bound) . Let fθ
+
+be an L-layer spectral GNN with an α-Lipschitz acti-vation σ satisfying σ(0) = 0 . Assume the model pa-rameters are constrained such that for each layer l ∈{0, . . . , L −1}, the weight matrix norm ∥W (l)∥2 ≤ CW,l 
+
+and the filter coefficient norm ∥θ(l)∥2 ≤ Cθ,l . The FTGC of the function class F is bounded by: 
+
+GV (F) = GV ( bF) ≤ 1
+
+√n ∥VP ∥L−12,∞
+
+> L−1
+
+Y
+
+> l=0
+
+αC W,l Cθ,l 
+
+!
+
+·
+
+> n
+
+X
+
+> i=1
+
+∥vi∥22E0(λi)
+
+!1/2
+
+,
+
+(14) 
+
+where vi is the i-th row of the generalized Vander-monde matrix VP , and ∥VP ∥2,∞ = max i ∥vi∥2 is the maximum row-norm of VP .
+
+The full proof is provided in App. D. This bound reveals how different factors contribute to the model complexity. The term QL−1 
+
+> l=1
+
+(·) shows an exponential dependency on the network depth for layers L−1 down to 1. Crucially, the final term,  P ni=1 ∥vi∥22E0(λi)1/2,captures the interaction between the data and the model at the first layer. Here, ∥vi∥22 measures the po-tential amplification of the filter basis at frequency λi,while E0(λi) is the signal’s energy at that frequency. The bound is minimized when the signal’s energy is concentrated at frequencies where the filter basis has a small response magnitude. This provides a key in-sight: good generalization is associated with spectral filters that avoid excessively amplifying the dominant frequencies of the input signal. Next, we bound the FTGC for the case when we have no nonlinearities. By avoiding the initial bounding of the complexity by the output norm, we can derive a result that is tighter than the general non-linear bound from Theorem 3 and which more clearly reveals the influence of network depth on the model’s complexity. We consider an L-layer GNN with the non-linear ac-tivation σ removed, so the propagation rule becomes 
+
+H(l+1) = gθ(l) ( ˆA)H(l)W (l).Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+Theorem 4 (Tighter Complexity Bound for Deep Lin-ear GNNs) . Let fθ be an L-layer linear spectral GNN with a single output feature. Assume the model pa-rameters are constrained such that ∥W (l)∥2 ≤ CW,l ,and ∥θ(l)∥2 ≤ Cθ,l for all layers l. The FTGC of the function class F is bounded by: 
+
+GV (F) ≤ 1
+
+n
+
+> L−1
+
+Y
+
+> l=0
+
+CW,l Cθ,l 
+
+! nX
+
+> i=1
+
+∥vi∥2L 
+
+> 2
+
+E0(λi)
+
+!1/2
+
+,
+
+(15) 
+
+where vi is the i-th row of VP and E0(λi) is the input signal spectral energy. 
+
+The full proof is in App. E. This bound provides a more precise characterization of complexity for deep linear models. Compared to the general non-linear bound in (14), it is tighter by a factor of 1 /√n. Most importantly, it clearly shows how the potential for complexity grows with depth. The data-dependent term now contains the factor ∥vi∥2L 
+
+> 2
+
+, indicating that any spectral instability in the polynomial basis (large 
+
+∥vi∥2 for some frequency λi) is amplified exponentially with the number of layers L. This provides a good theoretical justification for choosing spectrally stable polynomial bases ( e.g. , Chebyshev or Bernstein) when designing deep spectral GNNs, even in the absence of non-linearities. In App. H we plot our FTGC-based bound from Theorem 3 against the measured generalization gap across polynomial order, bases, and datasets. 
+
+5.3 Worst-Case Stability via Jacobian Norm 
+
+Our analysis reveals that the same core principles gov-erning the generalization error of a spectral GNN also control its stability. This property, which measures the sensitivity of a model’s output to small perturbations in its input, is important for ensuring robustness and preventing issues like exploding gradients during train-ing (Bousquet and Elisseeff, 2002). In this section, we formalize this connection by analyzing the network’s Jacobian from a worst-case perspective. A standard way to quantify stability is by bounding the spectral norm of the network’s Jacobian (Hariri et al., 2025; Yoshida and Miyato, 2017; Novak et al., 2018). A large Jacobian norm implies that small input changes can be amplified into large output changes. We define the network Jacobian as J = ∂vec( H(L)) 
+
+> ∂vec( H(0) )
+
+,where vec( ·) vectorizes the feature matrices. 
+
+Theorem 5 (Jacobian Norm Bound) . Let the GNN be an L-layer spectral GNN with an α-Lipschitz and con-tinuously differentiable activation σ satisfying σ(0) = 0. Under the same parameter constraints as Theo-rem 3, the spectral norm of the network Jacobian J
+
+is bounded by: 
+
+∥J ∥ 2 ≤
+
+> L−1
+
+Y
+
+> l=0
+
+(αC W,l Cθ,l ∥VP ∥2,∞) , (16) 
+
+where ∥VP ∥2,∞ = max i ∥vi∥2 is the maximum row-norm of the generalized Vandermonde matrix. 
+
+The full proof is in App. F. This bound quantifies the worst-case sensitivity of the GNN. It reveals an exponential dependency on depth ( L) and highlights the central role of ∥VP ∥2,∞, the maximum amplifica-tion potential of the polynomial basis. We empirically validate this bound in App. G, demonstrating that it bounds the true spectral norm of the network Jacobian within a small constant factor across varying polyno-mial orders. 
+
+5.4 A Unified Principle for Architectural Design 
+
+Comparing our generalization bound (Theorem 3) and our stability bound (Theorem 5) reveals a uni-fied principle: the same architectural factors govern both properties. The core components—the activa-tion’s Lipschitz constant ( α), the norms of the weights (CW,l , C θ,l ), and the characteristics of the polynomial basis appear in both bounds. The worst-case stability is controlled by the maximum amplification factor of the basis, ∥VP ∥2,∞. This term also appears in the generalization bound for the deeper layers. However, the generalization bound is more nuanced. For the first layer, it depends on the fine-grained interaction term  P ni=1 ∥vi∥22E0(λi)1/2, which measures how the filter basis amplifies the input sig-nal’s actual spectral energy distribution. This provides a clear design strategy. To ensure a model is both stable and generalizable, one should start by selecting a polynomial basis with a low max-imum amplification, ∥VP ∥2,∞. A large ∥vi∥2 means the chosen polynomial basis is highly sensitive to that frequency, so any signal energy present there will con-tribute more significantly to the model’s complexity. Good generalization is therefore achieved when the signal’s energy is concentrated at frequencies the fil-ter basis considers less important. This spectral perspective offers a distinct advantage over analyses in the spatial domain (Esser et al., 2021), which often rely on the diffusion operator’s norm 
+
+∥ ˆA∥∞ (bounded by O(pdegree max /degree min )) or on the maximum degree (Liao et al., 2021). As we em-pirically demonstrate in App. I, this reliance causes spatial bounds to grow exponentially with network depth. Our approach effectively trades a dependency Martirosyan, Malitesta, Talbot, Giraldo, Malliaros −1.0 −0.5 0.0 0.5 1.0 
+
+> x (Eigenvalue Spectrum)
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normalised
+> K
+> ∑
+> k = 0
+> Pk(x)2
+> Monomial
+> Chebyshev
+> Legendre
+> Bernstein
+
+Figure 1: Basis stability across the spectrum ( K =10). on the graph’s structural irregularity for a dependency on the mathematical stability of the filter basis. For many common architectures like GCN, this trade-off is highly favorable, as a simple polynomial basis can yield a small, constant ∥VP ∥2,∞ (e.g. , 1 for GCN) re-gardless of the graph’s degree disparity, leading to a much tighter guarantee. By selecting a spectrally sta-ble polynomial basis (low ∥VP ∥2,∞) and designing fil-ters that do not amplify the dominant frequencies of the input signal, we can simultaneously build models that are less prone to overfitting and exploding gradi-ents. 
+
+## 6 Design Implications: Basis Stability and Oversmoothing 
+
+Our theoretical bounds in Section 5 show that the generalization and stability of a spectral GNN de-pend on the properties of the chosen polynomial ba-sis {Pk}. This dependency appears through the term 
+
+∥vi∥22, which is the squared row norm of the general-ized Vandermonde matrix VP .We refer to the function x 7 → PKk=0 Pk(x)2 as the am-plification profile of the basis, as it shows how sensitive the basis is to different frequencies. When this func-tion is evaluated at the graph eigenvalues λi, its value is exactly equal to ∥vi∥22. In Figure 1, we plot the am-plification profiles for different bases. From the plot, we can group these bases, which are normalized to a maximum value of 1, into three classes based on their uniformity: 1. The Chebyshev basis is the most uniform. Its pro-file is relatively flat across the middle of the spec-trum, with its minimum value (around 0.5) being comparatively close to its maximum value of 1.0. 2. The Bernstein and Legendre bases have a clear U-shape, making them non-uniform. Their sensitivity is much higher at the spectral edges than in the center. 3. The Monomial basis is the least uniform. It ex-hibits the most extreme U-shape, with the largest comparative difference between its sensitivity at the edges versus the center. This uniformity has direct consequences for general-ization. As shown in our main bound (Theorem 3), model complexity depends on the interaction term P 
+
+> i
+
+∥vi∥22E0(λi). For a non-uniform basis, the model’s complexity becomes highly sensitive to the signal’s energy distribution ( E0(λi)), leading to unpredictable performance. The uniform profile of Chebyshev makes the complexity less dependent on the signal, which should lead to more consistent performance across dif-ferent graphs. Furthermore, this analysis provides insight into the problem of oversmoothing (Li et al., 2018) in deep GNNs. Our bound for deep linear models (Theo-rem 4) includes the term ∥vi∥2L 
+
+> 2
+
+. As depth L increases, the model’s complexity becomes exponentially domi-nated by the largest values of the amplification profile. For non-uniform bases, this forces the model to focus only on the spectral edges, which is a potential cause of oversmoothing (NT and Maehara, 2019; Oono and Suzuki, 2020). 
+
+Practical regularization. The first-layer, data-dependent term of our nonlinear bound (Eq. 14) sug-gests penalizing energy-weighted (EW) amplification. To discourage large gains at frequencies where the in-put has energy, we use the simple ratio: 
+
+REW = ∥diag( VP θ) cH(0) ∥2
+
+> F
+
+∥cH(0) ∥2
+
+> F
+
+= ∥gθ ( ˆA)H(0) ∥2
+
+> F
+
+∥H(0) ∥2
+
+> F
+
+.
+
+(17) In practice, we detach H(0) in this penalty term so that the gradient only updates the filter parameters. Training details are provided in Section 7. 
+
+## 7 Empirical Validation 
+
+7.1 Experimental Setup 
+
+To test the hypothesis from Section 6, we conduct node classification experiments on several benchmark datasets using the different polynomial bases. 
+
+Model. The core of our experimental model consists of a single linear spectral graph layer, as defined in Section 4. A residual connection is added to the graph layer to improve training stability. To enhance ex-pressive power, the input node features are first pro-cessed by an MLP before being passed to the graph Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+Table 1: Test accuracy improvement depends on basis stability. The column ∆ uses empirically cal-culated ρ for paired significance ( ∗p < 0.05 ,∗∗ p < 0.01 ,∗∗∗ p < 0.001). While other bases occasionally degrade performance (negative ∆), a consistent positive improvement is observed across all datasets only for the Cheby-shev basis.                                                                                                                                                
+
+> Chameleon Squirrel Cora Citeseer Basis Base +Reg ∆Base +Reg ∆Base +Reg ∆Base +Reg ∆Monomial 43 .68 ±2.044 .28 ±1.2+0 .60 ↑27 .87 ±1.226 .76 ±0.8−1.11 ∗↓78 .33 ±1.475 .34 ±1.5−2.99 ∗∗∗ ↓66 .15 ±1.964 .30 ±2.5−1.85 ↓
+> Legendre 41 .22 ±1.842 .74 ±1.9+1 .52 ↑26 .32 ±1.729 .15 ±1.0+2 .83 ∗∗∗ ↑79 .53 ±1.479 .36 ±1.4−0.17 ↓65 .35 ±1.766 .77 ±2.0+1 .42 ↑
+> Bernstein 40 .58 ±1.842 .23 ±1.9+1 .65 ∗↑26 .44 ±0.631 .23 ±0.9+4 .79 ∗∗∗ ↑78 .45 ±2.079 .08 ±1.7+0 .63 ↑65 .47 ±2.065 .30 ±2.0−0.17 ↓
+> Chebyshev 41 .76 ±1.743 .29 ±1.9+1 .53 ↑27 .89 ±0.831 .20 ±0.7+3 .31 ∗∗∗ ↑77 .64 ±2.078 .23 ±2.1+0 .59 ↑65 .57 ±1.665 .88 ±1.6+0 .31 ↑
+
+Table 2: The regularizer’s effect on the generalization gap. Column ∆ shows the change, where a negative value indicates a reduction in the gap ( ∗p < 0.05 ,∗∗ p < 0.01 ,∗∗∗ p < 0.001). The gap reduction is most consistent and significant on the Chebyshev basis.                                                                                                                                               
+
+> Chameleon Squirrel Cora Citeseer Basis Base +Reg ∆Base +Reg ∆Base +Reg ∆Base +Reg ∆Monomial 4.93 ±0.97 1.99 ±0.17 −2.94 ∗∗∗ ↓4.21 ±1.43 0.89 ±0.3−3.32 ∗∗∗ ↓0.75 ±0.06 0.63 ±0.04 −0.12 ∗∗∗ ↓1.02 ±0.04 1.02 ±0.05 +0 .00 Legendre 4.72 ±1.12.23 ±0.35 −2.49 ∗∗∗ ↓2.04 ±0.66 1.79 ±0.07 −0.25 ↓0.65 ±0.06 0.49 ±0.04 −0.16 ∗∗∗ ↓0.83 ±0.06 0.90 ±0.03 +0 .07 ∗∗ ↑
+> Bernstein 2.14 ±0.33.46 ±1.38 +1 .32 ∗↑2.44 ±0.55 0.29 ±0.18 −2.15 ∗∗∗ ↓0.64 ±0.06 0.54 ±0.04 −0.10 ∗∗∗ ↓1.00 ±0.05 0.99 ±0.03 −0.01 ↓
+> Chebyshev 3.06 ±1.02.20 ±0.17 −0.86 ↓2.77 ±0.31 0.09 ±0.09 −2.68 ∗∗∗ ↓0.79 ±0.07 0.69 ±0.06 −0.10 ∗∗ ↓0.99 ±0.02 0.92 ±0.06 −0.07 ∗↓
+
+layer. The output features are then passed to a linear classifier for node classification. Even with these com-ponents, our central graph convolution layer remains simple and linear. This allows us to isolate and ob-serve the effects of the different polynomial bases and our spectral regularizer, which is the primary goal of this experiment. 
+
+Regularization. We apply standard dropout and add the regularization term λEW REW from Eq. (17), with λEW tuned on the validation set. Evaluation. 
+
+We evaluate all models on four representative datasets. For each dataset we use 10 random sparsified splits: 10 labeled nodes per class for training; from the remaining nodes we use 35% for validation and 65% for test. Re-sults are reported as mean ± 95% confidence interval (CI) over the 10 splits. We report two metrics: test ac-curacy (%) and the generalization gap. We define the generalization gap as testing loss minus training loss. For both tables we do two hyperparameter searches before and after adding the regularisation. The full details are in App. K. 
+
+7.2 Results and Analysis 
+
+The results of our experiments are presented in Table 1 for test accuracy and Table 2 for the generalization gap. They confirm our analysis from Section 6. First, for the highly non-uniform Monomial basis , the regularizer’s effect is poor. As shown in Table 1, it fails to improve test accuracy and often hurts performance significantly ( e.g. , on Cora and Citeseer). Second, for the moderately non-uniform Bernstein and Legendre bases , the results are mixed. The regularizer some-times improves accuracy ( e.g. , Bernstein on Squirrel), but the effect is inconsistent across datasets. For ex-ample, Bernstein’s performance decreases on Citeseer, and Legendre’s effect on Cora is negligible. The gap reduction for these bases, shown in Table 2, is also un-reliable. Finally, for the uniform Chebyshev basis , the results are consistently positive. Table 2 shows that the regularizer reliably reduces the generalization gap, and Table 1 shows that this translates directly into a consistent improvement in test accuracy across all datasets. These results provide clear evidence that the unifor-mity of a basis’s amplification profile is a key predic-tor of its response to spectrally-aware regularization. The predictable behavior of the uniform Chebyshev basis allows the regularizer to function effectively and consistently. 
+
+## 8 Limitations 
+
+Our analysis targets the transductive, fixed-graph set-ting and does not cover inductive generalization to new nodes or graphs, or distribution shift. We study poly-nomial spectral filters on the normalized adjacency and assume α-Lipschitz activations with bounded pa-rameter norms. Attention layers, non-polynomial operators, and other normalizations are outside our scope. Furthermore, while we provide a sharper bound for deep linear networks, our non-linear bound relies on sequential Lipschitz contractions. Applying cover-ing number arguments and Dudley’s entropy integral could yield tighter capacity bounds for the non-linear case. Finally, our derived bounds help us understand spectral GNNs, but they are not direct predictors of test accuracy. They explain trends rather than provide Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+point estimates. 
+
+## 9 Conclusions 
+
+We presented a unified Fourier-domain analysis of spectral GNNs that leads to new, depth and order-aware generalization bounds. By showing that FTGC is invariant under the GFT, we derived data-dependent bounds that explicitly capture the inter-action between polynomial bases, filter amplification, and the spectral energy of the input. Our analysis also established tighter results in the linear setting and revealed that the same factors governing gener-alization also control network stability. These insights yield a simple regularizer and a clear design principle: spectrally stable bases and filters that avoid amplify-ing dominant frequencies improve both generalization and robustness. Together, our theoretical and empir-ical findings provide a principled foundation for un-derstanding and guiding the design of spectral GNN architectures. 
+
+## Acknowledgements 
+
+Vahan Martirosyan is the recipient of a PhD schol-arship from the STIC Doctoral School of Universit´ eParis-Saclay. 
+
+References 
+
+Abramowitz, M. and Stegun, I. A. (1964). Handbook of Mathematical Functions . Dover. Bartlett, P. L. and Mendelson, S. (2002). Rademacher and Gaussian Complexities: Risk Bounds and Structural Results . JMLR. Bergstra, J., Bardenet, R., Bengio, Y., and K´ egl, B. (2011). Algorithms for hyper-parameter optimiza-tion. In Advances in Neural Information Processing Systems (NeurIPS) .Bousquet, O. and Elisseeff, A. (2002). Stability and generalization. Journal of Machine Learning Re-search , 2. Defferrard, M., Bresson, X., and Vandergheynst, P. (2016). Convolutional neural networks on graphs with fast localized spectral filtering. In Advances in Neural Information Processing Systems (NeurIPS) .El-Yaniv, R. and Pechyony, D. (2009). Transductive rademacher complexity and its applications. Journal of Artificial Intelligence Research .Esser, P. M., Vankadara, L. C., and Ghoshdastidar, D. (2021). Learning theory can (sometimes) ex-plain generalisation in graph neural networks. In 
+
+Advances in Neural Information Processing Systems (NeurIPS) .Garg, V. K., Jegelka, S., and Jaakkola, T. (2020). Gen-eralization and representational limits of graph neu-ral networks. In International Conference on Ma-chine Learning (ICML) .Hariri, A., ´Alvaro Arroyo, Gravina, A., Eliasof, M., Sch¨ onlieb, C.-B., Bacciu, D., Azizzadenesheli, K., Dong, X., and Vandergheynst, P. (2025). Return of chebnet: Understanding and improving an over-looked gnn on long range tasks. In Advances in Neu-ral Information Processing Systems (NeurIPS) .He, M., Wei, Z., Huang, Z., and Xu, H. (2021). Bern-net: Learning arbitrary graph spectral filters via bernstein approximation. In Advances in Neural In-formation Processing Systems (NeurIPS) .Higham, N. J. (2002). Accuracy and Stability of Nu-merical Algorithms . SIAM. Horn, R. A. and Johnson, C. R. (2012). Matrix Anal-ysis . Cambridge University Press, second edition. Hu, W., Fey, M., Zitnik, M., Dong, Y., Ren, H., Liu, B., Catasta, M., and Leskovec, J. (2020). Open graph benchmark: Datasets for machine learning on graphs. In Advances in Neural Information Process-ing Systems (NeurIPS) .Kingma, D. P. and Ba, J. (2015). Adam: A method for stochastic optimization. In International Conference on Learning Representations (ICLR) .Kipf, T. N. and Welling, M. (2017). Semi-supervised classification with graph convolutional networks. In 
+
+International Conference on Learning Representa-tions (ICLR) .Kolda, T. G. and Bader, B. W. (2009). Tensor decom-positions and applications. SIAM Review .Ledoux, M. and Talagrand, M. (1991). Probabil-ity in Banach Spaces: Isoperimetry and Processes .Springer-Verlag. Li, Q., Han, Z., and Wu, X.-M. (2018). Deeper in-sights into graph convolutional networks for semi-supervised learning. In AAAI Conference on Artifi-cial Intelligence (AAAI) .Liao, R., Urtasun, R., and Zemel, R. (2021). Apac-bayesian approach to generalization bounds for graph neural networks. In International Conference on Learning Representations (ICLR) .Liu, F. and Wang, Q. (2025). Generalization of spec-tral graph neural networks. Lorentz, G. G. (2012). Bernstein Polynomials . AMS, 2nd edition. Mason, J. C. and Handscomb, D. C. (2002). Chebyshev Polynomials . CRC Press. Morris, C., Geerts, F., T¨ onshoff, J., and Grohe, M. (2023). Wl meet vc. In International Conference on Machine Learning (ICML) .Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+Novak, R., Bahri, Y., Abolafia, D. A., Pennington, J., and Sohl-Dickstein, J. (2018). Sensitivity and gen-eralization in neural networks: An empirical study. In International Conference on Learning Represen-tations (ICLR) .NT, H. and Maehara, T. (2019). Revisiting graph neu-ral networks: All we have is low-pass filters. arXiv preprint arXiv:1905.09550 .Oono, K. and Suzuki, T. (2020). Graph neural net-works exponentially lose expressive power for node classification. In International Conference on Learn-ing Representations (ICLR) .Pei, H., Wei, B., Chang, K. C.-C., Lei, Y., and Yang, B. (2020). Geom-gcn: Geometric graph convolu-tional networks. In International Conference on Learning Representations (ICLR) .Sandryhaila, A. and Moura, J. M. (2013). Discrete signal processing on graphs. IEEE Transactions on Signal Processing .Scarselli, F., Tsoi, A. C., and Hagenbuchner, M. (2018). The vapnik-chervonenkis dimension of graph and recursive neural networks. Neural Networks .Sen, P., Namata, G., Bilgic, M., Getoor, L., Galligher, B., and Eliassi-Rad, T. (2008). Collective classifica-tion in network data. AI magazine .Shalev-Shwartz, S. and Ben-David, S. (2014). Under-standing Machine Learning: From Theory to Algo-rithms . Cambridge University Press. Shuman, D. I., Narang, S. K., Frossard, P., Ortega, A., and Vandergheynst, P. (2012). The emerging field of signal processing on graphs: Extending high-dimensional data analysis to networks and other ir-regular domains. IEEE Signal Processing Magazine .Vasileiou, A., Finkelshtein, B., Geerts, F., Levie, R., and Morris, C. (2025a). Covered forest: Fine-grained generalization analysis of graph neural net-works. In International Conference on Machine Learning (ICML) .Vasileiou, A., Jegelka, S., Levie, R., and Morris, C. (2025b). Survey on generalization theory for graph neural networks. arXiv preprint arXiv:2503.15650 .Verma, S. and Zhang, Z.-L. (2019). Stability and generalization of graph convolutional neural net-works. In ACM SIGKDD International Conference on Knowledge Discovery & Data Mining (KDD) .Wang, X. and Zhang, M. (2022). How powerful are spectral graph neural networks. In International Conference on Machine Learning (ICML) .Wu, Z., Pan, S., Chen, F., Long, G., Zhang, C., and Yu, P. S. (2019). A comprehensive survey on graph neural networks. IEEE Transactions on Neural Net-works and Learning Systems .Yoshida, Y. and Miyato, T. (2017). Spectral norm regularization for improving the generalizability of deep learning. arXiv preprint arXiv:1705.10941 .Zhou, J., Cui, G., Zhang, Z., Yang, C., Liu, Z., Wang, L., Li, C., and Sun, M. (2020). Graph neural net-works: A review of methods and applications. AI Open .
+
+## Checklist 
+
+1. For all models and algorithms presented, check if you include: (a) A clear description of the mathematical set-ting, assumptions, algorithm, and/or model. [Yes — Mathematical setting, assumptions, and model are in Section 4 and Section 5, with notation in Section 3.] (b) An analysis of the properties and complexity (time, space, sample size) of any algorithm. [Not Applicable — We do not introduce a new algorithm.] (c) (Optional) Anonymized source code, with specification of all dependencies, including external libraries. [Yes — The link to the anonymous repository for the code is pro-vided in the Appendix.] 2. For any theoretical claim, check if you include: (a) Statements of the full set of assumptions of all theoretical results. [Yes — Assumptions (α-Lipschitz σ, bounded norms) are stated before each result (Section 5).] (b) Complete proofs of all theoretical results. [Yes — Complete proofs are provided in the Appendix.] (c) Clear explanations of any assumptions. [Yes — We explain assumptions before theorems and lemmas (Section 5).] 3. For all figures and tables that present empirical results, check if you include: (a) The code, data, and instructions needed to reproduce the main experimental results (ei-ther in the supplemental material or as a URL). [Yes — The anonymous repository hosting the code to reproduce the results of this paper is provided in the Appendix.] (b) All the training details (e.g., data splits, hy-perparameters, how they were chosen). [Yes — We provide full details regarding training in the Appendix.] Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+(c) A clear definition of the specific measure or statistics and error bars (e.g., with respect to the random seed after running experiments multiple times). [Yes — All experiments are repeated across 10 random splits, with fur-ther details reported in Section 7.] (d) A description of the computing infrastructure used. (e.g., type of GPUs, internal cluster, or cloud provider). [Yes — We report complete details about the computing infrastructure in the Appendix.] 4. If you are using existing assets (e.g., code, data, models) or curating/releasing new assets, check if you include: (a) Citations of the creator If your work uses ex-isting assets. [Yes — All the needed refer-ences and credits have been explicitly men-tioned in our code.] (b) The license information of the assets, if ap-plicable. [Yes — All license information of the existing assets were properly included.] (c) New assets either in the supplemental mate-rial or as a URL, if applicable. [Yes — The only new assets of our work are the imple-mented codes for which we report a detailed Readme file in the anonymous repository.] (d) Information about consent from data providers/curators. [Not Applicable —Since all used datasets are open-access, no permission was needed.] (e) Discussion of sensible content if applicable, e.g., personally identifiable information or of-fensive content. [Not Applicable — Since all used datasets are open-access, no permission was needed.] 5. If you used crowdsourcing or conducted research with human subjects, check if you include: (a) The full text of instructions given to partic-ipants and screenshots. [Not Applicable — Our paper does not involve crowdsourcing nor research with human subjects.] (b) Descriptions of potential participant risks, with links to Institutional Review Board (IRB) approvals if applicable. [Not Appli-cable — Our paper does not involve crowd-sourcing nor research with human subjects.] (c) The estimated hourly wage paid to partici-pants and the total amount spent on partic-ipant compensation. [Not Applicable — Our paper does not involve crowdsourcing nor re-search with human subjects.] Supplementary Materials 
+
+## Appendix Organization and Notation 
+
+This appendix provides proofs for all theoretical claims made in the main paper, presents further empirical analyses that validate our theory, and includes additional details to ensure reproducibility. 
+
+• Section Norms and Products: We define the vector and matrix norms used throughout the analysis. 
+
+• Section A: Proof of Lemma 1, relating TRC and FTGC. 
+
+• Section B: Proof of Lemma 2, showing FTGC invariance under the GFT. 
+
+• Section C: Proof of Lemma 3, on the Lipschitz preservation of the transformed activation. 
+
+• Section D: Proof of Theorem 3, our main data-dependent FTGC bound. 
+
+• Section E: Proof of Theorem 4, the tighter FTGC bound for linear models. 
+
+• Section F: Proof of Theorem 5, the network Jacobian norm bound. 
+
+• Section G: Empirical validation demonstrating the tightness of our Jacobian norm bound. 
+
+• Section H: Empirical validation of our theoretical bound against the measured generalization gap, including sensitivity analysis and large-scale validation on ogbn-arxiv dataset. 
+
+• Section I: Quantitative comparison of our FTGC bound against prior spatial transductive bounds. 
+
+• Section J: Formal definitions and properties of the polynomial bases discussed. 
+
+• Section K: Full details on experimental setup, including hyperparameters, datasets, and splits. 
+
+Norms and Products 
+
+We use the following standard norms and matrix products in our analysis: 
+
+• Vector l2-norm: For a vector x ∈ Rn, ∥x∥2 = pP ni=1 x2 
+
+> i
+
+.
+
+• Matrix Frobenius norm: For a matrix A ∈ Rm×n, the Frobenius norm is ∥A∥F =
+
+qPmi=1 
+
+Pnj=1 A2 
+
+> ij
+
+=
+
+pTr( A⊤A). 
+
+• Matrix spectral norm: For a matrix A ∈ Rm×n, the spectral norm (or operator norm) is induced by the vector l2-norm: ∥A∥2 = sup ∥x∥2=1 ∥Ax ∥2 = σmax (A), where σmax (A) is the largest singular value of A.
+
+• Matrix (2 , ∞)-norm: For a matrix A ∈ Rm×n with rows a1, . . . , am, this norm is the maximum l2-norm among all its rows: ∥A∥2,∞ = max i=1 ,...,m ∥ai∥2.
+
+• Kronecker product: For matrices A ∈ Rm×n and B ∈ Rp×q , their Kronecker product A ⊗ B is an mp × nq 
+
+block matrix where the ( i, j )-th block is the p × q matrix Aij B.
+
+• Khatri-Rao product: For matrices A ∈ Rm×k and B ∈ Rn×k with the same number of columns, their Khatri-Rao (or column-wise Kronecker) product A ⊙ B is an mn × k matrix where the j-th column is the Kronecker product of the j-th columns of A and B, i.e., ( A ⊙ B):,j = A:,j ⊗ B:,j . In our proofs, we use a row-wise variant, denoted ⊙r .
+
+## A Proof of Lemma 1 (Relation Between TRC and FTGC) 
+
+Lemma 1 (TRC Bound by FTGC) . The TRC Rm,n (F) is upper-bounded by the full transductive Gaussian complexity GV (F) as: 
+
+Rm,n (F) ≤ n2
+
+mu 
+
+r π
+
+2 · G V (F), (6) 
+
+where u = n − m. For simplicity in the main generalization bound, we can denote the constant pπ/ 2 as Cgc .Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+Proof. The proof connects the two complexity measures by showing that the expectation over the TRC random variables ( σi) is bounded by the expectation over standard Gaussian variables ( gi). This is done by using standard Rademacher variables ( ϵi ∈ {− 1, +1 }) as an intermediate step. We begin by defining the unnormalized core expectation terms: 
+
+ET RC = Eσ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+σifi
+
+#
+
+,EGC = Eg
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+gifi
+
+#
+
+,
+
+where σ is the TRC random vector and g is a vector of i.i.d. N (0 , 1) variables. A random variable σi from the TRC definition (value +1 or −1 with probability p, and 0 with probability 1 − 2p)can be constructed as the product σi = δiϵi. Here, ϵi is a standard Rademacher variable (taking values +1 or 
+
+−1 with probability 0.5), and δi is an independent Bernoulli variable (taking value 1 with probability 2 p and 0 otherwise). Using this construction, we can rewrite ET RC and apply the law of total expectation: 
+
+ET RC = Eδ,ϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+δiϵifi
+
+#
+
+= Eδ
+
+"
+
+Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+ϵi(δifi)
+
+## 
+
+. (18) We now apply the contraction principle of Ledoux and Talagrand (1991). For any fixed realization of the Bernoulli vector δ, we have |δi| ≤ 1. The principle states that for such contractions, the expected supremum does not increase: 
+
+Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+ϵi(δifi)
+
+#
+
+≤ Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+ϵifi
+
+#
+
+. (19) Since this inequality holds for any specific outcome of δ, it also holds when we take the expectation over δ. This gives us: 
+
+ET RC ≤ Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+ϵifi
+
+#
+
+. (20) Let g be a vector of i.i.d. standard Gaussian variables, and let ϵ be an independent Rademacher vector. The distribution of g is identical to the distribution of the vector ( |g1|ϵ1, . . . , |gn|ϵn). Using this property: 
+
+EGC = Eg
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+gifi
+
+#
+
+= E|g|,ϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+|gi|ϵifi
+
+#
+
+. (21) The function ϕ(z1, . . . , z n) = sup f
+
+P 
+
+> i
+
+zifi is a convex function of its arguments zi. We can therefore apply Jensen’s inequality to the expectation over the magnitudes |g|:
+
+EGC ≥ Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+E[|gi|]ϵifi
+
+#
+
+. (22) The expected absolute value of a standard Gaussian variable is a constant: E[|gi|] = p2/π . Substituting this in gives: 
+
+EGC ≥ Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+r 2
+
+π ϵifi
+
+#
+
+=
+
+r 2
+
+π · Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+ϵifi
+
+#
+
+. (23) Rearranging this inequality and combining it with the result from Eq. (20), we get: 
+
+ET RC ≤ Eϵ
+
+"
+
+sup  
+
+> f∈F
+> n
+
+X
+
+> i=1
+
+ϵifi
+
+#
+
+≤
+
+r π
+
+2 · EGC . (24) Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+We now have the relationship ET RC ≤ pπ/ 2 · EGC . We relate these unnormalized expectations back to the full complexity measures: 
+
+Rm,n (F) = 
+
+ 1
+
+m + 1
+
+u
+
+
+
+· ET RC = nmu · ET RC ,
+
+GV (F) = 1
+
+n · EGC =⇒ EGC = n · G V (F).
+
+Substituting these into our combined inequality: 
+
+mu n Rm,n (F) ≤
+
+r π
+
+2 · (n · G V (F)) . (25) Finally, solving for Rm,n (F) yields the desired result: 
+
+Rm,n (F) ≤ n2
+
+mu 
+
+r π
+
+2 · G V (F). (26) This completes the proof. 
+
+## B Proof of Lemma 2 (FTGC Invariance) 
+
+Lemma 2 (FTGC Invariance) . The FTGC of the GNN function class is the same in the spatial and Fourier domains. That is, GV (F) = GV ( bF).Proof. The FTGC over the entire vertex set V of size n is defined as: 
+
+GV (F) = Eg
+
+"
+
+sup  
+
+> f∈F
+
+1
+
+n
+
+> n
+
+X
+
+> i=1
+
+gi(f (H(0) )) i
+
+#
+
+, (27) where g1, . . . , g n ∼ N (0 , 1) are i.i.d. standard Gaussian variables. Let g ∈ Rn be the vector of these variables. Let ˆ y = f (H(0) ) be an output from the function class F, and let bˆy = U ⊤ ˆy be its representation in the Fourier domain, which belongs to the class bF. The proof relies on the rotational invariance of the standard multivariate Gaussian distribution. 
+
+n · G V (F) = Eg
+
+"
+
+sup 
+
+> ˆy∈F
+
+⟨g, ˆy⟩
+
+#
+
+= Eg
+
+"
+
+sup  
+
+> bˆy∈bF
+
+⟨g, U bˆy⟩
+
+#
+
+= Eg
+
+"
+
+sup  
+
+> bˆy∈bF
+
+⟨U ⊤g, bˆy⟩
+
+#
+
+= Eg′
+
+"
+
+sup  
+
+> bˆy∈bF
+
+⟨g′, bˆy⟩
+
+#
+
+Let g′ = U ⊤g. Since U is orthonormal, g′ d
+
+= g.
+
+= n · G V ( bF).
+
+Therefore, it follows that GV (F) = GV ( bF). 
+
+## C Proof of Lemma 3 (Lipschitz Preservation of Transformed Activation) 
+
+Lemma 3 (Lipschitz Preservation of Transformed Activation) . Let σ : R → R be an α-Lipschitz function applied element-wise. Then, the transformed activation τ (Z) = U ⊤σ(U Z ) is also α-Lipschitz with respect to the Frobenius norm ∥ · ∥ F .Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+Proof. We show that for any matrices X, Y of the same dimensions, the function τ satisfies ∥τ (X) − τ (Y )∥F ≤
+
+α∥X − Y ∥F .
+
+∥τ (X) − τ (Y )∥F = ∥U ⊤σ(U X ) − U ⊤σ(U Y )∥F
+
+= ∥U ⊤(σ(U X ) − σ(U Y )) ∥F
+
+= ∥σ(U X ) − σ(U Y )∥F Unitary invariance of ∥ · ∥ F
+
+≤ α∥U X − U Y ∥F σ is α-Lipschitz element-wise = α∥U (X − Y )∥F
+
+= α∥X − Y ∥F . Unitary invariance of ∥ · ∥ F
+
+This completes the proof. 
+
+## D Proof of Theorem 3 
+
+Theorem 3 (Data-Dependent FTGC Bound) . Let fθ be an L-layer spectral GNN with an α-Lipschitz activation 
+
+σ satisfying σ(0) = 0 . Assume the model parameters are constrained such that for each layer l ∈ { 0, . . . , L − 1},the weight matrix norm ∥W (l)∥2 ≤ CW,l and the filter coefficient norm ∥θ(l)∥2 ≤ Cθ,l . The FTGC of the function class F is bounded by: 
+
+GV (F) = GV ( bF) ≤ 1
+
+√n ∥VP ∥L−12,∞
+
+> L−1
+
+Y
+
+> l=0
+
+αC W,l Cθ,l 
+
+!
+
+·
+
+> n
+
+X
+
+> i=1
+
+∥vi∥22E0(λi)
+
+!1/2
+
+,
+
+(14) 
+
+where vi is the i-th row of the generalized Vandermonde matrix VP , and ∥VP ∥2,∞ = max i ∥vi∥2 is the maximum row-norm of VP .Proof. The proof proceeds by bounding the Frobenius norm of the final layer’s features in the Fourier domain, 
+
+∥bh(L)∥2, and then relating this quantity to the Gaussian complexity. First, we connect the Gaussian complexity to the norm of the output features. For a function class producing matrices, a standard result from statistical learning theory bounds the complexity by the expected correlation with a random Gaussian matrix g ∈ Rn (Shalev-Shwartz and Ben-David, 2014). Using the Cauchy-Schwarz inequality and the fact that E[∥g∥2] ≤ √n, we get: 
+
+GV (F) ≤ 1
+
+n E[∥g∥2] sup 
+
+> θ
+
+∥bh(L)∥2 ≤ 1
+
+√n sup 
+
+> θ
+
+∥bh(L)∥2. (28) Our task now is to bound sup θ ∥bh(L)∥2 by unrolling the network’s recursion from Eq. (12). For any intermediate layer l ∈ { 1, . . . , L − 1}, we can derive a general, data-independent bound. Starting with the propagation rule and using the α-Lipschitz property of τ (Lemma 2), we have: 
+
+∥cH(l+1) ∥F = ∥τ (diag( VP θ(l))cH(l)W (l))∥F ≤ α∥diag( VP θ(l))cH(l)W (l)∥F . (29) Using the submultiplicative property of matrix norms ( ∥ABC ∥F ≤ ∥ A∥2∥B∥F ∥C∥2) (Horn and Johnson, 2012), this becomes: 
+
+∥cH(l+1) ∥F ≤ α∥diag( VP θ(l))∥2∥cH(l)∥F ∥W (l)∥2. (30) The spectral norm of the diagonal matrix is its largest absolute entry. We can bound this using the Cauchy-Schwarz inequality: ∥diag( VP θ(l))∥2 = max i |⟨ vi, θ(l)⟩| ≤ (max i ∥vi∥2)∥θ(l)∥2 = ∥VP ∥2,∞∥θ(l)∥2. This gives the recursive bound for intermediate layers: 
+
+∥cH(l+1) ∥F ≤ α∥W (l)∥2∥θ(l)∥2∥VP ∥2,∞∥cH(l)∥F . (31) Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+Unrolling this recursion from l = L − 1 down to l = 1 gives: 
+
+∥cH(L)∥F ≤
+
+> L−1
+
+Y
+
+> l=1
+
+α∥W (l)∥2∥θ(l)∥2∥VP ∥2,∞
+
+!
+
+∥cH(1) ∥F . (32) For the first layer ( l = 0), we derive a tighter, data-dependent bound for ∥cH(1) ∥F . Following the same initial steps: 
+
+∥cH(1) ∥F ≤ α∥diag( VP θ(0) )cH(0) W (0) ∥F ≤ α∥W (0) ∥2∥diag( VP θ(0) )cH(0) ∥F . (33) We now analyze the squared norm of the filtered signal term by expanding it: 
+
+∥diag( VP θ(0) )cH(0) ∥2 
+
+> F
+
+=
+
+> n
+
+X
+
+> i=1
+> d0
+
+X
+
+> j=1
+
+|(diag( VP θ(0) )) ii (cH(0) )ij |2
+
+=
+
+> n
+
+X
+
+> i=1
+
+|(VP θ(0) )i|2
+
+> d0
+
+X
+
+> j=1
+
+|(cH(0) )ij |2
+
+=
+
+> n
+
+X
+
+> i=1
+
+|⟨ vi, θ(0) ⟩| 2∥(cH(0) )i∥22
+
+≤
+
+> n
+
+X
+
+> i=1
+
+(∥vi∥22∥θ(0) ∥22)E0(λi) (by Cauchy-Schwarz) = ∥θ(0) ∥22
+
+> n
+
+X
+
+> i=1
+
+∥vi∥22E0(λi).
+
+Taking the square root provides the bound on the norm of the feature matrix after the first layer: 
+
+∥cH(1) ∥F ≤ α∥W (0) ∥2∥θ(0) ∥2
+
+> n
+
+X
+
+> i=1
+
+∥vi∥22E0(λi)
+
+!1/2
+
+. (34) Finally, substituting this data-dependent bound into the recursive inequality for ∥cH(L)∥F , applying the parame-ter constraints ( CW,l , C θ,l ) and plugging the result into the initial inequality for GV (F) completes the proof. 
+
+## E Proof of Theorem 4 
+
+Theorem 4 (Tighter Complexity Bound for Deep Linear GNNs) . Let fθ be an L-layer linear spectral GNN with a single output feature. Assume the model parameters are constrained such that ∥W (l)∥2 ≤ CW,l , and 
+
+∥θ(l)∥2 ≤ Cθ,l for all layers l. The FTGC of the function class F is bounded by: 
+
+GV (F) ≤ 1
+
+n
+
+> L−1
+
+Y
+
+> l=0
+
+CW,l Cθ,l 
+
+! nX
+
+> i=1
+
+∥vi∥2L 
+
+> 2
+
+E0(λi)
+
+!1/2
+
+, (15) 
+
+where vi is the i-th row of VP and E0(λi) is the input signal spectral energy. Proof. We work in the graph Fourier domain throughout. Recall that the (linear) L-layer model is 
+
+cH(l+1) = Dl cH(l) W (l), Dl = diag  VP θ(l),
+
+with cH(0) ∈ Rn×d0 , W (l) ∈ Rdl×dl+1 , and dL = 1. Let v⊤ 
+
+> i
+
+denote the i-th row of VP and E0(λi) := ∥(cH(0) )i∥22
+
+the input spectral energy at frequency λi.Unrolling gives bh(L) =   Q L−1 
+
+> l=0
+
+Dl
+
+cH(0)   Q L−1 
+
+> l=0
+
+W (l). By spectral-norm duality (applied layer-by-layer), sup    
+
+> {W(l):∥W(l)∥2≤CW,l }
+
+⟨g, bh(L)⟩ =
+
+ L−1Y
+
+> l=0
+
+CW,l 
+
+ cH(0) ⊤  Q L−1 
+
+> l=0
+
+Dl
+
+g 2. (35) Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+Hence, by the FTGC definition, 
+
+GV (F) ≤ 1
+
+n
+
+ L−1Y
+
+> l=0
+
+CW,l 
+
+
+
+Eg
+
+h
+
+sup  
+
+> {θ(l):∥θ(l)∥2≤Cθ,l }
+
+cH(0) ⊤  Q L−1 
+
+> l=0
+
+Dl
+
+g 2
+
+i
+
+. (36) Next, we write the product of diagonals as a single diagonal via row-wise Kronecker lifting. For each frequency 
+
+i, we have   Q L−1 
+
+> l=0
+
+Dl
+
+ 
+
+> ii
+
+= QL−1 
+
+> l=0
+
+⟨vi, θ(l)⟩ = v⊗Li , θ(L−1) ⊗ · · · ⊗ θ(0) .
+
+Let Θ := θ(L−1) ⊗ · · · ⊗ θ(0) ∈ R(K+1) L
+
+, V⊗ := VP ⊙r VP ⊙r · · · ⊙ r VP
+
+| {z } 
+
+> Ltimes
+
+∈ Rn×(K+1) L
+
+,
+
+where ⊙r denotes the row-wise Khatri–Rao/Kronecker (Kolda and Bader, 2009) product so that the i-th row of 
+
+V⊗ equals v⊗Li and ∥v⊗Li ∥2 = ∥vi∥L 
+
+> 2
+
+. Then 
+
+> L−1
+
+Y
+
+> l=0
+
+Dl = diag( V⊗Θ) .
+
+Thus, for each fixed g,sup 
+
+> {θ(l)}
+
+cH(0) ⊤  L−1Y
+
+> l=0
+
+Dl
+
+g 2 = sup 
+
+> {θ(l)}
+
+cH(0) ⊤diag( g) V⊗Θ 2 ≤
+
+ L−1Y
+
+> l=0
+
+Cθ,l 
+
+ cH(0) ⊤diag( g) V⊗ 2,
+
+since ∥Θ∥2 = QL−1 
+
+> l=0
+
+∥θ(l)∥2 ≤ Q 
+
+> l
+
+Cθ,l .Taking expectation in Eq. (36) gives 
+
+GV (F) ≤ 1
+
+n
+
+ L−1Y
+
+> l=0
+
+CW,l Cθ,l 
+
+
+
+Eg
+
+h cH(0) ⊤diag( g) V⊗ 2
+
+i
+
+. (37) By using ∥X∥2 ≤ ∥ X∥F and Jensen/Cauchy–Schwarz: 
+
+Eg
+
+∥cH(0) ⊤diag( g) V⊗∥2
+
+ ≤
+
+q
+
+Eg
+
+∥cH(0) ⊤diag( g) V⊗∥2
+
+> F
+
+ .
+
+Let Q := cH(0) cH(0) ⊤. Then 
+
+∥cH(0) ⊤diag( g) V⊗∥2 
+
+> F
+
+= Tr 
+
+
+
+V ⊤⊗ diag( g) Q diag( g) V⊗
+
+
+
+.
+
+Since E[gigj ] = δij ,
+
+Ediag( g) Q diag( g) = diag( Q).
+
+Therefore 
+
+Eg ∥cH(0) ⊤diag( g) V⊗∥2 
+
+> F
+
+= Tr 
+
+
+
+V ⊤⊗ diag( Q) V⊗
+
+
+
+=
+
+> n
+
+X
+
+> i=1
+
+Qii 
+
+ V⊗
+
+ 
+
+> i, :
+> 22
+
+=
+
+> n
+
+X
+
+> i=1
+
+∥(cH(0) )i∥22 ∥v⊗Li ∥22. (38) We have ∥(cH(0) )i∥22 = E0(λi) and ∥v⊗Li ∥22 = ∥vi∥2L 
+
+> 2
+
+, so 
+
+Eg ∥cH(0) ⊤diag( g) V⊗∥2 
+
+> F
+
+=
+
+> n
+
+X
+
+> i=1
+
+∥vi∥2L 
+
+> 2
+
+E0(λi).
+
+Combining with Eq. (37) yields 
+
+GV (F) ≤ 1
+
+n
+
+ L−1Y
+
+> l=0
+
+CW,l Cθ,l 
+
+ nX
+
+> i=1
+
+∥vi∥2L 
+
+> 2
+
+E0(λi)
+
+!1/2
+
+.Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+## F Proof of Theorem 5 
+
+Theorem 5 (Jacobian Norm Bound) . Let the GNN be an L-layer spectral GNN with an α-Lipschitz and con-tinuously differentiable activation σ satisfying σ(0) = 0 . Under the same parameter constraints as Theorem 3, the spectral norm of the network Jacobian J is bounded by: 
+
+∥J ∥ 2 ≤
+
+> L−1
+
+Y
+
+> l=0
+
+(αC W,l Cθ,l ∥VP ∥2,∞) , (16) 
+
+where ∥VP ∥2,∞ = max i ∥vi∥2 is the maximum row-norm of the generalized Vandermonde matrix. Proof. The proof proceeds by analyzing the Jacobian in the graph Fourier domain, where the graph convolution operation simplifies to an element-wise product, and then combining bounds for each layer using the chain rule. Our first step is to move the analysis to the graph Fourier domain. The Jacobian in the Fourier domain is defined as bJ = ∂vec( cH(L)) 
+
+> ∂vec( cH(0) )
+
+. The vectorized features in the two domains are related by the linear transformation vec( cH(l)) = ( I ⊗ U ⊤)vec( H(l)), where U is the orthogonal matrix of normalized Adjacency eigenvectors. By the multivariate chain rule, the Jacobians are related by a similarity transformation: 
+
+bJ = ( I ⊗ U ⊤)J (I ⊗ U ). (39) Since U is an orthogonal (and thus unitary) matrix, the Kronecker product ( I ⊗U ) is also unitary. A fundamental property of the spectral norm is its unitary invariance, meaning ∥V H AV ∥2 = ∥A∥2. for any unitary matrix V .Therefore, the spectral norms of the Jacobians in the two domains are identical: 
+
+∥J ∥ 2 = ∥ bJ ∥ 2 (40) This equivalence allows us to derive the bound in the Fourier domain without loss of generality. By the chain rule, the full Jacobian can be expressed as the product of the Jacobians of individual layers: 
+
+bJ =
+
+> L−1
+
+Y
+
+> l=0
+
+bJ (l) where bJ (l) = ∂vec( cH(l+1) )
+
+∂vec( cH(l)) . (41) Using the submultiplicative property of the spectral norm, we can bound the total norm by the product of the individual layer norms: ∥ bJ ∥ 2 ≤ QL−1 
+
+> l=0
+
+∥ bJ (l)∥2.We now bound the norm ∥ bJ (l)∥2 for a single layer l. Let bS(l) = diag( VP θ(l))cH(l)W (l) be the pre-activation matrix in the Fourier domain. The propagation rule is cH(l+1) = τ ( bS(l)) = U ⊤σ(U bS(l)). The layer-wise Jacobian is given by: 
+
+bJ (l) = ∂vec( τ ( bS(l))) 
+
+∂vec( bS(l))
+
+| {z }
+
+> Jτ
+
+∂vec( bS(l))
+
+∂vec( cH(l))
+
+| {z }
+
+> JS
+
+. (42) The second term, JS , is the Jacobian of a linear transformation, which evaluates to the Kronecker product 
+
+JS = ( W (l)T ⊗ diag( VP θ(l))), since vec( bS(l)) =  (W (l))⊤ ⊗ diag( VP θ(l)) vec( cH(l)). The first term, Jτ , is the Jacobian of the transformed activation, which is Jτ = ( I ⊗ U ⊤)diag(vec( σ′(U bS(l))))( I ⊗ U ). We can now bound the norm of the product: 
+
+∥ bJ (l)∥2 ≤ ∥ Jτ ∥2 · ∥ JS ∥2
+
+= ∥diag(vec( σ′(U bS(l)))) ∥2 · ∥ W (l)T ⊗ diag( VP θ(l))∥2 (Unitary invariance of Jτ )=
+
+
+
+max  
+
+> i,j
+
+|σ′(( U bS(l))ij )|
+
+
+
+· ∥ W (l)∥2 · ∥ diag( VP θ(l))∥2. (Norm of diag and Kronecker) Since σ is α-Lipschitz, its derivative is bounded by α. The norm of the diagonal filter matrix is bounded by its largest entry, which via Cauchy-Schwarz is |⟨ vi, θ(l)⟩| ≤ ∥ vi∥2∥θ(l)∥2. This gives ∥diag( VP θ(l))∥2 ≤∥θ(l)∥2∥VP ∥2,∞. Substituting these bounds yields: 
+
+∥ bJ (l)∥2 ≤ α∥W (l)∥2∥θ(l)∥2∥VP ∥2,∞. (43) Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+Finally, we substitute the per-layer bound into the product from Step 2: 
+
+∥J ∥ 2 = ∥ bJ ∥ 2 ≤
+
+> L−1
+
+Y
+
+> l=0
+
+∥ bJ (l)∥2 ≤
+
+> L−1
+
+Y
+
+> l=0
+
+
+
+α∥W (l)∥2∥θ(l)∥2∥VP ∥2,∞
+
+
+
+. (44) Applying the parameter constraints ∥W (l)∥2 ≤ CW,l and ∥θ(l)∥2 ≤ Cθ,l completes the proof. 
+
+## G Empirical Tightness of the Jacobian Bound 
+
+To empirically evaluate the tightness of the stability bound derived in Theorem 5, we computed both our theoretical upper bound and the true spectral norm of the network Jacobian. We evaluated a 2-layer nonlinear model utilizing the Monomial basis across varying polynomial orders ( K ∈
+
+[1 , 10]) on both the Cora and Chameleon datasets. The true spectral norm of the network Jacobian was computed exactly using power iteration via automatic differentiation (to avoid materializing the full matrix in memory). This empirical true norm was then compared directly against our theoretical bound given by 
+
+QL−1 
+
+> l=0
+
+(αC W,l Cθ,l ∥VP ∥2,∞). As illustrated in Figure 2, our theoretical bound tracks the true Jacobian norm reliably. On the Cora dataset, the bound is exceptionally tight, remaining within a small factor (1.0x to 2.0x) of the true norm, and it correctly identifies the location of the instability spike at K = 7. On the Chameleon dataset, it successfully bounds the true norm within a factor of 1.3x to 4.0x. While the bound slightly overestimates the magnitude of instability at certain orders on Chameleon, it provides a tight measure of the model’s worst-case sensitivity. 1 2 3 4 5 6 7 8 9 10           
+
+> Polynomial Order (K)
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> 120
+> Jacobian Norm
+> Theoretical Bound
+> True Jacobian Norm
+> (a) Cora 12345678910
+> Polynomial Order (K)
+> 20
+> 40
+> 60
+> 80
+> 100
+> 120
+> Jacobian Norm
+> Theoretical Bound
+> True Jacobian Norm (b) Chameleon
+
+Figure 2: Jacobian bound tightness. 
+
+## H Correlation between the Theoretical Bound and the Generalization Gap 
+
+To compare theory and measurements under controlled conditions, we keep the architecture minimal and the training setup fixed across all plots. Unless noted, we use the spectral layer in Eq. (8) without activations for the linear setting (Section 5) and the standard model with activations for the nonlinear setting. The hyperparameters are the following: learning rate 0 .01, weight decay 10 −5, maximum 500 epochs with early stopping after 100 epochs without validation improvement. Results are averaged over 30 random splits (compared to 10 random splits in Section 7). The generalization gap is defined as Gap = test loss − train loss . No extra regularizers (beyond weight decay) are used in these plots. Error bars in the accuracy panels are standard deviations across splits. For the linear experiments (Cora and Chameleon, L ∈ { 1, 2}), we compare directly against the tighter linear FTGC bound (Theorem 4), which isolates depth, basis amplification, and the input spectrum (see Figures 3 and 5). The bound is evaluated via 
+
+GV (F) ≤ 1
+
+n
+
+> L−1
+
+Y
+
+> l=0
+
+CW,l Cθ,l 
+
+! nX
+
+> i=1
+
+∥vi∥ 2L 
+
+> 2
+
+E0(λi)
+
+!1/2
+
+.Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+For the nonlinear experiments ( L = 2 only), we use the nonlinear bound from Theorem 3 (see Figures 4 and 6). We only show L = 2 for the nonlinear case because with L = 1 the neural network is effectively linear and does not add anything new to this comparison. Across all runs, the models fit the labeled nodes well. On Chameleon, the minimum training accuracy is 76%, and on Cora, it is 94%. Since these are much larger than their corresponding test accuracies, the positive gaps are not due to underfitting. 
+
+Sensitivity Analysis. To verify that our Fourier Transductive Gaussian Complexity (FTGC) bound truly captures the generalization gap via spectral properties rather than just parameter norms, we performed a sensi-tivity analysis by decomposing the bound into the Weight Term ( Q αC W,l Cθ,l ) and the Spectral Interaction Term (∥VP ∥2,∞
+
+pP ∥vi∥22E0(λi)). For a 2-layer nonlinear model on Cora, the Pearson correlation drops drastically from 0 .86 (Full Bound, Figure 4a) to −0.19 when using only the Weight Term. Similarly, on Chameleon, the correlation drops from 0 .36 (Figure 6a) to −0.53. This confirms that the data-dependent spectral term is the crucial driver for predicting the generalization gap, validating our Fourier-domain analysis. 
+
+Large-Scale Validation on ogbn-arxiv. To verify that our theoretical framework scales to larger networks, we extended our empirical validation to the ogbn-arxiv dataset (approximately 170,000 nodes). We maintained the same highly sparse label setting used for the smaller datasets (only 10 training nodes per class) to rigorously stress-test our bound. Using the practical L = 2 nonlinear model, we computed the FTGC bound across different polynomial bases. As shown in Figure 7, we observed a strong positive correlation, achieving a Pearson coefficient of 0 .85 and a Spearman rank coefficient of 0 .71. This confirms that our bound robustly tracks generalization behavior even on massive graphs. 
+
+Main observations. The results shown in Figures 3–7 suggest the following main observations: 1. In the bound–gap panels, we observe a clear positive correlation between our bound and the empirical gap on all evaluated datasets. We report the overall Pearson r and Spearman ρ (with 95% CIs by Fisher transform) inside panels (a) and (c) of each figure. 2. The correlation is visibly stronger for L = 2 than for L = 1 (Figures 3 and 5). This matches Theorem 4, as the basis term scales as ∥vi∥2L 
+
+> 2
+
+and magnifies differences across bases and spectra with depth. 3. Points cluster by polynomial basis in the bound–gap plane, reflecting their amplification profiles x 7 →PKk=0 Pk(x)2 (Figure 1 of the main paper). Furthermore, stable bases like Chebyshev exhibit tighter corre-lations within their own group. This predictable behavior occurs because the spectral amplification profile of Chebyshev is relatively uniform (nearly constant) across the spectrum, preventing extreme fluctuations in the theoretical bound. 4. Chebyshev’s relatively uniform profile does not downweight any part of the spectrum. Because it amplifies all frequencies nearly equally (including the middle spectrum), the term P 
+
+> i
+
+∥vi∥2L 
+
+> 2
+
+E0(λi) becomes strictly larger when E0(λi) spreads broadly. This perfectly explains why it tends to yield both higher theoretical bounds and higher empirical generalization gaps (as seen in the top-right clusters of the plots). 5. Cora is homophilous, meaning low-frequency content is more predictive. Bases with stronger low-pass behavior (more U-shaped amplification in Figure 1 of the main paper) tend to achieve higher test accuracy. Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 50 100 150 200 250 300 350 400 450 
+
+Linear Bound 
+
+2.5 
+
+3.0 
+
+3.5 
+
+4.0 
+
+4.5 
+
+> Generalization Gap
+> Pearson r=0.76 [0.63,0.85]
+> Spearman ρ=0.73 [0.58,0.83]
+> n=60
+
+2 4 6 8 10 12 14 
+
+Order K 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Test Accuracy
+
+0 250 500 750 1000 1250 1500 1750 2000 
+
+Linear Bound 
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+> Generalization Gap
+> Pearson r=0.88 [0.81,0.93]
+> Spearman ρ=0.72 [0.57,0.82]
+> n=60
+
+2 4 6 8 10 12 14 
+
+Order K 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Test Accuracy
+
+(a) Linear Bound vs. Gap (L=1) (b) Test Acc vs. K (L=1) 
+
+(c) Linear Bound vs. Gap (L=2) (d) Test Acc vs. K (L=2) 
+
+Monomial Chebyshev Legendre Bernstein 
+
+Figure 3: Cora linear models. 20k 40k 60k 80k 100k 120k 
+
+Nonlinear Bound 
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+8
+
+9
+
+> Generalization Gap
+> Pearson r=0.86 [0.77,0.91]
+> Spearman ρ=0.61 [0.42,0.75]
+> n=60
+
+2 4 6 8 10 12 14 
+
+Order K 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> Test Accuracy
+
+(a) Nonlinear Bound vs. Gap (L=2) (b) Test Acc vs. K (L=2) 
+
+Monomial Chebyshev Legendre Bernstein 
+
+Figure 4: Cora nonlinear model. Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 200 300 400 500 600 700 
+
+Linear Bound 
+
+2.5 
+
+3.0 
+
+3.5 
+
+4.0 
+
+4.5 
+
+5.0 
+
+5.5 
+
+6.0 
+
+> Generalization Gap
+> Pearson r=0.74 [0.61,0.84]
+> Spearman ρ=0.80 [0.69,0.88]
+> n=60
+
+2 4 6 8 10 12 14 
+
+Order K 
+
+0.0 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+> Test Accuracy
+
+250 500 750 1000 1250 1500 1750 
+
+Linear Bound 
+
+2
+
+4
+
+6
+
+8
+
+10 
+
+12 
+
+14 
+
+> Generalization Gap
+> Pearson r=0.87 [0.79,0.92]
+> Spearman ρ=0.67 [0.50,0.79]
+> n=60
+
+2 4 6 8 10 12 14 
+
+Order K 
+
+0.0 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+> Test Accuracy
+
+(a) Linear Bound vs. Gap (L=1) (b) Test Acc vs. K (L=1) 
+
+(c) Linear Bound vs. Gap (L=2) (d) Test Acc vs. K (L=2) 
+
+Monomial Chebyshev Legendre Bernstein 
+
+Figure 5: Chameleon linear models. 20k 30k 40k 50k 60k 70k 80k 90k 100k 
+
+Nonlinear Bound 
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+
+8
+
+9
+
+> Generalization Gap
+> Pearson r=0.36 [0.12,0.57]
+> Spearman ρ=0.31 [0.06,0.52]
+> n=60
+
+2 4 6 8 10 12 14 
+
+Order K 
+
+0.0 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+> Test Accuracy
+
+(a) Nonlinear Bound vs. Gap (L=2) (b) Test Acc vs. K (L=2) 
+
+Monomial Chebyshev Legendre Bernstein 
+
+Figure 6: Chameleon nonlinear model. Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 250k 500k 750k 1000k 1250k 1500k 1750k 2000k 
+
+Nonlinear Bound       
+
+> 2.5
+> 5.0
+> 7.5
+> 10.0
+> 12.5
+> 15.0
+> 17.5
+> 20.0
+> Generalization Gap
+> Pearson r=0.85 [0.77,0.91]
+> Spearman ρ=0.71 [0.56,0.82]
+> n=60
+> 246810 12 14
+
+Order K 
+
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.5
+> Test Accuracy
+
+(a) Nonlinear Bound vs. Gap (b) Test Acc vs. K 
+
+Bernstein Chebyshev Legendre Monomial 
+
+Figure 7: Ogbn-arxiv nonlinear model. 
+
+## I Comparison with Prior Transductive Bounds 
+
+To quantitatively evaluate the tightness of our proposed Fourier-Transductive Gaussian Complexity (FTGC) bound, we compare it against the generalization bound derived specifically for GNNs by Esser et al. (2021). For a fair comparison, we employ a standard GCN architecture, as the theoretical analysis by Esser et al. (2021) is limited to GCNs. We calculate both bounds across varying network depths ( L ∈ [1 , 7]) on the Cora and Chameleon datasets. As shown in Figure 8, as network depth increases, the spatial bound from Esser et al. (2021) suffers from exponential amplification due to its dependency on the spatial graph shift operator ( ∥ ˆA∥∞). By depth 7, this bound becomes completely vacuous ( ∼ O(10 14 )). In contrast, our FTGC bound depends on the spectral norm of the generalized Vandermonde matrix ( || VP || 2,∞), which is 1 for GCNs. Consequently, our bound remains significantly tighter ( ∼ O(10 5)) and avoids exponential explosion, while still successfully capturing the generalization trends demonstrated earlier in App. H. 1 2 3 4 5 6 7
+
+Network Depth (L) 
+
+> 10 4
+> 10 6
+> 10 8
+> 10 10
+> 10 12
+> 10 14
+> Bound Value (log scale)
+
+Our Bound 
+
+Esser et al. Bound 
+
+(a) Cora 1 2 3 4 5 6 7
+
+Network Depth (L) 
+
+> 10 4
+> 10 6
+> 10 8
+> 10 10
+> 10 12
+> 10 14
+> Bound Value (log scale)
+
+Our Bound 
+
+Esser et al. Bound (b) Chameleon 
+
+Figure 8: Comparison of generalization bounds. Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+## J Formal definitions and properties of the polynomial bases 
+
+This section provides the formal definitions for the polynomial bases used in our analysis. The key property for our bounds is the filter’s amplification profile, which measures the total response of the basis functions at a given frequency x ∈ [−1, 1]: 
+
+MK (x) = 
+
+> K
+
+X
+
+> k=0
+
+Pk(x)2.
+
+This quantity directly relates to the maximum row norm of the Vandermonde matrix VP , which appears in our generalization and stability bounds: 
+
+∥VP ∥2,∞ = max  
+
+> i
+
+∥v(λi)∥2 = max 
+
+> λ∈Λ
+
+pMK (λ).
+
+For all four bases we consider, the amplification profile MK (x) reaches its maximum on [ −1, 1] at the endpoints 
+
+x = ±1. 
+
+Monomial Basis. This is the simplest polynomial basis, also known as the power basis. While straightforward, it is known to be poorly conditioned for high orders K, leading to numerical instability (Higham, 2002). The basis functions are defined as: 
+
+Pk(x) = xk, for k = 0 , 1, . . . , K. (45) Its amplification profile is a geometric series, MK (x) = PKk=0 x2k, which reaches its maximum value of MK (±1) = 
+
+K + 1. 
+
+Chebyshev Basis. The Chebyshev polynomials Tk(x) are a sequence of orthogonal polynomials known for their numerical stability and role in approximation theory (Mason and Handscomb, 2002). They are defined on the interval [ −1, 1] by the recurrence relation: 
+
+T0(x) = 1 , (46) 
+
+T1(x) = x, (47) 
+
+Tk+1 (x) = 2 xT k(x) − Tk−1(x), for k ≥ 1. (48) Since Tk(±1) 2 = 1 and |Tk(x)| ≤ 1 for all k, the amplification profile reaches its maximum of MK (±1) = K + 1 at the endpoints. 
+
+Legendre Basis. Legendre polynomials Pk(x) are another sequence of orthogonal polynomials on [ −1, 1], notable for being solutions to Legendre’s differential equation (Abramowitz and Stegun, 1964). They are defined by Bonnet’s recurrence relation: 
+
+P0(x) = 1 , (49) 
+
+P1(x) = x, (50) (k + 1) Pk+1 (x) = (2 k + 1) xP k(x) − kP k−1(x), for k ≥ 1. (51) Just like the Chebyshev polynomials, Pk(±1) 2 = 1 and |Pk(x)| ≤ 1, so the amplification profile has a maximum of MK (±1) = K + 1 at the endpoints. 
+
+Bernstein Basis. The Bernstein polynomials are known for their shape-preserving properties and numerical stability, particularly near interval endpoints (Lorentz, 2012). For the spectral domain [ −1, 1], they are defined using an affine transformation t = ( x + 1) /2: 
+
+Pk(x) = 
+
+Kk
+
+
+
+tk(1 − t)K−k, for k = 0 , 1, . . . , K. (52) Because these polynomials are non-negative and sum to 1, their sum of squares is bounded by 1. The maximum amplification is MK (±1) = 1, which occurs at the endpoints where only one basis polynomial is non-zero. Martirosyan, Malitesta, Talbot, Giraldo, Malliaros 
+
+Summary of Maximum Amplification. These maximum values directly determine the worst-case amplifi-cation term in our bounds. For a filter of order K, we get: 
+
+∥VP ∥2,∞ = max 
+
+> x∈Λ
+
+pMK (x) ≤ max 
+
+> x∈[−1,1]
+
+pMK (x) = 
+
+(√K + 1 for Monomial, Chebyshev, Legendre 1 for Bernstein .
+
+This shows that the depth-dependent terms in our bounds grow with √K + 1 for the first three bases, but remain constant for the Bernstein basis. To match worst-case amplification across bases, we can rescale ˜Pk(x) = Pk(x)
+
+pmax x∈[−1,1] MK (x) ,
+
+so that max x
+
+PKk=0 ˜Pk(x)2 = 1 for all four bases and ∥VP ∥2,∞ ≤ 1 (for fixed K). This keeps parameter-norm constraints comparable across bases. 
+
+## K Hyperparameters, Datasets, and Splits 
+
+K.1 Datasets and Splits 
+
+We conduct experiments on four public node classification datasets: the homophilic citation networks Cora and Citeseer (Sen et al., 2008), and the heterophilic Wikipedia networks Chameleon and Squirrel (Pei et al., 2020). For the large-scale bound validation in App. H, we also use the OGBN-Arxiv dataset (Hu et al., 2020), which represents a much larger citation network. For all datasets, we use 10 random stratified splits where each split contains 10 training nodes per class, with the remaining nodes divided into a validation set (35%) and a test set (65%). We report the mean and 95% confidence interval over these 10 splits. 
+
+K.2 Model and Training 
+
+Our model architecture implements a spectral filter layer with a residual connection, inserted between the two linear layers of an MLP. Specifically, input features are first processed by a linear layer and a ReLU activation to produce hidden feature. These features are then filtered in the spectral domain, and the result is added back to the original hidden features. A final linear layer then acts as a readout to produce the class logits. We use two distinct dropout rates, which are tuned separately. The first is applied to the input features and to the features after the spectral filtering block. The second is applied to the hidden features after the ReLU activation. We use the Adam optimizer (Kingma and Ba, 2015) and train for a maximum of 2000 epochs, with early stopping triggered if the validation accuracy does not improve for 200 epochs. 
+
+K.3 Hyperparameter Optimization 
+
+For each dataset and polynomial basis, we conduct two separate hyperparameter searches using the Hyperopt library’s Tree-structured Parzen Estimator (TPE) algorithm (Bergstra et al., 2011), optimizing for the highest mean validation accuracy. The first search optimizes a baseline model where the regularizer strength λEW is fixed at 0. The second search optimizes the fully regularized model over the complete hyperparameter space listed below. 
+
+• Learning Rate : {0.0005 , 0.001 , 0.005 , 0.01 , 0.05 , 0.1}
+
+• Weight Decay : {0, 10 −6, 5 · 10 −6, 10 −5, 5 · 10 −5, 10 −4, 5 · 10 −4, 10 −3}
+
+• Hidden Dimension : {8, 16 , 32 , 64 , 128 }
+
+• Polynomial Degree : {10 }
+
+• Dropout 1 (Input/Post-Filter) : {0.0, 0.2, 0.4, 0.6, 0.8}
+
+• Dropout 2 (Hidden) : {0.0, 0.2, 0.4, 0.6, 0.8}
+
+• Regularization Strength (λEW ): {0.001 , 0.005 , 0.01 , 0.05 , 0.1, 0.5, 1, 5, 10 }Generalization Bounds for Spectral GNNs via Fourier Domain Analysis 
+
+K.4 Code and Infrastructure 
+
+All experiments were run on a single NVIDIA A100 GPU. The complete code to reproduce our results is available on this link: https://github.com/vmart20/spectral-GNN-regularization

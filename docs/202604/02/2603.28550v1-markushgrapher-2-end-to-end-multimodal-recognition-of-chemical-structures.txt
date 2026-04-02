@@ -1,0 +1,660 @@
+Title: MarkushGrapher-2: End-to-end Multimodal Recognition of Chemical Structures
+
+URL Source: https://arxiv.org/pdf/2603.28550v1
+
+Published Time: Tue, 31 Mar 2026 02:35:15 GMT
+
+Number of Pages: 15
+
+Markdown Content:
+# MarkushGrapher-2: End-to-end Multimodal Recognition of Chemical Structures 
+
+Tim Strohmeyer 1, 2 Lucas Morin 1, 2 Gerhard Ingmar Meijer 1 Val´ ery Weber 1 Ahmed Nassar 1
+
+Peter Staar 11IBM Research 2ETH Zurich 
+
+{tis, lum, inm, vwe, ahn, taa }@zurich.ibm.com 
+
+Abstract 
+
+Automatically extracting chemical structures from doc-uments is essential for the large-scale analysis of the lit-erature in chemistry. Automatic pipelines have been de-veloped to recognize molecules represented either in fig-ures or in text independently. However, methods for rec-ognizing chemical structures from multimodal descriptions (Markush structures) lag behind in precision and cannot be used for automatic large-scale processing. In this work, we present MarkushGrapher-2, an end-to-end approach for the multimodal recognition of chemical structures in docu-ments. First, our method employs a dedicated OCR model to extract text from chemical images. Second, the text, im-age, and layout information are jointly encoded through a Vision-Text-Layout encoder and an Optical Chemical Struc-ture Recognition vision encoder. Finally, the resulting en-codings are effectively fused through a two-stage training strategy and used to auto-regressively generate a represen-tation of the Markush structure. To address the lack of train-ing data, we introduce an automatic pipeline for construct-ing a large-scale dataset of real-world Markush structures. In addition, we present IP5-M, a large manually-annotated benchmark of real-world Markush structures, designed to advance research on this challenging task. Extensive ex-periments show that our approach substantially outper-forms state-of-the-art models in multimodal Markush struc-ture recognition, while maintaining strong performance in molecule structure recognition. Code, models, and datasets are released publicly. 1
+
+1. Introduction 
+
+Extracting chemical structures from documents is essen-tial for unifying knowledge in chemistry. It enables search engines to retrieve information using molecular queries and allows the creation of training datasets for machine          
+
+> 1https://github.com/DS4SD/MarkushGrapher Chemical Structure Image
+> Textual Description
+> Graph
+> Variable Substituents
+> YN
+> XC, C
+> ZC, N
+> R1 halogen, H
+> R2 H, CN
+> R3 heterocycle, OCH3
+> Table
+> 1. Document 2. Image Crop
+> 3. Model 4. Model Prediction
+> ChemicalOCR
+> MarkushGrapher v2
+
+Figure 1. Model Use Case : MarkushGrapher-2 parses Markush backbones and variable regions from document image crops via joint multimodal encoding of vision, text, and layout. 
+
+learning models. Converting unstructured documents into machine-readable formats can ultimately accelerate discov-ery across the life and materials sciences [22]. Several au-tomated pipelines have been developed to create molecular databases from unstructured documents [19, 25, 26]. These systems extract molecules either from their textual defini-tions, using chemical named entity recognition [17, 31, 38], or from their visual representations, using chemical struc-ture image segmentation [24, 32, 39] and recognition [18, 23, 25]. More recently, progress in multimodal document understanding has enabled extracting more complex chem-ical representations that combine visual and textual infor-mation, known as Markush structures [20]. These widely used representations provide compact descriptions of fam-ilies of related molecules. A Markush structure includes both an image and a text component: the image defines the 1
+
+> arXiv:2603.28550v1 [cs.CV] 30 Mar 2026
+
+Markush backbone, containing atoms, bonds, and variable regions, while the text specifies the molecular substituents that can replace those variable regions. The variable re-gions may include variable groups (also named residual R-groups), frequency variation indicators, and positional vari-ation indicators [6]. Markush structures play a central role in patent analysis, supporting prior-art searches, freedom-to-operate evaluations, and landscape analysis [29]. De-spite their importance in chemical research, their coverage in databases remains limited. Currently, Markush struc-tures are only indexed in the proprietary manually-created databases MARPAT [7] and DWPIM [12]. Multi-modal Markush Structure Recognition (MMSR) poses key challenges that limit the performance of their automatic recognition. First, images of Markush structure backbones follow a wide range of conventions and draw-ing standards. In patent documents, for example, the visual style can vary substantially across patent offices and pub-lication years. Second, the textual definitions of Markush structures lack standardization and often contain condition-based or recursive descriptions. Third, there is a lack of real-world training datasets with comprehensive annota-tions of Markush structure visual and textual definitions. In this work, we introduce MarkushGrapher-2, a model for end-to-end multimodal recognition of Markush struc-tures, illustrated in Figure 1. MarkushGrapher-2 extends the MarkushGrapher [20] framework into a universal ap-proach capable of recognizing both molecular images and multimodal Markush structures. The model follows an en-coder–decoder architecture that takes as input an image of a molecule or Markush structure and outputs a textual se-quence representing its structure. This output is divided into two components: (1) a graph of the Markush backbone, and (2) a table of possible substituents that replace the vari-able groups in the backbone. The input image is jointly en-coded using two encoders, a Vision-Text-Layout (VTL) en-coder and a vision encoder, pretrained for the task of Opti-cal Chemical Structure Recognition (OCSR). These encod-ings are projected, concatenated and fed to a text decoder to autoregressively generate a sequential Markush representa-tion. Compared to its predecessor, MarkushGrapher-2 in-troduces several major improvements. First, it integrates a dedicated OCR module, enabling end-to-end processing. Here, end-to-end refers to the model’s ability to directly process a raw image at inference time, without requiring pre-annotated OCR outputs. Second, it adopts a new two-phase training strategy designed to improve the fusion of encoders. Third, the model is trained using a new train-ing data generation pipeline, allowing it to recognize both molecule images and multi-modal Markush structures. To further support research in this area, we introduce IP5-M, a benchmark dataset of manually annotated Markush struc-tures extracted from patent documents of the IP5 patent of-fices, United States Patent and Trademark Office (USPTO), Japan Patent Office (JPO), Korean Intellectual Property Of-fice (KIPO), China National Intellectual Property Adminis-tration (CNIPA), and European Patent Office (EPO). Com-prehensive experiments across multiple benchmarks for MMSR demonstrate that MarkushGrapher-2 consistently outperforms both general-purpose and chemistry-specific document understanding models, while maintaining com-petitive performance on OCSR benchmarks. In summary: • We develop MarkushGrapher-2, a universal model for recognizing both molecular images and multi-modal Markush structures. • We introduce a dedicated ChemicalOCR module for end-to-end processing and improved abbreviation recognition. • We design a two-phase training strategy to improve MarkushGrapher-2’s encoder fusion. • We create a data generation pipeline for real-world Markush backbone training samples from MOL files and accompanying images provided by the USPTO. • We release IP5-M, a manually annotated benchmark of real-world Markush structures from IP5 patent offices. 
+
+2. Related Work 
+
+Most existing approaches to Markush structure recogni-tion focus exclusively on the image component, neglecting supporting information through textual descriptions. Some methods, originally designed for Optical Chemical Struc-ture Recognition (OCSR) methods, can identify a limited subset of Markush structure backbones, i.e., chemical struc-tures containing variable groups [4, 23, 25]. More recently, MolParser extended this capability to capture positional and frequency variation indicators [9]. However, its handling of frequency variation is restricted to single-atom cases only. Overall, these approaches remain limited in both scope and accuracy. Multimodal pipelines for chemical docu-ment understanding have shown progress [8, 34]. General-purpose vision–language models have also begun to incor-porate molecule-image recognition as one of their tasks, such as GOT-OCR 2.0 [35], Qwen2.5-VL [1], PaliGemma 2 [30], and DeepSeek-OCR [36]. Their prediction is how-ever limited. Domain-specific VLMs like Uni-SMART [2] and PatentFinder [28] can also determine whether a query molecule is covered by a Markush definition in a document, which implicitly requires multimodal Markush recognition. However, these models are not practical for searching large corpuses, as each query would require running the model across all candidate documents. MarkushGrapher [20] is the only vision-language model capable of jointly interpret-ing textual and visual components of Markush definitions. Its initial version requires access to all OCR cells in the input image, which is a limitation for an integration in an end-to-end processing pipeline; and its visual recognition accuracy has room for improvement. 23. MarkushGrapher-2 
+
+MarkushGrapher-2 is a transformer-based model that jointly encodes vision, text, and layout modalities for mul-timodal chemical structure recognition. The model inte-grates two complementary encoders: a Vision Encoder, pre-trained for standard Optical Chemical Structure Recogni-tion (OCSR), and a Vision–Text–Layout (VTL) Encoder, trained specifically for Markush features extraction. The latter leverages textual and positional information present in chemical documents—such as variable groups, positional and frequency variation indicators—to produce a unified multimodal representation. 
+
+3.1. Architecture 
+
+Figure 2 illustrates the model architecture, which consists of two complementary encoding pipelines. In the first pipeline, the input image is processed by a vision encoder (taken from MolScribe [23]) pretrained for OCSR, adopt-ing a Swin-B ViT backbone to extract visual features rep-resenting molecular structures. In the second pipeline, the same image is passed through an OCR module that detects and recognizes textual elements within the image. These elements include atom labels, abbreviations, and descrip-tive text (e.g., variable group definitions) typically located near or below the structure. The extracted text and bounding boxes are combined with the image patches and fed into a VTL encoder based on a T5-base backbone. Following the UDOP fusion paradigm [33], visual and textual tokens that spatially coincide—according to their bounding boxes—are aligned and fused to form a combined multimodal represen-tation. The output of the VTL encoder is then concatenated with a projected embedding from the pretrained Vision En-coder. This joint representation is passed to a text decoder, which autoregressively generates a structured sequence de-scribing the chemical backbone and its associated Markush features. The generated Markush features include variable groups, frequency variation indicators, positional variation indicators, and a table containing the variable group sub-stituents mentioned in the textual description. 
+
+3.2. OCR Model 
+
+The Optical Character Recognition (OCR) module is a critical component of the model architecture, providing the textual and layout modalities necessary for interpret-ing complex Markush features. The OCR module extracts character-level text and bounding boxes from the input im-age. Subsequently, the extracted text, bounding boxes and vision patches are passed to the model’s VLT encoder for multimodal encoding. Due to limited performance of existing OCR models on chemical images, we introduce ChemicalOCR, a com-pact vision–language model (VLM) fine-tuned for OCR in chemical images. The ChemicalOCR architecture is based on Smoldocling [21], a lightweight 256M-parameter model originally developed for end-to-end document conversion. 
+
+3.3. Two-stage Training Strategy 
+
+To train MarkushGrapher-2, we adopt a two-stage training strategy designed to fully leverage the pretrained features of the vision encoder for OCSR, while effectively fusing them with the multimodal representations learned by the VTL en-coder for MMSR. Figure 3 shows a depiction of the two training phases. During Phase 1 (Adaptation), the Vision Encoder, Pro-jector, and Text Decoder are trained in isolation for the task of standard SMILES (Simplified Molecular Input Line Entry System) prediction. Keeping the Vision Encoder weights frozen, this allows the decoder and projector to adapt to the pretrained OCSR feature space without alter-ing the original visual representations. During Phase 2 (Fu-sion), the OCR model and VTL encoder are introduced to the model architecture. The Vision Encoder, Projector, and OCR model are frozen and the VTL encoder and Text de-coder are trained end-to-end for the task of CXSMILES (Chemaxon Extended SMILES) and Substituent Table pre-diction. This two-phase training strategy allows the model to ef-fectively leverage the pretrained Vision Encoder and build upon the OCSR features to perform the more challenging task of Markush structure recognition. By freezing the Vi-sion Encoder and Projector during Phase 2 we preserve the original OCSR feature space and ensure that the VTL en-coder focuses on learning the missing features required for Markush structure recognition (i.e., CXSMILES and substi-tutent table prediction). 
+
+4. Datasets 
+
+MarkushGrapher-2 is trained on diverse sets of synthetic data and real-world data. The data is sourced and converted from different public document collections and databases: IP5 patent offices, PubChem, and datasets published by MolScribe [23] and MolParser [10]. 
+
+4.1. The USPTO-MOL-M Dataset 
+
+For the training of MarkushGrapher-2, we introduce a new large-scale training dataset, consisting of real-world image-(CX)SMILES pairs extracted automatically from MOL files that are provided by the USPTO along with the patent doc-ument. The USPTO MOL files (V2000 format) contain in-formation such as atom symbols, atomic coordinates, bonds and bond types, aliases (abbreviations and R-groups), su-peratoms (abbreviations), and frequency variation indica-tors. These MOL files do not include all the visual details that are shown in their corresponding image, for example, positional variation indicators are not directly included. We developed code to clean the MOL files and convert them 3Projector                     
+
+> (v, t, l)
+> (v) e1
+> e2
+> OCR
+> Model
+> (v)
+> <markush>
+> <cxsmi >
+> <r>R0</r>C.O=C1N=C[NH2+]C1COCc1ccccc1 .
+> <r> R4 </r>C |Sg :n:8,9,10:r:ht ,
+> m:18:11.12.13.14.15.16 ,
+> m:1:11.12.13.14.15.16
+> </ cxsmi >
+> <stable>
+> R0 :hydroxyl group <n> carboxyl group< n>
+> carbonyl group <ns >
+> R4 :C2 -C6 alkenyl -carbamoyl< n>iodine<ns >
+> r:2-15
+> </ stable >
+> </markush>
+> Graph
+> Wherein R0 is a hydroxyl group , carboxyl
+> group, carbonyl group; R4 is selected from the
+> group consisting of C2 -C6 -alkenylc -arbamyol,
+> or iodine, and r is an integer of 2 to 15 .
+> Output : Predicted Sequence
+> Input : Image
+> Table
+> Translation: Graph -Table
+> VTL
+> Encoder
+> Vision
+> Encoder
+> Text
+> Decoder Variable Substituents
+> R0 -hydroxyl group
+> -carboxyl group
+> -carbonyl group
+> R4 -C2 -C6 alkenylcarbamoyl
+> -iodine
+> r2-15
+
+Figure 2. Model Architecture : MarkushGraher-2 employs two complementary encoding pipelines. In the first pipeline, the input image is processed by a vision encoder (blue) followed by an MLP projector (yellow). In the second pipeline, the image is passed through an OCR model to extract textual content and bounding boxes, which is then fed into a Vision–Text–Layout (VTL) encoder together with the original image. The output of the MLP projector (e1) is concatenated with the resulting VTL embedding (e2). The combined representation is passed to a text decoder to generate a sequential description of the Markush structure and its substituents in tabular form. Phase 1 : Adaptation 
+
+Phase 2 : Fusion       
+
+> Projector
+> (v, t, l)
+> (v) e1
+> e2
+> OCR
+> Model
+> (v) VTL
+> Encoder
+> Vision
+> Encoder
+> Text
+> Decoder
+> Projector
+> (v) e1
+> Vision
+> Encoder
+> Text
+> Decoder SMILES
+> CXSMILES +
+> S-Table
+> Regular
+> Molecule
+> Images
+> Markush
+> Structure
+> Images
+> :frozen
+> :trainable
+
+Figure 3. Two-Phase Training : In Phase 1 (Adaptation), the OCSR encoder is frozen while the MLP projector and text decoder are trained for SMILES prediction to align with pretrained OCSR features. In Phase 2 (Fusion), the adapted modules are initialized, the VTL encoder is introduced, and the full model is trained end-to-end for CXSMILES prediction. 
+
+to CXSMILES format. In this process, positional variation indicators were reconstructed based on atomic coordinates and bonding patterns, frequency variation indicators were extracted from the structural repeating unit sections, and R-groups were derived from the alias and superatom sec-tions. Unnecessary elements—such as text, labels, or in-dices present in the MOL files—were removed to the great-est extent possible. The dataset built in this study comprises USPTO MOL files from the years 2010 to 2025. 
+
+4.2. Training Datasets 
+
+The datasets used for training MarkushGrapher-2 can be categorized into three categories: (1) OCR data, consist-ing of image-OCR pairs for optical character recognition on chemical structure images, (2) OCSR data, consist-ing of image–SMILES pairs for standard molecular struc-ture recognition, and (3) MMSR data, comprising im-age–CXSMILES pairs (and substituent tables) for recogniz-ing Markush structures. ChemicalOCR module is pretrained on a set of 235k syn-thetic chemical structures containing automatic OCR anno-tations. To generate the training images, SMILES are ran-domly sampled from PubChem [16] and augmented into chemically valid CXSMILES representations, introducing variable groups, frequency and positional variation indica-tors. These CXSMILES are then rendered into images con-taining corresponding molecular drawings, textual annota-tions, and character-level bounding boxes [20]. To substan-tially improve model performance on real-world chemical images, the model is further finetuned using a set of 7k manually annotated OCR samples with chemical structures cropped from IP5 patent documents. During Phase 1 (Adaptation), the model is trained exclu-sively on OCSR data. Specifically, we use 243k real-world image–SMILES pairs sourced from the public MolScribe dataset [23], derived from USPTO documents. In the subsequent Phase 2 (Fusion), we train the model on a combination of MMSR datasets. This includes same 235k synthetically generated image–CXSMILES pairs with corresponding substituent tables that were used for train-ing the ChemicalOCR module. Additionally, the MMSR training corpus includes 91k real-world Markush samples from the MolParser dataset [10], that are converted into an optimized CXSMILES prediction format, and 54k real-world Markush samples from the USPTO-MOL-M dataset described above. 
+
+5. Experiments 
+
+5.1. Implementation Details 
+
+The Vision-Text-Layout encoder and text decoder are based on a T5 encoder–decoder architecture [33]. The OCSR en-4coder is the vision encoder taken from MolScribe, which is based on a SWIN transformer architecture [23]. This en-coder remains frozen during training. In total, the model comprises 831M parameters, of which 744M are train-able. Training is performed in two phases. During Phase 1 (Adaptation), the Projector and Text Decoder are trained on 243K real samples for 3 epochs using an NVIDIA A100 GPU. Here, we use the Adam optimizer with a learning rate of 5e-4, 1000 warm-up steps, a batch size of 10, and a weight decay of 1e-3. For Phase 2 (Fusion), the pretrained Vision encoder and Projector are frozen, and the VTL en-coder and text decoder are further trained using a mix of 235k synthetic and 145k real-world Markush structure sam-ples. Here we use a batch size of 8 and train for 2 epochs. 
+
+5.2. Evaluation Datasets and Metrics 
+
+We evaluate MarkushGrapher-2 on two tasks: (1) image recognition and (2) substituent table recognition. 
+
+Markush Benchmarks: To evaluate model perfor-mance for Markush structure recognition under diverse real-world conditions, we employ several benchmark datasets of Markush structures. M2S contains 103 real-world Markush structure images with textual descriptions, manually anno-tated and substituent tables [20]. USPTO-M contains 74 real-world Markush structure images, manually annotated [20]. WildMol-M, introduced by MolParser [10], contains 10k real-world, semi-manually annotated Markush struc-ture images. Finally, we introduce a new benchmark, IP5-M, consisting of 1,000 manually annotated Markush struc-tures from patent documents of the IP5 offices published between 1980 and 2025. 
+
+OCSR Benchmarks: To evaluate model performance on standard SMILES prediction, we use four common OCSR benchmarks, USPTO [11], JPO [13], UOB [27], and WildMol [10]. 
+
+OCR Benchmarks: The above M2S, USPTO-M, and IP5-M benchmarks are also used to evaluate the Chem-icalOCR performance on OCR predictions. 
+
+CXSMILES Accuracy (A): Image recognition perfor-mance is measured using the CXSMILES accuracy (A), while substituent table recognition is evaluated using pre-diction accuracy and F1 score. Markush accuracy measures the overall accuracy of correct Table and CXSMILES pre-dictions. Stereochemistry is ignored during evaluation to ensure consistency across datasets. In more detail, the CXS-MILES accuracy (A) metric quantifies the percentage of perfectly recognized molecular representations. A predic-tion is considered correct if two conditions are satisfied: (1) the predicted SMILES (without Markush features) corre-sponds to the ground truth according to InChIKey equiva-lence, and (2) the Markush features, i.e., variable groups (R-groups), positional and frequency variation indicators are correctly represented. 
+
+5.3. Evaluation and State-of-the-art Comparison 
+
+In this section we provide an evaluation of the Chem-icalOCR module and the overall MarkushGrapher-2 perfor-mance versus state-of-the-art methods. 
+
+Optical Character Recognition: Table 1 shows a quan-titative comparison of our ChemicalOCR model with Pad-dleOCR v5 [5] and EasyOCR [15]. ChemicalOCR sub-stantially outperforms PaddleOCR and EasyOCR. Figure 4 presents a visual comparison of OCR predictions obtained by each evaluated method for a representative Markush structure image from each benchmark. Consistent with the quantitative results in Table 1, ChemicalOCR demon-strates superior performance in both character localization and recognition. It accurately identifies long abbreviations within chemical structures and correctly parses textual de-scriptions below the images (see M2S, second row). It is ob-served that EasyOCR struggles with longer text sequences, including abbreviations and descriptive text. PaddleOCR v5 handles longer text sequences, such as descriptive captions, reliably, but often misinterprets characters within chemi-cal structures—frequently merging symbols into a single bounding box and confusing bonds with minus or equal signs. 
+
+Markush Structure Recognition : Table 2 shows a quantitative comparison of our MarkushGrapher-2 model with image-only models MolParser-Base and MolScribe, and multimodel models GPT-5, DeepSeek-OCR, and MarkushGrapher-1. GPT-5 was run on the M2S bench-mark, which is reasonably representative for Markush struc-ture recognition. MarkushGrapher-2 substantially outper-forms state-of-the-art models on Markush structure recog-nition. Figure 5 presents a visual comparison of predic-tions of MarkushGrapher-2 and state-of-the-art models for a representative Markush structure image from each bench-marks. As illustrated, MarkushGrapher-2 accurately re-constructs both the molecular backbone from the struc-tural image, as well as complex Markush-specific features, such as variable groups, positional and frequency varia-tion indicators. Specifically, the model effectively captures any-locant cycle connections, repeating structural units, and end-to-molecule attach points (AP). Note: Scores for MarkushGrapher-1 cannot be provided for WildMold-M, since MarkushGrapher-1 does not constitute an OCR mod-ule. 
+
+Molecular Structure Recognition : Table 3 shows a quantitative comparison of our MarkushGrapher-2 model with image-only models MolParser-Base and MolScribe, and multimodel models GPT-5, DeepSeek-OCR, and MarkushGrapher-1. GPT-5 was run on the JPO benchmark, which is reasonably representative for molecular structure recognition. The results show that MarkushGrapher-2 is competitive with state-of the-art models on molecular struc-ture recognition. 5Models M2S (103) USPTO-M (74) IP5-M (1000) 
+
+P R F1 A@IoU 0.5 P R F1 A@IoU 0.5 P R F1 A@IoU 0.5 PaddleOCR v5 8.9 6.8 7.7 0.0 2.3 1.1 1.2 0.0 2.2 1.7 1.9 0.6 EasyOCR 9.8 10.7 10.2 0.0 24.8 14.2 18.0 0.0 23.5 15.2 18.4 2.7 
+
+ChemicalOCR (Ours) 86.9 87.4 87.2 32.0 93.5 92.6 93.0 63.5 85.6 87.4 86.5 69.5 
+
+Table 1. OCR on Chemical Images : Comparison of our ChemicalOCR model with existing OCR models. The evaluation is conducted on real-world benchmarks (M2S, USPTO-M, and IP5-M). Precision P , Recall R, and F1 are measured at individual bounding-box level. Accuracy A is measured at the image level; an image is considered correct if all OCR cells have an IoU > 0.5 and their recognized characters match the ground truth. PaddleOCR v5  EasyOCR  ChemicalOCR (Ours)       
+
+> H2N NNH2
+> NH
+> O
+> R8
+> O
+> CO2R9
+> H\nN
+> CH2CH2CO OR10
+> HzN NNH2
+> COz R9
+> NH
+> R8
+> ???
+> CHzCHzcO_f
+> N_!H
+> ORIo
+> H₂NN=NH2
+> R8(n )
+> NH
+> CO2R9
+> 工之
+> 0cH₂CH₂CO -OR10
+> H
+
+Input Image                   
+
+> R5 R4 R3
+> R1
+> R6
+> R7
+> R2
+> xi x2
+> R2 is a cyano group,
+> In Chemical Fo rmula 1
+> R6 is hyd rogen ,
+> unsubstituted aliphatic heterocyclic grou p, and ,
+> R4 is a su bstitu ted or unsubstituted aryl group ,
+> R1, R3, R5 and R7 are the same as or d iffer ent fr om each
+> and are each ind ependently a halogen gr oup or a cyano
+> group.
+> other , and are each ind ependently a substituted or
+> unsubstituted cyclo alkyl group; or a sub stituted 1 1 or
+> X1 and X2 are the same as or different from each other ,
+> R5 R4 R3
+> R2 R6
+> R7
+> N
+> X1 X2
+> N
+> B
+> R1
+> In Chemical Fo rmula 1,
+> X1 and X2 are the same as or different from each other ,
+> R2 is a cyano group,
+> R6 is hyd rogen ,
+> R4 is a su bstitu ted or unsubstituted aryl group ,
+> R1, R3, R5, and R7 are the same as or different from each
+> other , and are each ind ependently a substituted or
+> Un substituted cycloalkyl group; or a su bstitu ted or
+> Un substituted aliphatic hetero cy clic gro up, an d
+> and are each ind ependently a halogen gr oup or a cyano
+> group.
+> R2 is a cyano group;
+> R6 is hyd rogen ;
+> R4 is a su bstitu ted or unsubstituted aryl grolp???
+> and Are each idepen dently 3OI substituted
+> unsubstituted cyclo alkyl group. and
+> XI and X2 are the same as Or differen t fro m each oth er;
+> grOUP; Or 2substituted O1
+> and are each ind ependently a halogen group o r a cyan o
+> group
+> ??? Ch emical Formula 1,
+> RI.R3.RS. And R7 are the same as OR different from each
+> R4 R3 RS
+> R6
+> ???
+> R7 XI X2
+> N
+> RI
+> B
+> R
+> unsubstituted cyclo alkyl
+> other ???
+
+USPTO -M
+
+M2S 
+
+IP5 -M   
+
+> R1
+> R4
+> N
+> R2 N
+> HN
+> O
+> R3
+> R14
+> NS
+> O
+> O
+> p
+> R
+> N
+> HN
+> ??????14
+> ???
+> ???3
+> ???2 ???4
+> -R14)
+> HN
+> N
+> N
+> R1
+> $R 2r)$
+> O
+
+Figure 4. OCR - Qualitative Comparison : Comparison of OCR predictions by three models PaddleOCR v5, EasyOCR, and Chem-icalOCR (Ours) for an exemplary chemical structure from the benchmarks M2S, USPTO-M, and IP5-M. Red labels indicate incorrect OCR, green labels indicate correct OCR and blue indicates predicted bounding boxes. 
+
+5.4. Ablation Study 
+
+Effect of OCR module : Table 4 compares the perfor-mance of MarkushGrapher-2 with and without OCR pre-dictions from the ChemicalOCR module as input. The scores provide insight about the importance of the text and layout modality for the overall model prediction. We observe that the OCR predictions substantially improves MarkushGrapher-2 prediction accuracy. Figure 6 illus-trates an example prediction from MarkushGrapher-2 with and without OCR input. While MarkushGrapher-2 with-out OCR input accurately predicts the structural backbone, it fails to capture the Markush features, i.e., the repeating groups (Sg). It may be inferred that the text extracted by the OCR—such as brackets and indices—provides important additional information that substantially improves Markush feature prediction. 
+
+Effect of Two-Phase Training : Table 5 shows the impact of the proposed two-phase training on overall MarkushGrapher-2 performance. We compare the two-phase setup—first adapting the Projector and VTL decoder to the pretrained OCSR features, followed by joint training of both encoders—with a single-phase training approach. In the table, the single-phase and two-phase setups are la-beled with ‘Fusion only’ and ‘Adaptation and Fusion’, re-spectively. This experiment highlights the benefits of adapt-ing the decoder to the pretrained OCSR features before fus-ing encoder outputs for Markush structure recognition. The results show that two-phase training improves the model’s ability to encode Markush features while preserving perfor-mance on standard molecular recognition. 6Methods M2S (103) USPTO-M (74) WildMol-M (10000) IP5-M (1000) CXSMILES Table Markush CXSMILES CXSMILES CXSMILES 
+
+A A F1 A A A A
+
+Image only 
+
+MolParser-Base 39 – – – 30 38.1 ‡ 47.7 MolScribe 21 † – – – 7† 28.1 22.3 
+
+Multimodal 
+
+GPT-5 3 8 24 0DeepSeek-OCR 0 – – – 0 1.9 0.0 MarkushGrapher-1 38 † 29 † 65 † 10 † 32 † – –
+
+MarkushGrapher-2 (Ours) 56 22 65 13 55 48.0 53.7 
+
+Table 2. Markush Structure Recognition: Comparison of our MarkushGrapher-2 model with existing models on CXSMILES and Sub-stituent Table prediction. Models are evaluated on real-world benchmarks (M2S, UPSTO-M, WildMol-M, IP5-M). Accuracy A measures the percentage of correctly predicted samples, while F1 quantifies the similarity between predictions and ground truth, ranging from 0 (least similar) to 100 (most similar). † scores taken from [20], ‡ scores taken from [10]. 
+
+Methods WildMol (10000) JPO (450) UOB (5740) USPTO (5719) 
+
+Image only 
+
+MolParser-Base 76.9 78.9 91.8 93.0 MolScribe 66.4 76.2 87.4 93.1 
+
+DECIMER 2.7 56.0 64.0 88.3 59.9 MolGrapher 45.5 67.5 94.9 91.5 
+
+Multi-modal 
+
+GPT-5 19.2 DeepSeek-OCR 25.8 31.6 78.7 36.9 MarkushGrapher-1 - - - -
+
+MarkushGrapher-2 (Ours) 68.4 71.0 96.6 89.8 
+
+Table 3. Molecular Structure Recognition : Comparison of our MarkushGrapher-2 model with existing models on SMILES prediction. Models are evaluated on real-world benchmarks (WildMol, JPO, UOB, and USPTO). Accuracy measures the percentage of correctly predicted molecular structure. Scores for MolParser, MolScribe, DECIMER, and MolGrapher scores are taken from [10, 20].                     
+
+> Methods M2S USPTO-M IP5-M
+> AAInChIKey AAInChIKey AAInChIKey
+> without OCR 439 351 15.4 51.3
+> with OCR 56 80 55 69 53.7 73.3
+
+Table 4. Effect of ChemicalOCR on Overall Model Perfor-mance : Comparison of MarkushGrapher-2 performance with and without OCR predictions as input. The table shows the CXS-MILES prediction accuracy A and structural backbone prediction accuracy AInChIKey .
+
+6. Conclusion 
+
+In this work, we present MarkushGrapher-2, a univer-sal model for the recognition of both molecular structures and multi-modal Markush structures. Our approach in-
+
+Methods M2S JPO 
+
+A AInChIKey A AInChIKey 
+
+Fusion only 44 53 53.0 53.0 
+
+Adaptation and Fusion 50 68 61.5 61.5 
+
+Table 5. Effect of Two-Phase Training : Comparison of MarkushGrapher-2 performance with and without two-phase training. ‘Fusion only’ denotes the model trained in a single phase, while ‘Adaptation and Fusion’ refers to the two-phase training setup. Scores for CXSMILES prediction accuracy A and struc-tural backbone prediction accuracy A InChIKey are reported after 2 epochs for both configurations. 
+
+troduces a dedicated ChemicalOCR module that extracts text from images, allowing the joint encoding of image, text, and layout modalities for end-to-end processing. To 7Variable Substituents                    
+
+> R3 -(CH2)n –C(R)(R1)R2
+> R-H
+> -lower alkoxy (C1 –6)
+> -lower alkyl (C1 –6)
+> R1 -H
+> -lower alkoxy (C1 –6)
+> -lower alkyl (C1 –6)
+> R2 -selected from
+> Formula II
+> n-integer ≥0
+> R4 (M in
+> O-M
+> -H
+> -Li+
+> -Na+
+> -K+
+> -NH4+
+
+USPTO -M WildMol -MM2S IP5 -M-1k 
+
+MolParser 
+
+DeepSeek OCR 
+
+GPT 5            
+
+> Variable Substituents
+> R1 -H
+> -Lower alkoxy (C1 -6)
+> -lower alkyl (C1 -6)
+> R-H
+> -Lower alkoxy (C1 -6)
+> -lower alkyl (C1 -6)
+> R2 -Formula II
+
+MarkushGrapher -2 (Ours)            
+
+> Variable Substituents
+> R1 -H
+> -Lower alkoxy (C1 -6)
+> -lower alkyl (C1 -6)
+> R-H
+> -Lower alkoxy (C1 -6)
+> -lower alkyl (C1 -6)
+> R2 -Formula II
+
+Invalid (CX)SMILES Invalid (CX)SMILES 
+
+Invalid (CX)SMILES 
+
+MarkushGrapher -1Figure 5. Markush Structure Recognition - Qualitative Comparison : Comparison of Markush structure predictions by five models MarkushGrapher-2 (Ours), MarkushGrapher-1, MolParser, DeepSeek OCR, and GPT-5 for an exemplary Markush structure from the benchmarks M2S, USPTO-M, WildMol-M, and IP5-M. Red labels indicate incorrect predictions, green labels indicate correct predictions. Input Image  
+
+> MarkushGrapher -2without OCR
+> MarkushGrapher -2 with OCR
+
+Figure 6. Effect of OCR Predictions : Comparison of MarkushGrapher-2 predictions with and without OCR input. The green circle indicates prediction of a frequency variation indicator (i.e., repeating Sg groups). 
+
+train MarkushGrapher-2, we employ a two-phase train-ing strategy designed to optimally leverage pretrained fea-tures from a vision encoder, effectively fusing them for improved Markush structure recognition. To address the scarcity of training data, we developed a data generation pipeline for constructing real-world Markush samples from MOL files and accompanying USPTO images. In addi-tion, we introduce IP5-M, a manually annotated bench-mark dataset of real-world Markush structures from IP5 patent documents. Extensive experiments demonstrate that MarkushGrapher-2 substantially outperforms state-of-the-art models on Markush structure recognition, while remain-ing competitive on standard molecular structure recognition tasks. Our work bridges the gap between molecular and Markush recognition, offering a unified solution for large-scale automated extraction of chemical structures in docu-ments. 8MarkushGrapher-2: End-to-end Multimodal Recognition of Chemical Structures 
+
+# Supplementary Material 
+
+In this section we provide supplementary information on the work presented in this paper. This includes details on the CXSMILES schema, training and benchmark datasets, OCR training, evaluation, and multi-modal model predic-tions. 
+
+7. CXSMILES - Schema 
+
+Figure 7 illustrates the CXSMILES schema used to repre-sent Markush structures in string format. The schema con-sists of two sections: (1) SMILES, (2) Markush features. The SMILES is a string representing the molecular struc-ture comprising atom labels and bonds [37]. The Markush features are R-groups (variable groups and attach points), positional variation indicators, and frequency variation in-dicators. More details on the CXSMILES schema can be found in [3]. C[*].C1C(CCN1) OC | $; R1 ;;;;;;;<AP>$, m :0:2.3.4.5.6 , Sg :n:7:n:ht|   
+
+> SMILES R-Groups Positional
+> Variation
+> Indicators
+> Frequency
+> Variation
+> Indicators
+
+R1 
+
+<AP>   
+
+> Section 1 Section 2
+
+Figure 7. CXSMILES - Schema : A CXSMILES consists of two sections separated by a | character. The first section is a SMILES that describes the molecular backbone of the Markush structure. The second section are the Markush features; variable groups (yel-low) and attachment points (orange) are defined in the the R-groups section, cycle connections (green) are defined in the po-sitional variation indicator section, and repeating structural groups (purple) are defined in the frequency variation indicator section. 
+
+8. USPTO-MOL-M Dataset 
+
+Figure 8 presents two representative examples from the USPTO-MOL-M training dataset. The dataset contains real images sourced directly from USPTO patents; the corre-sponding CXSMILES are generated using MOL files. CXSMILES: *COC(*)=O |$<AP>;;;;<AP>;$, Sg:n:1:n:ht| 
+
+> CXSMILES :*[N+]([*])=C 1C=CC(=C(C 2=CC=CC=C 2)C 2=CC=C(N([*])[*])C=C 2)C=C 1.[*]C .[*]C .
+> [*]C .[*]C .[*]C .[*]C .[*]C .[*]C| $R36 ;; R35 ;;;;;;;;;;;;;;;;; R33 ;R34 ;;;;; R37 ;; R38 ;; R39 ;; R40 ;; R41 ;; R
+> 42 ;; R43 ;; R44 ;$,m :26 :17 .14 .15 .16 .21 .22 ,m :28 :17 .14 .15 .16 .21 .22 ,m :30 :6.3.4.5.23 .24 ,
+> m:32 :6.3.4.5.23 .24 ,m :34 :8.9.13 .10 .11 .12 ,m :40 :8.9.13 .10 .11 .12 ,m :36 :8.9.13 .10 .11 .12 ,
+> m:38 :8.9.13 .10 .11 .12 |
+> Example 1:
+> Example 2:
+
+Figure 8. USPTO-MOL-M Training dataset : Two examples of a chemical-structure image that is provided by the USPTO (left), the CXSMILES that we obtained (bottom) by processing the cor-responding MOL file that is provided by the USPTO, and a vi-sualization of said CXSMILES (right). Example 1 shows a sim-ple Markush structure. Typical features of Markush structures, attach point (AP) and frequency variation ”n” (marked in green in CXSMILES and visualization (right)), are indicated. Example 2 shows a typical Markush structure. Typical features of Markush structures, variable groups and positional variation (color coded in CXSMILES and visualization (right)), are indicated. 
+
+Example 1 shows a simple Markush structure containing a frequency variation indicator (denoted by the brackets and index n) and an attach point. Example 2 depicts a typi-cal Markush structure, containing multiple variable groups and positional variation indicators. Table 6 shows a break-down of the Markush features present in the USPTO-MOL-M dataset. 
+
+9. Benchmark Datasets 
+
+The IP5 patent offices are arguably the most relevant patent offices, handling about 90% of the world’s patent docu-ments [14]. Therefore, a Markush structure recognition model is only relevant if it performs well on Markush struc-tures images in patent documents from these patent offices. The IP5-M benchmark contains 1000 such Markush struc-1USPTO-MOL-M (54k)        
+
+> Variable group 91 Attach point 8m-section 42 Sg-section 55 Mean num. atoms 20 Mean num. OCR cells 13
+> Table 6. USPTO-MOL-M - Statistics : Percentage of different (Markush) features found in the training dataset.
+
+ture images. Figure 9 illustrates the dataset distribution. Ta-ble 12 summarizes key statistics for all the Markush struc-ture recognition benchmarks used in this work. USPTO  
+
+> 51%
+> JPO
+> 20%
+> EPO
+> 14%
+> CNIPA
+> 8%
+> KIPO
+> 7%
+> IP5 -M Dataset Composition
+> Figure 9. IP5-M Benchmark - Composition : Distribution of the Markush structure images extracted from patent documents of the IP5 offices.
+
+10. Ablation - Architectural Branches 
+
+Table 7 provides an ablation of the architectural branches, comparing each encoding pipeline when trained individu-ally with the decoder. The results show that Pipeline 1 (vi-sion encoder + projector + decoder) achieves strong per-formance on molecular structure recognition (USPTO), and struggles with multimodal Markush structure recognition (M2S). In contrast, Pipeline 2 (OCR + VTL encoder + de-coder) performs decently on Markush benchmarks while yielding weaker result on OCSR. This ablation demon-strates our architecture’s ability to successfully integrate the complementary strengths of both pipelines through the two-phase training. Methods M2S USPTO CXSMILES Table SMILES Pipeline 1 8 0 89.1 Pipeline 2 39 21 84.4 Pipeline 1 & 2 56 22 89.8    
+
+> Table 7. Architectural Branches Ablation :Comparison of Pipelines 1, 2, and 1 & 2. Pipeline 1: vision encoder + projec-tor + decoder; Pipeline 2: OCR + VTL encoder + decoder.
+
+11. ChemicalOCR - Training 
+
+ChemicalOCR is trained in two stages. In the first stage, the model is pretrained on 235k synthetically generated images containing automatic OCR annotations. In the second stage, the model is finetuned on 7k images from IP5 patent docu-ments containing manual OCR annotations. Table 8 shows a comparison of ChemicalOCR’s prediction accuracy after each stage. The results demonstrate that finetuning on a small set of real-world data provides a substantial improve-ment of OCR prediction accuracy. 
+
+Checkpoints M2S USPTO-M IP5-M ChemicalOCR - pretrained 26.2 18.9 27.6 
+
+ChemicalOCR - finetuned 32.0 63.5 69.5    
+
+> Table 8. Comparison of ChemicalOCR training stages : Com-parison of OCR Accuracy A at IoU >0.5 of ChemicalOCR at dif-ferent training stages. “Pretrained” denotes training on synthetic data only, while “finetuned” indicates additional training on 7k real samples.
+
+12. OCR - Benchmark Evaluations 
+
+Table 9 shows the OCR prediction scores for different IoU thresholds. The IoU threshold determines the overlap be-tween the predicted and ground truth bounding boxes. Pos-sibly surprising, we observe a significant degradation in PaddleOCR’s accuracy as the IoU requirement increases. This trend aligns with the qualitative results displayed in Figure 4 of the main paper. We note that PaddleOCR tends to misinterpret chemical features, such as bonds, as charac-ters. This leads to the prediction of large, incorrect bound-ing boxes. In comparison, ChemicalOCR and EasyOCR provide more consistent results for different IoU thresh-olds. ChemicalOCR substantially outperforms PaddleOCR v5 and EasyOCR for all IoU thresholds. 
+
+13. Multi-Modal Models - Observations 
+
+In Tables 2 and 3 of the main paper it was shown that our dedicated model MarkushGrapher-2 has substantially higher accuracy for molecular and Markush structure recog-nition than the multi-purpose models DeepSeek-OCR and GPT-5. Table 10 shows a more detailed comparison of the model predictions with respect to output valid-ity and correctness. Specifically, we evaluate the pro-portion of chemically-valid (CX)SMILES versus correct (CX)SMILES given molecular and Markush structure im-ages as input. The “Valid” metric captures only chemi-cal validity of the model prediction and does not assess its correctness. The “Correct” metric reflects the accuracy of the predicted (CX)SMILES. We evaluate performance on two representative benchmarks, M2S for Markush struc-ture recognition and JPO for molecular structure recog-nition. The results reveal that both DeepSeek-OCR and GPT-5 predominantly generate chemically invalid outputs for Markush structure images (M2S benchmark). Typically, 2Models M2S (103) USPTO-M (74) IP5-M (1000) 
+
+P R F1 A P R F1 A P R F1 A
+
+@IoU > 0.0 
+
+PaddleOCR v5 61.9 47.3 53.6 0.0 57.0 47.2 51.7 1.4 43.3 34.3 38.3 5.5 EasyOCR 10.4 11.4 10.8 0.0 29.8 17.0 21.7 0.0 30.6 19.7 24.0 3.5 
+
+ChemicalOCR (Ours) 90.0 90.6 90.3 37.9 96.2 95.3 95.8 73.0 90.3 92.2 91.3 73.7 
+
+@IoU > 0.3 
+
+PaddleOCR v5 46.0 35.2 40.0 0.0 25.0 20.7 22.6 0.0 27.8 22.0 24.6 3.0 EasyOCR 10.2 11.2 10.7 0.0 29.0 16.6 21.1 0.0 29.6 19.1 23.3 3.2 
+
+ChemicalOCR (Ours) 88.8 89.4 89.1 40.0 94.8 94.0 94.4 70.3 88.5 90.3 89.4 72.8 
+
+@IoU > 0.5 
+
+PaddleOCR v5 8.9 6.8 7.7 0.0 2.3 1.1 1.2 0.0 2.2 1.7 1.9 0.6 EasyOCR 9.8 10.7 10.2 0.0 24.8 14.2 18.0 0.0 23.5 15.2 18.4 2.7 
+
+ChemicalOCR (Ours) 86.9 87.4 87.2 32.0 93.5 92.6 93.0 63.5 85.6 87.4 86.5 69.5 
+
+Table 9. Comparison of OCR performance for different IoU thresholds : Comparison of our ChemicalOCR model with existing OCR models for different IoU thresholds. The evaluation is conducted on real-world benchmarks (M2S, USPTO-M, and IP5-M). Precision P ,Recall R, and F1 are measured at individual bounding-box level. Accuracy A is measured at the image level; an image is considered correct if all OCR cells have an IoU greater than the threshold (0.0, 0.3, 0.5), and their recognized characters match the ground truth. 
+
+Models M2S JPO 
+
+Valid Correct Valid Correct 
+
+DeepSeek-OCR 15 0 72 32 
+
+GPT-5 30 3 74 19 
+
+MarkushGrapher-2 95 56 92 71 
+
+Table 10. Comparison of (CX)SMILES predictions: Com-parison of the percentage of chemically-valid and correct (CX)SMILES generated by multi-purpose models (DeepSeek-OCR and GPT-5) versus our dedicated MarkushGrapher-2 model. “Valid” reports the percentage of chemically-valid (CX)SMILES, and “Correct” denotes the percentage of correct CXSMILES pre-dictions (i.e., accuracy). 
+
+these invalid predictions constitute incorrect (CX)SMILES schemas, repetitive token loops, or unrelated text hallucina-tions. In contrast, the task of standard molecular structure recognition (JPO benchmark) leads to more chemically-valid outputs for both models. While DeepSeek-OCR is trained to predict SMILES as one of its subtasks [36], it occasionally hallucinates random outputs when presented with Markush structure images. Figure 10 shows an ex-ample in which DeepSeek-OCR generates a repeating se-quence followed by the generation of an unrelated essay titled “How to Improve Your English Writing Skills.” For the datasets evaluated, GPT-5 did not exhibit this behav-ior. Rather, it occasionally reports its inability to generate CXSMILES from some Markush images. Figure 11 shows an example of such a prediction outlier. The findings sug-gest that Markush images constitute a largely unseen image domain for the multi-purpose models DeepSeek-OCR and GPT-5, potentially lying outside their training data distri-bution. Our dedicated MarkushGrapher-2 substantially out-performs these multi-purpose models in both categories. 
+
+14. Failure Analysis 
+
+Table 11 provides additional performance analysis on different Markush features for IP5-M, including stereo-chemistry. Figure 12 shows a qualitative evaluation of MarkushGrapher-2 predictions. Methods IP5-M InChi Variable AP m Sg AMarkushGrapher-2 73.3(70.8) 74.8 73.9 78.8 30.7 53.7(51.5) 
+
+Table 11. Comparison of Markush features performances :Breakdown of model performance for backbone structure (InChi), variable groups, attach points, positional and frequency variation indicators and total accuracy. Scores reported in parentheses con-sider stereochemistry. (6.4% of samples contain stereochemistry). 
+
+3Benchmarks Samples Percentage of CXSMILES with at least one Mean num. atoms Mean num. OCR cells Variable group Attach point m-section Sg-section M2S 103 97 0 30 25 19 15 USPTO-M 74 91 0 74 42 20 8WildMol-M 10000 59 31 15 12 14 -IP5-M 1000 60 28 17 26 14 7
+
+Table 12. Benchmarks - Statistics : Comparison of the number of samples, percentage of dataset samples containing at least one Markush feature (variable group, attach point, positional variation indicator (m-section), frequency variation indicator (Sg-section)), mean number of heavy atoms, and mean number of OCR cells. DeepSeek -OCR prediction outlier 
+
+“< smiles>[CH]NCC1C2C3C4C5C6C7C8C9C%10C%1 
+
+1C%12C%13C%14C%15C%16C%17C%18C%19C% 20C 
+
+…
+
+How to Improve Your English Writing 
+
+Skills \n\nIn today's globalized world, 
+
+English has become the lingua franca of 
+
+communication, and proficiency in the 
+
+language is essential for success in 
+
+various fields. As a result, many 
+
+students are turning to English writing 
+
+as a way to improve their language 
+
+skills. In this article, we will explore 
+
+some effective strategies to help you 
+
+improve your English writing 
+
+skills .\n\n1. Read extensively \n\n
+
+…
+
+Reading is the foundation of writing… 
+
+n\n70. Use online resources \n\nThere are 
+
+many online resources available to help 
+
+you improve your English writing skills. 
+
+Websites such as Grammarly, Hemingway 
+
+Editor, and ProWritingA u can help you 
+
+identify and correct grammar, spelling, 
+
+and punctuation errors in your writing 
+
+Input image 
+
+Model prediction 
+
+Figure 10. DeepSeek-OCR : Example of a model prediction outlier. GPT -5 prediction outlier 
+
+“CXSMILES : I’m sorry, but I can’t 
+
+unambiguously derive a CXSMILES for this 
+
+Markush backbone from the image alone .
+
+Please provide a structure file (e .g.,
+
+MOL/SDF) or a clearer 2D drawing with 
+
+atom numbering so I can generate the 
+
+exact CXSMILES and variable table .”
+
+Input image 
+
+Model prediction Figure 11. GPT-5 : Example of a model prediction outlier. 
+
+4Variable Groups Attach Points Stereochemistry 
+
+> MarkushGrapher -2
+
+Abbreviations Frequency variation indicators Positional Variation Indicators 
+
+Abbreviations Frequency variation indicators Positional Variation Indicators 
+
+Variable Groups Attach Points Stereochemistry 
+
+> MarkushGrapher -2
+
+Abbreviations Frequency variation indicators Positional Variation Indicators Figure 12. Qualitative Evaluation : MarkushGrapher-2 predictions of benchmark samples. A correct and an incorrect prediction is displayed for the features stereochemistry, variable groups, attach points, positional variation indicators, abbreviations, and frequency variation indicators. 
+
+5References 
+
+[1] Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang, Wenbin Ge, Sibo Song, Kai Dang, Peng Wang, Shijie Wang, Jun Tang, Humen Zhong, Yuanzhi Zhu, Mingkun Yang, Zhao-hai Li, Jianqiang Wan, Pengfei Wang, Wei Ding, Zheren Fu, Yiheng Xu, Jiabo Ye, Xi Zhang, Tianbao Xie, Zesen Cheng, Hang Zhang, Zhibo Yang, Haiyang Xu, and Jun-yang Lin. Qwen2.5-VL Technical Report. arXiv preprint arXiv:2502.13923 , 2025. 2 [2] Hengxing Cai, Xiaochen Cai, Shuwen Yang, Jiankun Wang, Lin Yao, Zhifeng Gao, Junhan Chang, Sihang Li, Mingjun Xu, Changxin Wang, et al. Uni-SMART: Universal Sci-ence Multimodal Analysis and Research Transformer. arXiv preprint arXiv:2403.10301 , 2024. 2 [3] ChemAxon. Chemaxon extended smiles and smarts: Cxs-miles and cxsmarts. https://docs.chemaxon.com/ display/docs/formats_chemaxon- extended-smiles-and-smarts-cxsmiles-and-cxsmarts ,2025. Accessed: 2025-11-18. 1 [4] Yufan Chen, Ching Ting Leung, Yong Huang, Jianwei Sun, Hao Chen, and Hanyu Gao. MolNexTR: A Generalized Deep Learning Model for Molecular Image Recognition. 
+
+arXiv preprint arXiv:2403.03691 , 2024. 2 [5] Cheng Cui, Ting Sun, Manhui Lin, Tingquan Gao, Yubo Zhang, Jiaxuan Liu, Xueqing Wang, Zelun Zhang, Changda Zhou, Hongen Liu, Yue Zhang, Wenyu Lv, Kui Huang, Yichao Zhang, Jing Zhang, Jun Zhang, Yi Liu, Dianhai Yu, and Yanjun Ma. Paddleocr 3.0 technical report, 2025. 5 [6] Winfried Dethlefsen, Michael F. Lynch, Valerie J. Gillet, Ge-offrey M. Downs, John D. Holliday, and John M. Barnard. Computer storage and retrieval of generic chemical struc-tures in patents. 11. Theoretical aspects of the use of struc-ture languages in a retrieval system. Journal of Chemical Information and Computer Sciences , 31(2):233–253, 1991. 2[7] Tommy. Ebe, Karen A. Sanderson, and Patricia S. Wilson. The Chemical Abstracts Service generic chemical (Markush) structure storage and retrieval capability. 2. The MARPAT file. Journal of Chemical Information and Computer Sci-ences , 31(1):31–36, 1991. 2 [8] Vincent Fan, Yujie Qian, Alex Wang, Amber Wang, Con-nor W. Coley, and Regina Barzilay. OpenChemIE: An Infor-mation Extraction Toolkit for Chemistry Literature. Journal of Chemical Information and Modeling , 64(14):5521–5534, 2024. 2 [9] Xi Fang, Jiankun Wang, Xiaochen Cai, Shangqian Chen, Shuwen Yang, Haoyi Tao, Nan Wang, Lin Yao, Linfeng Zhang, and Guolin Ke. Molparser: End-to-end visual recog-nition of molecule structures in the wild. In Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV) , pages 24528–24538, 2025. 2 [10] Xi Fang, Jiankun Wang, Xiaochen Cai, Shangqian Chen, Shuwen Yang, Haoyi Tao, Nan Wang, Lin Yao, Linfeng Zhang, and Guolin Ke. Molparser: End-to-end visual recog-nition of molecule structures in the wild, 2025. 3, 4, 5, 7 [11] Igor V Filippov and Marc C Nicklaus. Optical struc-ture recognition software to recover chemical information: OSRA, an open source solution. J. Chem. Inf. Model. , 49(3): 740–743, 2009. 5 [12] William Fisanick. The Chemical Abstract’s Service generic chemical (Markush) structure storage and retrieval capabil-ity. 1. Basic concepts. Journal of Chemical Information and Computer Sciences , 30(2):145–154, 1990. 2 [13] Akio Fujiyoshi, Koji Nakagawa, and Masakazu Suzuki. Ro-bust method of segmentation and recognition of chemical structure images in cheminfty. 2011. 5 [14] IP5. About ip5 co-operation. https : / / www . fiveipoffices.org/about . Accessed: 2025-11-20. 1[15] JaidedAI. EasyOCR: Ready-to-use OCR with 80+ supported languages and all popular writing scripts including latin, chi-nese, arabic, devanagari, cyrillic and etc, 2024. Available at: 
+
+https://github.com/JaidedAI/EasyOCR . 5 [16] Sunghwan Kim, Jie Chen, Tiejun Cheng, Asta Gindulyte, Jia He, Siqian He, Qingliang Li, Benjamin A Shoemaker, Paul A Thiessen, Bo Yu, Leonid Zaslavsky, Jian Zhang, and Evan E Bolton. PubChem 2025 update. Nucleic Acids Res. , 53(D1): D1516–D1525, 2025. 4 [17] Ilia Korvigo, Maxim Holmatov, Anatolii Zaikovskii, and Mikhail Skoblov. Putting hands to rest: efficient deep CNN-RNN architecture for chemical named entity recognition with no hand-crafted rules. Journal of Cheminformatics , 10 (1):28, 2018. 1 [18] Lucas Morin, Martin Danelljan, Maria Isabel Agea, Ahmed Nassar, Valery Weber, Ingmar Meijer, Peter Staar, and Fisher Yu. MolGrapher: Graph-based Visual Recognition of Chem-ical Structures. In Proceedings of the IEEE/CVF Inter-national Conference on Computer Vision (ICCV) , pages 19552–19561, 2023. 1 [19] Lucas Morin, Val´ ery Weber, Gerhard Ingmar Meijer, Fisher Yu, and Peter W. J. Staar. PatCID: an open-access dataset of chemical structures in patent documents. Nature Communi-cations , 15(1):6532, 2024. 1 [20] Lucas Morin, Valery Weber, Ahmed Nassar, Gerhard Ingmar Meijer, Luc Van Gool, Yawei Li, and Peter Staar. Markush-Grapher: Joint Visual and Textual Recognition of Markush Structures . In 2025 IEEE/CVF Conference on Computer Vi-sion and Pattern Recognition (CVPR) , pages 14505–14515, Los Alamitos, CA, USA, 2025. IEEE Computer Society. 1, 2, 4, 5, 7 [21] Ahmed Nassar, Andres Marafioti, Matteo Omenetti, Maksym Lysak, Nikolaos Livathinos, Christoph Auer, Lucas Morin, Rafael Teixeira de Lima, Yusik Kim, A. Said Gurbuz, Michele Dolfi, Miquel Farr´ e, and Peter W. J. Staar. Smol-Docling: An ultra-compact vision-language model for end-to-end multi-modal document conversion. arXiv preprint arXiv:2503.11576 , 2025. 3 [22] Edward O. Pyzer-Knapp, Matteo Manica, Peter Staar, Lu-cas Morin, Patrick Ruch, Teodoro Laino, John R. Smith, and Alessandro Curioni. Foundation models for materials dis-covery – current state and future directions. npj Computa-tional Materials , 11(1):61, 2025. 1 [23] Yujie Qian, Jiang Guo, Zhengkai Tu, Zhening Li, Con-nor W. Coley, and Regina Barzilay. MolScribe: Robust 
+
+6Molecular Structure Recognition with Image-to-Graph Gen-eration. Journal of Chemical Information and Modeling , 63 (7):1925–1934, 2023. 1, 2, 3, 4, 5 [24] Kohulan Rajan, Henning Otto Brinkhaus, Maria Sorokina, Achim Zielesny, and Christoph Steinbeck. DECIMER-Segmentation: Automated extraction of chemical structure depictions from scientific literature. Journal of Cheminfor-matics , 13(1):20, 2021. 1 [25] Kohulan Rajan, Henning Otto Brinkhaus, M. Isabel Agea, Achim Zielesny, and Christoph Steinbeck. DECIMER.ai: an open platform for automated optical chemical structure iden-tification, segmentation and recognition in scientific publica-tions. Nature Communications , 14(1):5045, 2023. 1, 2 [26] Kohulan Rajan, Viktor Weißenborn, Laurin Lederer, Achim Zielesny, and Christoph Steinbeck. Marcus: molecular an-notation and recognition for curating unravelled structures. 
+
+Digital Discovery , 4:3137–3148, 2025. 1 [27] Noureddin Sadawi, Alan Sexton, and Volker Sorge. Chem-ical structure recognition: A rule based approach. Proceed-ings of SPIE - The International Society for Optical Engi-neering , 8297:32–, 2012. 5 [28] Yaorui Shi, Sihang Li, Taiyan Zhang, Xi Fang, Jiankun Wang, Zhiyuan Liu, Guojiang Zhao, Zhengdan Zhu, Zhifeng Gao, Renxin Zhong, Linfeng Zhang, Guolin Ke, Weinan E, Hengxing Cai, and Xiang Wang. Intelligent system for auto-mated molecular patent infringement assessment. 2025. 2 [29] Edlyn S. Simmons. Markush structure searching over the years. World Patent Information , 25(3):195–202, 2003. 2 [30] Andreas Steiner, Andr´ e Susano Pinto, Michael Tschan-nen, Daniel Keysers, Xiao Wang, Yonatan Bitton, Alexey Gritsenko, Matthias Minderer, Anthony Sherbondy, Shang-bang Long, Siyang Qin, Reeve Ingle, Emanuele Bugliarello, Sahar Kazemzadeh, Thomas Mesnard, Ibrahim Alabdul-mohsin, Lucas Beyer, and Xiaohua Zhai. PaliGemma 2: A Family of Versatile VLMs for Transfer. arXiv preprint arXiv:2412.03555 , 2024. 2 [31] Matthew C. Swain and Jacqueline M. Cole. ChemDataEx-tractor: A Toolkit for Automated Extraction of Chemical In-formation from the Scientific Literature. Journal of Chemi-cal Information and Modeling , 56(10):1894–1904, 2016. 1 [32] Bowen Tang, Zhangming Niu, Xiaofeng Wang, Junjie Huang, Chao Ma, Jing Peng, Yinghui Jiang, Ruiquan Ge, Hongyu Hu, Luhao Lin, and Guang Yang. Automated molec-ular structure segmentation from documents using Chem-SAM. Journal of Cheminformatics , 16(1):29, 2024. 1 [33] Zineng Tang, Ziyi Yang, Guoxin Wang, Yuwei Fang, Yang Liu, Chenguang Zhu, Michael Zeng, Cha Zhang, and Mo-hit Bansal. Unifying Vision, Text, and Layout for Univer-sal Document Processing. In 2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , page 19254–19264. IEEE, 2023. 3, 4 [34] Aniko T. Valko and A. Peter Johnson. CLiDE Pro: The Latest Generation of CLiDE, a Tool for Optical Chemical Structure Recognition. Journal of Chemical Information and Modeling , 49(4):780–787, 2009. 2 [35] Haoran Wei, Chenglong Liu, Jinyue Chen, Jia Wang, Lingyu Kong, Yanming Xu, Zheng Ge, Liang Zhao, Jianjian Sun, Yuang Peng, et al. General OCR Theory: Towards OCR-2.0 via a Unified End-to-end Model. arXiv preprint arXiv:2409.01704 , 2024. 2 [36] Haoran Wei, Yaofeng Sun, and Yukun Li. Deepseek-ocr: Contexts optical compression, 2025. 2, 3 [37] David Weininger. SMILES, a chemical language and infor-mation system. 1. Introduction to methodology and encoding rules. Journal of Chemical Information and Computer Sci-ences , 28(1):31–36, 1988. Publisher: American Chemical Society. 1 [38] Zenan Zhai, Dat Quoc Nguyen, Saber Akhondi, Camilo Thorne, Christian Druckenbrodt, Trevor Cohn, Michelle Gregory, and Karin Verspoor. Improving Chemical Named Entity Recognition in Patents with Contextualized Word Em-beddings. In Proceedings of the 18th BioNLP Workshop and Shared Task , pages 328–338, Florence, Italy, 2019. Associa-tion for Computational Linguistics. 1 [39] Chong Zhou, Wei Liu, Xiyue Song, Mengling Yang, and Xi-aowang Peng. YoDe-Segmentation: automated noise-free re-trieval of molecular structures from scientific publications. 
+
+Journal of Cheminformatics , 15(1):111, 2023. 1 
+
+7

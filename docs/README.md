@@ -6,56 +6,64 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-01
-- 运行时间：2026-04-01 19:54:43 UTC
+- 最新运行日期：2026-04-02
+- 运行时间：2026-04-02 20:18:14 UTC
 - 运行状态：成功
-- 本次总论文数：11
-- 精读区：0
+- 本次总论文数：14
+- 精读区：3
 - 速读区：11
 
 ### 今日简报（AI）
-今日速览 11 篇 AI 前沿进展，涵盖空间转录组预测、DNA 模型安全及图神经网络优化。
-扩散模型在受限数据下的基因表达预测展现潜力，同时需警惕针对基因组基础模型的定向后门攻击。
-推荐生物信息学研究者关注生成式框架的应用，并同步提升对大规模生物模型安全性的重视。
-- 详情：[/202604/01/README](/202604/01/README)
+今日深度解析 14 篇前沿论文，重点攻克拓扑数据降噪与强化学习驱动的逆合成规划难题。
+研究揭示了 TDA 降噪算法在数据简化中的高效性，以及端到端推理在复杂化学合成路径中的卓越表现。
+建议关注生成式预训练在蛋白质设计及分子热力学预测中的跨界应用，把握 AI for Science 的最新动向。
+- 详情：[/202604/02/README](/202604/02/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Denoising data reduction algorithm for Topological Data Analysis](/202604/02/2603.29248v1-denoising-data-reduction-algorithm-for-topological-data-analysis)  
+   标签：评分：8.0/10、query:molrna
+   evidence：用于拓扑数据分析和持续同调的去噪算法
+2. [Reinforced Reasoning for End-to-End Retrosynthetic Planning](/202604/02/2603.29723v1-reinforced-reasoning-for-end-to-end-retrosynthetic-planning)  
+   标签：评分：8.0/10、query:molrna
+   evidence：逆合成规划的生成式框架
+3. [Multimodal Higher-Order Brain Networks: A Topological Signal Processing Perspective](/202604/02/2603.29903v1-multimodal-higher-order-brain-networks-a-topological-signal-processing-perspective)  
+   标签：评分：8.0/10、query:molrna
+   evidence：网络中的拓扑信号处理和高阶交互
 
 ### 速读区论文标签
-1. [Central-to-Local Adaptive Generative Diffusion Framework for Improving Gene Expression Prediction in Data-Limited Spatial Transcriptomics](/202604/01/2603.26827v1-central-to-local-adaptive-generative-diffusion-framework-for-improving-gene-expression-prediction-in-data-limited-spatial-transcriptomics)  
+1. [Scaling Atomistic Protein Binder Design with Generative Pretraining and Test-Time Compute](/202604/02/2603.27950v1-scaling-atomistic-protein-binder-design-with-generative-pretraining-and-test-time-compute)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于基因表达的生成式扩散框架
-2. [Poisoning the Genome: Targeted Backdoor Attacks on DNA Foundation Models](/202604/01/2603.27465v1-poisoning-the-genome-targeted-backdoor-attacks-on-dna-foundation-models)  
+   evidence：用于全原子蛋白质结合剂设计和药物发现的生成式预训练
+2. [Unrestrained Simplex Denoising for Discrete Data. A Non-Markovian Approach Applied to Graph Generation](/202604/02/2603.28572v1-unrestrained-simplex-denoising-for-discrete-data-a-non-markovian-approach-applied-to-graph-generation)  
    标签：评分：7.0/10、query:molrna
-   evidence：基因组基础模型的后门攻击
-3. [Cross-attentive Cohesive Subgraph Embedding to Mitigate Oversquashing in GNNs](/202604/01/2603.27529v1-cross-attentive-cohesive-subgraph-embedding-to-mitigate-oversquashing-in-gnns)  
+   evidence：应用于图生成的扩散生成模型
+3. [Thermodynamics-Informed Accurate pKa Prediction and Protonation State Generation in PlayMolecule AI](/202604/02/2604.00841v1-thermodynamics-informed-accurate-pka-prediction-and-protonation-state-generation-in-playmolecule-ai)  
    标签：评分：7.0/10、query:molrna
-   evidence：通过子图表示增强节点嵌入的图学习框架
-4. [Cross-attentive Cohesive Subgraph Embedding to Mitigate Oversquashing in GNNs](/202604/01/2603.27529v2-cross-attentive-cohesive-subgraph-embedding-to-mitigate-oversquashing-in-gnns)  
+   evidence：用于分子属性预测的表示学习
+4. [Event Embedding of Protein Networks : Compositional Learning of Biological Function](/202604/02/2604.00911v1-event-embedding-of-protein-networks--compositional-learning-of-biological-function)  
    标签：评分：7.0/10、query:molrna
-   evidence：图表示学习与子图嵌入
-5. [CrossHGL: A Text-Free Foundation Model for Cross-Domain Heterogeneous Graph Learning](/202604/01/2603.27685v1-crosshgl-a-text-free-foundation-model-for-cross-domain-heterogeneous-graph-learning)  
-   标签：评分：7.0/10、query:molrna
-   evidence：跨域异构图学习的基础模型
-6. [TMTE: Effective Multimodal Graph Learning with Task-aware Modality and Topology Co-evolution](/202604/01/2603.27723v1-tmte-effective-multimodal-graph-learning-with-task-aware-modality-and-topology-co-evolution)  
-   标签：评分：7.0/10、query:molrna
-   evidence：多模态图学习与拓扑优化
-7. [Accelerating Maximum Common Subgraph Computation by Exploiting Symmetries](/202604/01/2603.23031v1-accelerating-maximum-common-subgraph-computation-by-exploiting-symmetries)  
+   evidence：蛋白质相互作用网络的表示学习
+5. [FEAST: Fully Connected Expressive Attention for Spatial Transcriptomics](/202604/02/2603.25247v1-feast-fully-connected-expressive-attention-for-spatial-transcriptomics)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于化学信息学和生物信息学的最大公共子图
-8. [Kirchhoff-Inspired Neural Networks for Evolving High-Order Perception](/202604/01/2603.23977v1-kirchhoff-inspired-neural-networks-for-evolving-high-order-perception)  
+   evidence：用于空间转录组学和生物关系的注意力机制框架
+6. [Q-BIOLAT: Binary Latent Protein Fitness Landscapes for QUBO-Based Optimization](/202604/02/2603.27526v1-q-biolat-binary-latent-protein-fitness-landscapes-for-qubo-based-optimization)  
    标签：评分：6.0/10、query:molrna
-   evidence：神经网络中的高阶感知与耦合结构
-9. [Detecting Complex-Energy Braiding Topology in a Dissipative Atomic Simulator with Transformer-Based Geometric Tomography](/202604/01/2603.25775v1-detecting-complex-energy-braiding-topology-in-a-dissipative-atomic-simulator-with-transformer-based-geometric-tomography)  
+   evidence：利用预训练模型进行蛋白质适应度景观的表示学习
+7. [MarkushGrapher-2: End-to-end Multimodal Recognition of Chemical Structures](/202604/02/2603.28550v1-markushgrapher-2-end-to-end-multimodal-recognition-of-chemical-structures)  
    标签：评分：6.0/10、query:molrna
-   evidence：基于Transformer的拓扑物质研究框架
-10. [Gaussian Joint Embeddings For Self-Supervised Representation Learning](/202604/01/2603.26799v1-gaussian-joint-embeddings-for-self-supervised-representation-learning)  
+   evidence：化学结构的多模态识别与基于图的提取
+8. [SimMOF: AI agent for Automated MOF Simulations](/202604/02/2603.29152v1-simmof-ai-agent-for-automated-mof-simulations)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于表示学习的生成式联合建模
-11. [From Independent to Correlated Diffusion: Generalized Generative Modeling with Probabilistic Computers](/202604/01/2603.27996v1-from-independent-to-correlated-diffusion-generalized-generative-modeling-with-probabilistic-computers)  
+   evidence：用于自动化分子（MOF）模拟和性质预测的LLM智能体
+9. [Sampling at intermediate temperatures is optimal for training large language models in protein structure prediction](/202604/02/2603.29529v1-sampling-at-intermediate-temperatures-is-optimal-for-training-large-language-models-in-protein-structure-prediction)  
    标签：评分：6.0/10、query:molrna
-   evidence：具有相互作用结构的广义扩散模型
+   evidence：在蛋白质序列数据上训练的Transformer模型
+10. [Learning Laplacian Forms for Graph Signal Processing via the Deformed Laplacian](/202604/02/2604.00728v1-learning-laplacian-forms-for-graph-signal-processing-via-the-deformed-laplacian)  
+   标签：评分：6.0/10、query:molrna
+   evidence：学习用于图信号处理的拉普拉斯形式
+11. [Generalization Bounds for Spectral GNNs via Fourier Domain Analysis](/202604/02/2604.00918v1-generalization-bounds-for-spectral-gnns-via-fourier-domain-analysis)  
+   标签：评分：6.0/10、query:molrna
+   evidence：谱图神经网络与傅里叶域分析
 
 
 <div class="dpr-home-promo-card">
