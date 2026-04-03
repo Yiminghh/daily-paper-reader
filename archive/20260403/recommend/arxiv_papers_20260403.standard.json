@@ -1,0 +1,456 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-03T19:18:44.271038+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 12,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2603.27529v3",
+      "title": "Cross-attentive Cohesive Subgraph Embedding to Mitigate Oversquashing in GNNs",
+      "abstract": "Graph neural networks (GNNs) have achieved strong performance across various real-world domains. Nevertheless, they suffer from oversquashing, where long-range information is distorted as it is compressed through limited message-passing pathways. This bottleneck limits their ability to capture essential global context and decreases their performance, particularly in dense and heterophilic regions of graphs. To address this issue, we propose a novel graph learning framework that enriches node embeddings via cross-attentive cohesive subgraph representations to mitigate the impact of excessive long-range dependencies. This framework enhances the node representation by emphasizing cohesive structure in long-range information but removing noisy or irrelevant connections. It preserves essential global context without overloading the narrow bottlenecked channels, which further mitigates oversquashing. Extensive experiments on multiple benchmark datasets demonstrate that our model achieves consistent improvements in classification accuracy over standard baseline methods.",
+      "authors": [
+        "Tanvir Hossain",
+        "Muhammad Ifte Khairul Islam",
+        "Lilia Chebbah",
+        "Charles Fanning",
+        "Esra Akbas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-29T05:43:29+00:00",
+      "link": "https://arxiv.org/pdf/2603.27529v3",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "graph learning framework for node embeddings and subgraph representations",
+      "llm_evidence_cn": "用于节点嵌入和子图表示的图学习框架",
+      "llm_evidence": "用于节点嵌入和子图表示的图学习框架",
+      "canonical_evidence": "用于节点嵌入和子图表示的图学习框架",
+      "llm_tldr_en": "Proposes a cross-attentive subgraph embedding method to mitigate oversquashing in graph neural networks.",
+      "llm_tldr_cn": "提出一种交叉注意力内聚子图嵌入方法，以缓解图神经网络中的过度压缩问题。",
+      "llm_tldr": "提出一种交叉注意力内聚子图嵌入方法，以缓解图神经网络中的过度压缩问题。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.25017v1",
+      "title": "Discrete Causal Representation Learning",
+      "abstract": "Causal representation learning seeks to uncover causal relationships among high-level latent variables from low-level, entangled, and noisy observations. Existing approaches often either rely on deep neural networks, which lack interpretability and formal guarantees, or impose restrictive assumptions like linearity, continuous-only observations, and strong structural priors. These limitations particularly challenge applications with a large number of discrete latent variables and mixed-type observations. To address these challenges, we propose discrete causal representation learning (DCRL), a generative framework that models a directed acyclic graph among discrete latent variables, along with a sparse bipartite graph linking latent and observed layers. This design accommodates continuous, count, and binary responses through flexible measurement models while maintaining interpretability. Under mild conditions, we prove that both the bipartite measurement graph and the latent causal graph are identifiable from the observed data distribution alone. We further propose a three-stage estimate-resample-discovery pipeline: penalized estimation of the generative model parameters, resampling of latent configurations from the fitted model, and score-based causal discovery on the resampled latents. We establish the consistency of this procedure, ensuring reliable recovery of the latent causal structure. Empirical studies on educational assessment and synthetic image data demonstrate that DCRL recovers sparse and interpretable latent causal structures.",
+      "authors": [
+        "Wenjin Zhang",
+        "Yixin Wang",
+        "Yuqi Gu"
+      ],
+      "primary_category": "stat.ME",
+      "categories": [
+        "stat.ME",
+        "stat.ML"
+      ],
+      "published": "2026-03-26T04:28:02+00:00",
+      "link": "https://arxiv.org/pdf/2603.25017v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative framework modeling directed acyclic graphs for latent variables",
+      "llm_evidence_cn": "为潜变量建模有向无环图的生成框架",
+      "llm_evidence": "为潜变量建模有向无环图的生成框架",
+      "canonical_evidence": "为潜变量建模有向无环图的生成框架",
+      "llm_tldr_en": "Proposes a causal representation learning framework using discrete latent variables and graph structures.",
+      "llm_tldr_cn": "提出一种利用离散隐变量和图结构进行因果表示学习的生成框架。",
+      "llm_tldr": "提出一种利用离散隐变量和图结构进行因果表示学习的生成框架。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.00069v1",
+      "title": "Perspective: Towards sustainable exploration of chemical spaces with machine learning",
+      "abstract": "Artificial intelligence is transforming molecular and materials science, but its growing computational and data demands raise critical sustainability challenges. In this Perspective, we examine resource considerations across the AI-driven discovery pipeline--from quantum-mechanical (QM) data generation and model training to automated, self-driving research workflows--building on discussions from the ``SusML workshop: Towards sustainable exploration of chemical spaces with machine learning'' held in Dresden, Germany. In this context, the availability of large quantum datasets has enabled rigorous benchmarking and rapid methodological progress, while also incurring substantial energy and infrastructure costs. We highlight emerging strategies to enhance efficiency, including general-purpose machine learning (ML) models, multi-fidelity approaches, model distillation, and active learning. Moreover, incorporating physics-based constraints within hierarchical workflows, where fast ML surrogates are applied broadly and high-accuracy QM methods are used selectively, can further optimize resource use without compromising reliability. Equally important is bridging the gap between idealized computational predictions and real-world conditions by accounting for synthesizability and multi-objective design criteria, which is essential for practical impact. Finally, we argue that sustainable progress will rely on open data and models, reusable workflows, and domain-specific AI systems that maximize scientific value per unit of computation, enabling efficient and responsible discovery of technological materials and therapeutics.",
+      "authors": [
+        "Leonardo Medrano Sandonas",
+        "David Balcells",
+        "Anton Bochkarev",
+        "Jacqueline M. Cole",
+        "Volker L. Deringer",
+        "Werner Dobrautz",
+        "Adrian Ehrenhofer",
+        "Thorben Frank",
+        "Pascal Friederich",
+        "Rico Friedrich",
+        "Janine George",
+        "Luca Ghiringhelli",
+        "Alejandra Hinostroza Caldas",
+        "Veronika Juraskova",
+        "Hannes Kneiding",
+        "Yury Lysogorskiy",
+        "Johannes T. Margraf",
+        "Hanna Türk",
+        "Anatole von Lilienfeld",
+        "Milica Todorović",
+        "Alexandre Tkatchenko",
+        "Mariana Rossi",
+        "Gianaurelio Cuniberti"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cond-mat.mtrl-sci",
+        "cs.AI"
+      ],
+      "published": "2026-03-31T13:29:20+00:00",
+      "link": "https://arxiv.org/pdf/2604.00069v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "AI-driven discovery pipeline for molecular and materials science",
+      "llm_evidence_cn": "分子和材料科学的AI驱动发现流程",
+      "llm_evidence": "分子和材料科学的AI驱动发现流程",
+      "canonical_evidence": "分子和材料科学的AI驱动发现流程",
+      "llm_tldr_en": "Discusses sustainable AI strategies for molecular discovery and chemical space exploration.",
+      "llm_tldr_cn": "讨论了分子发现和化学空间探索中的可持续AI策略。",
+      "llm_tldr": "讨论了分子发现和化学空间探索中的可持续AI策略。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.25802v1",
+      "title": "LEMON: a foundation model for nuclear morphology in Computational Pathology",
+      "abstract": "Computational pathology relies on effective representation learning to support cancer research and precision medicine. Although self-supervised learning has driven major progress at the patch and whole-slide image levels, representation learning at the single-cell level remains comparatively underexplored, despite its importance for characterizing cell types and cellular phenotypes. We introduce LEMON (Learning Embeddings from Morphology Of Nuclei), a self-supervised foundation model for scalable single-cell image representation learning. Trained on millions of cell images from diverse tissues and cancer types, LEMON learns robust and versatile morphological representations that support large-scale single-cell analyses in pathology. We evaluate LEMON on five benchmark datasets across a range of prediction tasks and show that it provides strong performance, highlighting its potential as a new paradigm for cell-level computational pathology. Model weights are available at https://huggingface.co/aliceblondel/LEMON.",
+      "authors": [
+        "Loïc Chadoutaud",
+        "Alice Blondel",
+        "Hana Feki",
+        "Jacqueline Fontugne",
+        "Emmanuel Barillot",
+        "Thomas Walter"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-26T18:09:09+00:00",
+      "link": "https://arxiv.org/pdf/2603.25802v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "foundation model for biological morphology representation",
+      "llm_evidence_cn": "生物形态表示的基础模型",
+      "llm_evidence": "生物形态表示的基础模型",
+      "canonical_evidence": "生物形态表示的基础模型",
+      "llm_tldr_en": "Introduces LEMON, a foundation model for single-cell nuclear morphology representations.",
+      "llm_tldr_cn": "介绍了LEMON，一种用于单细胞核形态表示的基础模型。",
+      "llm_tldr": "介绍了LEMON，一种用于单细胞核形态表示的基础模型。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.00580v1",
+      "title": "Representation choice shapes the interpretation of protein conformational dynamics",
+      "abstract": "Molecular dynamics simulations provide detailed trajectories at the atomic level, but extracting interpretable and robust insights from these high-dimensional data remains challenging. In practice, analyses typically rely on a single representation. Here, we show that representation choice is not neutral: it fundamentally shapes the conformational organization, similarity relationships, and apparent transitions inferred from identical simulation data.   To complement existing representations, we introduce Orientation features, a geometrically grounded, rotation-aware encoding of protein backbone. We compare it against common descriptions across three dynamical regimes: fast-folding proteins, large-scale domain motions, and protein-protein association. Across these systems, we find that different representations emphasize complementary aspects of conformational space, and that no single representation provides a complete picture of the underlying dynamics.   To facilitate systematic comparison, we developed ManiProt, a library for efficient computation and analysis of multiple protein representations. Our results motivate a comparative, representation-aware framework for the interpretation of molecular dynamics simulations.",
+      "authors": [
+        "Axel Giottonini",
+        "Thomas Lemmin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.BM"
+      ],
+      "published": "2026-04-01T07:38:52+00:00",
+      "link": "https://arxiv.org/pdf/2604.00580v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "geometrically grounded encoding of protein backbone for conformational dynamics",
+      "llm_evidence_cn": "用于构象动力学的蛋白质骨架几何编码",
+      "llm_evidence": "用于构象动力学的蛋白质骨架几何编码",
+      "canonical_evidence": "用于构象动力学的蛋白质骨架几何编码",
+      "llm_tldr_en": "Introduces Orientation features for rotation-aware encoding of protein structures in molecular dynamics.",
+      "llm_tldr_cn": "引入 Orientation 特征，用于分子动力学中蛋白质结构的旋转感知编码。",
+      "llm_tldr": "引入 Orientation 特征，用于分子动力学中蛋白质结构的旋转感知编码。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.29370v1",
+      "title": "Decoding Dopant-Induced Electronic Modulation in Graphene via Region-Resolved Machine Learning of XANES",
+      "abstract": "Revealing how heteroatom doping alters the local electronic structure of graphene is crucial for understanding and controlling its functional properties. In this study, we combine density functional theory (DFT) and machine learning (ML) to interpret how boron (B) and nitrogen (N) dopants influence the local electronic environments of graphene. A dataset of 415 DFT-simulated XANES spectra from 91 distinct configurations was analyzed using a region-specific approach by decomposing each spectrum into pi*, sigma*, and post-edge regions. Random forest models trained on these spectral segments identified the pi* region as the most informative for predicting key local electronic descriptors, particularly the Bader charge and mean dopant-carbon bond length. The Bader charge quantifies dopant-induced charge redistribution and local bonding polarity, directly reflecting the degree of electronic perturbation introduced by heteroatom substitution. The enhanced predictive power of the pi* region arises from its strong coupling to the perturbed pi-electron network, which captures these charge-transfer and hybridization effects more effectively than sigma* or post-edge regions. These findings establish Bader charge as a robust and physically meaningful descriptor for quantifying dopant-induced electronic modulation and demonstrate that region-resolved ML analysis of XANES spectra provides a powerful pathway to uncover structure-property relationships in doped graphene and related materials.",
+      "authors": [
+        "Yinan Wang",
+        "Arpita Varadwaj",
+        "Teruyasu Mizoguchi",
+        "Masato Kotsugi"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-03-31T07:41:42+00:00",
+      "link": "https://arxiv.org/pdf/2603.29370v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "machine learning for molecular electronic structure prediction",
+      "llm_evidence_cn": "用于分子电子结构预测的机器学习",
+      "llm_evidence": "用于分子电子结构预测的机器学习",
+      "canonical_evidence": "用于分子电子结构预测的机器学习",
+      "llm_tldr_en": "Uses machine learning to decode electronic modulations in doped graphene structures.",
+      "llm_tldr_cn": "利用机器学习解码掺杂石墨烯结构中的电子调制。",
+      "llm_tldr": "利用机器学习解码掺杂石墨烯结构中的电子调制。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "advancements in topological deep learning for molecular property prediction",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.00602v1",
+      "title": "The fitness landscape of overlapping genes",
+      "abstract": "Natural genomes sometimes encode two different proteins in staggered reading frames of the same DNA sequence. Despite the prevalence of these 'overlapping genes' across the tree of life, it remains unknown whether arbitrary protein pairs can overlap, to what extent such overlaps are feasible, or what design principles govern them. Here, we study compatibility, frustration, and connectivity in the fitness landscape of overlapping genes. We computationally design sequences de novo that satisfy the dual functional constraints of two distinct protein families. The joint fitness landscape, inferred via Potts models from multiple sequence alignments, reveals a fundamental trade-off between the two proteins and provides a simple criterion for when overlap is feasible. We find widespread compatibility between protein families, with one class of reading frames markedly more permissible than others. By exploring alternative genetic codes, we find that the natural genetic code is uniquely well-suited to support overlapping genes. Constructing mutational paths between sequences, we find that sequence-diverse overlapped genes can be connected via a network of near-neutral mutations. Overall, our results suggest that protein fitness landscapes are sufficiently flexible so as to accommodate the stringent, orthogonal requirements of overlapping genes.",
+      "authors": [
+        "Orson Kirsch",
+        "Nicole Wood",
+        "Steven A Redford",
+        "Kabir Husain"
+      ],
+      "primary_category": "q-bio.BM",
+      "categories": [
+        "q-bio.BM",
+        "physics.bio-ph",
+        "q-bio.PE"
+      ],
+      "published": "2026-04-01T08:07:31+00:00",
+      "link": "https://arxiv.org/pdf/2604.00602v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "de novo sequence design for dual functional constraints in genomes",
+      "llm_evidence_cn": "针对基因组双重功能约束的从头序列设计",
+      "llm_evidence": "针对基因组双重功能约束的从头序列设计",
+      "canonical_evidence": "针对基因组双重功能约束的从头序列设计",
+      "llm_tldr_en": "Studies the fitness landscape of overlapping genes to enable de novo design of dual-function protein sequences.",
+      "llm_tldr_cn": "研究重叠基因的适应度景观，以实现双功能蛋白质序列的从头设计。",
+      "llm_tldr": "研究重叠基因的适应度景观，以实现双功能蛋白质序列的从头设计。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.01000v1",
+      "title": "EmbedPart: Embedding-Driven Graph Partitioning for Scalable Graph Neural Network Training",
+      "abstract": "Graph Neural Networks (GNNs) are widely used for learning on graph-structured data, but scaling GNN training to massive graphs remains challenging. To enable scalable distributed training, graphs are divided into smaller partitions that are distributed across multiple machines such that inter-machine communication is minimized and computational load is balanced. In practice, existing partitioning approaches face a fundamental trade-off between partitioning overhead and partitioning quality. We propose EmbedPart, an embedding-driven partitioning approach that achieves both speed and quality. Instead of operating directly on irregular graph structures, EmbedPart leverages node embeddings produced during the actual GNN training workload and clusters these dense embeddings to derive a partitioning. EmbedPart achieves more than 100x speedup over Metis while maintaining competitive partitioning quality and accelerating distributed GNN training. Moreover, EmbedPart naturally supports graph updates and fast repartitioning, and can be applied to graph reordering to improve data locality and accelerate single-machine GNN training. By shifting partitioning from irregular graph structures to dense embeddings, EmbedPart enables scalable and high-quality graph data optimization.",
+      "authors": [
+        "Nikolai Merkel",
+        "Ruben Mayer",
+        "Volker Markl",
+        "Hans-Arno Jacobsen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.DB",
+        "cs.DC"
+      ],
+      "published": "2026-04-01T15:00:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.01000v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "scalable graph neural network training",
+      "llm_evidence_cn": "可扩展的图神经网络训练",
+      "llm_evidence": "可扩展的图神经网络训练",
+      "canonical_evidence": "可扩展的图神经网络训练",
+      "llm_tldr_en": "Proposes an embedding-driven partitioning approach for scalable GNN training.",
+      "llm_tldr_cn": "提出一种嵌入驱动的分区方法，用于大规模图神经网络的训练。",
+      "llm_tldr": "提出一种嵌入驱动的分区方法，用于大规模图神经网络的训练。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.01365v1",
+      "title": "VIANA: character Value-enhanced Intensity Assessment via domain-informed Neural Architecture",
+      "abstract": "Predicting the perceived intensity of odorants remains a fundamental challenge in sensory science due to the complex, non-linear behavior of their response, as well as the difficulty in correlating molecular structure with human perception. While traditional deep learning models, such as Graph Convolutional Networks (GCNs), excel at capturing molecular topology, they often fail to account for the biological and perceptual context of olfaction. This study introduces VIANA, a novel \"tri-pillar\" framework that integrates structural graph theory, character value embeddings, and phenomenological behavior. This methodology systematically evaluates knowledge transfer across three distinct domains: molecular structure via GCNs, semantic odor character values via Principal Odor Map (POM) embeddings, and biological dose-response logic via Hill's law. We demonstrate that knowledge transfer is not inherently positive; rather, a balance must be maintained in the volume of information provided to the model. While raw semantic data led to \"information overload\" in domain-informed models, applying Principal Component Analysis (PCA) to distill the 95% most impactful semantic variance yielded a superior \"signal distillation\" effect. Results indicate that the synthesis of these three knowledge transfer pillars significantly outperforms baseline structural models, with VIANA achieving a peak R^2 of 0.996 and a test Mean Squared Error (MSE) of 0.19. In this context, VIANA successfully captures the physical ceiling of saturation, the sensitivity of detection thresholds, and the nuance of odor character value expression, providing a domain grounded simulation of the human olfactory experience. This research provides a robust framework for digital olfaction, effectively bridging the gap between molecular informatics and sensory perception.",
+      "authors": [
+        "Luana P. Queiroz",
+        "Icaro S. C. Bernardes",
+        "Ana M. Ribeiro",
+        "Bernardo M. Aguilera-Mercado",
+        "Idelfonso B. R. Nogueira"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG"
+      ],
+      "published": "2026-04-01T20:22:12+00:00",
+      "link": "https://arxiv.org/pdf/2604.01365v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "integrates structural graph theory for molecular structure assessment",
+      "llm_evidence_cn": "集成结构图论进行分子结构评估",
+      "llm_evidence": "集成结构图论进行分子结构评估",
+      "canonical_evidence": "集成结构图论进行分子结构评估",
+      "llm_tldr_en": "Combines GCNs and structural graph theory to predict odorant intensity from molecular structures.",
+      "llm_tldr_cn": "结合图卷积网络和结构图论，通过分子结构预测气味强度。",
+      "llm_tldr": "结合图卷积网络和结构图论，通过分子结构预测气味强度。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.01949v1",
+      "title": "annbatch unlocks terabyte-scale training of biological data in anndata",
+      "abstract": "The scale of biological datasets now routinely exceeds system memory, making data access rather than model computation the primary bottleneck in training machine-learning models. This bottleneck is particularly acute in biology, where widely used community data formats must support heterogeneous metadata, sparse and dense assays, and downstream analysis within established computational ecosystems. Here we present annbatch, a mini-batch loader native to anndata that enables out-of-core training directly on disk-backed datasets. Across single-cell transcriptomics, microscopy and whole-genome sequencing benchmarks, annbatch increases loading throughput by up to an order of magnitude and shortens training from days to hours, while remaining fully compatible with the scverse ecosystem. Annbatch establishes a practical data-loading infrastructure for scalable biological AI, allowing increasingly large and diverse datasets to be used without abandoning standard biological data formats. Github: https://github.com/scverse/annbatch",
+      "authors": [
+        "Ilan Gold",
+        "Felix Fischer",
+        "Lucas Arnoldt",
+        "F. Alexander Wolf",
+        "Fabian J. Theis"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.GN"
+      ],
+      "published": "2026-04-02T12:16:07+00:00",
+      "link": "https://arxiv.org/pdf/2604.01949v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "training on large-scale biological data",
+      "llm_evidence_cn": "大规模生物数据训练",
+      "llm_evidence": "大规模生物数据训练",
+      "canonical_evidence": "大规模生物数据训练",
+      "llm_tldr_en": "Enables out-of-core training for terabyte-scale biological datasets like transcriptomics.",
+      "llm_tldr_cn": "实现对TB级生物数据集（如转录组学）的离存训练。",
+      "llm_tldr": "实现对TB级生物数据集（如转录组学）的离存训练。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.01878v1",
+      "title": "Robust Graph Representation Learning via Adaptive Spectral Contrast",
+      "abstract": "Spectral graph contrastive learning has emerged as a unified paradigm for handling both homophilic and heterophilic graphs by leveraging high-frequency components. However, we identify a fundamental spectral dilemma: while high-frequency signals are indispensable for encoding heterophily, our theoretical analysis proves they exhibit significantly higher variance under spectrally concentrated perturbations. We derive a regret lower bound showing that existing global (node-agnostic) spectral fusion is provably sub-optimal: on mixed graphs with separated node-wise frequency preferences, any global fusion strategy incurs non-vanishing regret relative to a node-wise oracle. To escape this bound, we propose ASPECT, a framework that resolves this dilemma through a reliability-aware spectral gating mechanism. Formulated as a minimax game, ASPECT employs a node-wise gate that dynamically re-weights frequency channels based on their stability against a purpose-built adversary, which explicitly targets spectral energy distributions via a Rayleigh quotient penalty. This design forces the encoder to learn representations that are both structurally discriminative and spectrally robust. Empirical results show that ASPECT achieves new state-of-the-art performance on 8 out of 9 benchmarks, effectively decoupling meaningful structural heterophily from incidental noise.",
+      "authors": [
+        "Zhuolong Li",
+        "Boxue Yang",
+        "Haopeng Chen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-02T10:38:00+00:00",
+      "link": "https://arxiv.org/pdf/2604.01878v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "spectral graph representation learning for heterophilic graphs",
+      "llm_evidence_cn": "异质图的光谱图表示学习",
+      "llm_evidence": "异质图的光谱图表示学习",
+      "canonical_evidence": "异质图的光谱图表示学习",
+      "llm_tldr_en": "Proposes ASPECT for robust graph representation learning via adaptive spectral contrast.",
+      "llm_tldr_cn": "提出ASPECT框架，通过自适应光谱对比实现鲁棒图表示学习。",
+      "llm_tldr": "提出ASPECT框架，通过自适应光谱对比实现鲁棒图表示学习。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

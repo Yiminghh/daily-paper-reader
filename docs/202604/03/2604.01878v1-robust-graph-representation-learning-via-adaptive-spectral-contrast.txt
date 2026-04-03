@@ -1,0 +1,1042 @@
+Title: Robust Graph Representation Learning via Adaptive Spectral Contrast
+
+URL Source: https://arxiv.org/pdf/2604.01878v1
+
+Published Time: Fri, 03 Apr 2026 00:46:05 GMT
+
+Number of Pages: 18
+
+Markdown Content:
+# Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+Zhuolong Li 1 Boxue Yang 1 Haopeng Chen 1
+
+## Abstract 
+
+Spectral graph contrastive learning has emerged as a unified paradigm for handling both ho-mophilic and heterophilic graphs by leveraging high-frequency components. However, we iden-tify a fundamental spectral dilemma: while high-frequency signals are indispensable for encoding heterophily, our theoretical analysis proves they exhibit significantly higher variance under spec-trally concentrated perturbations. We derive a regret lower bound showing that existing global (node-agnostic) spectral fusion is provably sub-optimal: on mixed graphs with separated node-wise frequency preferences, any global fusion strategy incurs non-vanishing regret relative to a node-wise oracle. To escape this bound, we propose ASPECT, a framework that resolves this dilemma through a reliability-aware spectral gat-ing mechanism. Formulated as a minimax game, ASPECT employs a node-wise gate that dynam-ically re-weights frequency channels based on their stability against a purpose-built adversary, which explicitly targets spectral energy distribu-tions via a Rayleigh quotient penalty. This de-sign forces the encoder to learn representations that are both structurally discriminative and spec-trally robust. Empirical results show that AS-PECT achieves new state-of-the-art performance on 8 out of 9 benchmarks, effectively decoupling meaningful structural heterophily from incidental noise. 
+
+## 1. Introduction 
+
+Graph Contrastive Learning (GCL) has emerged as a fun-damental paradigm for encoding structural data without supervision (Velickovic et al., 2019; You et al., 2020; Zhu               
+
+> 1School of Computer Science, Shanghai Jiao Tong University, Shanghai, China. Correspondence to: Zhuo-long Li <li.zhuolong@sjtu.edu.cn >,Haopeng Chen <chen-hp@sjtu.edu.cn >.
+> Preprint. April 3, 2026.
+
+et al., 2020b). A critical evolution in this field addresses the limitation of standard message passing, which acts as a rigid low-pass filter and inherently struggles with heterophilic graphs where connected nodes exhibit dissimilar properties (Zhu et al., 2020a; Lim et al., 2021; Zheng et al., 2022a). To overcome this, state-of-the-art approaches have adopted a spectral perspective, employing learnable high-pass filters alongside low-pass ones to capture sharp signal variations across edges (Yang & Mirzasoleiman, 2024; Chen et al., 2024; Wan et al., 2024; Zou et al., 2025). This spectral decomposition provides a principled way to unify the pro-cessing of homophily and heterophily, allowing models to discern complex structural boundaries that escape traditional smoothing-based encoders. However, this reliance on high-frequency components in-troduces a fundamental vulnerability. We identify a crit-ical spectral dilemma : while high-frequency signals are necessary to encode heterophilic boundaries, they are in-herently more sensitive to noise. Our theoretical analysis (Proposition 2.1) reveals that under spectrally concentrated perturbations, high-pass filters amplify the variance of the signal significantly more than their low-pass counterparts. Furthermore, we prove that on mixed graphs, where the optimal frequency preference varies by node, any global fusion strategy suffers from an unavoidable regret lower bound compared to a node-wise oracle (Theorem 2.2). Yet, state-of-the-art dual-channel spectral GCL methods (e.g., PolyGCL (Chen et al., 2024), DPGCL (Huang et al., 2024), and LOHA (Zou et al., 2025)) predominantly employ such global (graph-level) fusion. Consequently, these methods fall into a deadlock: they are mathematically incapable of simultaneously minimizing risk for both homophilic and heterophilic populations. To resolve this dilemma, we propose ASPECT (Adaptive 
+
+SPE ctral Contrast for Targeted robustness), a framework that decouples structural learning from noise amplification through a reliability-aware spectral gating mechanism. Un-like prior works that assume a uniform spectral dependency, ASPECT formulates a minimax game where a node-wise gate dynamically modulates the reliance on frequency chan-nels based on their stability against perturbations. Cru-cially, this policy is optimized against a purpose-built spec-1
+
+> arXiv:2604.01878v1 [cs.LG] 2 Apr 2026 Robust Graph Representation Learning via Adaptive Spectral Contrast
+
+tral adversary that explicitly targets the energy distribution via a Rayleigh quotient penalty, attempting to maximize spectral confusion between channels. This adversarial in-terplay forces the encoder to distinguish between robust heterophilic patterns and fragile high-frequency artifacts, effectively learning to filter out spectral bands that are struc-turally unreliable. We empirically validate ASPECT across 9 real-world bench-marks, where it establishes a new state-of-the-art on 8 datasets, with particularly significant gains on challenging heterophilic graphs. Beyond standard performance metrics, our analysis of the learned gate value reveals a strong corre-lation with ground-truth local homophily, confirming that the model effectively disentangles robust structural signals from incidental high-frequency noise. This work supports a broader view: in spectral graph learning, robustness is not merely a defense against attacks, but often a prerequi-site for learning representations that generalize under mixed structure and structural shifts. Due to space limitations, an extended discussion of related work is provided in Ap-pendix A. 
+
+## 2. Theoretical Analysis: The Spectral Dilemma 
+
+2.1. Preliminaries 
+
+Let G = ( V, E) be an undirected graph with adjacency matrix A and degree matrix D. We use the normalized Laplacian L ≜ I − D−1/2AD −1/2, whose eigendecompo-sition is L = U ΛU ⊤ with 0 = λ1 ≤ · · · ≤ λ|V| ≤ 2. Given a spectral response function g : [0 , 2] → R, the associated graph filter operator is 
+
+g(L)X ≜ U g (Λ) U ⊤X, (1) where X ∈ R|V|× F denotes node features. A low-pass 
+
+filter gL emphasizes small eigenvalues (smooth signals), while a high-pass filter gH emphasizes large eigenvalues (non-smooth signals). We define the corresponding spectral views as 
+
+XL ≜ gL(L)X, XH ≜ gH (L)X, (2) and obtain node embeddings using a shared projector fθ :
+
+ZL ≜ fθ (XL), ZH ≜ fθ (XH ), (3) with zL,v and zH,v denoting the v-th rows of ZL and ZH .
+
+2.2. Setup: Global Fusion, Node-wise Risk, and Regret 
+
+A broad class of spectral contrastive learners fuses low-/high-frequency embeddings via a global (node-independent) coefficient α ∈ [0 , 1] :
+
+zv (α) ≜ (1 − α)zL,v + αzH,v . (4) Let T capture training/evaluation randomness (e.g., con-trastive sampling, data stochasticity, and potential perturba-tions), and define the expected node-wise risk 
+
+Rv (α) ≜ ET
+
+ℓ(v; zv (α), T ), α ∈ [0 , 1] , (5) where ℓ(·) is any surrogate objective consistent with the evaluation protocol. We compare the best global fusion to a node-wise oracle. Define 
+
+Rstat ≜ min 
+
+> α∈[0 ,1]
+
+1
+
+|V| 
+
+X
+
+> v∈V
+
+Rv (α), (6) 
+
+Radapt ≜ 1
+
+|V| 
+
+X
+
+> v∈V
+
+min   
+
+> αv∈[0 ,1]
+
+Rv (αv ), (7) and the regret 
+
+Regret ≜ Rstat − R adapt ≥ 0. (8) We consider mixed graphs containing two node populations 
+
+Vhom and Vhet , with r ≜ |V het |/|V| ∈ (0 , 1) .
+
+2.3. The Spectral Dilemma Dilemma. High-frequency information is crucial for encod-ing heterophilic structures, yet it is often the most sensitive to perturbations that concentrate energy on high graph fre-quencies, amplifying variance and instability. 
+
+Proposition 2.1 (High-frequency sensitivity under spec-trally concentrated perturbations) . Under a spectrally con-centrated perturbation model (formalized in Appendix B), the high-frequency channel exhibits larger perturbation-induced variance than the low-frequency channel. Con-sequently, increasing α in (4) can substantially increase 
+
+Rv (α) for nodes whose optimal preference lies in the low-frequency regime. 
+
+The full statement and proof appear in Appendix B. This result motivates risk landscapes where the frequency prefer-ence must depend on node-level structural context. 
+
+2.4. Impossibility of Global Fusion on Mixed Graphs 
+
+We now show that, on mixed graphs, enforcing a single global α induces an unavoidable loss relative to a node-wise fusion oracle. 
+
+Assumptions. We adopt (i) a standard quadratic-growth/error-bound condition on Rv (α) (which accommo-dates nonconvex objectives), and (ii) separated node-wise optimal preferences between Vhom and Vhet . Let ∆ > 0
+
+denote the separation gap and μ > 0 the quadratic-growth constant. Precise statements are given in Appendix C. 2Robust Graph Representation Learning via Adaptive Spectral Contrast 𝐀 𝐀 
+
+> 𝐀𰠀𝐀
+
+Targeted 
+
+PGD Attack  
+
+> Added edges Removed edges
+> Z
+> XN×F,AN×N
+
+Original Graph 
+
+> 𝐀 𝐀
+> 𝐀𖠀𝐀
+> 𝐀 H
+> 𝐀𖠀𝐀
+> Z
+> N×D
+> Zaug
+> N×D
+> 𝐀 𝐀𱀀𝐀𝐀𝐀
+> 𝐀 𝐀
+> 𝐀𰠀𝐀
+
+High-pass filter 
+
+Low-pass filter MLP  MLP 
+
+> N×1
+> m
+> Node-Wise Gating ZL
+> ZH
+> N×D
+> N×D
+
+# +  
+
+> MLP
+> High-frequency signal Low-frequency signal
+> Augmented
+> View Shared Encoder
+
+Adversarial 
+
+Objective 𝐀 a𰠀𝐀 
+
+Adversarial Graph 
+
+Generation Graph Filtering & Gating Contrastive Training 
+
+Adversarial Graph   
+
+> Xadv N×F,Aadv N×N𝐀 𝐀
+> 𝐀𖠀𝐀
+> N×D
+> 𝐀 H
+> 𝐀𖠀𝐀
+> N×D
+
+Low-pass filter 
+
+High-pass filter  
+
+> MLP  MLP
+> m
+> 𝐀 𝐀𝐀𝐀𱀀𝐀𶠀𝐀𳐀
+> 𝐀 𝐀𱀀𝐀𝐀𝐀
+> Gate
+> Perturbed node Encoder frozen
+
+Figure 1. The overall architecture of ASPECT. The framework functions as a minimax game: (Left) An adversary generates targeted perturbations by maximizing a reliability-weighted objective ( Jadv ) with a Rayleigh quotient penalty (LRayleigh ), explicitly attacking the encoder’s current spectral reliance. (Middle) A dual-channel encoder filters signals into low- ( ZL) and high-frequency ( ZH ) views, which are dynamically fused by a node-wise gating mechanism ( m). (Right) The model optimizes a joint risk: a clean contrastive loss 
+
+(Lclean ) is computed between the fused embedding and an augmented view , while the adversarial loss forces the gate to “retreat” from frequency channels that exhibit high variance under attack. 
+
+Theorem 2.2 (Regret lower bound for global fusion) . Under the assumptions above, the regret of the optimal global fusion satisfies 
+
+Regret ≥ μ
+
+2 r(1 − r) ∆ 2. (9) The complete proof is provided in Appendix C. Theorem 2.2 formalizes an irreducible compromise: when the graph is structurally mixed (large r(1 − r)) and node-wise optimal frequency preferences are separated (large ∆), no single global α can be simultaneously near-optimal for both popu-lations. 
+
+2.5. Design Implications 
+
+Proposition 2.1 and Theorem 2.2 impose concrete design requirements: (i) fusion should be node-adaptive to escape the global regret lower bound; (ii) fusion should reflect 
+
+node-wise reliability of high-frequency information under perturbations; and (iii) robustness mechanisms should ex-plicitly discourage reliance on unreliable high-frequency components under worst-case perturbations. These impli-cations directly motivate our reliability-aware, node-wise spectral policy in Section 3. 
+
+## 3. The ASPECT Framework 
+
+Motivated by the theoretical analysis in Section 2, we intro-duce ASPECT (Adaptive SPE ctral Contrast for Targeted robustness), a framework designed to resolve the spectral dilemma in heterophilic graph learning. Recall that Theorem 2.2 formalizes the sub-optimality of 
+
+global fusion on mixed graphs: when node-wise optimal frequency preferences are separated, any single α incurs an unavoidable regret lower bound relative to a node-wise oracle. To escape this bound, ASPECT learns an adaptive 
+
+fusion policy that approximates the oracle decision at each node through a Reliability-Aware Gating Mechanism .As illustrated in Figure 1, we formulate the learning process as a minimax game between two players: • The Encoder (Minimizer): A dual-channel spectral network that learns to dynamically re-weight frequency channels based on their local stability estimates. • The Adversary (Maximizer): A spectrally-targeted attacker that exploits the model’s current frequency reliance to maximize spectral confusion via a Rayleigh quotient penalty. 3Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+The following sections detail the encoder design, the ad-versarial generation process, and the unified optimization strategy. 
+
+3.1. Adaptive Spectral Encoder via Reliability Gating 
+
+To capture the full spectrum of structural information while enabling granular frequency selection, we design a dual-channel encoder. Unlike prior works that merge channels with global parameters, our encoder employs a node-wise gating mechanism to disentangle stable structural signals from high-frequency noise. 
+
+Dual-Channel Spectral Filtering. We approximate the filter functions using truncated Chebyshev polynomials of order K. To strictly enforce the physical properties of the channels (i.e., ensuring gL is monotonically non-increasing and gH is monotonically non-decreasing), we adopt the reparameterization strategy proposed in PolyGCL (Chen et al., 2024). Instead of learning polynomial coefficients directly, we learn a set of parameters {δj }Kj=0 and reconstruct the filter values 
+
+γj = g(xj ) at Chebyshev nodes via prefix operations: 
+
+γHi =
+
+> i
+
+X
+
+> j=0
+
+ReLU( δHj ),γLi = ReLU( δL 
+
+> 0
+
+) −
+
+> i
+
+X
+
+> j=1
+
+ReLU( δLj ),i = 0 , . . . , K. 
+
+(10) The polynomial coefficients wk are then recovered analyt-ically by wk = 2
+
+> K+1
+
+PKj=0 γj Tk(xj ). Given the rescaled Laplacian ˜L = 2 L/λ max − I, the spectral embeddings are computed as: 
+
+ZL = fθ
+
+> K
+
+X
+
+> k=0
+
+wLk Tk(˜L)X
+
+!
+
+,
+
+ZH = fθ
+
+> K
+
+X
+
+> k=0
+
+wHk Tk(˜L)X
+
+!
+
+,
+
+(11) where fθ (·) is a shared projection MLP. This formulation ensures that ZL and ZH encode the homophilic and het-erophilic signals, respectively. 
+
+Reliability-Aware Gating Mechanism. To resolve the bias-variance trade-off identified in Section 2, we introduce a learnable node-wise gate m ∈ [0 , 1] N . This gate serves as a dynamic estimator of the spectral reliability for each node. We compute the gate value mv for node v using a lightweight MLP that maps the concatenated spectral views to a scalar reliability score: 
+
+mv = σ(MLP gate ([ zL,v ∥ zH,v ])) , (12) where σ(·) is the sigmoid function and MLP gate (·) is a learnable two-layer perceptron. The final robust representa-tion zv is obtained via a reliability-weighted fusion: 
+
+zv = mv · zL,v + (1 − mv ) · zH,v (13) Here, mv quantifies the model’s confidence in the low-frequency channel. A value mv ≈ 1 indicates a reliance on 
+
+zL,v , while mv ≈ 0 indicates a reliance on zH,v .
+
+Interpretation. The gate mv approximates the node-wise preference implied by Theorem 2.2, enabling node-adaptive fusion on mixed graphs. Under attack, Proposition 2.1 sug-gests higher instability in the high-frequency channel, and the minimax objective encourages shifting weight toward the more stable channel. 
+
+3.2. Spectrally-Targeted Adversarial Generation 
+
+To strictly enforce the robustness of our reliability-aware encoder, we employ a Spectrally-Targeted Adversary . Un-like standard attackers that blindly disrupt graph structure, this adversary exploits the spectral dilemma identified in Section 2 by explicitly targeting the frequency components that the encoder currently relies on. 
+
+Adversarial Objective. Let G = ( A, X) be the origi-nal graph and fθ be the current encoder state. The adver-sary seeks a perturbed graph Gadv = ( A′, X′) that maxi-mizes the contrastive loss while simultaneously manipulat-ing the spectral energy distribution. Crucially, the attack is targeted based on the encoder’s current reliability gate 
+
+m = Gate (G; θ), treated here as fixed coefficients derived from the clean graph. For each node v, mv ∈ [0 , 1] quan-tifies the model’s reliance on the low-frequency view. The adversary constructs a weighted objective to specifically attack the trusted view: 
+
+Jadv (A′, X′) = X
+
+> v∈V
+
+mv ℓNCE 
+
+ z′ 
+
+> L,v
+
+, zv
+
+
+
++ X
+
+> v∈V
+
+(1 − mv ) ℓNCE 
+
+ z′ 
+
+> H,v
+
+, zv
+
+
+
++ λspec LRayleigh .
+
+(14) Here, z′ 
+
+> L,v
+
+and z′ 
+
+> H,v
+
+are the embeddings generated from the perturbed graph Gadv , while zv is the final fused embed-ding of the clean graph, serving as the stable anchor. We employ the standard InfoNCE loss as the distance metric. For a query u and a positive key v, the loss is defined as: 
+
+ℓNCE (u, v) = − log exp( u⊤v/τ )
+
+P 
+
+> k∈N
+
+exp( u⊤k/τ ) (15) where N = {v} ∪ N neg includes the positive key and all negative samples (other nodes in the batch), and vectors are 4Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+L2-normalized such that u⊤v represents cosine similarity. The term LRayleigh enforces spectral confusion by directly manipulating the global smoothness of the embedding ma-trices. We define the matrix Rayleigh quotient for node embeddings Z ∈ RN ×D as R(A, Z) = Tr( Z⊤LZ )Tr( Z⊤Z) . The ad-versarial spectral loss is formulated to invert the frequency properties: 
+
+LRayleigh = R(A′, Z′
+
+> L
+
+) − R (A′, Z′ 
+
+> H
+
+) (16) Maximizing Eq. 16 increases the normalized Dirichlet en-ergy of the low-pass channel Z′ 
+
+> L
+
+while minimizing the en-ergy of the high-pass channel Z′ 
+
+> H
+
+, thereby defying the en-coder’s spectral assumptions and triggering the variance amplification predicted in Proposition 2.1. 
+
+Projected Gradient Descent (PGD) Attack. Following the method proposed by Xu et al. (2019), we solve the maximization problem max A′,X′ Jadv via PGD. Initializ-ing perturbations ∆A(0) = 0 and ∆X(0) = 0, we perform iterative updates on the inputs: 
+
+∆A(t+1) = Π FϵA
+
+
+
+∆A(t) + η ∇∆AJadv (A(t)adv , X(t)adv )
+
+
+
+,
+
+∆X(t+1) = Π FϵX
+
+
+
+∆X(t) + η ∇∆XJadv (A(t)adv , X(t)adv )
+
+
+
+,
+
+(17) where ΠFϵ (·) denotes projection onto the Frobenius-norm ball of radius ϵ, and η is the step size. Note that the gate val-ues m remain constant during this inner loop optimization, ensuring the attack targets the model’s current belief. 
+
+Scalable Implementation. To scale to large graphs, we adopt a sparse attack strategy by restricting ∆A to a candi-date edge set Ecand (existing edges plus sampled non-edges), avoiding dense O(N 2) updates over all potential edges. With a sparse reformulation of the Laplacian quadratic form, the Rayleigh-based spectral term and its gradients can be computed in O(|E cand | · D) time (where D is the embed-ding dimension), yielding practical speedups on large sparse graphs. 
+
+3.3. Minimax Optimization Strategy 
+
+The training proceeds as a bi-level minimax game between the encoder (minimizer) and the adversary (maximizer). 
+
+Clean Contrastive Risk. Before the adversarial inter-play, we define the primary self-supervised signal Lclean as shown in the top-right of Figure 1. To ensure the reliability gate mv learns to select structurally valid frequencies, we contrast the fused representation against a randomly aug-mented view (via edge dropping and node feature masking). Let Gaug be the randomly augmented graph and zaug v be its corresponding fused embedding. The clean loss is: 
+
+Lclean (A, X) = X
+
+> v∈V
+
+ℓNCE (zv , zaug v ), (18) where ℓNCE is defined in Eq. 15. This objective actively optimizes both the filters and the gate to be invariant to intrinsic noise. 
+
+Alternating Updates. The optimization alternates be-tween two steps: • Inner Loop (Adversarial Generation): Fix the en-coder parameters Θ. Compute the current reliability gate m on the clean graph. Generate the worst-case view Gadv by performing T steps of PGD to maximize Eq. 14. • Outer Loop (Reliability-Aware Update): Given 
+
+Gadv , update the encoder parameters Θ to minimize the total robust risk: 
+
+Ltotal = Lclean (A, X)+ λadv 
+
+X
+
+> v∈V
+
+mv ℓNCE 
+
+ zadv  
+
+> L,v
+
+, zv
+
+
+
++ λadv 
+
+X
+
+> v∈V
+
+(1 − mv ) ℓNCE 
+
+ zadv  
+
+> H,v
+
+, zv
+
+.
+
+(19) This step implements the “Reliability Retreat” : minimiz-ing Eq. 19 forces the gate mv to shift weight towards the frequency channel that incurs lower adversarial loss. 
+
+## 4. Experiments 
+
+This section empirically validates the central claims in Sec-tion 2 and evaluates the effectiveness of ASPECT . Our experiments are organized around three questions: (Q1) Clean generalization: does ASPECT perform well on both homophilic and heterophilic graphs? (Q2) Robustness: 
+
+does ASPECT mitigate performance degradation under poi-soning attacks? (Q3) Mechanism validity: does the learned node-wise gate align with local homophily and exhibit the predicted reliability retreat under attack? Finally, we con-duct an ablation study to quantify the contribution of each component (gate, Rayleigh term, and adversarial training). 
+
+4.1. Experimental Setup Datasets. We conduct node classification experiments on 9 widely-used benchmark graphs spanning a broad range of homophily. Homophilic datasets include Cora ,
+
+Citeseer , and Pubmed (Sen et al., 2008). Heterophilic datasets include Cornell , Texas , Wisconsin , Actor ,
+
+Chameleon , and Squirrel (Pei et al., 2020; Rozember-czki et al., 2021). 
+
+Baselines. We compare ASPECT against 16 state-of-the-art methods spanning four categories: general augmentation-5Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+Table 1. Node classification accuracy (mean ± standard deviation, %) on 9 real-world homophily and heterophily datasets under a linear protocol. Results for ASPECT compared to state-of-the-art self-supervised GCL baselines. Boldface indicates the best performance. 
+
+Methods Homophilic Datasets Heterophilic Datasets Cora Citeseer Pubmed Cornell Texas Wisconsin Actor Chameleon Squirrel 
+
+DGI 85.88 ± 0.95 76.44 ± 0.84 82.13 ± 0.24 70.82 ± 2.71 81.48 ± 2.79 75.00 ± 4.22 32.09 ± 1.18 58.23 ± 0.70 38.80 ± 0.76 
+
+MVGRL 87.36 ± 0.64 78.70 ± 0.64 86.30 ± 0.23 67.70 ± 4.45 73.11 ± 4.47 74.25 ± 2.43 32.98 ± 0.53 57.75 ± 1.20 40.25 ± 1.14 
+
+GMI 85.09 ± 1.13 76.38 ± 0.70 83.06 ± 0.34 62.79 ± 3.85 68.03 ± 2.02 62.13 ± 2.88 32.37 ± 1.16 62.47 ± 1.52 39.82 ± 0.94 
+
+GGD 87.21 ± 1.18 79.25 ± 1.06 85.38 ± 0.25 80.33 ± 1.80 82.62 ± 1.41 73.25 ± 3.28 32.27 ± 1.17 57.64 ± 1.65 40.87 ± 0.93 
+
+GraphCL 86.54 ± 1.34 78.99 ± 1.95 85.16 ± 0.60 61.48 ± 4.69 66.07 ± 3.42 60.63 ± 2.19 32.45 ± 1.13 58.49 ± 1.23 42.92 ± 0.96 
+
+GRACE 83.27 ± 0.74 73.79 ± 0.57 81.71 ± 0.14 60.66 ± 2.94 75.74 ± 3.12 72.13 ± 1.99 31.97 ± 1.13 59.52 ± 2.65 42.68 ± 1.10 
+
+GCA 84.09 ± 0.85 75.23 ± 1.19 82.01 ± 0.34 53.11 ± 4.01 81.97 ± 1.58 73.50 ± 2.85 31.13 ± 1.11 65.54 ± 1.10 47.13 ± 0.93 
+
+GREET 85.16 ± 0.77 79.06 ± 1.34 85.64 ± 0.28 78.36 ± 2.77 78.03 ± 3.94 84.63 ± 2.10 37.12 ± 0.67 60.57 ± 1.03 42.80 ± 1.01 
+
+BGRL 84.45 ± 0.66 74.84 ± 1.44 83.06 ± 0.29 59.84 ± 3.12 69.84 ± 2.91 62.88 ± 3.52 32.48 ± 1.16 64.09 ± 3.44 47.02 ± 0.95 
+
+GBT 84.89 ± 1.11 76.59 ± 0.81 86.10 ± 0.29 59.18 ± 3.54 72.79 ± 2.79 62.38 ± 2.71 34.34 ± 1.10 68.77 ± 1.23 48.86 ± 0.87 
+
+CCA-SSG 87.39 ± 0.89 79.60 ± 1.01 84.95 ± 0.26 78.69 ± 4.61 87.87 ± 1.89 82.88 ± 3.58 34.86 ± 1.13 59.84 ± 1.21 41.50 ± 1.12 
+
+SP-GCL 82.99 ± 1.18 75.54 ± 1.06 85.74 ± 0.21 69.41 ± 1.49 69.76 ± 1.23 69.34 ± 0.77 35.92 ± 0.67 69.23 ± 1.23 53.05 ± 1.05 
+
+HLCL 85.53 ± 1.03 76.79 ± 0.60 85.13 ± 0.18 64.00 ± 8.98 78.38 ± 5.08 79.50 ± 4.50 40.56 ± 0.70 63.86 ± 1.34 44.49 ± 0.68 
+
+POLYGCL 87.57 ± 0.62 79.81 ± 0.85 87.15 ± 0.27 82.62 ± 3.11 88.03 ± 1.80 85.50 ± 1.88 41.15 ± 0.88 71.62 ± 0.96 56.49 ± 0.72 
+
+S3GCL 87.04 ± 1.25 77.48 ± 0.80 86.03 ± 0.37 81.27 ± 3.67 86.12 ± 3.91 84.56 ± 2.71 40.06 ± 1.58 71.88 ± 1.91 56.90 ± 1.37 
+
+RDGI 83.53 ± 1.23 78.99 ± 0.80 80.89 ± 1.55 67.21 ± 6.06 69.01 ± 4.59 56.75 ± 4.12 32.74 ± 1.27 59.95 ± 1.11 42.71 ± 0.70 
+
+ARIEL 87.30 ± 0.71 79.53 ± 0.61 86.42 ± 0.47 70.70 ± 2.46 76.19 ± 5.02 71.15 ± 2.38 37.68 ± 1.03 64.53 ± 1.47 42.42 ± 1.53 
+
+ASPECT 88.69 ± 0.82 81.17 ± 0.71 87.04 ± 0.73 88.85 ± 2.34 90.90 ± 1.95 88.00 ± 2.12 41.55 ± 1.15 72.06 ± 1.87 59.22 ± 0.92 
+
+based GCL, invariance-keeping GCL, heterophily/spectral-oriented GCL, and adversarial robust GCL. Detailed de-scriptions and configurations are provided in Appendix E.1. Among them, PolyGCL is the most direct external control for our theory: it adopts dual spectral channels but relies on 
+
+node-agnostic fusion. To isolate the effect of node adaptiv-ity independent of other modeling choices, we also include an internal ablation ASPECT w/o Gate (global fusion) as a like-for-like control in Section 4.5. 
+
+Self-supervised training and linear evaluation. Follow-ing the standard protocol of Velickovic et al. (2019), we first pretrain each method in a self-supervised manner on the un-labeled graph, then freeze the encoder and train a linear clas-sifier on top of the learned node representations. We use 10 random data splits with 60%/20%/20% train/validation/test partitions following Chien et al. (2020), and report mean ±
+
+standard deviation of test accuracy across splits. Hyperpa-rameters are selected using the validation set on the clean 
+
+graph only (to assess intrinsic robustness and avoid tuning on attacked data). 
+
+Robustness evaluation protocol. To evaluate robustness against poisoning attacks, the encoder is pre-trained on the attacked (poisoned) graph and then evaluated via lin-ear probing on the same attacked graph. We adopt Metat-tack (Z¨ ugner & G¨ unnemann, 2019) as the primary attacker following prior robust GCL evaluations (Feng et al., 2024). Although Metattack is not explicitly spectral, edge pertur-bations can strongly alter local roughness/high-frequency components (Lin et al., 2022), making it a relevant stress test for the spectral dilemma. We evaluate robustness in two complementary ways: (1) a fixed-budget setting used for tabular comparison across methods, and (2) a variable-budget setting where we sweep the attack rate to produce degradation curves. Datasets with very small node counts may be omitted from poisoning evaluation due to instability in class distributions under edge perturbations; we explicitly state the evaluated datasets in each robustness table/figure. 
+
+4.2. Performance on Real-World Datasets 
+
+Table 1 reports linear-probe node classification accuracy on 9 benchmarks. ASPECT achieves the best perfor-mance on 8/9 datasets , demonstrating strong general-ization across both homophilic and heterophilic graphs. On homophilic datasets, ASPECT performs competitively and attains the best results on Cora (88 .69 ± 0.82 ) and 
+
+Citeseer (81 .17 ± 0.71 ). On heterophilic datasets, AS-PECT consistently outperforms strong heterophily-oriented baselines, with particularly clear gains over PolyGCL (dual spectral channels with node-agnostic fusion), supporting the benefit of node-wise spectral selection implied by Theo-rem 2.2. 
+
+4.3. Performance Under Attack 
+
+We evaluate robustness under poisoning attacks following Section 4.1. As shown in Table 2, ASPECT achieves the best overall robustness , with the lowest average percent-age accuracy drop ( 7.03% ) while maintaining the highest 6Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+Table 2. Node classification accuracy (mean ± standard deviation, %) on attacked graphs using the poisoning protocol, and average percentage accuracy drop from clean performance. Boldface for individual datasets indicates highest absolute accuracy under attack. Boldface in the “Avg. Drop (%)” column indicates best overall robustness (lowest average percentage drop). Clean accuracy values are from Table 1. 
+
+Methods Homophilic Datasets Heterophilic Datasets Avg. Drop (%) Cora Citeseer Pubmed Actor Chameleon Squirrel 
+
+DGI 79.62 ± 0.62 72.25 ± 0.85 74.29 ± 1.01 30.28 ± 1.32 51.47 ± 0.70 32.94 ± 0.73 9.11 MVGRL 77.93 ± 0.76 70.31 ± 1.00 73.57 ± 0.49 27.00 ± 0.52 54.62 ± 1.09 39.31 ± 1.13 10.35 GMI 79.23 ± 0.56 70.67 ± 0.85 73.51 ± 0.66 28.88 ± 0.96 52.01 ± 1.27 32.07 ± 1.15 12.14 GGD 80.72 ± 0.61 71.00 ± 0.83 72.97 ± 0.70 30.29 ± 1.60 50.92 ± 1.51 32.23 ± 1.19 11.89 GraphCL 78.54 ± 0.89 72.40 ± 1.19 73.94 ± 0.70 31.04 ± 0.56 49.93 ± 0.88 31.69 ± 1.44 12.65 GRACE 77.08 ± 1.28 70.67 ± 0.86 75.25 ± 0.60 30.78 ± 0.71 51.38 ± 1.75 32.76 ± 1.07 10.03 GCA 76.39 ± 0.92 56.55 ± 1.31 71.32 ± 0.87 31.87 ± 0.97 58.75 ± 1.09 37.20 ± 0.90 12.68 GREET 78.80 ± 1.45 75.44 ± 0.59 79.47 ± 0.57 34.46 ± 1.23 51.77 ± 1.55 35.64 ± 1.32 9.61 BGRL 75.04 ± 0.81 68.10 ± 0.83 73.29 ± 1.03 30.19 ± 1.23 53.00 ± 1.20 35.05 ± 1.09 13.62 GBT 79.84 ± 0.46 72.07 ± 0.89 75.60 ± 1.3 33.10 ± 1.23 57.59 ± 1.41 38.93 ± 0.51 10.71 CCA-SSG 82.79 ± 1.28 74.88 ± 0.72 77.01 ± 0.90 30.70 ± 0.77 49.63 ± 1.09 31.23 ± 1.44 12.57 SP-GCL 76.32 ± 1.11 70.12 ± 1.07 74.76 ± 0.79 30.77 ± 0.76 62.02 ± 1.72 41.94 ± 1.32 12.29 PolyGCL 80.18 ± 0.78 72.51 ± 1.25 77.82 ± 0.83 37.35 ± 0.90 59.01 ± 1.35 37.89 ± 1.40 14.68 S3GCL 80.31 ± 0.62 71.72 ± 1.40 79.46 ± 1.57 36.03 ± 1.28 59.89 ± 1.99 40.29 ± 1.75 13.12 RDGI 78.85 ± 0.96 73.92 ± 0.68 74.12 ± 1.41 30.37 ± 1.47 52.66 ± 0.94 34.00 ± 0.63 10.03 ARIEL 84.80 ± 1.01 76.17 ± 1.39 81.08 ± 0.95 32.33 ± 0.43 54.27 ± 1.46 34.21 ± 0.76 10.45 
+
+ASPECT 85.21 ± 0.79 78.84 ± 0.60 84.71 ± 0.47 39.19 ± 0.52 65.61 ± 1.84 48.53 ± 0.90 7.03 
+
+Table 3. Node classification accuracy (mean ± std, %) of ASPECT and ablated variants on clean graphs and Metattack-poisoned graphs (attack rate = 10% ), evaluated using the same protocol as Table 2. w/o Gate : replace the node-wise gate mv with a single global fusion coefficient ¯m shared across nodes. w/o Rayleigh : remove the Rayleigh quotient term from the adversary objective (Eq. (16) ). w/o Adversarial : disable adversarial training by setting λadv = 0 in Eq. (19). Bold indicates the best performance. 
+
+Variant Cora Wisconsin Actor Clean Attacked Clean Attacked Clean Attacked ASPECT 88.69 ± 0.82 85.21 ± 0.79 88.00 ± 1.13 86.50 ± 2.75 41.55 ± 1.15 39.19 ± 0.52 
+
+w/o Gate 87.15 ± 0.88 80.64 ± 1.05 85.20 ± 1.29 79.76 ± 1.87 40.05 ± 1.18 37.84 ± 1.73 
+
+w/o Rayleigh 87.09 ± 1.14 81.15 ± 1.22 86.88 ± 2.16 78.69 ± 2.55 40.70 ± 1.10 37.18 ± 1.35 
+
+w/o Adversarial 86.51 ± 0.95 76.31 ± 1.14 85.35 ± 1.71 73.53 ± 1.49 40.97 ± 1.26 35.72 ± 1.50 
+
+attacked accuracy on each dataset. Compared to the strong spectral baseline PolyGCL, ASPECT substantially reduces degradation (PolyGCL: 14 .68% avg. drop), highlighting the brittleness of node-agnostic spectral reliance. Impor-tantly, ASPECT also outperforms ARIEL , a robust GCL method that employs PGD-style adversarial training: AS-PECT attains a lower average drop ( 7.03% vs. 10 .45% )and consistently higher attacked accuracy, especially on heterophilic benchmarks. Figure 2 further confirms that AS-PECT degrades more gracefully as the attack rate increases, validating the benefit of reliability-aware, spectrally-targeted adversarial training. 
+
+4.4. Mechanism Verification 
+
+We verify whether the learned gate mv behaves as a relia-bility indicator at inference time . All results in Fig. 3 are reported on Chameleon . We use a model pretrained on the clean graph, and evaluate it on the clean graph as well as an attacked graph generated by Metattack under the same fixed-budget setting as Table 2 (attack rate = 10% ; other set-tings unchanged). This isolates the gate’s adaptive behavior from any re-training effect on attacked data. 
+
+Reliability retreat under attack. Fig. 3(a) shows the kernel density of node-wise gate values on clean vs. at-tacked graphs. The distribution shifts markedly toward larger mv under attack (mean shift +0 .169 , median shift 
+
++0 .725 ), indicating that ASPECT reduces reliance on the high-frequency channel when the input graph is perturbed. 
+
+Structure alignment on clean graphs. We compute each node’s local homophily ratio hv and group nodes into five quantile bins (Q1–Q5). As shown in Fig. 3(b), the aver-age gate value increases monotonically with homophily, yielding a positive Spearman correlation ( ρ = 0 .565 ). This 7Robust Graph Representation Learning via Adaptive Spectral Contrast      
+
+> 0510 15 20 25
+> 75
+> 80
+> 85
+
+Attack Rate ( %)
+
+> Accuracy ( %)
+
+Cora      
+
+> 0510 15 20 25
+> 65
+> 70
+> 75
+> 80
+
+Attack Rate ( %)
+
+Citeseer      
+
+> 0510 15 20 25
+> 40
+> 50
+> 60
+> 70
+
+Attack Rate ( %)
+
+Chameleon      
+
+> 0510 15 20 25
+> 30
+> 40
+> 50
+> 60
+
+Attack Rate ( %)
+
+Squirrel 
+
+ASPECT PolyGCL GREET CCA-SSG 
+
+Figure 2. Robustness against Metattack. Classification accuracy ( %) w.r.t. increasing attack rates. ASPECT (Red solid line) demonstrates superior stability, validating the efficacy of the adaptive gating mechanism. Note that on the heterophilic Squirrel dataset, while the competitive spectral baseline PolyGCL suffers a significant performance drop, ASPECT maintains high robustness. 0.0 0.2 0.4 0.6 0.8 1.0      
+
+> Gate Value ( mv)
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> Density
+> Δmean=+0.169
+> Δmedian=+0.725
+> Clean
+> Attacked
+> Q1 Q2 Q3 Q4 Q5
+> Local Homophily
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Gate Value ( mv) ρ=0.565 Mean ± STD
+
+Figure 3. Mechanism verification on Chameleon . ASPECT is pretrained on the clean graph and evaluated on clean and attacked graphs. (a) Distribution of node-wise gates mv (KDE). (b) Mean 
+
+mv across five local-homophily quantiles (Q1–Q5; shaded: ± std). 
+
+supports that the gate learns a structure-aligned, node-wise frequency preference rather than a global fusion rule. Ad-ditionally, Fig. 3(a) further suggests a bimodal pattern of node-wise gates on the clean graph, with two modes near 0 and 1, indicating that different nodes strongly prefer differ-ent frequency channels rather than a single global mixture. 
+
+4.5. Ablation Study 
+
+We ablate ASPECT’s key components on Cora (ho-mophilic) and Wisconsin /Actor (heterophilic). Table 3 reports accuracy on clean graphs and under the same attack setting as Table 2. 
+
+Effect of node-wise gating. w/o Gate replaces the node-wise gate mv with a single global scalar ¯m, i.e., zv =¯m zL,v + (1 − ¯m) zH,v . This consistently degrades per-formance, especially under attack. For example, on 
+
+Wisconsin the attacked accuracy drops from 86 .50 ±2.75 
+
+to 79 .76 ± 1.87 , and on Cora from 85 .21 ± 0.79 to 
+
+80 .64 ± 1.05 . This supports that global fusion is insuf-ficient on mixed graphs, aligning with the motivation of Theorem 2.2. 
+
+Effect of the Rayleigh penalty. Removing the Rayleigh term ( w/o Rayleigh ) weakens robustness, indicating that generic adversarial training alone does not sufficiently ex-pose frequency-specific vulnerabilities. The attacked accu-racy decreases on all three datasets, e.g., 85 .21 → 81 .15 on 
+
+Cora and 86 .50 → 78 .69 on Wisconsin .
+
+Effect of adversarial training. Disabling adversarial training ( w/o Adversarial ) leads to the largest robustness drop, confirming that the minimax objective is crucial for stability: attacked accuracy falls to 76 .31 ± 1.14 on Cora ,
+
+73 .53 ± 1.49 on Wisconsin , and 35 .72 ± 1.50 on Actor .Overall, all components contribute, with the full ASPECT achieving the best clean and robust performance. 
+
+## 5. Conclusion 
+
+In this work, we identified a fundamental spectral dilemma 
+
+in graph representation learning: while high-frequency sig-nals are essential for modeling heterophily, they are more vulnerable to spectrally concentrated perturbations. We de-rived a theoretical regret lower bound, demonstrating that existing global fusion strategies are inherently sub-optimal on mixed-structure graphs. To resolve this, we proposed ASPECT, a framework that employs a reliability-aware gat-ing mechanism optimized via a minimax game against a spectrally-targeted adversary. Our empirical results across 9 benchmarks confirm that AS-PECT not only achieves state-of-the-art performance on clean graphs but also exhibits superior robustness under poi-soning attacks. By effectively decoupling structural learning from noise amplification, ASPECT provides a principled direction for building generalized and robust graph encoders. Future work may explore extending this reliability-aware spectral gating to edge-level filtering or incorporating it into large-scale graph transformers. 8Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of Machine Learning. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. 
+
+## References 
+
+Bielak, P., Kajdanowicz, T., and Chawla, N. V. Graph barlow twins: A self-supervised representation learning framework for graphs. Knowledge-Based Systems , 256: 109631, 2022. Bo, D., Wang, X., Shi, C., and Shen, H. Beyond low-frequency information in graph convolutional networks. In Proceedings of the AAAI Conference on Artificial In-telligence . AAAI Press, 2021. Bojchevski, A. and G ¨unnemann, S. Certifiable robustness to graph perturbations. In Advances in Neural Information Processing Systems , 2019. Chen, J., Lei, R., and Wei, Z. PolyGCL: GRAPH CON-TRASTIVE LEARNING via learnable spectral poly-nomial filters. In The Twelfth International Confer-ence on Learning Representations , 2024. URL https: //openreview.net/forum?id=y21ZO6M86t .Chien, E., Peng, J., Li, P., and Milenkovic, O. Adaptive uni-versal generalized pagerank graph neural network. arXiv preprint arXiv:2006.07988 , 2020. Feng, S., Jing, B., Zhu, Y., and Tong, H. Ariel: Adver-sarial graph contrastive learning. ACM Transactions on Knowledge Discovery from Data , 18(4):1–22, 2024. Hassani, K. and Khasahmadi, A. H. Contrastive multi-view representation learning on graphs. In International conference on machine learning , pp. 4116–4126. PMLR, 2020. He, D., Liang, C., Liu, H., Wen, M., Jiao, P., and Feng, Z. Block modeling-guided graph convolutional neural networks. In Proceedings of the AAAI conference on artificial intelligence , volume 36, pp. 4022–4029, 2022. Ho, C.-H. and Nvasconcelos, N. Contrastive learning with adversarial examples. Advances in Neural Information Processing Systems , 33:17081–17093, 2020. Hou, Z., Liu, X., Cen, Y., Dong, Y., and Tang, J. Graphmae: Self-supervised masked graph autoencoders. In Proceed-ings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 594–604. ACM, 2022. doi: 10.1145/3534678.3539321. Hou, Z., He, Y., Cen, Y., Liu, X., Dong, Y., Kharlamov, E., and Tang, J. Graphmae2: A decoding-enhanced masked self-supervised graph learner. In Proceedings of the ACM Web Conference 2023 , pp. 737–746. ACM, 2023. doi: 10.1145/3543507.3583379. Huang, R., Li, P., and Zhang, K. Dpgcl: Dual pass filtering based graph contrastive learning. Neural Networks , 179: 106517, 2024. Jiang, Z., Chen, T., Chen, T., and Wang, Z. Robust pre-training by adversarial contrastive learning. Advances in neural information processing systems , 33:16199–16210, 2020. Jin, W., Ma, Y., Liu, X., Tang, X., Wang, S., and Tang, J. Graph structure learning for robust graph neural networks. In Proceedings of the 26th ACM SIGKDD international conference on knowledge discovery & data mining , pp. 66–74, 2020. Kim, M., Tack, J., and Hwang, S. J. Adversarial self-supervised contrastive learning. Advances in neural in-formation processing systems , 33:2983–2994, 2020. Langley, P. Crafting papers on machine learning. In Langley, P. (ed.), Proceedings of the 17th International Conference on Machine Learning (ICML 2000) , pp. 1207–1216, Stan-ford, CA, 2000. Morgan Kaufmann. Lim, D., Hohne, F., Li, X., Huang, S. L., Gupta, V., Bhalerao, O., and Lim, S. N. Large scale learning on non-homophilous graphs: New benchmarks and strong simple methods. Advances in neural information process-ing systems , 34:20887–20902, 2021. Lin, L., Blaser, E., and Wang, H. Graph structural attack by perturbing spectral distance. In Proceedings of the 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining , pp. 989–998, 2022. Liu, Y., Zheng, Y., Zhang, D., Lee, V. C., and Pan, S. Beyond smoothing: Unsupervised graph representation learning with edge heterophily discriminating. In Pro-ceedings of the AAAI conference on artificial intelligence ,volume 37, pp. 4516–4524, 2023. Madry, A., Makelov, A., Schmidt, L., Tsipras, D., and Vladu, A. Towards deep learning models resistant to adversarial attacks. arXiv preprint arXiv:1706.06083 ,2017. Pei, H., Wei, B., Chang, K. C.-C., Lei, Y., and Yang, B. Geom-gcn: Geometric graph convolutional networks. 
+
+arXiv preprint arXiv:2002.05287 , 2020. Peng, Z., Huang, W., Luo, M., Zheng, Q., Rong, Y., Xu, T., and Huang, J. Graph representation learning via graphical 9Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+mutual information maximization. In Proceedings of The Web Conference 2020 , pp. 259–270, 2020. Qiu, J., Chen, Q., Dong, Y., Zhang, J., Yang, H., Ding, M., Wang, K., and Tang, J. Gcc: Graph contrastive coding for graph neural network pre-training. In Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , pp. 1150–1160. ACM, 2020. doi: 10.1145/3394486.3403168. Rozemberczki, B., Allen, C., and Sarkar, R. Multi-scale at-tributed node embedding. Journal of Complex Networks ,9(2):cnab014, 2021. Sen, P., Namata, G., Bilgic, M., Getoor, L., Galligher, B., and Eliassi-Rad, T. Collective classification in network data. AI magazine , 29(3):93–93, 2008. Song, C., Niu, L., and Lei, M. Two-level adversarial attacks for graph neural networks. Information Sciences , 654: 119877, 2024. Suresh, S., Li, P., Hao, C., and Neville, J. Adversarial graph augmentation to improve graph contrastive learning. 
+
+Advances in Neural Information Processing Systems , 34: 15920–15933, 2021. Thakoor, S., Tallec, C., Azar, M. G., Azabou, M., Dyer, E. L., Munos, R., Veli ˇckovi ´c, P., and Valko, M. Large-scale representation learning on graphs via bootstrapping. 
+
+arXiv preprint arXiv:2102.06514 , 2021. Velickovic, P., Fedus, W., Hamilton, W. L., Li `o, P., Bengio, Y., and Hjelm, R. D. Deep graph infomax. ICLR (poster) ,2(3):4, 2019. Wan, G., Tian, Y., Huang, W., Chawla, N. V., and Ye, M. S3gcl: Spectral, swift, spatial graph contrastive learn-ing. In Forty-first International Conference on Machine Learning , 2024. Wang, H., Zhang, J., Zhu, Q., Huang, W., Kawaguchi, K., and Xiao, X. Single-pass contrastive learning can work for both homophilic and heterophilic graph. Transac-tions on Machine Learning Research , 2023. ISSN 2835-8856. URL https://openreview.net/forum? id=244KePn09i .Xu, J., Yang, Y., Chen, J., Jiang, X., Wang, C., Lu, J., and Sun, Y. Unsupervised adversarially robust representation learning on graphs. In Proceedings of the AAAI confer-ence on artificial intelligence , volume 36, pp. 4290–4298, 2022. Xu, K., Chen, H., Liu, S., Chen, P.-Y., Weng, T.-W., Hong, M., and Lin, X. Topology attack and defense for graph neural networks: An optimization perspective. arXiv preprint arXiv:1906.04214 , 2019. Yang, W. and Mirzasoleiman, B. Graph contrastive learn-ing under heterophily via graph filters. In Proceedings of the Fortieth Conference on Uncertainty in Artificial Intelligence , UAI ’24. JMLR.org, 2024. You, Y., Chen, T., Sui, Y., Chen, T., Wang, Z., and Shen, Y. Graph contrastive learning with augmentations. Advances in neural information processing systems , 33:5812–5823, 2020. Zhang, H., Wu, Q., Yan, J., Wipf, D., and Yu, P. S. From canonical correlation analysis to self-supervised graph neural networks. Advances in Neural Information Pro-cessing Systems , 34:76–89, 2021. Zhang, X. and Zitnik, M. Gnnguard: Defending graph neural networks against adversarial attacks. In Advances in Neural Information Processing Systems , 2020. Zheng, X., Wang, Y., Liu, Y., Li, M., Zhang, M., Jin, D., Yu, P. S., and Pan, S. Graph neural networks for graphs with heterophily: A survey. arXiv preprint arXiv:2202.07082 ,2022a. Zheng, Y., Pan, S., Lee, V., Zheng, Y., and Yu, P. S. Re-thinking and scaling up graph contrastive learning: An extremely efficient approach with group discrimination. 
+
+Advances in Neural Information Processing Systems , 35: 10809–10820, 2022b. Zhu, D., Zhang, Z., Cui, P., and Zhu, W. Robust graph convolutional networks against adversarial attacks. In 
+
+Proceedings of the 25th ACM SIGKDD international con-ference on knowledge discovery & data mining , pp. 1399– 1407, 2019. Zhu, J., Yan, Y., Zhao, L., Heimann, M., Akoglu, L., and Koutra, D. Beyond homophily in graph neural networks: Current limitations and effective designs. Advances in neural information processing systems , 33:7793–7804, 2020a. Zhu, Y., Xu, Y., Yu, F., Liu, Q., Wu, S., and Wang, L. Deep graph contrastive representation learning. arXiv preprint arXiv:2006.04131 , 2020b. Zhu, Y., Xu, Y., Yu, F., Liu, Q., Wu, S., and Wang, L. Graph contrastive learning with adaptive augmentation. In Proceedings of the web conference 2021 , pp. 2069– 2080, 2021. Zou, Z., Jiang, Y., Shen, L., Liu, J., and Liu, X. Loha: Direct graph spectral contrastive learning between low-pass and high-pass views. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 39, pp. 13492–13500, 2025. 10 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+Z ¨ugner, D., Akbarnejad, A., and G ¨unnemann, S. Adversarial attacks on neural networks for graph data. In Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , pp. 2847–2856. ACM, 2018. doi: 10.1145/3219819.3220078. Z ¨ugner, D. and G ¨unnemann, S. Adversarial attacks on graph neural networks via meta learning. In In-ternational Conference on Learning Representations ,2019. URL https://openreview.net/forum? id=Bylnx209YX .11 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+## A. Related Work 
+
+A.1. Self-Supervised Graph Representation Learning 
+
+Self-supervised learning on graphs has been extensively studied to mitigate label scarcity. Early approaches largely follow mutual-information maximization and contrastive paradigms, such as DGI (Velickovic et al., 2019), MVGRL (Hassani & Khasahmadi, 2020), and GMI (Peng et al., 2020). Subsequent works emphasize augmentation-driven contrastive objectives (e.g., GraphCL (You et al., 2020), GRACE (Zhu et al., 2020b), and adaptive augmentation in GCA (Zhu et al., 2021)) and improve scalability/efficiency via alternative discrimination schemes (Zheng et al., 2022b). Beyond contrastive learning, non-contrastive objectives based on bootstrapping and redundancy reduction (e.g., BGRL (Thakoor et al., 2021), Graph Barlow Twins (Bielak et al., 2022), and CCA-SSG (Zhang et al., 2021)) alleviate the reliance on negative samples and sensitive augmentations. Recently, generative pretext tasks have regained attention on graphs. In particular, masked graph autoencoders, such as GraphMAE (Hou et al., 2022) and GraphMAE2 (Hou et al., 2023), reconstruct masked node attributes (or structures) and demonstrate strong performance and transferability. In parallel, cross-graph pretraining frameworks like GCC (Qiu et al., 2020) learn universal structural patterns via subgraph-level instance discrimination, further motivating the pretrain–finetune paradigm for graph representation learning. These advances provide strong foundations for spectral or frequency-aware self-supervised modeling, but they typically do not explicitly characterize the reliability of different spectral components under adversarial structural noise. 
+
+A.2. Heterophily, Mixed Graphs, and Frequency-Aware Learning 
+
+A key challenge for graph learning is heterophily, where neighbors tend to have dissimilar labels/features. Empirically, classic message-passing GNNs can degrade under heterophily due to over-smoothing and the low-pass nature of neighborhood aggregation (Zhu et al., 2020a; Lim et al., 2021). Recent surveys summarize this line and categorize architectural remedies for heterophilous graphs (Zheng et al., 2022a). Representative supervised designs exploit structural patterns beyond immediate neighborhoods (e.g., block modeling guidance (He et al., 2022)) or explicitly strengthen heterophily discrimination (e.g., GREET (Liu et al., 2023)). From a graph signal processing perspective, heterophily often demands high-frequency information to preserve boundaries. Frequency-adaptive GNNs (e.g., FAGCN (Bo et al., 2021)) introduce gating mechanisms to mix low- and high-frequency signals. In self-supervised learning, spectral/frequency-aware contrastive methods—such as polynomial spectral filters in PolyGCL (Chen et al., 2024), hybrid spectral-spatial pipelines in S3GCL (Wan et al., 2024), and heterophily-aware dual filtering in HLCL (Yang & Mirzasoleiman, 2024)—seek to incorporate both low- and high-pass information for improved representation learning. More recent methods further emphasize explicit low/high-pass view contrast (Zou et al., 2025) or multi-pass filtering designs (Huang et al., 2024). However, most of these approaches still rely on global (node-agnostic) 
+
+frequency fusion weights, implicitly assuming a uniform frequency preference across nodes. This assumption becomes brittle on mixed graphs where local homophily varies substantially, motivating node-wise, context-dependent frequency selection. 
+
+A.3. Adversarial Attacks and Robustness in Graph Learning 
+
+Graph neural networks are vulnerable to adversarial perturbations on edges and features. Classic targeted attacks include Nettack (Z ¨ugner et al., 2018) and meta-learning-based poisoning attacks such as Metattack (Z ¨ugner & G ¨unnemann, 2019). Further studies analyze attacks/defenses through optimization and topology perspectives (Xu et al., 2019) and propose additional structural attack objectives, including spectral-distance-driven perturbations (Lin et al., 2022) and multi-level attack strategies (Song et al., 2024). In response, robust learning methods include robust GCN variants (Zhu et al., 2019), graph structure learning for denoising (Jin et al., 2020), and defense mechanisms that reweight/prune suspicious edges (e.g., GNNGuard (Zhang & Zitnik, 2020)). Complementarily, certified robustness aims to provide worst-case guarantees; Graph-Cert (Bojchevski & G ¨unnemann, 2019) derives certificates for a broad class of graph models under graph perturbations. 
+
+A.4. Robust Self-Supervised and Adversarial Graph Contrastive Learning 
+
+Robustness has also been studied in self-supervised representation learning. In general domains, adversarial contrastive learning and adversarial robustness principles (Kim et al., 2020; Ho & Nvasconcelos, 2020; Jiang et al., 2020; Madry 12 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+et al., 2017) inspire graph adaptations. In graph SSL, adversarial augmentation and robust objectives have been explored in AD-GCL (Suresh et al., 2021), RDGI (Xu et al., 2022), and ARIEL (Feng et al., 2024). Despite their effectiveness, many robust graph SSL methods are spectrally agnostic : they treat perturbations as generic noise and do not explicitly model how adversarial structure corruption disproportionately harms high-frequency components that are crucial for heterophily discrimination. This gap becomes more pronounced in frequency-aware SSL, where leveraging high-pass signals can improve expressiveness but may amplify vulnerability. 
+
+A.5. Positioning of ASPECT 
+
+In contrast to prior frequency-aware GCL methods that use global spectral fusion, ASPECT introduces a node-wise frequency gating mechanism to accommodate local variations (e.g., local-homophily regimes) in mixed graphs. Meanwhile, unlike robustness methods that ignore spectral reliability, ASPECT couples representation learning with a spectrally-targeted adversary, enabling the model to estimate and down-weight unreliable (attack-sensitive) frequency channels during inference. This design directly addresses the tension between heterophily-driven high-frequency usefulness and adversarial fragility, yielding adaptive and robust spectral contrastive learning. 
+
+## B. Proof of Proposition 2.1 
+
+B.1. Perturbation model and variance proxy 
+
+Let X ∈ RN ×F be node features and consider an additive feature perturbation X′ = X + ∆ X. Let L = U ΛU ⊤ be the normalized Laplacian. Define the spectral coefficients of the perturbation as 
+
+d∆X ≜ U ⊤∆X ∈ RN ×F , (20) and the per-eigenmode perturbation energy 
+
+ρi ≜ E∥ d∆Xi, :∥22
+
+, i = 1 , . . . , N. (21) A standard way to express “spectrally concentrated” perturbations is that {ρi} is biased toward larger eigenvalues. One sufficient condition is monotonicity: 
+
+λi ≤ λj ⇒ ρi ≤ ρj . (22) (Alternative, weaker concentration assumptions can be substituted; the proof only requires that the perturbation energy assigned to gH dominates that assigned to gL.) Let gL, g H : [0 , 2] → R be low-/high-pass responses (cf. Section 2.1) and define the filtered perturbations 
+
+∆XL ≜ gL(L)∆ X, ∆XH ≜ gH (L)∆ X. (23) We measure perturbation-induced variance by the expected squared norm of filtered perturbations: 
+
+Var( g(·)) ≜ E∥g(L)∆ X∥2
+
+> F
+
+. (24) 
+
+B.2. Statement and proof Proposition B.1 (Restated) . Assume (22) . If gH emphasizes larger eigenvalues than gL in the sense that |gH (λi)| ≥ | gL(λi)|
+
+for all sufficiently large λi and |gH (λi)| ≤ | gL(λi)| for small λi (i.e., a high-/low-pass pair), then 
+
+Var( gH ) ≥ Var( gL). (25) 
+
+Proof. Using L = U ΛU ⊤ and orthonormality of U ,
+
+Var( g) = E∥U g (Λ) U ⊤∆X∥2
+
+> F
+
+ = E∥g(Λ) U ⊤∆X∥2
+
+> F
+
+
+
+= E
+
+
+
+> N
+
+X
+
+> i=1
+> F
+
+X 
+
+> f=1
+
+g(λi)2  U ⊤∆X2
+
+> i,f
+
+ =
+
+> N
+
+X
+
+> i=1
+
+g(λi)2 E∥ d∆Xi, :∥22
+
+
+
+=
+
+> N
+
+X
+
+> i=1
+
+g(λi)2ρi. (26) 13 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+Thus, 
+
+Var( gH ) − Var( gL) = 
+
+> N
+
+X
+
+> i=1
+
+ gH (λi)2 − gL(λi)2ρi. (27) Under spectral concentration (22) , larger λi correspond to larger ρi. Since gH places relatively larger magnitude on high λ
+
+than gL (and vice versa on low λ), the sequence  gH (λi)2 − gL(λi)2 is (weakly) increasing with λi and has positive mass on high frequencies. By Chebyshev’s sum inequality (or equivalently an elementary rearrangement/majorization argument), the weighted sum in (27) is nonnegative, hence (25) holds. 
+
+How this connects to risk. If the node-wise risk admits a variance component that grows with perturbation-induced feature noise (e.g., Rv (α) includes a term proportional to E∥∆Xα∥2 
+
+> F
+
+for ∆Xα = (1 − α)∆ XL + α∆XH ), then Proposition B.1 implies that increasing α amplifies the variance term under spectrally concentrated perturbations, motivating node-wise control of α.
+
+B.3. Discussion: Structural perturbations as high-frequency noise 
+
+Although Proposition B.1 is stated under additive feature perturbations ∆X, this model serves as an effective proxy for 
+
+structural perturbations ∆A in many adversarial/poisoning settings. 
+
+Empirical tendency: attacks increase heterophily. A recurring empirical observation in graph attacks/defenses is that effective topology attacks tend to add edges between dissimilar nodes (e.g., different communities/labels) and/or remove edges between similar nodes, thereby decreasing homophily and injecting irregular neighborhood connections (Lin et al., 2022). For instance, Zhu et al. (2019) explicitly note that an attacker tends to connect nodes from different communities to confuse the classifier. Likewise, canonical structural baselines such as DICE manipulate graphs by connecting nodes with different labels and deleting connections between nodes with the same labels (Song et al., 2024), directly increasing heterophily on the perturbed graph. Pro-GNN (Jin et al., 2020) further motivates defense from the perspective that real graphs exhibit intrinsic properties such as neighbor-feature similarity/smoothness, and adversarial attacks are likely to violate these properties. 
+
+Why this corresponds to high-frequency structural noise. Let s ∈ RN ×d denote any graph signal that is expected to be smooth on the clean graph (e.g., labels, features, or low-pass embeddings). Its normalized Dirichlet energy is 
+
+EL(s) ≜ Tr( s⊤Ls ) = 12
+
+P 
+
+> (i,j )
+
+Aij si√di
+
+− sj
+
+√dj
+
+> 22
+
+, which quantifies roughness (large energy ⇔ less smoothness / more high-frequency content). Adding edges between dissimilar nodes (or removing edges between similar nodes) increases this roughness, pushing signal energy toward higher Laplacian frequencies. This interpretation is consistent with works that analyze attacks through the lens of spectral disruption: e.g., structural attacks can be explicitly designed to disrupt graph spectral filters in the Fourier domain by maximizing a spectral distance between Laplacians. 
+
+Takeaway for our dilemma. Therefore, while ∆A is discrete and affects the Laplacian eigen-structure, its dominant effect in many practical attacks is to introduce high-frequency structural noise (increased local irregularity / Dirichlet energy). Modeling perturbations as spectrally concentrated noise in the signal domain (our ∆X analysis) captures this key mechanism and justifies Proposition 2.1 as a simplified but aligned theoretical lens for the attack/perturbation model used in our framework. 
+
+## C. Proof of Theorem 2.2 
+
+C.1. Formal assumptions Assumption C.1 (Quadratic growth / error bound) . For each node v, define the (possibly set-valued) minimizer set 
+
+A⋆v ≜ arg min α∈[0 ,1] Rv (α) and the optimal value R⋆v ≜ min α∈[0 ,1] Rv (α). There exists μ > 0 such that for all v and all 
+
+α ∈ [0 , 1] ,
+
+Rv (α) ≥ R ⋆v + μ
+
+2 dist( α, A⋆v )2 , (28) where dist( α, A) ≜ inf a∈A |α − a|.14 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+Assumption C.2 (Separated optimal spectral preferences) . There exist two node populations Vhom and Vhet with r ≜
+
+|V het |/|V| ∈ (0 , 1) , and two scalars 0 ≤ α0 < α 1 ≤ 1 such that 
+
+A⋆v ⊆ [0 , α 0] ∀v ∈ V hom , A⋆u ⊆ [α1, 1] ∀u ∈ V het . (29) Let ∆ ≜ α1 − α0 > 0.
+
+C.2. Regret lower bound Theorem C.3 (Restated) . Under Assumptions C.1 and C.2, the regret Regret = Rstat − R adapt satisfies 
+
+Regret ≥ μ
+
+2 r(1 − r) ∆ 2.
+
+Proof. By Assumption C.1, for any node v and any α ∈ [0 , 1] ,
+
+Rv (α) ≥ R ⋆v + μ
+
+2 dist( α, A⋆v )2 .
+
+Summing over nodes and minimizing over a single global α yields 
+
+Rstat = min 
+
+> α∈[0 ,1]
+
+1
+
+|V| 
+
+X
+
+> v
+
+Rv (α)
+
+≥ min 
+
+> α∈[0 ,1]
+
+1
+
+|V| 
+
+X
+
+> v
+
+
+
+R⋆v + μ
+
+2 dist( α, A⋆v )2
+
+= 1
+
+|V| 
+
+X
+
+> v
+
+R⋆v
+
+| {z } 
+
+> =Radapt
+
++ μ
+
+2 min 
+
+> α∈[0 ,1]
+
+1
+
+|V| 
+
+X
+
+> v
+
+dist( α, A⋆v )2 . (30) Therefore, 
+
+Regret ≥ μ
+
+2 min 
+
+> α∈[0 ,1]
+
+1
+
+|V| 
+
+X
+
+> v
+
+dist( α, A⋆v )2 . (31) Next we lower-bound the distance term using Assumption C.2. For any v ∈ V hom , A⋆v ⊆ [0 , α 0] implies 
+
+dist( α, A⋆v ) ≥ dist( α, [0 , α 0]) = ( α − α0)+,
+
+and for any u ∈ V het , A⋆u ⊆ [α1, 1] implies 
+
+dist( α, A⋆u) ≥ dist( α, [α1, 1]) = ( α1 − α)+,
+
+where (x)+ ≜ max {x, 0}. Hence, 
+
+1
+
+|V| 
+
+X
+
+> v
+
+dist( α, A⋆v )2 ≥ (1 − r)( α − α0)2+ + r(α1 − α)2+. (32) We now minimize the right-hand side over α ∈ [0 , 1] . If α ∈ [α0, α 1], both hinge terms are active and we minimize 
+
+f (α) = (1 − r)( α − α0)2 + r(α1 − α)2,
+
+whose minimizer is α⋆ = (1 − r)α0 + rα 1 and minimum value 
+
+min  
+
+> α∈[α0,α 1]
+
+f (α) = r(1 − r)( α1 − α0)2 = r(1 − r)∆ 2. (33) If α < α 0, then f (α) = r(α1 − α)2 ≥ r(α1 − α0)2 = r∆2 ≥ r(1 − r)∆ 2. If α > α 1, then f (α) = (1 − r)( α − α0)2 ≥
+
+(1 − r)∆ 2 ≥ r(1 − r)∆ 2. Therefore, 
+
+min 
+
+> α∈[0 ,1]
+
+h
+
+(1 − r)( α − α0)2+ + r(α1 − α)2+
+
+i
+
+= r(1 − r)∆ 2. (34) Combining (31), (32), and (34) yields 
+
+Regret ≥ μ
+
+2 r(1 − r)∆ 2,
+
+which proves the theorem. 15 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+## D. Dataset Details 
+
+As indicated in the Reproducibility Checklist, this paper relies on several publicly available datasets. We provide detailed information to facilitate their usage and verification. 
+
+D.1. Dataset Descriptions and Sources 
+
+We conduct our experiments on the following widely-used benchmark datasets, all drawn from existing literature and publicly available for research purposes: • Homophilic Datasets: Cora , Citeseer , and Pubmed (Sen et al., 2008). These are standard citation networks commonly used for evaluating graph learning models. In these graphs, nodes represent papers and edges represent citation relationships between two papers. The features consist of bag-of-word representations of the papers, while the labels indicate the research topic of each paper. • Heterophilic Datasets: Chameleon , Squirrel (Rozemberczki et al., 2021) are two heterophilic networks based on Wikipedia. The nodes denote web pages in Wikipedia and edges denote links between them. The features consist of informative nouns in the Wikipedia pages, and labels indicate the average traffic of the web pages. Actor (Pei et al., 2020) is an actor co-occurrence network where nodes denote actors and edges indicate two actors have co-occurrence in the same movie. The features indicate the keywords in the Wikipedia pages, and the labels are the words of corresponding actors. It is a typical heterophilic graph. Cornell , Texas , and Wisconsin (Pei et al., 2020) are three heterophilic networks originating from the WebKB project, where nodes are web pages of the computer science departments of different universities and edges are hyperlinks between them. The features of each page are represented as bag-of-words, and the labels indicate the types of web pages. All datasets were sourced from their official or commonly accepted repositories (e.g., PyTorch Geometric, Deep Graph Library). No custom or novel datasets were created or used for this work. The motivation for selecting these datasets is to cover a broad spectrum of graph properties, including both homophilic and heterophilic structures, which is crucial for evaluating robust graph contrastive learning methods like ASPECT. 
+
+D.2. Dataset Statistics 
+
+The key statistics for the datasets used in our experiments are summarized in Table 4. The homophily ratio ( H) is calculated as the proportion of edges connecting nodes of the same class, as defined in our main paper.         
+
+> Table 4. Dataset Statistics. N: Number of nodes, E: Number of edges, F: Number of features, C: Number of classes, H: Homophily ratio.
+
+Dataset N E F C H
+
+Cora 2,708 5,278 1,433 7 0.81 Citeseer 3,327 4,552 3,703 6 0.74 Pubmed 19,717 44,338 500 3 0.80 Cornell 183 298 1,703 5 0.31 Texas 187 325 1,703 5 0.11 Wisconsin 251 515 1,703 5 0.20 Actor 7,600 30,019 932 5 0.22 Chameleon 2,277 36,101 2,277 5 0.24 Squirrel 5,201 217,073 2,089 5 0.22 
+
+D.3. Data Preprocessing and Partitioning 
+
+For all datasets, raw node features are used, and adjacency matrices are preprocessed by symmetrizing and adding self-loops to convert them into an undirected, unweighted format suitable for graph neural networks. We strictly adhere to the standard experimental protocol of 10 random 60%/20%/20% train/validation/test splits for node classification, as proposed by Chien et al. (2020) and commonly used in graph representation learning literature. The random seeds for these splits are fixed and consistent across all runs and baselines to ensure a fair and reproducible comparison of results. No additional data augmentation or unique preprocessing steps beyond these standard procedures were applied. 16 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+## E. Experimental Setup and Reproducibility Details 
+
+This section addresses the computational aspects of our experiments, providing the necessary details for reproducibility as outlined in the checklist. 
+
+E.1. Baselines 
+
+We compare ASPECT against representative state-of-the-art self-supervised GCL methods from four families. 
+
+(i) General augmentation-based GCL: DGI (Velickovic et al., 2019), MVGRL (Hassani & Khasahmadi, 2020), GMI (Peng et al., 2020), GGD (Zheng et al., 2022b), GraphCL (You et al., 2020), GRACE (Zhu et al., 2020b), GCA (Zhu et al., 2021), and GREET (Liu et al., 2023). 
+
+(ii) Invariance-keeping / predictor-based GCL: BGRL (Thakoor et al., 2021), GBT (Bielak et al., 2022), and CCA-SSG (Zhang et al., 2021). 
+
+(iii) Heterophily- and spectral-oriented GCL: SP-GCL (Wang et al., 2023), HLCL (Yang & Mirzasoleiman, 2024), PolyGCL (Chen et al., 2024), and S3GCL (Wan et al., 2024). Among them, PolyGCL is the most direct external control for our theory: it adopts dual spectral channels but relies on node-agnostic fusion. To isolate the effect of node adaptivity 
+
+independent of other modeling choices, we also include an internal ablation ASPECT w/o Gate (global fusion) as a like-for-like control in Section 4.5. 
+
+(iv) Robust / adversarial representation learning on graphs: RDGI (Xu et al., 2022) and ARIEL (Feng et al., 2024). 
+
+Implementation and Reproducibility Note. We primarily utilize official open-source implementations for all baselines (see Table 5 for URLs). Regarding HLCL (Yang & Mirzasoleiman, 2024), as no official code has been released, we report its clean performance (Table 1) directly from the PolyGCL paper (Chen et al., 2024), which follows the exact same evaluation protocol. Consequently, HLCL is excluded from the robustness evaluation (Table 2) as we could not subject it to our specific Metattack pipeline. Similarly, recent global fusion methods such as DPGCL (Huang et al., 2024) and LOHA (Zou et al., 2025) are excluded from comparison due to the unavailability of source code at the time of submission.                                    
+
+> Table 5. Codes & commit numbers.
+> Method URL Commit
+> DGI https://github.com/PetarV-/DGI 61baf67 MVGRL https://github.com/kavehhassani/mvgrl 628ed2b GMI https://github.com/zpeng27/GMI 3491e8c GGD https://github.com/zyzisastudyreallyhardguy/graph-group-discrimination 7cf72db GRACE https://github.com/CRIPAC-DIG/GRACE 51b4496 GCA https://github.com/CRIPAC-DIG/GCA cd6a9f0 GraphCL https://github.com/Shen-Lab/GraphCL a0c8c97 GREET https://github.com/yixinliu233/GREET 8bcc940 BGRL https://github.com/nerdslab/bgrl 60f9f19 GBT https://github.com/pbielak/graph-barlow-twins ec62580 CCA-SSG https://github.com/hengruizhang98/CCA-SSG cea6e73 SP-GCL https://github.com/haonan3/SPGCL 58caefa POLYGCL https://github.com/ChenJY-Count/PolyGCL ec246bc S3GCL https://github.com/GuanchengWan/S3GCL 35c4cfc RDGI https://github.com/galina0217/robustgraph 2ee6abb ARIEL https://github.com/Shengyu-Feng/ARIEL e761cb8
+
+E.2. Model Hyperparameters and Selection Criterion 
+
+To ensure a fair and comprehensive evaluation across all models, including our proposed ASPECT and all baseline methods, we systematically tuned hyperparameters using Optuna . Optuna, an advanced open-source hyperparameter optimization framework, leverages efficient sampling algorithms (such as the default Tree-structured Parzen Estimator, TPE) to effectively explore the parameter space and identify optimal configurations. Crucially, to ensure a fair and rigorous comparison, we adopted a baseline-centric hyperparameter tuning strategy .Instead of applying a single global search space across all models, we defined specific search ranges for each baseline that 17 Robust Graph Representation Learning via Adaptive Spectral Contrast 
+
+were centered around the hyperparameter configurations recommended in their respective original publications .This approach allows each model to be fine-tuned effectively within the vicinity of its intended design settings, thereby preventing performance degradation due to inappropriate hyperparameter initialization. The final hyperparameter settings, as presented in Table 6, were selected based on the highest node classification accuracy achieved on the validation set for each dataset. This rigorous and consistent tuning methodology enhances the reliability and reproducibility of our reported experimental results. 
+
+Table 6. Hyperparameters used for each dataset 
+
+Parameter Cora Citeseer Pubmed Cornell Texas Wisconsin Actor Chameleon Squirrel 
+
+Epochs 2000 500 1000 500 500 2000 500 2000 1500 Patience 180 160 40 160 100 20 120 40 140 LR ( η) 0.00013 0.00106 0.00011 0.00073 0.00010 0.00214 0.00398 0.00335 0.00121 LR 1 (η1) 0.00044 0.00357 0.00535 0.00025 0.00486 0.00016 0.00233 0.00228 0.00157 LR 2 (η2) 0.00915 0.00199 0.00183 0.00295 0.00137 0.00170 0.00054 0.00818 0.00817 LR α (ηα) 0.14373 26.1982 1.48472 2.63077 0.18482 12.8336 95.5903 12.7409 0.15628 LR β (ηβ ) 0.00072 0.00026 0.00124 0.01863 0.00111 0.00051 0.00017 0.00138 0.08001 
+
+ϵ 4.05399 1.16728 0.39319 0.83449 1.37270 3.48387 0.66148 3.98710 0.35897 WD ( λ) 0.00134 0.00030 0.00786 0.09682 0.00897 3.21e-05 0.09832 0.09787 0.00105 WD 1 (λ1) 0.00158 0.00356 0.00010 0.00462 0.04208 0.06565 0.01628 0.00018 8.15e-06 WD 2 (λ2) 0.00202 0.00313 8.34e-05 0.00825 0.09067 0.05710 0.01122 0.00024 2.71e-06 Rayleigh ( λray ) 0.46024 0.07248 0.96707 1.19355 1.71332 0.31904 0.08448 0.90943 0.61738 Attack Steps 9 5 5 10 4 7 4 7 3Attack Ratio 0.22765 0.11267 0.29437 0.12920 0.46972 0.22592 0.45570 0.35284 0.21216 Hidden Dim 512 512 512 512 256 512 512 512 512 
+
+K 5 2 4 5 5 5 5 5 5Dropout 0.34248 0.47064 0.03399 0.45193 0.57931 0.56790 0.04807 0.60798 0.69773 DP Rate 0.45262 0.28825 0.45139 0.72541 0.04969 0.87453 0.04567 0.47966 0.34687 
+
+τ 0.26108 0.20047 0.12469 0.69792 0.60886 0.79692 0.27668 0.12598 0.10106 Batch Norm False False True False False False False True True Activation prelu prelu prelu prelu prelu relu prelu relu prelu 
+
+E.3. Hardware and Software Environment 
+
+All experiments reported in the main paper were conducted on a uniform computing environment to ensure consistency and comparability. The computing infrastructure used, including hardware and software configurations, is detailed below: • CPU: AMD EPYC 9554 64-Core Processor @ 3.10GHz (64 Cores, 128 Threads) • GPU: NVIDIA RTX A6000 (48GB GDDR6 memory) • RAM: 256GB DDR4 • Operating System: Ubuntu 24.04.2 LTS • Python Version: 3.12.9 • Deep Learning Framework: PyTorch 2.4.1 • GPU Acceleration Libraries: – CUDA Toolkit 12.0 
+
+– cuDNN 9.1.0 • Other Key Python Libraries: – NumPy 1.26.4 
+
+– SciPy 1.13.1 
+
+– scikit-learn 1.6.1 
+
+– PyTorch Geometric (PyG) 2.6.1 (for graph data structures and operations) A comprehensive ASPECT env.yaml file is provided within the accompanying code package, listing all exact library versions for precise environment replication. 18
