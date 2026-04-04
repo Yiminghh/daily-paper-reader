@@ -1,0 +1,294 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-04T19:44:16.313538+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 7,
+    "quick_skim_target": 11,
+    "quick_selected": 7
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2604.00405v1",
+      "title": "Reliable and Efficient Automated Transition-State Searches with Machine-Learned Interatomic Potentials",
+      "abstract": "Transition-state searches are central to understanding reaction mechanisms, but the high computational cost of density-functional theory (DFT) limits their application in high-throughput catalyst and materials discovery. Machine-learned interatomic potentials (MLIPs) offer near-DFT accuracy at orders-of-magnitude lower cost, yet their reliability for transition-state searches remains underexplored. Here, we systematically benchmark hybrid transition-state-search workflows combining six freely available potentials (MACE-OMol25, UMA-Small, UMA-Medium, eSEN-S, AIMNet2, and GFN2-xTB) with two reaction-path-finding algorithms (the freezing-string method and climbing-image nudged elastic band) across 58 diverse reactions spanning small organics, polymerization chemistry, and transition-metal catalysis. We find that models trained on the Open Molecules 2025 dataset exhibit markedly superior performance, with MACE-OMol25 achieving a 96.6% success rate while requiring fewer than four DFT-gradient evaluations per reaction on organic systems - a 94-96% reduction compared to conventional DFT-based searches. Low-level refinement on the MLIP surface before high-level DFT optimization reduces computational cost three-fold with minimal loss in reliability. For transition-metal systems, UMA-Medium demonstrates promising transferability to in-distribution transition metal complex reactions and out-of-distribution organometallic C-H activation. These results establish MLIP-accelerated workflows as practical tools for automated reaction discovery, enabling near-DFT accuracy at a fraction of traditional expense.",
+      "authors": [
+        "Jonah Marks",
+        "Jonathon Vandezande",
+        "Joseph Gomes"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph"
+      ],
+      "published": "2026-04-01T02:42:43+00:00",
+      "link": "https://arxiv.org/pdf/2604.00405v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Machine-learned interatomic potentials for molecular discovery",
+      "llm_evidence_cn": "用于分子发现的机器学习原子间势能",
+      "llm_evidence": "用于分子发现的机器学习原子间势能",
+      "canonical_evidence": "用于分子发现的机器学习原子间势能",
+      "llm_tldr_en": "Benchmarks machine-learned interatomic potentials for efficient transition-state searches in molecular discovery.",
+      "llm_tldr_cn": "评估了机器学习原子间势能在分子发现过渡态搜索中的可靠性与效率。",
+      "llm_tldr": "评估了机器学习原子间势能在分子发现过渡态搜索中的可靠性与效率。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.26264v1",
+      "title": "Topology-Aware Graph Reinforcement Learning for Energy Storage Systems Optimal Dispatch in Distribution Networks",
+      "abstract": "Optimal dispatch of energy storage systems (ESSs) in distribution networks involves jointly improving operating economy and voltage security under time-varying conditions and possible topology changes. To support fast online decision making, we develop a topology-aware Reinforcement Learning architecture based on Twin Delayed Deep Deterministic Policy Gradient (TD3), which integrates graph neural networks (GNNs) as graph feature encoders for ESS dispatch. We conduct a systematic investigation of three GNN variants: graph convolutional networks (GCNs), topology adaptive graph convolutional networks (TAGConv), and graph attention networks (GATs) on the 34-bus and 69-bus systems, and evaluate robustness under multiple topology reconfiguration cases as well as cross-system transfer between networks with different system sizes. Results show that GNN-based controllers consistently reduce the number and magnitude of voltage violations, with clearer benefits on the 69-bus system and under reconfiguration; on the 69-bus system, TD3-GCN and TD3-TAGConv also achieve lower saved cost relative to the NLP benchmark than the NN baseline. We also highlight that transfer gains are case-dependent, and zero-shot transfer between fundamentally different systems results in notable performance degradation and increased voltage magnitude violations. This work is available at: https://github.com/ShuyiGao/GNNs_RL_ESSs and https://github.com/distributionnetworksTUDelft/GNNs_RL_ESSs.",
+      "authors": [
+        "Shuyi Gao",
+        "Stavros Orfanoudakis",
+        "Shengren Hou",
+        "Peter Palensky",
+        "Pedro P. Vergara"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-03-27T10:32:18+00:00",
+      "link": "https://arxiv.org/pdf/2603.26264v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "topology-aware graph neural networks for feature encoding",
+      "llm_evidence_cn": "用于特征编码的拓扑感知图神经网络",
+      "llm_evidence": "用于特征编码的拓扑感知图神经网络",
+      "canonical_evidence": "用于特征编码的拓扑感知图神经网络",
+      "llm_tldr_en": "Develops a topology-aware RL architecture using GNNs like TAGConv for energy storage system dispatch.",
+      "llm_tldr_cn": "开发了一种拓扑感知强化学习架构，使用TAGConv等图神经网络进行储能系统调度。",
+      "llm_tldr": "开发了一种拓扑感知强化学习架构，使用TAGConv等图神经网络进行储能系统调度。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.02270v1",
+      "title": "Crystalite: A Lightweight Transformer for Efficient Crystal Modeling",
+      "abstract": "Generative models for crystalline materials often rely on equivariant graph neural networks, which capture geometric structure well but are costly to train and slow to sample. We present Crystalite, a lightweight diffusion Transformer for crystal modeling built around two simple inductive biases. The first is Subatomic Tokenization, a compact chemically structured atom representation that replaces high-dimensional one-hot encodings and is better suited to continuous diffusion. The second is the Geometry Enhancement Module (GEM), which injects periodic minimum-image pair geometry directly into attention through additive geometric biases. Together, these components preserve the simplicity and efficiency of a standard Transformer while making it better matched to the structure of crystalline materials. Crystalite achieves state-of-the-art results on crystal structure prediction benchmarks, and de novo generation performance, attaining the best S.U.N. discovery score among the evaluated baselines while sampling substantially faster than geometry-heavy alternatives.",
+      "authors": [
+        "Tin Hadži Veljković",
+        "Joshua Rosenthal",
+        "Ivor Lončarić",
+        "Jan-Willem van de Meent"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-02T17:03:42+00:00",
+      "link": "https://arxiv.org/pdf/2604.02270v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "diffusion Transformer for crystal modeling and generative design",
+      "llm_evidence_cn": "用于晶体建模和生成设计的扩散Transformer",
+      "llm_evidence": "用于晶体建模和生成设计的扩散Transformer",
+      "canonical_evidence": "用于晶体建模和生成设计的扩散Transformer",
+      "llm_tldr_en": "A lightweight diffusion Transformer for efficient crystal modeling using subatomic tokenization and geometric biases.",
+      "llm_tldr_cn": "一种轻量级扩散Transformer，通过亚原子分词和几何偏置实现高效晶体建模。",
+      "llm_tldr": "一种轻量级扩散Transformer，通过亚原子分词和几何偏置实现高效晶体建模。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.26359v1",
+      "title": "Automated near-term quantum algorithm discovery for molecular ground states",
+      "abstract": "Designing quantum algorithms is a complex and counterintuitive task, making it an ideal candidate for AI-driven algorithm discovery. To this end, we employ the Hive, an AI platform for program synthesis, which utilises large language models to drive a highly distributed evolutionary process for discovering new algorithms. We focus on the ground state problem in quantum chemistry, and discover efficient quantum heuristic algorithms that solve it for molecules LiH, H2O, and F2 while exhibiting significant reductions in quantum resources relative to state-of-the-art near-term quantum algorithms. Further, we perform an interpretability study on the discovered algorithms and identify the key functions responsible for the efficiency gains. Finally, we benchmark the Hive-discovered circuits on the Quantinuum System Model H2 quantum computer and identify minimum system requirements for chemical precision. We envision that this novel approach to quantum algorithm discovery applies to other domains beyond chemistry, as well as to designing quantum algorithms for fault-tolerant quantum computers.",
+      "authors": [
+        "Fabian Finger",
+        "Frederic Rapp",
+        "Pranav Kalidindi",
+        "Kerry He",
+        "Kante Yin",
+        "Alexander Koziell-Pipe",
+        "David Zsolt Manrique",
+        "Gabriel Greene-Diniz",
+        "Stephen Clark",
+        "Hamza Fawzi",
+        "Bernardino Romera-Paredes",
+        "Alhussein Fawzi",
+        "Konstantinos Meichanetzidis"
+      ],
+      "primary_category": "quant-ph",
+      "categories": [
+        "quant-ph",
+        "cs.AI"
+      ],
+      "published": "2026-03-27T12:37:20+00:00",
+      "link": "https://arxiv.org/pdf/2603.26359v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "AI-driven discovery for molecular ground states and quantum chemistry",
+      "llm_evidence_cn": "AI驱动的分子基态和量子化学发现",
+      "llm_evidence": "AI驱动的分子基态和量子化学发现",
+      "canonical_evidence": "AI驱动的分子基态和量子化学发现",
+      "llm_tldr_en": "Uses LLMs and evolutionary processes to discover efficient quantum algorithms for molecular ground state problems.",
+      "llm_tldr_cn": "利用大语言模型和进化过程发现解决分子基态问题的高效量子算法。",
+      "llm_tldr": "利用大语言模型和进化过程发现解决分子基态问题的高效量子算法。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.27156v1",
+      "title": "GSR-GNN: Training Acceleration and Memory-Saving Framework of Deep GNNs on Circuit Graph",
+      "abstract": "Graph Neural Networks (GNNs) show strong promise for circuit analysis, but scaling to modern large-scale circuit graphs is limited by GPU memory and training cost, especially for deep models. We revisit deep GNNs for circuit graphs and show that, when trainable, they significantly outperform shallow architectures, motivating an efficient, domain-specific training framework. We propose Grouped-Sparse-Reversible GNN (GSR-GNN), which enables training GNNs with up to hundreds of layers while reducing both compute and memory overhead. GSR-GNN integrates reversible residual modules with a group-wise sparse nonlinear operator that compresses node embeddings without sacrificing task-relevant information, and employs an optimized execution pipeline to eliminate fragmented activation storage and reduce data movement. On sampled circuit graphs, GSR-GNN achieves up to 87.2\\% peak memory reduction and over 30$\\times$ training speedup with negligible degradation in correlation-based quality metrics, making deep GNNs practical for large-scale EDA workloads.",
+      "authors": [
+        "Yuebo Luo",
+        "Shiyang Li",
+        "Yifei Feng",
+        "Vishal Kancharla",
+        "Shaoyi Huang",
+        "Caiwen Ding"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-03-28T06:47:20+00:00",
+      "link": "https://arxiv.org/pdf/2603.27156v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "graph representation learning for large-scale graphs",
+      "llm_evidence_cn": "大规模图的图表示学习",
+      "llm_evidence": "大规模图的图表示学习",
+      "canonical_evidence": "大规模图的图表示学习",
+      "llm_tldr_en": "A memory-saving framework for training deep Graph Neural Networks on large-scale circuit graphs.",
+      "llm_tldr_cn": "一种用于在大规模电路图上训练深度图神经网络的省显存框架。",
+      "llm_tldr": "一种用于在大规模电路图上训练深度图神经网络的省显存框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.27665v1",
+      "title": "Test-Time Instance-Specific Parameter Composition: A New Paradigm for Adaptive Generative Modeling",
+      "abstract": "Existing generative models, such as diffusion and auto-regressive networks, are inherently static, relying on a fixed set of pretrained parameters to handle all inputs. In contrast, humans flexibly adapt their internal generative representations to each perceptual or imaginative context. Inspired by this capability, we introduce Composer, a new paradigm for adaptive generative modeling based on test-time instance-specific parameter composition. Composer generates input-conditioned parameter adaptations at inference time, which are injected into the pretrained model's weights, enabling per-input specialization without fine-tuning or retraining. Adaptation occurs once prior to multi-step generation, yielding higher-quality, context-aware outputs with minimal computational and memory overhead. Experiments show that Composer substantially improves performance across diverse generative models and use cases, including lightweight/quantized models and test-time scaling. By leveraging input-aware parameter composition, Composer establishes a new paradigm for designing generative models that dynamically adapt to each input, moving beyond static parameterization.",
+      "authors": [
+        "Minh-Tuan Tran",
+        "Xuan-May Le",
+        "Quan Hung Tran",
+        "Mehrtash Harandi",
+        "Dinh Phung",
+        "Trung Le"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-03-29T12:31:33+00:00",
+      "link": "https://arxiv.org/pdf/2603.27665v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "adaptive generative modeling paradigm for diffusion networks",
+      "llm_evidence_cn": "扩散网络的自适应生成模型范式",
+      "llm_evidence": "扩散网络的自适应生成模型范式",
+      "canonical_evidence": "扩散网络的自适应生成模型范式",
+      "llm_tldr_en": "Introduces Composer, a paradigm for instance-specific parameter adaptation in generative models like diffusion.",
+      "llm_tldr_cn": "引入Composer，一种用于扩散模型等生成模型的实例特定参数自适应范式。",
+      "llm_tldr": "引入Composer，一种用于扩散模型等生成模型的实例特定参数自适应范式。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2603.29406v1",
+      "title": "PRISM: PRIor from corpus Statistics for topic Modeling",
+      "abstract": "Topic modeling seeks to uncover latent semantic structure in text, with LDA providing a foundational probabilistic framework. While recent methods often incorporate external knowledge (e.g., pre-trained embeddings), such reliance limits applicability in emerging or underexplored domains. We introduce \\textbf{PRISM}, a corpus-intrinsic method that derives a Dirichlet parameter from word co-occurrence statistics to initialize LDA without altering its generative process. Experiments on text and single cell RNA-seq data show that PRISM improves topic coherence and interpretability, rivaling models that rely on external knowledge. These results underscore the value of corpus-driven initialization for topic modeling in resource-constrained settings.   Code is available at: https://github.com/shaham-lab/PRISM.",
+      "authors": [
+        "Tal Ishon",
+        "Yoav Goldberg",
+        "Uri Shaham"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-03-31T08:10:37+00:00",
+      "link": "https://arxiv.org/pdf/2603.29406v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "topic modeling for single cell RNA-seq data",
+      "llm_evidence_cn": "单细胞RNA-seq数据的主题建模",
+      "llm_evidence": "单细胞RNA-seq数据的主题建模",
+      "canonical_evidence": "单细胞RNA-seq数据的主题建模",
+      "llm_tldr_en": "Introduces PRISM, a corpus-intrinsic method for topic modeling applicable to single-cell RNA-seq data.",
+      "llm_tldr_cn": "引入PRISM，一种适用于单细胞RNA-seq数据的主题建模语料库内在方法。",
+      "llm_tldr": "引入PRISM，一种适用于单细胞RNA-seq数据的主题建模语料库内在方法。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -1,0 +1,1814 @@
+Title: Crystalite: A Lightweight Transformer for Efficient Crystal Modeling
+
+URL Source: https://arxiv.org/pdf/2604.02270v1
+
+Published Time: Fri, 03 Apr 2026 01:19:12 GMT
+
+Number of Pages: 39
+
+Markdown Content:
+# Crystalite: A Lightweight Transformer for Efficient Crystal Modeling 
+
+Tin Hadži Veljković 1,2,∗, Joshua Rosenthal 1,2,∗, Ivor Lončarić 3, Jan-Willem van de Meent 1,2
+
+> 1
+
+UvA-Bosch Delta Lab, 2University of Amsterdam, 3Ruđer Bošković Institute 
+
+> ∗
+
+Equal contribution 
+
+Generative models for crystalline materials often rely on equivariant graph neural networks, which capture geometric structure well but are costly to train and slow to sample. We present Crystalite, a lightweight diffusion Transformer for crystal modeling built around two simple inductive biases. The first is Subatomic Tokenization , a compact chemically structured atom representation that replaces high-dimensional one-hot encodings and is better suited to continuous diffusion. The second is the Geometry Enhancement Module (GEM), which injects periodic minimum-image pair geometry directly into attention through additive geometric biases. Together, these components preserve the simplicity and efficiency of a standard Transformer while making it better matched to the structure of crystalline materials. Crystalite achieves state-of-the-art results on crystal structure prediction benchmarks, and de novo generation performance, attaining the best S.U.N. discovery score among the evaluated baselines while sampling substantially faster than geometry-heavy alternatives. 
+
+Correspondence: THV: tin.hadzi@gmail.com; JR: joshua.rosenthal@student.uva.nl 
+
+Code: https://github.com/joshrosie/crystalite 
+
+Keywords: Crystal Generation, Crystal Structure Prediction, Diffusion Transformers 
+
+# 1 Introduction 
+
+The discovery of novel, synthesizable, and diverse crystalline materials with targeted properties remains a central goal of materials science (Merchant et al., 2023). Yet the search space of possible compositions and structures is combinatorially vast, while only a small fraction of candidates is thermodynamically stable. Traditional computational approaches can explore this space systematically (Pickard and Needs, 2011; Oganov and Glass, 2006). However, even with large high-throughput infrastructures (Jain et al., 2013; Curtarolo et al., 2012; Kirklin et al., 2015), candidate evaluation still typically relies on density functional theory (DFT) (Kohn and Sham, 1965; Jones, 2015), whose conventional Kohn–Sham implementations remain computationally expensive have cubic scaling with the number of electrons or basis functions (Goedecker, 1999). Deep generative models offer a promising alternative by learning to propose candidate materials directly from data (Xie et al., 2021; Zeni et al., 2025). In crystal generation, however, the geometric and symmetry structure of the problem has driven much of the literature toward equivariant graph neural networks (GNNs) and other specialized architectures (Luo et al., 2025; Jiao et al., 2024a; Zeni et al., 2025; Miller et al., 2024). While highly effective, these approaches can be architecturally complex and computationally demanding, motivating the search for simpler backbones that still capture enough crystal geometry to remain competitive (Yang et al., 2024). This raises a natural question: can a lightweight transformer recover enough geometric structure to compete without explicit equivariant message passing? Recent work suggests that transformers can be competitive with GNN-based approaches for crystal generation. In particular, diffusion transformers have emerged as a promising lightweight alternative for atomistic and crystalline generation (Yi et al., 2025; Joshi et al., 2025; Jin et al., 2025). However, these approaches often 1
+
+> arXiv:2604.02270v1 [cs.LG] 2 Apr 2026
+
+Geometric Enhancement Module Multi-Head Attention  
+
+> ftLt
+> Pairwise Min-Image Geo. (PBC)
+> Fourier Feat.
+> Concat
+> MLP
+> Scale ( ×σatt )
+
++    
+
+> ∆dmin
+> dmin ,Lt
+> Bedge
+> Bdist
+> x
+> WQWKWV
+
+× 
+
+> QKT
+
++  
+
+> Logits
+> attn mask Softmax
+
+×
+
+> A
+> V
+> Output
+
+Figure 1: Overview of the proposed architecture. Left: The Geometric Enhancement Module (GEM) computes pairwise minimum-image geometry under periodic boundary conditions (PBC) from fractional coordinates ft and lattice 
+
+Lt. Two bias terms are constructed: an edge-aware bias Bedge via Fourier features and an Multi-Layer Perceptron (MLP), and a distance-based bias Bdist via scaled minimum distances. These are combined into an additive attention mask ( attn_mask ). Right: Standard multi-head attention (MHA), where the geometric mask is injected additively into the attention logits before the softmax, thereby modulating attention scores while preserving the canonical QK T
+
+formulation. 
+
+incorporate crystal geometry only weakly or indirectly, leaving open whether a standard diffusion transformer can remain simple while benefiting from a more direct injection of periodic geometric structure. In this work, we introduce Crystalite , a lightweight diffusion transformer for crystalline materials. Crystalite augments standard multi-head attention with periodic and geometric biases, and uses a compact chemically informed atom representation in place of high-dimensional one-hot type encodings. This preserves the simplicity and scalability of a standard transformer backbone while improving its suitability for crystal generation. Our main contributions are as follows: 
+
+• We introduce the Geometric Enhancement Module (GEM), a lightweight attention-biasing mechanism that injects periodic and pairwise geometry directly into standard Transformers, providing an efficient alternative to equivariant message passing. 
+
+• We replace one-hot atom types with a compact chemically informed representation that is better matched to continuous diffusion. 
+
+• We show that Crystalite achieves state-of-the-art crystal structure prediction and de novo generation performance, while sampling much faster than geometry-heavy baselines. 
+
+• We characterize the trade-off between novelty, validity, and stability, and show that MLIP-based stability estimates provide a practical signal for model selection. 
+
+# 2 Related Work 
+
+Prior work on crystal generation differs largely in how geometric structure is handled. One line of research builds symmetry and periodicity directly into the model through equivariant or geometry-aware architectures. Another explores lighter backbones, including transformers, with weaker inductive bias. Crystalite is most 2closely related to the recent diffusion-transformer line, but differs in how geometric information is incorporated. 
+
+Equivariant and geometry-aware crystal generators. Diffusion models (Ho et al., 2020; Song and Ermon, 2019) have become a powerful framework for generative modeling in atomistic domains. In crystalline materials, a common strategy is to combine diffusion with equivariant GNNs, since crystal structures naturally admit graph-based representations and are governed by important geometric symmetries (see Appendix A). MatterGen (Zeni et al., 2025), for example, is a high-performing equivariant diffusion model built on GemNet (Gasteiger et al., 2021) that jointly models atom types, fractional coordinates, and lattice parameters, and can also be adapted for inverse design. EGNN (Satorras et al., 2021), as used in DiffCSP (Jiao et al., 2024a), has likewise served as the backbone for several subsequent approaches (Miller et al., 2024; Hoellmer et al., 2025; Cornet et al., 2025; Luo et al., 2025). These works also explore increasingly specialized generative formulations to better handle crystal geometry. FlowMM (Miller et al., 2024), for instance, extends Riemannian flow matching (Chen and Lipman, 2024) to fractional coordinates, while Hoellmer et al. (2025) study this setting using stochastic interpolants (Albergo et al., 2025). KLDM (Cornet et al., 2025) instead handles periodic fractional coordinates by lifting the noising process to an auxiliary flat space using the Lie group structure of the torus. Collectively, these methods show the value of strong geometric inductive bias, but often at the cost of increasing architectural and computational complexity. 
+
+Lightweight alternatives to full equivariance. A more recent line of work asks whether strong performance in material generation can be achieved without fully equivariant architectures. These approaches are attractive because they are typically simpler, more computationally efficient, and easier to scale. UniMat (Yang et al., 2024), for example, shows that a diffusion model based on a 3D U-Net can remain competitive with equivariant baselines and benefit from increased model scale. More broadly, transformer-based approaches have also been explored in autoregressive and hybrid settings, including sequence models over crystal representations (Mohanty et al., 2024; Kazeev et al., 2025; Gruver et al., 2025; Cao et al., 2025) and pipelines in which language models provide crystal priors that are later refined by more structured geometric generators (Khastagir et al., 2025; Sriram et al., 2024). These results suggest that fully equivariant message passing may not always be necessary, but they leave open how much geometry a crystal generator should encode directly. 
+
+Diffusion transformers for atomistic and crystal generation. The works closest to ours are recent diffusion-transformer approaches for molecules, materials, and crystals. ADiT (Joshi et al., 2025) employs a latent diffusion transformer (Peebles and Xie, 2023; Rombach et al., 2022) with minimal inductive bias for joint generation over molecules and materials, while Morehead et al. (2026) extend this direction with a simpler diffusion-transformer formulation. OXtal (Jin et al., 2025) applies diffusion transformers to crystal structure prediction for metal-organic frameworks and combines this with EDM-style preconditioning and sampling (Karras et al., 2022), while CrystalDiT (Yi et al., 2025) brings the diffusion-transformer type of model to crystalline generation. Crystalite builds most directly on this line of work, but differs in that it injects periodic pairwise geometry directly into attention rather than relying only on augmentation or latent-space structure. In this sense, our goal is not to remove geometric inductive bias, but to incorporate it in a simpler and more modular form than in fully equivariant GNNs. 
+
+# 3 Methodology 
+
+Crystalite is built around a simple idea: keep the denoising backbone close to a standard diffusion Transformer, and incorporate crystal-specific structure through the representation, attention mechanism, and sampling procedure. We begin from the standard unit-cell description of a crystal in terms of atom identities, fractional coordinates, and lattice geometry. On top of this representation, we replace one-hot atom identities with chemically structured tokens, define diffusion jointly over atom, coordinate, and lattice variables, and process the resulting state with a Transformer that uses one token per atom together with a single global lattice token. Periodic pairwise geometry can then be injected directly into attention through the Geometry Enhancement 3O (Oxygen) 
+
+> Atomic no.
+> 8
+> Period
+> 2
+> Group
+> 16
+> Block
+> P-block
+> Electronic configuration
+
+[He] 2s2 2p4         
+
+> Valence Occupancy PCA16 Signature
+> s2/2
+> p4/6
+> d0/10
+> f0/14 1816
+
+## Ti (Titanium) 
+
+> Atomic no.
+> 22
+> Period
+> 4
+> Group
+> 4
+> Block
+> D-block
+> Electronic configuration
+
+[Ar] 3d2 4s2         
+
+> Valence Occupancy PCA16 Signature
+> s2/2
+> p0/6
+> d2/10
+> f0/14 1816
+
+Figure 2: Subatomic tokenization of atomic species. Instead of representing each chemical element by a one-hot identity vector, we assign each element a fixed 34-dimensional chemically structured descriptor built from its period, group, block, and valence-shell occupancies. These descriptors are compressed to a 16-dimensional token space using PCA, yielding a continuous atom-type representation for diffusion. Diffusion noise is applied in this 16-dimensional space, after which a learned embedding maps the noisy token to the Transformer hidden dimension. Representative examples are shown for oxygen (left) and titanium (right). 
+
+Module (GEM), while a channel-wise anti-annealing heuristic improves refinement at sampling time. Concretely, throughout this section we represent a crystal with N atoms by the unit-cell tuple 
+
+C = ( A, F, L), A ∈ { 0, 1}N ×NZ , F ∈ [0 , 1) N ×3, L ∈ R3×3, (1) where NZ is the number of supported atom types and each row satisfies Ai = onehot (ai) for some label 
+
+ai ∈ { 1, . . . , N Z }. Here, A is the atom-type matrix, F contains the fractional coordinates, and L defines the periodic unit cell. The corresponding Cartesian coordinates are given by X = FL .
+
+3.1 Chemically Structured Atom Tokens 
+
+A standard representation uses the one-hot atom-type matrix A ∈ { 0, 1}N ×NZ . We found this choice suboptimal for diffusion over crystalline materials for two reasons. First, for realistic materials datasets NZ
+
+can be large (e.g. NZ = 89 on MP-20), making the atom-type channel unnecessarily high-dimensional relative to the underlying chemical variable. Second, the one-hot geometry is chemically uninformative: all elements are mutually orthogonal, so for example, Li is as far from Na as it is from Xe. This can encourage the model to memorize recurring compositions, while providing no notion of smooth chemical similarity. To address this, we replace the one-hot channel by a low-dimensional continuous tokenization, which we refer to as Subatomic Tokenization . For each supported element k ∈ { 1, . . . , N Z }, let rk, gk, and bk denote its period, group, and block, and let (sk, p k, d k, f k) denote its ground-state valence-shell occupancies. The tokenized representation associated with element k is 
+
+hk =
+
+[
+
+onehot (rk), onehot (gk), onehot (bk), s k/2, p k/6, d k/10 , f k/14 
+
+]
+
+. (2) Figure 2 illustrates representative chemically structured element tokens. Following the implementation used in our experiments, these element-wise descriptors are standardized across the supported elements, optionally projected with a fixed PCA basis, and finally ℓ2-normalized. We continue to denote the resulting tokenized vectors by hk. The subatomic matrix is then 
+
+H = [ha1 , . . . , haN
+
+]⊤ ∈ RN ×dH , (3) where dH denotes the token dimension after optional PCA compression. This design serves two purposes. First, it reduces the dimensionality of the atom-type channel, which makes denoising statistically easier and 4lowers the capacity of the model to memorize frequent compositional patterns. Second, it equips the diffusion process with a chemically meaningful geometry: errors in subatomic space become structured, so that under noise the model is encouraged to confuse elements with plausible substitutions before unrelated species. Subatomic Tokenization is especially natural in our EDM formulation, since atom types are treated as continuous diffusion variables jointly with fractional coordinates and lattice parameters. The denoiser therefore does not need to recover a sparse one-hot vector in a high-dimensional simplex-like space, but instead returns a low-dimensional chemical token. During sampling, the denoised token ˆhi is mapped back to a discrete element by nearest-token decoding, 
+
+ˆai = arg max  
+
+> k∈{ 1,...,N Z}
+
+⟨ˆhi, hk⟩, (4) which is equivalent to cosine-similarity decoding because all token vectors are normalized. This keeps the training and decoding geometries aligned. In the crystal structure prediction (CSP) setting, where the composition is known, the subatomic matrix is held fixed and only the coordinate and lattice channels are denoised. We provide additional information on this embedding in Appendix B.1. 
+
+3.2 Diffusion formulation for crystals 
+
+Starting from a crystal C = ( A, F, L), we define a continuous diffusion state 
+
+(H, F, y),
+
+where H is the chemically structured atom-type representation, F ∈ [0 , 1) N ×3 contains the fractional coordinates, and y ∈ R6 is a latent parameterization of the lattice. Concretely, hi ∈ RdH denotes the token of atom i, and H = [ h1, . . . , hN ]⊤. Likewise, fi ∈ [0 , 1) 3 denotes the fractional coordinate of atom i, and 
+
+F = [ f1, . . . , fN ]⊤.Rather than diffusing the raw lattice matrix L ∈ R3×3 directly, we represent it through a lower-triangular latent y ∈ R6 and reconstruct 
+
+L(y) = 
+
+
+
+ey1 0 0
+
+y2 ey3 0
+
+y4 y5 ey6
+
+ . (5) This yields a stable unconstrained representation with positive diagonal entries and reduces representational redundancy in the lattice channel. The diffusion model therefore operates on the continuous tuple (H, F, y).The lattice representation remains basis-dependent, however. To reduce basis ambiguity, we preprocess each structure into a Niggli-reduced cell and express the lattice in a fixed lattice-parameter convention before tokenization. During training, the only explicit crystal augmentation is a random global translation of the fractional coordinates; we do not augment over lattice-basis permutations or other equivalent cell choices. Following EDM, at each training step we sample a noise level from 
+
+log σ ∼ N (Pmean , P 2std ),
+
+and perturb all three channels jointly: 
+
+(Hσ , Fσ , yσ ) = ( H, F, y) + σ ε, (6) where ε denotes Gaussian noise with the appropriate channel-wise shapes. For the coordinate channel, noise is added in a centered Euclidean representation: fractional coordinates are first shifted to a centered cube, Gaussian noise is added in that space, and the resulting noisy coordinates are wrapped back into [0 , 1) 3 before being embedded by the Transformer. The training loss, however, is evaluated using a componentwise wrapped residual in fractional space. This respects periodicity on the torus, but unlike GEM it is not a metric-aware minimum-image search under the lattice metric. Full details are given in Appendix D. As in EDM, the noisy inputs and raw network outputs are combined through the standard channel-wise preconditioning coefficients 
+
+cin (σ), cskip (σ), and cout (σ); we defer the exact formulas to Appendix D. 5We train the model with separate denoising losses for the atom-type, coordinate, and lattice channels. Atom tokens and lattice latents are regressed directly in Euclidean space, while coordinates are compared through componentwise wrapped residuals in fractional space. Writing wrap (u) = u−round (u), the three channel-wise losses are 
+
+LH = 1
+
+N
+
+> N
+
+∑
+
+> i=1
+
+wH (σ) ∥ˆhi − hi∥22, LF = 1
+
+N
+
+> N
+
+∑
+
+> i=1
+
+wF (σ) ∥∥wrap( ˆfi − fi)∥∥22, Llat = 16 wlat (σ) ∥ˆy − y∥22. (7) The total objective is 
+
+L = λH LH + λF LF + λlat Llat , (8) where wH (σ), wF (σ), and wlat (σ) are the standard EDM channel-wise weights. We use the same diffusion formulation for both de novo generation and crystal structure prediction. In DNG, Crystalite models the joint distribution pθ (A, F, L) and generates all channels jointly. Because the number of atoms per unit cell varies across structures, we first sample N ∼ p(N ) from the empirical training-set distribution and then generate the atom-type, coordinate, and lattice channels for that sampled size. In CSP, it instead models the conditional distribution pθ (F, L | A), treating structure prediction as conditional generation with the composition fixed. 
+
+3.3 Crystalite architecture 
+
+Crystalite operates on the continuous diffusion state (H, F, y) using a standard Transformer backbone with one token per atom and one additional token for the lattice. The full Crystalite architecture is shown in Figure 3. 
+
+Input parameterization. For each atom i, we map the chemically structured atom token hi ∈ RdH and the corresponding fractional coordinate fi ∈ R3 into a common hidden dimension through separate learned embedders. These are then added to form a single atom token, 
+
+tatom  
+
+> i
+
+= EH (hi) + EF (fi), (9) where EH and EF denote the atom-type and coordinate embedders. In this way, each atom token jointly represents chemical identity and geometric position. The lattice is embedded separately. The latent lattice vector y ∈ R6 is mapped to a single global lattice token, 
+
+tlat = Elat (y). (10) For a crystal with N atoms, the full input sequence is therefore 
+
+T(0) = [tatom 1 , . . . , tatom  
+
+> N
+
+, tlat ] ∈ R(N +1) ×d, (11) where d is the model width. The diffusion noise level is embedded through a small MLP applied to the standard EDM noise coordinate cnoise (σ) = 14 log σ, producing a conditioning vector cσ ∈ Rd that is injected into every block through adaptive layer normalization (AdaLN). 
+
+Output parameterization. The sequence T(0) is processed by a standard Transformer backbone composed of stacked self-attention and feed-forward blocks. We denote the state after K layers as: 
+
+T(K) = [t(K)1 , . . . , t(K) 
+
+> N
+
+, t(K)lat 
+
+]
+
+The first N tokens are then decoded into denoised atom-token and coordinate predictions, while the final token is decoded into the lattice latent: 
+
+ˆhi = DH (t(K) 
+
+> i
+
+), ˆfi = DF (t(K) 
+
+> i
+
+), ˆy = Dlat (t(K)lat ). (12) 6TokenEmbedder   
+
+> Noise Level Embedder
+> TransformerTrunk ×L
+> hi
+> fi
+> L
+> TypeEmbed
+> CoordEmbed
+> LatticeEmbed
+> +
+> Concat
+> tatom
+> i
+> tlat
+> σSigmaEmbed
+> LNorm
+> Modulate
+> Attention
+> Gate ( ×)
+> +
+> LNorm
+> Modulate
+> MLP
+> Gate ( ×)
+> +
+> Modulation
+> T(0)
+> cσ
+> CrystalHeads
+> T(k)
+
+Figure 3: Overview of the Crystalite architecture. The model operates on the continuous crystal state (H, F, y).Atom-type and coordinate embeddings are added to form one token per atom, while the lattice embedding produces a single global lattice token. The resulting sequence is processed by an AdaLN-conditioned Transformer trunk, and output heads predict ˆH, ˆF, and ˆy.
+
+Collecting these predictions over all atoms gives 
+
+( ˆH, ˆF, ˆy) = Crystalite θ (Hσ , Fσ , yσ ; σ), (13) which are interpreted as denoised predictions and combined with the noisy inputs through the EDM preconditioning rules described in Appendix D. A more detailed architectural description is provided in Appendix C. 
+
+3.4 Geometry Enhancement Module (GEM) 
+
+Crystalite augments standard self-attention with a geometry-dependent additive bias, recomputed at each denoising step. This design is related in spirit to additive structural biases used in graph transformers such as Graphormer (Ying et al., 2021), but here the bias is constructed from periodic minimum-image crystal geometry. This injects periodic pairwise structure into the attention mechanism without requiring equivariant message-passing, as shown in Figure 1. Given the fractional coordinates F and lattice latent y, we reconstruct the lattice matrix L(y). For each atom pair (i, j ), we compute the minimum-image fractional displacement ∆f ⋆ij under periodic boundary conditions and its normalized Cartesian distance: 
+
+¯dij = ∥∆f ⋆ij L(y)∥2
+
+s(y) , (14) where s(y) is a characteristic cell scale; in our implementation we use the mean of the three lattice lengths. Unlike the wrapped fractional residual used in the coordinate loss, GEM selects the periodic image by minimizing the Cartesian quadratic form induced by the lattice metric G = LL ⊤.From this geometry, GEM constructs a head-wise attention bias by combining a direct distance penalty with learned edge features. This combined bias is then modulated by a learned noise-dependent gate gh(σ) to form the final geometric bias: 
+
+Bgeom  
+
+> hij
+
+= gh(σ)
+
+(
+
+Bdist  
+
+> hij
+
++ Bedge 
+
+> hij
+
+)
+
+(15) where the distance penalty Bdist  
+
+> hij
+
+= wh ¯dij uses a learned, monotonically non-positive slope wh ≤ 0, and the edge bias models non-linear interactions through an MLP: 
+
+Bedge  
+
+> hij
+
+= MLP edge 
+
+([ γ∆(∆ f ⋆ij ), γ d( ¯dij ), ψ (y)])  
+
+> h
+
+. (16) Here, γ∆ applies Fourier features to the displacement, γd applies a Radial Basis Function (RBF) kernel to the distance, and ψ(y) is a low-dimensional lattice descriptor. 750k 400k 800k 1.2M 1.6M          
+
+> Training steps
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Percentage (%)
+> UN Rate
+> 50k 400k 800k 1.2M 1.6M
+> Training steps
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> Stability
+> 50k 400k 800k 1.2M 1.6M
+> Training steps
+> 20
+> 25
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> SUN Rate
+> Crystalite (Higher Atom Loss) Crystalite (Lower Atom Loss)
+
+Figure 4: Training-time trade-off in de novo generation. UN rate (left), stability (middle), and SUN rate (right) as a function of training steps for two Crystalite runs with different atom-loss settings. The setting that achieves higher stability also loses UN more quickly, whereas the more diversity-preserving setting yields a flatter and more sustained SUN trajectory. Overall, the figure illustrates the central DNG trade-off: improved distributional fit tends to increase stability, but often at the cost of novelty and uniqueness, making checkpoint selection and loss balancing important in practice. 
+
+This geometric bias is applied exclusively to atom–atom interactions. Padding Bgeom with zeros for any interactions involving the global lattice token, the attention update becomes: 
+
+Attn( Q, K, V ) = softmax 
+
+( QK ⊤
+
+√d + Bgeom 
+
+)
+
+V. (17) This allows the model to emphasize geometrically compatible atom pairs directly in the attention logits while maintaining the simplicity and efficiency of a standard diffusion Transformer. We provide more details on the implementation in Appendix C.2. 
+
+3.5 Channel-wise anti-annealing during sampling. 
+
+During EDM sampling, we optionally apply a channel-wise anti-annealing step, which rescales the reverse-time update separately for the atom-token, coordinate, and lattice channels. Intuitively, this acts as a channel-dependent time warp: if a particular channel denoises more slowly or dominates the remaining error, anti-annealing drives that channel more aggressively toward the denoised prediction while leaving the learned denoiser itself unchanged. This was particularly useful in our setting for improving geometric refinement at sampling time without modifying the training objective. Concretely, for each channel q ∈ { H, F, lat }, we replace the standard Heun-style EDM update by 
+
+z(q) 
+
+> i+1
+
+= ¯ z(q) 
+
+> i
+
++ ( σi+1 − ¯σi) α(q)
+
+> i
+
+d(q) 
+
+> i
+
++ d(q),E i+1 
+
+2 , α(q) 
+
+> i
+
+≥ 1, (18) where α(q) 
+
+> i
+
+is a channel-specific anti-annealing factor derived from an auxiliary Karras schedule, and α(q) 
+
+> i
+
+= 1 
+
+recovers the standard EDM sampler. Full details are given in Appendix D.1, and additional results ablating the effect of anti-annealing on DNG in Appendix F. 
+
+# 4 Experimental Setup 
+
+4.1 Datasets 
+
+We use three realistic datasets to benchmark the models: MP-20 (Xie et al., 2021), a subset of the Materials Project (Jain et al., 2013) containing 45 231 crystalline materials of up to 20 atoms per unit cell with 89 distinct atom types; MPTS-52 (Baird et al., 2024) where each split is derived chronologically from the 8Materials Project and contains 40 476 structures with up to 50 atoms per unit cell – notably the temporal component adds an extra degree of difficulty where the training, validation, and test sets exhibit a fundamental shift in their underlying distributions, making this benchmark particularly challenging; and Alex-MP-20 (Zeni et al., 2025) which contains 675 204 structures with up to 20 atoms per unit cell, derived from Alexandria and MP-20. Here we follow the data splits as given by Hoellmer et al. (2025). 
+
+4.2 Task setup 
+
+We evaluate Crystalite in two settings: de novo generation (DNG) and crystal structure prediction (CSP). In the DNG setting, the model generates atom types, fractional coordinates, and lattice parameters jointly from noise. In the CSP setting, the atomic composition is provided as input, and the model predicts only the crystal geometry, i.e. the fractional coordinates and lattice. Operationally, this is implemented by fixing the chemically structured atom tokens to the known composition and masking the type loss during training and sampling. 
+
+Model settings. Unless otherwise noted, all experiments use the same base Crystalite configuration across datasets and across both de novo generation and crystal structure prediction. The model has approximately 
+
+6.7 × 10 7 trainable parameters and consists of a 14 -layer Transformer with width d = 512 and 16 attention heads, using PCA-compressed Subatomic Tokenization with token dimension dH = 16 . GEM is enabled throughout. We train in bfloat16 and maintain an exponential moving average (EMA) of the parameters; all reported sampling and evaluation results use the EMA weights. Unless noted otherwise, we also use the same EDM sampling setup across benchmarks, including 150 sampling steps and the same channel-wise anti-annealing settings. The only task-specific difference is that in CSP the composition is held fixed, as described above. Full architectural, training, and sampling details are provided in Appendix C, Appendix D, and Table 4. 
+
+Sampling speed benchmarking. For a fair comparison of sampling speed, we measure the wall-clock time required to generate 1,000 crystals on a single NVIDIA H100 GPU. For each model, we use the largest sampling batch size that fits in memory, so that each method is evaluated at its highest feasible throughput. Unless otherwise noted, the reported timing corresponds to the standard inference setting used for cross-model comparison. For Crystalite, we additionally report a second timing, marked with † in Table 2, obtained with FlashAttention and bfloat16 inference. We regard the primary timing as the main comparison across methods, and the daggered number as a reference for the throughput attainable by Crystalite under an optimized implementation. 
+
+# 5 Results and Discussion 
+
+5.1 CSP Results 
+
+Table 1 summarizes the results on the CSP benchmarks. Across all datasets, Crystalite outperforms prior methods. Using Match Rate to assess successful structure recovery and RMSE to measure geometric accuracy (see Appendix E.1), Crystalite achieves state-of-the-art results on both criteria. The improvement is especially pronounced in RMSE, indicating more accurate structural recovery even in settings where match-based performance is already strong. The effect of GEM is examined in more detail in the ablation study in Appendix F.3. We find that GEM has only a limited impact on Match Rate, while consistently improving geometric accuracy, reducing RMSE by approximately 20% across experiments. This indicates that GEM primarily refines local atomic arrangements and overall structural fidelity, rather than affecting whether the correct structural mode is recovered. 9Table 1: Crystal structure prediction results across standard benchmarks. Best values are in bold.                                                          
+
+> Model MP-20 MPTS-52 Alex-MP-20
+> MR RMSE MR RMSE MR RMSE (%) ↑↓(%) ↑↓(%) ↑↓
+> CDVAE 33 .90 0.1045 5.34 0.2106 ––DiffCSP 51 .49 0.0631 12 .19 0.1786 ––FlowMM 61 .39 0.0566 17 .54 0.1726 ––CrystalFlow 62 .02 0.0710 22 .71 0.1548 ––KLDM 65 .83 0.0517 23 .93 0.1276 ––OMatG 63 .75 0.0720 25 .15 0.1931 64 .71 0.1251
+> Crystalite 66.05 0.0329 31.49 0.0701 67.52 0.0335
+
+5.2 DNG Results 
+
+Table 2 summarizes the main de novo generation results. Crystalite achieves the highest SUN rate and the fastest sampling speed among the compared methods. Since de novo generation is fundamentally governed by a trade-off between stability and diversity, we treat SUN as the primary summary metric. The remaining reported metrics can be grouped into two broad categories: quality and diversity metrics, and stability and distribution metrics, which are described in detail in Appendix E.1. In practice, however, these quantities are tightly coupled, so model selection depends strongly on which aspect of performance is prioritized. As shown in Figure 4, training induces a clear trade-off. As optimization progresses, the model more closely matches the training distribution, which tends to improve validity, stability, and distributional alignment, but at the same time reduces novelty and uniqueness. Intuitively, a more distribution-matched model generates structures that are easier to stabilize and more chemically plausible, yet also more likely to repeat previously seen chemical formulas and structural motifs. This trade-off is especially pronounced because atom types are modeled jointly with coordinates and lattice parameters, making it difficult to control compositional memorization independently of structural quality. One simple and effective way to mitigate this is to substantially downweight the atom-type loss. Figure 4 shows that when the atom-type prediction task is made harder in this way, the SUN metric saturates more gradually, but remains stable for longer during training. By contrast, with more evenly balanced loss weights, stability and percentage of stable, unique and novel crystals (SUN) improve rapidly at first, but then deteriorate once the model begins to memorize chemical formulas. This also makes checkpoint selection more fragile. We therefore choose to significantly downweight the atom-type loss, which leads to smoother and more stable training dynamics. This behavior is reflected across the evaluation metrics. Structural validity, compositional validity, stability, and Wasserstein-based distribution metrics generally improve with longer training, particularly once the model begins to fit the training distribution more closely. In contrast, uniqueness, novelty, and consequently the UN rate tend to decrease over the same period. We therefore view DNG evaluation as fundamentally governed by a trade-off between stability and diversity . For this reason, we emphasize the SUN metric in the main table, since it directly captures the balance between these competing objectives. As further analyzed in the GEM ablation study (Appendix F.2), GEM mainly improves the stability side of this trade-off, leading to higher stability and consequently a consistently higher SUN rate throughout training. 
+
+Fairness and comparability between models. Our primary evaluation pipeline uses NequIP-based relaxation (Batzner et al., 2022) together with SUN-based checkpoint selection. For fairness, all baseline results reported in the main tables were obtained by evaluating the competing methods within this same pipeline, rather than by taking published numbers at face value. Nevertheless, since those methods may originally have been trained and checkpointed under different criteria, it remains important to verify that Crystalite does not benefit disproportionately from our setup. We therefore also evaluate Crystalite under 10 Table 2: Generative quality, diversity, stability, distribution, and sampling speed metrics. All metrics are computed from 10,000 generated crystals per model. Stability-based quantities are evaluated using the same NequIP-based relaxation pipeline for all methods. Sampling time is reported in seconds per 1k generated crystals; for Crystalite, †                                                                                       
+
+> denotes an optimized implementation.
+> Model Quality and Diversity Stability, Distribution, and Speed
+> Struct. Val. Comp. Val. Unique Novel U.N. Stable S.U.N. wdist-ρwdist N-ary Time/1k (%) ↑(%) ↑(%) ↑(%) ↑(%) ↑(%) ↑(%) ↑↓↓(s) ↓
+> FlowMM 93 .03 83 .15 97 .44 85 .00 83 .99 46 .05 31 .64 1.389 0.075 1560 CrystalDiT 77 .82 67 .28 90 .88 59 .33 56 .86 83.41 41 .70 0.202 0.171 73.72 DiffCSP 99.93 82 .10 96 .90 89 .53 87 .89 50 .28 38 .60 0.192 0.344 237 MatterGen 99 .78 83 .72 98.10 91.14 90.26 51 .70 42 .29 0.088 0.184 2639 ADiT 99 .52 90.15 90 .25 59 .80 56 .91 76 .90 36 .76 0.231 0.089 84.81
+> Crystalite 99 .61 81 .94 95 .33 79 .15 77 .12 70 .97 48.55 0.046 0.125 22.36/5.14 †
+
+external benchmarking pipelines, namely the MatterGen (Zeni et al., 2025) evaluation pipeline and LeMat GenBench (Betala et al., 2026); the corresponding results are reported in Table 3 and Appendix Table 5. 
+
+Extensive and intensive metrics. In de novo generation, evaluation metrics do not all behave the same way as the number of generated samples increases. Some reflect properties of an individual draw and can therefore be estimated reliably from random subsets. Others instead characterize the generated set as a whole and vary systematically with the total sampling budget. By analogy with physics, we refer to these as sample-intensive and sample-extensive metrics, respectively. Uniqueness, and derived quantities such as the UN rate, are strongly sample-extensive: as more crystals are generated, duplicates inevitably accumulate, so these metrics typically decrease. This dependence matters in practice, since a useful crystal generator should not only produce plausible structures, but should also continue to discover many distinct and previously unseen candidates at scale. We therefore compare Crystalite and ADiT in Figure 5 as a function of the number of generated crystals, showing that Crystalite preserves diversity more effectively as sampling is scaled up. More broadly, this suggests that sample-extensive metrics should always be reported together with the total number of generated samples, since their values are not directly comparable across different budgets. We discuss this issue further in Appendix E.3, where we formalize the distinction and clarify which metrics can, and cannot, be reliably estimated from subsets. 11 10 2 10 3 10 4 10 5 10 6    
+
+> Number of Samples (Log Scale)
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Rate
+> Uniqueness
+> Crystalite
+> ADiT
+> 10 210 310 410 510 6
+> Number of Samples (Log Scale)
+> 0.40
+> 0.45
+> 0.50
+> 0.55
+> 0.60
+> 0.65
+> 0.70
+> 0.75
+> UN Rate
+> Crystalite
+> ADiT
+
+Figure 5: Large-scale generation. Uniqueness and unique-and-novel (UN) rate are shown as a function of the number of generated crystals for Crystalite and ADiT. Crystalite consistently preserves more diversity at scale, reaching a higher UN rate at 10 6 samples and higher uniqueness. 
+
+Table 3: Generation, stability, and relaxation metrics for MP-20 trained models on the LeMat-GenBench leaderboard (Betala et al., 2026), separated by relaxation status. 
+
+Model Valid Unique Novel Stable Metastable SUN MSUN E Above Hull Relax. RMSD (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ (eV) ↓ (Å) ↓
+
+Pre-Relaxed Models 
+
+WyFormer [22] 93 .40 93 .00 66 .40 0.50 15 .70 0.10 1.90 0.4988 0.8121 
+
+WyFormer-DFT [22] 95 .20 95 .00 66 .40 3.70 24 .80 0.40 7.80 0.2708 0.4173 
+
+PLaID++ [41] 96 .00 77 .80 24 .20 12 .40 60.70 1.00 7.60 0.0854 0.1286 
+
+MatterGen [45] 95 .70 95 .10 70.50 2.00 33 .40 0.20 15 .00 0.1834 0.3878 
+
+OMatG [14] 96 .40 95 .20 51 .20 11 .60 49 .80 1.00 18 .00 0.0956 0.0759 Crystalite 97.20 95.80 53 .20 12.70 51 .60 1.50 22.60 0.0905 0.1320 
+
+Non-Pre-Relaxed Models 
+
+Crystal-GFN [30] 51 .70 51 .70 51 .70 0.00 0.00 0.00 0.00 2.0858 1.8665 
+
+ADiT [20] 90 .60 87 .80 26 .00 0.40 36.50 0.00 1.00 0.3333 0.3794 
+
+CrystalFormer [5] 69 .90 69 .40 31 .80 1.40 28 .80 0.00 3.10 0.7039 0.6585 
+
+SymmCD [26] 73 .40 73 .00 47 .00 1.40 18 .60 0.10 2.40 0.8761 0.8720 
+
+DiffCSP++ [17] 95 .30 95.10 62 .00 1.00 26 .40 0.20 5.00 0.4093 0.6933 
+
+DiffCSP [16] 95.70 94 .80 66.20 2.30 29 .80 0.10 8.50 0.2747 0.3794 
+
+# 6 Conclusion 
+
+We introduced Crystalite, a lightweight diffusion Transformer for crystal structure prediction and de novo 
+
+crystal generation. By combining chemically structured atom tokens with the Geometry Enhancement Module (GEM), Crystalite injects crystal-specific inductive bias into a standard Transformer without relying on expensive equivariant message passing. Across benchmarks, Crystalite achieves state-of-the-art crystal structure prediction performance and strong 
+
+de novo generation results, attaining the best SUN score among the evaluated baselines while sampling substantially faster than geometry-heavy alternatives. These results show that strong crystal modeling performance does not necessarily require full equivariance, provided that periodic geometry and chemical 12 structure are incorporated in the right way. Overall, Crystalite offers a simple and efficient approach to crystal modeling and suggests that lightweight diffusion Transformers are a promising direction for scalable materials discovery. 
+
+# References 
+
+Michael Albergo, Nicholas M. Boffi, and Eric Vanden-Eijnden. Stochastic interpolants: A unifying framework for flows and diffusions. Journal of Machine Learning Research , 26(209):1–80, 2025. URL http://jmlr.o rg/papers/v26/23-1605.html .Sterling G. Baird, Hasan M. Sayeed, Joseph Montoya, and Taylor D. Sparks. matbench-genmetrics: A python library for benchmarking crystal structure generative models using time-based splits of materials project structures. Journal of Open Source Software , 9(97):5618, 2024. doi: 10.21105/joss.05618. URL 
+
+https://doi.org/10.21105/joss.05618 .Simon Batzner, Albert Musaelian, Lixin Sun, Mario Geiger, Jonathan P Mailoa, Mordechai Kornbluth, Nicola Molinari, Tess E Smidt, and Boris Kozinsky. E(3)-equivariant graph neural networks for data-efficient and accurate interatomic potentials. Nature communications , 13(1):2453, 2022. Siddharth Betala, Samuel P. Gleason, Ali Ramlaoui, Andy Xu, Georgia Channing, Daniel Levy, Clémentine Fourrier, Nikita Kazeev, Chaitanya K. Joshi, Sékou-Oumar Kaba, Félix Therrien, Alex Hernandez-Garcia, Rocío Mercado, N. M. Anoop Krishnan, and Alexandre Duval. Lemat-genbench: A unified evaluation framework for crystal generative models, 2026. URL https://arxiv.org/abs/2512.04562 .Zhendong Cao, Xiaoshan Luo, Jian Lv, and Lei Wang. Space Group Informed Transformer for Crystalline Materials Generation. Science Bulletin , 70(21):3522–3533, November 2025. ISSN 20959273. doi: 10.1016/j. scib.2025.09.035. Ricky T. Q. Chen and Yaron Lipman. Flow Matching on General Geometries, February 2024. François Cornet, Federico Bergamin, Arghya Bhowmik, Juan Maria Garcia Lastra, Jes Frellsen, and Mikkel N. Schmidt. Kinetic Langevin Diffusion for Crystalline Materials Generation, July 2025. Stefano Curtarolo, Wahyu Setyawan, Gus L. W. Hart, Michal Jahnatek, Roman V. Chepulskii, Richard H. Taylor, Shidong Wang, Junkai Xue, Kesong Yang, Ohad Levy, Michael J. Mehl, Harold T. Stokes, Denis O. Demchenko, and Dane Morgan. AFLOW: An automatic framework for high-throughput materials discovery. 
+
+Computational Materials Science , 58:218–226, 2012. doi: 10.1016/j.commatsci.2012.02.005. Daniel W. Davies, Keith T. Butler, Adam J. Jackson, Jonathan M. Skelton, Kazuki Morita, and Aron Walsh. Smact: Semiconducting materials by analogy and chemical theory. Journal of Open Source Software , 4(38): 1361, 2019. doi: 10.21105/joss.01361. URL https://doi.org/10.21105/joss.01361 .Johannes Gasteiger, Florian Becker, and Stephan Günnemann. Gemnet: Universal directional graph neural networks for molecules. In Conference on Neural Information Processing Systems (NeurIPS) , 2021. Stefan Goedecker. Linear scaling electronic structure methods. Reviews of Modern Physics , 71(4):1085–1123, 1999. doi: 10.1103/RevModPhys.71.1085. Nate Gruver, Anuroop Sriram, Andrea Madotto, Andrew Gordon Wilson, C. Lawrence Zitnick, and Zachary Ulissi. Fine-Tuned Language Models Generate Stable Inorganic Materials as Text, July 2025. Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising Diffusion Probabilistic Models, December 2020. Philipp Hoellmer, Thomas Egg, Maya M. Martirossyan, Eric Fuemmeler, Zeren Shui, Amit Gupta, Pawan Prakash, Adrian Roitberg, Mingjie Liu, George Karypis, Mark Transtrum, Richard G. Hennig, Ellad B. Tadmor, and Stefano Martiniani. Open Materials Generation with Stochastic Interpolants, 2025. 13 Anubhav Jain, Shyue Ping Ong, Geoffroy Hautier, Wei Chen, William Davidson Richards, Stephen Dacek, Shreyas Cholia, Dan Gunter, David Skinner, Gerbrand Ceder, and Kristin A. Persson. Commentary: The Materials Project: A materials genome approach to accelerating materials innovation. APL Materials , 1(1): 011002, July 2013. ISSN 2166-532X. doi: 10.1063/1.4812323. Rui Jiao, Wenbing Huang, Peijia Lin, Jiaqi Han, Pin Chen, Yutong Lu, and Yang Liu. Crystal Structure Prediction by Joint Equivariant Diffusion, March 2024a. Rui Jiao, Wenbing Huang, Yu Liu, Deli Zhao, and Yang Liu. Space group constrained crystal generation. In 
+
+The Twelfth International Conference on Learning Representations , 2024b. URL https://openreview.n et/forum?id=jkvZ7v4OmP .Emily Jin, Andrei Cristian Nica, Mikhail Galkin, Jarrid Rector-Brooks, Kin Long Kelvin Lee, Santiago Miret, Frances H. Arnold, Michael Bronstein, Avishek Joey Bose, Alexander Tong, and Cheng-Hao Liu. OXtal: An All-Atom Diffusion Model for Organic Crystal Structure Prediction, December 2025. R. O. Jones. Density functional theory: Its origins, rise to prominence, and future. Reviews of Modern Physics , 87(3):897–923, 2015. doi: 10.1103/RevModPhys.87.897. Chaitanya K. Joshi, Xiang Fu, Yi-Lun Liao, Vahe Gharakhanyan, Benjamin Kurt Miller, Anuroop Sriram, and Zachary Ward Ulissi. All-atom diffusion transformers: Unified generative modelling of molecules and materials. In Forty-second International Conference on Machine Learning , 2025. URL https: //openreview.net/forum?id=89QPmZjIhv .Tero Karras, Miika Aittala, Timo Aila, and Samuli Laine. Elucidating the design space of diffusion-based generative models. In S. Koyejo, S. Mohamed, A. Agarwal, D. Belgrave, K. Cho, and A. Oh, editors, 
+
+Advances in Neural Information Processing Systems , volume 35, pages 26565–26577. Curran Associates, Inc., 2022. URL https://proceedings.neurips.cc/paper_files/paper/2022/file/a98846e9d9cc0 1cfb87eb694d946ce6b-Paper-Conference.pdf .Nikita Kazeev, Wei Nong, Ignat Romanov, Ruiming Zhu, Andrey Ustyuzhanin, Shuya Yamazaki, and Kedar Hippalgaonkar. Wyckoff Transformer: Generation of Symmetric Crystals, June 2025. Subhojyoti Khastagir, Kishalay Das, Pawan Goyal, Seung-Cheol Lee, Satadeep Bhattacharjee, and Niloy Ganguly. LLM Meets Diffusion: A Hybrid Framework for Crystal Material Generation, October 2025. Scott Kirklin, James E. Saal, Bryce Meredig, Alex Thompson, Jeff W. Doak, Muratahan Aykol, Stephan Rühl, and Chris Wolverton. The open quantum materials database (OQMD): Assessing the accuracy of DFT formation energies. npj Computational Materials , 1:15010, 2015. doi: 10.1038/npjcompumats.2015.10. W. Kohn and L. J. Sham. Self-consistent equations including exchange and correlation effects. Phys. Rev. ,140:A1133–A1138, Nov 1965. doi: 10.1103/PhysRev.140.A1133. URL https://link.aps.org/doi/10.11 03/PhysRev.140.A1133 .Daniel Levy, Siba Smarak Panigrahi, Sékou-Oumar Kaba, Qiang Zhu, Kin Long Kelvin Lee, Mikhail Galkin, Santiago Miret, and Siamak Ravanbakhsh. SymmCD: Symmetry-preserving crystal generation with diffusion models. In The Thirteenth International Conference on Learning Representations , 2025. URL 
+
+https://openreview.net/forum?id=xnssGv9rpW .Xiaoshan Luo, Zhenyu Wang, Qingchang Wang, Xuechen Shao, Jian Lv, Lei Wang, Yanchao Wang, and Yanming Ma. CrystalFlow: A flow-based generative model for crystalline materials. Nature Communications ,16(1):9267, October 2025. ISSN 2041-1723. doi: 10.1038/s41467-025-64364-4. Amil Merchant, Simon Batzner, Samuel S. Schoenholz, Muratahan Aykol, Gowoon Cheon, and Ekin Dogus Cubuk. Scaling deep learning for materials discovery. Nature , 624(7990):80–85, November 2023. ISSN 1476-4687. doi: 10.1038/s41586-023-06735-9. URL http://dx.doi.org/10.1038/s41586-023-06735-9 .14 Benjamin Kurt Miller, Ricky T. Q. Chen, Anuroop Sriram, and Brandon M. Wood. Flowmm: generating materials with riemannian flow matching. In Proceedings of the 41st International Conference on Machine Learning , ICML’24. JMLR.org, 2024. Mistal, Alex Hernández-García, Alexandra Volokhova, Alexandre AGM Duval, Yoshua Bengio, Divya Sharma, Pierre Luc Carrier, Michał Koziarski, and Victor Schmidt. Crystal-GFN: sampling materials with desirable properties and constraints. In AI for Accelerated Materials Design - NeurIPS 2023 Workshop , 2023. URL 
+
+https://openreview.net/forum?id=l167FjdPOv .Trupti Mohanty, Maitrey Mehta, Hasan M. Sayeed, Vivek Srikumar, and Taylor D. Sparks. CrysText: A Generative AI Approach for Text-Conditioned Crystal Structure Generation using LLM, December 2024. Alex Morehead, Miruna Cretu, Antonia Panescu, Rishabh Anand, Maurice Weiler, Tynan Perez, Samuel Blau, Steven Farrell, Wahid Bhimji, Anubhav Jain, Hrushikesh Sahasrabuddhe, Pietro Lio, Tommi Jaakkola, Rafael Gomez-Bombarelli, Rex Ying, N. Benjamin Erichson, and Michael W. Mahoney. Zatom-1: AMultimodal Flow Foundation Model for 3D Molecules and Materials, February 2026. Artem R. Oganov and Colin W. Glass. Crystal structure prediction using ab initio evolutionary techniques: Principles and applications. The Journal of Chemical Physics , 124(24), June 2006. ISSN 1089-7690. doi: 10.1063/1.2210932. URL http://dx.doi.org/10.1063/1.2210932 .William Peebles and Saining Xie. Scalable Diffusion Models with Transformers, March 2023. Chris J Pickard and R J Needs. Ab initio random structure searching. Journal of Physics: Condensed Matter ,23(5):053201, jan 2011. doi: 10.1088/0953-8984/23/5/053201. URL https://doi.org/10.1088/0953-8 984/23/5/053201 .Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. High-Resolution Image Synthesis with Latent Diffusion Models. In 2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pages 10674–10685, June 2022. doi: 10.1109/CVPR52688.2022.01042. Víctor Garcia Satorras, Emiel Hoogeboom, and Max Welling. E(n) equivariant graph neural networks. In Marina Meila and Tong Zhang, editors, Proceedings of the 38th International Conference on Machine Learning , volume 139 of Proceedings of Machine Learning Research , pages 9323–9332. PMLR, 18–24 Jul 2021. URL https://proceedings.mlr.press/v139/satorras21a.html .Yang Song and Stefano Ermon. Generative modeling by estimating gradients of the data distribution. In H. Wallach, H. Larochelle, A. Beygelzimer, F. d 'Alché-Buc, E. Fox, and R. Garnett, editors, Advances in Neural Information Processing Systems , volume 32. Curran Associates, Inc., 2019. URL https://proceedi ngs.neurips.cc/paper_files/paper/2019/file/3001ef257407d5a371a96dcd947c7d93-Paper.pdf .Anuroop Sriram, Benjamin Kurt Miller, Ricky T. Q. Chen, and Brandon M. Wood. FlowLLM: Flow Matching for Material Generation with Large Language Models as Base Distributions, October 2024. Tian Xie, Xiang Fu, Octavian-Eugen Ganea, Regina Barzilay, and Tommi Jaakkola. Crystal Diffusion Variational Autoencoder for Periodic Material Generation. arXiv preprint arXiv:2110.06197 , 2021. Andy Xu, Rohan Desai, Larry Wang, Gabriel Hope, and Ethan Ritz. Plaid++: A preference aligned language model for targeted inorganic materials design, 2025. URL https://arxiv.org/abs/2509.07150 .Sherry Yang, KwangHwan Cho, Amil Merchant, Pieter Abbeel, Dale Schuurmans, Igor Mordatch, and Ekin Dogus Cubuk. Scalable Diffusion for Materials Generation, June 2024. Xiaohan Yi, Guikun Xu, Xi Xiao, Zhong Zhang, Liu Liu, Yatao Bian, and Peilin Zhao. CrystalDiT: A Diffusion Transformer for Crystal Generation, August 2025. Chengxuan Ying, Tianle Cai, Shengjie Luo, Shuxin Zheng, Guolin Ke, Di He, Yanming Shen, and Tie-Yan Liu. Do transformers really perform bad for graph representation?, 2021. URL https://arxiv.org/abs/ 2106.05234 .15 Claudio Zeni, Robert Pinsler, Daniel Zügner, Andrew Fowler, Matthew Horton, Xiang Fu, Zilong Wang, Aliaksandra Shysheya, Jonathan Crabbé, Shoko Ueda, Roberto Sordillo, Lixin Sun, Jake Smith, Bichlien Nguyen, Hannes Schulz, Sarah Lewis, Chin-Wei Huang, Ziheng Lu, Yichi Zhou, Han Yang, Hongxia Hao, Jielan Li, Chunlei Yang, Wenjie Li, Ryota Tomioka, and Tian Xie. A generative model for inorganic materials design. Nature , 639(8055):624–632, March 2025. ISSN 0028-0836, 1476-4687. doi: 10.1038/s415 86-025-08628-5. 16 A Introduction to Materials 
+
+A.1 Unit-cell representation of crystals 
+
+A crystalline material is, ideally, an infinite periodic arrangement of atoms in three-dimensional space, as shown in Figure 6. Rather than describing the full solid atom by atom, it suffices to specify a single unit cell 
+
+together with the rule that this cell repeats under integer translations of the lattice. This is the standard representation used throughout the paper. Concretely, we represent a crystal with N atoms by the triple 
+
+C = ( A, F, L), (19) where A ∈ { 0, 1}N ×NZ is the atom-type matrix, F = [ f ⊤ 
+
+> 1
+
+; . . . ; f ⊤ 
+
+> N
+
+] ∈ [0 , 1) N ×3 contains the fractional coordinates, and L ∈ R3×3 is the lattice matrix. Each row of A satisfies Ai = onehot (ai) for some atomic species ai ∈ { 1, . . . , N Z }. The pair (A, F) specifies the basis atoms inside the cell, while L determines the geometry of the cell itself. 0 1 2 3 4 5  
+
+> Cartesian r1(Å)
+> 1
+> 0
+> 1
+> 2
+> 3
+> 4
+> Cartesian  r2 (Å)
+
+Unit Cell        
+
+> Elements
+> Li
+> Mn
+> O
+> l1
+> l2
+> 202468
+> Cartesian r1(Å)
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Cartesian  r2 (Å)
+
+Neighbouring Cells 
+
+> Elements
+> Li
+> Mn
+> O
+> l1
+> l2
+
+Figure 6: A crystal can be represented by a unit cell together with its periodic repetition under lattice translations. 
+
+Fractional and Cartesian coordinates. We use fractional coordinates because they make periodicity explicit. Each row fi ∈ [0 , 1) 3 gives the position of atom i relative to the lattice basis. Under the row-vector convention used in this paper, Cartesian coordinates are obtained by 
+
+X = FL ∈ RN ×3, (20) so that the Cartesian coordinate of atom i is the i-th row 
+
+xi = fiL. (21) Thus, L controls the size and shape of the cell, while F determines where atoms are placed inside it. Figure 7 visualizes this transformation. 17 2 1 0 1 2 3 4 5 6  
+
+> Cartesian r1(Å)
+> 1
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> Cartesian  r2 (Å)
+
+Real Space   
+
+> l1
+> l2
+> 01
+> Fractional f1
+> 0
+> 1
+> Fractional  f2
+
+Fractional Space 
+
+> e1
+> e2
+
+Figure 7: Fractional coordinates are defined in the unit cube and mapped to Cartesian space by the lattice matrix. Integer shifts in fractional coordinates correspond to lattice translations in real space. 
+
+Periodic boundary conditions. Fractional coordinates live on the flat torus 
+
+T3 ∼= ( R/Z)3, (22) meaning that f and f + n represent the same physical position for any n ∈ Z3. This is precisely the periodic boundary condition: atoms leaving one face of the unit cell re-enter through the opposite face. The full infinite crystal is therefore generated by translating each basis atom by all integer lattice shifts: 
+
+xi, n = ( fi + n)L, n ∈ Z3. (23) A finite unit-cell description thus implicitly defines the entire periodic material. 
+
+Wrapped residuals and metric-aware minimum-image geometry. Because fractional coordinates are periodic, geometric quantities must respect the torus structure. In the coordinate loss, we use the componentwise wrapped residual in fractional space, 
+
+δwrap  
+
+> ij
+
+= wrap( fi − fj ), wrap( u) = u − round( u), (24) so that each component of δwrap  
+
+> ij
+
+lies in [− 12 , 12 ). The associated Cartesian displacement and distance are 
+
+rwrap  
+
+> ij
+
+= δwrap  
+
+> ij
+
+L, dwrap  
+
+> ij
+
+= ∥rwrap  
+
+> ij
+
+∥2. (25) In the Geometry Enhancement Module (GEM), however, we do not use componentwise wrapping. Instead, we use a metric-aware periodic-image search under the lattice metric. Writing 
+
+G = LL ⊤, (26) and restricting the search to a finite set of lattice offsets ΩR = {− R, . . . , R }3, we define 
+
+∆f ⋆ij = arg min 
+
+> r∈ΩR
+
+(fi − fj + r) G (fi − fj + r)⊤, (27) 18 with corresponding Cartesian displacement and distance 
+
+r⋆ij = ∆ f ⋆ij L, d⋆ij = ∥r⋆ij ∥2. (28) For orthogonal cells these two constructions coincide, but for general non-orthogonal cells they need not be equivalent. Throughout the paper, we therefore distinguish between the wrapped fractional residual used in the coordinate loss and the metric-aware minimum-image geometry used in GEM. When we refer to minimum-image geometry, we mean the latter construction. 
+
+A.2 Symmetries and representation non-uniqueness 
+
+The same physical crystal can admit multiple equivalent representations. As a result, the target distribution over crystals should respect several symmetries. In the notation of the main paper, these can be expressed directly in terms of (A, F, L).
+
+Permutation of atom indices. The ordering of atoms inside the unit cell is arbitrary. For any permutation matrix P ∈ P N ,
+
+p(A, F, L) = p(P A, P F, L). (29) 
+
+Global rotation in Cartesian space. A rigid rotation of the entire crystal changes only the Cartesian frame, not the underlying material. Under our row-vector convention, this corresponds to right multiplication of the lattice matrix. For any rotation R ∈ SO (3) ,
+
+p(A, F, L) = p(A, F, LR). (30) 
+
+Permutation of the lattice basis. The choice of lattice basis vectors is not unique. Permuting the lattice basis while applying the inverse permutation to the fractional coordinates leaves the Cartesian crystal unchanged. For any S ∈ P 3,
+
+p(A, F, L) = p(A, FS⊤, S L). (31) 
+
+Global translation on the torus. Shifting all fractional coordinates by the same torus element does not change the crystal. For any t ∈ T3,
+
+p(A, F, L) = p(A, wrap( F + 1t ⊤), L), (32) where 1 ∈ RN denotes the all-ones vector. These symmetries motivate several of the design choices in Crystalite. In particular, we represent positions in fractional coordinates, use wrapped periodic residuals for coordinate denoising, use metric-aware minimum-image geometry in GEM, and apply random global translations during training to encourage approximate translation equivariance. 19 ¡1.0 ¡0.5 0.0 0.5 1.0 1.5 
+
+> PC1
+> ¡1.0
+> ¡0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> PC2
+
+Subatomic Tokenization PCA 
+
+> s-block
+> p-block
+> d-block
+> f-block
+
+Figure 8: Two-dimensional PCA projection of the chemically structured atom tokens. Each point corresponds to one supported element after projecting the balanced descriptors onto the first two principal components. The projection shows that the tokenization preserves meaningful chemical organization even after strong dimensionality reduction. 
+
+# B Subatomic Tokenization of Atoms 
+
+B.1 Chemically Structured Atom Tokens 
+
+We replace the usual one-hot atom identity with a continuous token that encodes basic chemical structure while still allowing deterministic decoding back to a valid element. The construction starts from simple periodic-table information and valence-shell occupancies, then standardizes and balances these features before optionally compressing them with PCA. Let ai ∈ { 1, . . . , N Z } denote the atomic number at site i. For each supported element z ∈ { 1, . . . , N Z }, we build a descriptor from four ingredients: its period, its group, its block, and its ground-state valence-shell occupancies. Concretely, let r(z) ∈ { 1, . . . , 7} be the period, g(z) ∈ { 0, . . . , 18 } the group, where g(z) = 0 is reserved for f -block elements, and b(z) ∈ { s, p, d, f } the block. Let (sz , p z , d z , f z ) denote the corresponding valence occupancies from a fixed lookup table. We then define the raw descriptor 
+
+dz =
+
+[
+
+onehot 7
+
+(r(z) − 1), onehot 19 
+
+(g(z)), onehot 4
+
+(b(z)), s z /2, p z /6, d z /10 , f z /14 
+
+]
+
+. (33) In our implementation this gives a 34 -dimensional vector, since 
+
+7 + 19 + 4 + 4 = 34 .
+
+Because these feature groups have different dimensionalities, we standardize each coordinate across the supported elements and then rebalance the groups so that large one-hot blocks do not dominate purely because they contain more entries. Let 
+
+D =
+
+
+
+d⊤
+
+> 1
+
+...
+
+d⊤
+
+> NZ
+
+ ∈ RNZ ×34 
+
+collect the raw descriptors for all elements. We compute the featurewise mean and standard deviation, 
+
+μ = 1
+
+NZNZ∑
+
+> z=1
+
+dz , σ = std( D),
+
+20 ¡0.5 ¡0.4 ¡0.3 ¡0.2 ¡0.1 0.0 0.1 0.2 
+
+> PC1
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> PC2
+
+Fe Neighborhood in Subatomic Tokenization PCA 
+
+> s-block
+> p-block
+> d-block
+> f-block
+
+Figure 9: Local neighborhood of Fe in the two-dimensional PCA space. The plot highlights Fe together with its nearest elements in the projected representation, illustrating how the learned token geometry places chemically related species close to one another. 
+
+and form the standardized descriptor ˜dz = ( dz − μ) ⊘ σ, (34) where ⊘ denotes elementwise division. Any near-zero entry of σ is replaced by 1 for numerical stability. We next split ˜dz into the four groups period (7) , group (19) , block (4) , valence (4) ,
+
+and rescale each group by the inverse square root of its dimensionality. If ˜d(G) 
+
+> z
+
+denotes the subvector corresponding to group G, we define ¯d(G) 
+
+> z
+
+= |G|−1/2 ˜d(G) 
+
+> z
+
+. (35) Concatenating the reweighted groups gives the balanced descriptor ¯dz . The final raw token is then obtained by ℓ2-normalization, 
+
+hz = ¯dz
+
+∥¯dz ∥2
+
+. (36) For a crystal with atomic numbers (a1, . . . , a N ), the atom-type channel becomes 
+
+H =
+
+
+
+h⊤
+
+> a1
+
+...
+
+h⊤
+
+> aN
+
+ ∈ RN ×dH , (37) with dH = 34 in the raw representation. When a lower-dimensional token is preferred, we apply PCA to the balanced descriptors. Let 
+
+¯D =
+
+
+
+¯d⊤
+
+> 1
+
+...
+
+¯d⊤
+
+> NZ
+
+ ∈ RNZ ×34 ,
+
+21 and let Ud ∈ R34 ×d contain the top d principal directions. Each element is then represented by 
+
+pz = ¯dz Ud ∈ Rd, hPCA  
+
+> z
+
+= pz
+
+∥pz ∥2
+
+. (38) This gives a compressed tokenization with dH = d. A two-dimensional PCA projection of the element tokens is shown in Figure 8. Even in two dimensions, the representation retains visible chemical structure. Figure 9 shows the local neighborhood of Fe in this projected space, which provides an intuitive view of how chemically related elements cluster around it. Finally, both the raw and PCA-compressed tokens can be decoded deterministically by nearest-prototype matching. Given a predicted continuous token ˆhi, we assign the atomic species as 
+
+ˆai = arg max  
+
+> z∈{ 1,...,N Z}
+
+⟨ˆhi, h⋆z ⟩, (39) where h⋆z is either the raw prototype hz or the PCA-compressed prototype hPCA  
+
+> z
+
+. Since all prototypes are normalized, this is equivalent to cosine-similarity decoding. 22 C Crystalite Architecture 
+
+This appendix provides a more detailed description of Crystalite using the notation of the main text. Recall that a crystal is represented as 
+
+C = ( A, F, L),
+
+and that the diffusion model operates on the continuous state 
+
+(H, F, y),
+
+where H denotes the chemically structured atom tokens obtained from A, and y ∈ R6 is the lower-triangular lattice parameterization satisfying L = L(y). Figure 3 gives an overview of the full architecture, while Figure 10 illustrates the Geometry Enhancement Module (GEM). 
+
+C.1 Tokenization and input embeddings 
+
+Each atomic site i contributes one token to the Transformer sequence. The chemically structured atom token 
+
+Hi ∈ RdH is first mapped to the model dimension through a learned embedder EH ,
+
+hHi = EH (Hi), (40) where EH is implemented as a two-layer MLP with SiLU activation acting directly on the continuous atom token: 
+
+EH : RdH → Rd, Linear( dH , d ) → SiLU → Linear( d, d ).
+
+The corresponding fractional coordinate fi ∈ [0 , 1) 3 is embedded separately through 
+
+hFi = EF (fi) = MLP F
+
+(γF (fi)), (41) where γF denotes a deterministic Fourier feature map. Concretely, we use sinusoidal features at multiple frequencies, 
+
+γF (fi) = [ sin(2 πℓ fi), cos(2 πℓ fi)]nF
+
+> ℓ=1
+
+,
+
+followed by a two-layer MLP with SiLU activation. Thus EF has the form 
+
+EF : R6nF → Rd, Linear(6 nF , d ) → SiLU → Linear( d, d ),
+
+with nF = 32 in the base configuration. The resulting atom token is 
+
+tatom  
+
+> i
+
+= EH (Hi) + EF (fi). (42) The lattice is represented by a single global token. The lattice latent y ∈ R6 is the lower-triangular parameterization introduced in Eq. (5), and is embedded through 
+
+tlat = Elat (y), (43) where Elat is implemented as a two-layer MLP with SiLU activation acting directly on y:
+
+Elat : R6 → Rd, Linear(6 , d ) → SiLU → Linear( d, d ).
+
+For a crystal with N atoms, the initial Transformer sequence is therefore 
+
+T(0) = [tatom 1 , . . . , tatom  
+
+> N
+
+, tlat ] ∈ R(N +1) ×d. (44) Thus Crystalite uses one token per atom, together with one additional token that summarizes the global unit-cell geometry. The diffusion noise level is embedded through the standard EDM noise coordinate 
+
+cnoise (σ) = 14 log σ, (45) 23 followed by a learned embedder Eσ , giving a conditioning vector 
+
+cσ = Eσ
+
+(cnoise (σ)). (46) This conditioning is injected into every Transformer block through adaptive layer normalization (AdaLN). The token sequence is then processed by a standard Transformer trunk with stacked self-attention and feed-forward blocks. Writing T(k) for the token sequence entering block k, the update can be written schematically as 
+
+T(k+ 12 ) = T(k) + MHA (k)(T(k); cσ , ˜B(k)), (47) 
+
+T(k+1) = T(k+ 12 ) + MLP (k)(T(k+ 12 ); cσ
+
+), (48) where ˜B(k) denotes the optional additive attention bias produced by GEM. When GEM is disabled, ˜B(k) = 0 
+
+and the model reduces to a standard AdaLN-conditioned diffusion Transformer. After the final block, shallow output heads map the updated atom tokens to denoised atom-type and coordinate predictions, and the lattice token to the denoised lattice latent: 
+
+ˆHi = DH (t(K) 
+
+> i
+
+), ˆfi = DF (t(K) 
+
+> i
+
+), ˆy = Dlat (t(K)lat ). (49) Thus atom-wise quantities are predicted from the site tokens, while the global lattice parameters are predicted from the lattice token. 24 C.2 Geometry Enhancement Module (GEM) Detailed Geometry Enhancement Module (GEM) 
+
+ft (Coords) Lt (Lattice) σt (Noise)               
+
+> Sanitize & Transform Generates y1, Gram
+> Pairwise Min-Image Geometry (PBC)
+> Extends images, computes d2, selects minimum
+> Edge Bias Branch Distance Bias Branch Noise Gate Branch
+> Fourier Feat.
+> sin ,cos
+> RBF
+> exp( −γd 2)
+> Expand
+> y1
+> Scale by
+> −softplus (w)
+> Log Transform
+> −log( σt)
+> ∆fij dnorm,ij dnorm,ij y1
+> Concat(Fourier ,RBF ,y1)
+> MLP (Hidden Dim)
+> Affine + Sigmoid
+> σ(α·x+β)
+
++
+
+> Bedge
+> Bdist
+
+× 
+
+> Bgeom
+> Gate g(σt)
+
+Output: attn head bias (B, H, L, L )
+
+Figure 10: Detailed view of the Geometry Enhancement Module (GEM). Starting from the current fractional coordinates and lattice parameters, GEM computes periodic pairwise geometry under minimum-image conventions, converts it into distance and edge-aware attention biases, and injects the resulting signal additively into the attention logits. 
+
+GEM augments self-attention with pairwise geometric biases derived from the current crystal geometry. It does not change the tokenization or prediction heads; instead, it modifies the attention logits through an additive bias tensor. Given the current fractional coordinates F and lattice latent y, GEM first reconstructs the lattice matrix 
+
+L(y) and computes pairwise minimum-image geometry under periodic boundary conditions. Let 
+
+G(y) = L(y)L(y)⊤ (50) denote the corresponding metric tensor. For each pair of atoms (i, j ), we consider periodic offsets r ∈ ΩR =
+
+{− R, . . . , R }3 and define 
+
+∆fij (r) = fi − fj + r. (51) The minimum-image displacement is then chosen as 
+
+∆f ⋆ij = arg min 
+
+r∈ΩR
+
+∆fij (r) G(y) ∆ fij (r)⊤, (52) 25 with corresponding Cartesian distance 
+
+dij = ∥∥∆f ⋆ij L(y)∥∥2. (53) In practice, this distance is normalized by a characteristic cell scale s(y), yielding ¯dij = dij /s (y).From this pairwise geometry, GEM builds two additive bias terms. The first is a distance bias, 
+
+Bdist  
+
+> hij
+
+= αh ¯dij , αh ≤ 0, (54) which acts as a learnable locality prior for each attention head h. The second is an edge-aware bias produced by a small MLP acting on periodic pairwise features, 
+
+ϕij = [γ∆(∆ f ⋆ij ), γ d( ¯dij ), ψ (y)], Bedge  
+
+> hij
+
+= MLP edge (ϕij )h, (55) where γ∆ and γd denote Fourier/RBF feature maps and ψ(y) is a low-dimensional lattice descriptor. The two branches are combined, optionally modulated by a noise-dependent gate, 
+
+B(k) 
+
+> hij
+
+= gh(σ)
+
+(
+
+Bdist  
+
+> hij
+
++ Bedge 
+
+> hij
+
+)
+
+, (56) and then expanded from atom pairs to the full token sequence by leaving lattice-token interactions unbiased: 
+
+˜B(k) 
+
+> h
+
+=
+
+[B(k) 
+
+> h
+
+00⊤ 0
+
+]
+
+. (57) Finally, this bias is added directly to the attention logits, 
+
+Attn( Q, K, V ) = softmax 
+
+( QK ⊤
+
+√d + ˜B(k)
+
+)
+
+V. (58) This construction lets Crystalite inject periodic geometric information directly into attention while preserving the simplicity of a standard Transformer backbone. When GEM is disabled, the model uses the same tokenization, diffusion objective, and output heads, but with ˜B(k) = 0 .26 C.3 Base model configuration 
+
+Unless otherwise stated, the main MP-20 DNG results in the paper use the base Crystalite configuration summarized in Table 4. This instantiation contains approximately 6.7 × 10 7 trainable parameters. It uses a 
+
+14 -layer Transformer trunk with model width d = 512 and 16 attention heads, together with PCA-compressed Subatomic Tokenization with token dimension dH = 16 .
+
+Table 4: Base Crystalite configuration used for the main MP-20 DNG results. 
+
+(a) Architecture 
+
+Component Setting 
+
+Trainable parameters ∼ 67 MTransformer width d 512 Transformer layers 14 Attention heads 16 Dropout / attn. dropout 0 / 0 Atom tokenization Subatomic, PCA dH = 16 
+
+Coordinate embedding Fourier, 32 freqs. Coordinate head direct fractional head GEM enabled GEM sharing shared across layers PBC search radius R 1Distance bias enabled Edge-aware bias enabled Edge-bias hidden dim. 256 Edge-bias Fourier freqs. 12 Edge-bias RBF features 32 Noise-dependent gate enabled 
+
+(b) Training and sampling 
+
+Component Setting 
+
+Batch size 128 Learning rate 10 −4
+
+Weight decay 0EMA decay 0.9999 LR warmup 1000 steps Training steps 2.5 × 10 6
+
+Precision bfloat16 EDM (Pmean , P std ) (−1.2, 1.2) 
+
+σdata for all channels 0.3 Loss weights (λH , λ F , λ lat ) (1 , 50 , 5) 
+
+Sampling steps 150 
+
+[σmin , σ max ] [0 .002 , 80] (Schurn , S noise ) (60 , 1.003) (Smin , S max ) (0 , 999) 
+
+Atom-count strategy empirical Max atoms per cell 20 Sampling weights EMA 
+
+These settings define the base model used throughout the main experiments. The broader implementation supports alternative tokenizations, embedding variants, and GEM configurations, but the specification above corresponds to the principal model reported in the paper. 27 D EDM Training Details 
+
+EDM noising and preconditioning. At each training step, we sample a noise level according to 
+
+log σ ∼ N (Pmean , P 2std ). (59) Following the notation of the main text, the diffusion model operates on the continuous crystal state 
+
+(H, F, y),
+
+where H denotes the chemically structured atom tokens, F ∈ [0 , 1) N ×3 the fractional coordinates, and y ∈ R6
+
+the lattice latent. The atom-token and lattice channels are noised directly in Euclidean space, while the coordinate channel is noised in a centered representation. Concretely, we define 
+
+Fc = F − 12 , (60) and then sample ˜H = H + σεH , ˜Fc = Fc + σεF , ˜y = y + σεlat , (61) with independent Gaussian noise terms. Before the coordinate embedder, the noisy centered coordinates are shifted back and wrapped into the unit cube, 
+
+˜Fin = mod1 
+
+(˜Fc + 12
+
+)
+
+, mod1( u) = u − ⌊ u⌋. (62) The noise level is provided to the Transformer through the usual EDM conditioning scalar 
+
+cnoise (σ) = 14 log σ. (63) For each channel u ∈ { H, F, lat }, we use the standard EDM preconditioning coefficients 
+
+cskip ,u (σ) = σ2data ,u 
+
+σ2 + σ2data ,u 
+
+, cout ,u (σ) = σ σ data ,u 
+
+√
+
+σ2 + σ2data ,u 
+
+, cin ,u (σ) = 1
+
+√
+
+σ2 + σ2data ,u 
+
+. (64) In our implementation, the atom-token and lattice channels are scaled by cin ,u (σ) before being passed to the network, whereas the coordinate channel is passed as wrapped fractional coordinates ˜Fin . Denoting the raw network outputs by RH , RF , and Rlat , the corresponding denoised predictions are 
+
+ˆH = cskip ,H (σ) ˜H + cout ,H (σ) RH , (65) 
+
+ˆFc = cskip ,F (σ) ˜Fc + cout ,F (σ) RF , (66) 
+
+ˆy = cskip ,lat (σ) ˜y + cout ,lat (σ) Rlat . (67) For the coordinate loss, we map the centered prediction back to fractional coordinates, 
+
+ˆF = mod1 
+
+( ˆFc + 12
+
+)
+
+, (68) and then compute the wrapped fractional residual 
+
+∆i = wrap( ˆfi − fi), wrap( u) = u − round( u),
+
+so that each component lies in [− 12 , 12 ). This is a torus-aware residual in fractional space, not the metric-aware minimum-image displacement used in GEM. Finally, the EDM loss weights are 
+
+wu(σ) = σ2 + σ2data ,u 
+
+(σ σ data ,u )2 , u ∈ { H, F, lat }. (69) These are the weights used in the channel-wise training objective described in the main text. 28 D.1 Channel-wise anti-annealing during sampling 
+
+We write the sampler state at step i as 
+
+zi = ( Hi, Fi, yi), i = 0 , . . . , N, 
+
+along a decreasing EDM noise schedule 
+
+σ0 > σ 1 > · · · > σ N −1 > σ N = 0 ,
+
+with 
+
+σi =
+
+(
+
+σ1/ρ  
+
+> max
+
++ iN − 1
+
+(
+
+σ1/ρ  
+
+> min
+
+− σ1/ρ 
+
+> max
+
+))ρ
+
+, i = 0 , . . . , N − 1. (70) As in EDM, we optionally apply churn at step i, defining 
+
+¯σi = (1 + γi)σi, (71) and the corresponding perturbed state 
+
+( ¯Hi, ¯Fi, ¯yi) = ( Hi, Fi, yi) + 
+
+√
+
+¯σ2 
+
+> i
+
+− σ2 
+
+> i
+
+(εHi , εFi , εyi ), (72) where the noise tensors have the appropriate shapes. We then evaluate the denoiser at ¯σi,
+
+(Hden  
+
+> i
+
+, Fden  
+
+> i
+
+, yden  
+
+> i
+
+) = Dθ ( ¯Hi, ¯Fi, ¯yi, ¯σi). (73) The corresponding EDM drifts are 
+
+dHi = ¯Hi − Hden 
+
+> i
+
+¯σi
+
+, (74) 
+
+dFi = wrap( ¯Fi − Fden  
+
+> i
+
+)¯σi
+
+, (75) 
+
+dyi = ¯yi − yden 
+
+> i
+
+¯σi
+
+, (76) where wrap( u) = u − round( u) is applied elementwise to respect periodicity in fractional coordinates. To anti-anneal a selected channel q ∈ { H, F, y }, we introduce an auxiliary Karras schedule 
+
+˜σ(q) 
+
+> i
+
+=
+
+(
+
+σ1/ρ AA  
+
+> q
+> max
+
++ iN − 1
+
+(
+
+σ1/ρ AA  
+
+> q
+> min
+
+− σ1/ρ AA 
+
+> q
+> max
+
+)) ρAA 
+
+> q
+
+, i = 0 , . . . , N − 1. (77) Writing 
+
+∆i = σi − σi+1 , ˜∆(q) 
+
+> i
+
+= ˜ σ(q) 
+
+> i
+
+− ˜σ(q)
+
+> i+1
+
+,
+
+we define the anti-annealing factor 
+
+α(q) 
+
+> i
+
+= max 
+
+(
+
+1, ˜∆(q)
+
+> i
+
+∆i
+
+)
+
+. (78) If anti-annealing is disabled for channel q, we set α(q) 
+
+> i
+
+= 1 . For fractional coordinates, we may additionally cap this factor, 
+
+α(F ) 
+
+> i
+
+← min (α(F ) 
+
+> i
+
+, α max 
+
+). (79) Let 
+
+z(H) = H, z(F ) = F, z(y) = y.
+
+29 The Euler predictor step is then 
+
+z(q),pred  
+
+> i+1
+
+= ¯ z(q) 
+
+> i
+
++ ( σi+1 − ¯σi) α(q) 
+
+> i
+
+d(q) 
+
+> i
+
+, q ∈ { H, F, y }. (80) When σi+1 > 0, we apply the usual Heun correction. We first evaluate the denoiser at the predicted state, 
+
+(Hden 
+
+> i+1
+
+, Fden 
+
+> i+1
+
+, yden 
+
+> i+1
+
+) = Dθ (Hpred  
+
+> i+1
+
+, Fpred  
+
+> i+1
+
+, ypred  
+
+> i+1
+
+, σ i+1 ), (81) and define corrected drifts 
+
+dHi+1 = Hpred  
+
+> i+1
+
+− Hden 
+
+> i+1
+
+σi+1 
+
+, (82) 
+
+dFi+1 = wrap( Fpred  
+
+> i+1
+
+− Fden 
+
+> i+1
+
+)
+
+σi+1 
+
+, (83) 
+
+dyi+1 = ypred  
+
+> i+1
+
+− yden 
+
+> i+1
+
+σi+1 
+
+. (84) The final Heun update becomes 
+
+z(q) 
+
+> i+1
+
+= ¯ z(q) 
+
+> i
+
++ ( σi+1 − ¯σi) α(q)
+
+> i
+
+d(q) 
+
+> i
+
++ d(q)
+
+> i+1
+
+2 , q ∈ { H, F, y }. (85) At the terminal step, where σi+1 = 0 , we simply use the predictor: 
+
+z(q) 
+
+> i+1
+
+= z(q),pred  
+
+> i+1
+
+. (86) In this form, anti-annealing is a channel-wise rescaling of the EDM drift. Equivalently, it introduces a channel-dependent time warp: channels with α(q) 
+
+> i
+
+> 1 are driven more aggressively toward their denoised predictions, while the denoiser itself and the underlying EDM schedule remain unchanged. 30 E Evaluation Details 
+
+E.1 De novo generation (DNG) 
+
+For de novo generation, we sample 
+
+Ngen = 10 ,000 
+
+crystals and decode them into periodic structures 
+
+G = {C 1, . . . , CNgen }.
+
+We report four groups of metrics: validity, uniqueness and novelty, distribution matching, and thermodynamic competitiveness. 
+
+Validity. We report composition validity, structure validity, and overall validity separately. Composition validity is evaluated with SMACT (Davies et al., 2019). For each generated crystal, the stoichiometry is reduced to its primitive integer ratio, after which oxidation-state assignments, charge neutrality, and the Pauling electronegativity criterion are checked. Unary systems and all-metal alloys are handled in the standard way used in prior crystal-generation work. Structure validity is implemented as a small pipeline rather than as a single geometric test. Before constructing a pymatgen Structure , the evaluator applies a safe-wrapper prefilter that rejects malformed decoded samples, including invalid atomic numbers and implausible lattice angles. The code then attempts to construct a periodic structure and marks the sample as structurally invalid if this fails, if lattice parameters or coordinates are non-finite, if lattice lengths are negative, or if the resulting cell volume is smaller than 0.1 Å3. Only samples that survive these checks reach the final geometric validity test, which requires both 
+
+vol( C) ≥ 0.1 Å3 and dmin (C) ≥ 0.5 Å, (87) where dmin (C) is the minimum non-self interatomic distance in the constructed periodic structure. Thus, the familiar condition dmin ≥ 0.5 Å together with V ≥ 0.1 Å3 is the final structural-validity gate, but malformed samples may already be rejected earlier by wrapper- or construction-stage checks. Let Gcomp , Gstruct , and Gval denote the subsets of generated crystals that pass the composition check, the structure check, and both checks, respectively. We then report 
+
+CompVal = |G comp |
+
+Ngen 
+
+, StructVal = |G struct |
+
+Ngen 
+
+, Val = |G val |
+
+Ngen 
+
+. (88) These validity metrics are reported for interpretability, but they are not the eligibility filter used for the main uniqueness, novelty, and UN metrics. 
+
+Uniqueness, novelty, and UN . For the main DNG metrics, we first construct filtered generated and reference sets, 
+
+Geval ⊆ G , Teval ⊆ T ,
+
+by retaining only structures with finite geometry that satisfy the implemented N -ary threshold. In the current DNG code path, this threshold is minimum_nary = 1 , so unary structures are retained. Structure comparisons are performed with pymatgen ’s StructureMatcher using 
+
+stol = 0 .5, ltol = 0 .3, angle _tol = 10 .
+
+A pair of structures is treated as matching whenever the matcher returns a valid alignment. Let 
+
+Neval = |G eval |
+
+31 denote the number of generated structures that enter this evaluation stage. Uniqueness is computed by greedily deduplicating Geval , keeping only the first representative of each duplicate cluster. If Nunique denotes the number of retained representatives, then 
+
+Unique = Nunique 
+
+Neval 
+
+. (89) Novelty is evaluated relative to the filtered reference set Teval , after the usual chemistry-system filtering used by the benchmark. Let Nnovel _cand denote the number of generated structures that enter this novelty comparison, and let Nnovel denote the number of these structures that do not match any structure in Teval .We report 
+
+Novel = Nnovel 
+
+Nnovel _cand 
+
+. (90) The unique-and-novel set is not obtained by intersecting separately computed uniqueness and novelty flags. Instead, the code first restricts to the novel subset and then greedily deduplicates within that subset using the same first-occurrence rule as above. If NUN denotes the number of resulting representatives, then 
+
+UN = NUN 
+
+Nnovel _cand 
+
+. (91) In the usual non-degenerate case, Nnovel _cand = Neval , but we keep the notation separate here to reflect the implementation more faithfully. 
+
+Distribution matching. Distribution metrics are computed on the validity-filtered generated set Gval . For any scalar crystal statistic x(C), let P gen  
+
+> x
+
+and P ref  
+
+> x
+
+denote its empirical distributions over the generated and reference sets, respectively. We compare these distributions using the one-dimensional Wasserstein-1 distance 
+
+W1(P, Q ) = 
+
+∫
+
+> R
+
+∣∣FP (t) − FQ(t)∣∣ dt, (92) where FP and FQ are the corresponding cumulative distribution functions. In the main text we report two such metrics. The first is based on mass density, 
+
+ρ(C) = mass( C)vol( C) , (93) and the second is based on the N -ary statistic, 
+
+nary (C) = ∣∣{elements present in C} ∣∣. (94) We therefore report 
+
+wdist -ρ = W1
+
+(P gen  
+
+> ρ
+
+, P ref 
+
+> ρ
+
+), wdist -N -ary = W1
+
+(P gen  
+
+> nary
+
+, P ref 
+
+> nary
+
+). (95) 
+
+Thermodynamic stabilities. For offline evaluation, we generate 10 ,000 crystals and perform thermody-namic post-processing on all 10 ,000 generated structures. During training, we use a lighter version of this procedure, in which thermodynamic evaluation may be restricted to a smaller subset for efficiency. Relaxation is performed with a compiled NequIP model using the batched TorchSim backend on CUDA, together with FIRE optimization and a Fréchet cell filter, so that both atomic positions and lattice degrees of freedom are optimized jointly. In this batched code path, relaxation is run for a fixed 200 FIRE steps; no force-threshold early stopping is used. After relaxation, the implementation does not compute energy above hull via a hand-written subtrac-tion formula. Instead, for each relaxed crystal ˜C with final MLIP-predicted total energy EMLIP ( ˜C),32 the code constructs a ComputedStructureEntry , attaches synthetic VASP-style metadata needed by 
+
+MaterialsProject2020Compatibility , applies 
+
+MaterialsProject2020Compatibility(check_potcar=False) ,
+
+and then evaluates the corrected entry against the patched Materials Project phase diagram through 
+
+get_e_above_hull(...) . The reported quantity is therefore the hull distance of the corrected entry produced by this compatibility-processing pipeline. Equivalently, one may view this as applying an MP2020-style correction to the relaxed MLIP energy before evaluating the distance to the reference convex hull, but the literal implementation is entry-based rather than an explicit subtraction against a separately written Eref hull term. If compatibility processing fails, returns no corrected entry, or produces a non-finite hull distance, the sample is recorded as a thermodynamic failure. Internally, the thermo logger records two thresholds: 
+
+Stable = 1
+
+Nthermo 
+
+∣∣{ ˜C : ehull ( ˜C) ≤ 0.0 eV /atom }∣∣, (96) and 
+
+Meta = 1
+
+Nthermo 
+
+∣∣{ ˜C : ehull ( ˜C) ≤ 0.1 eV /atom }∣∣, (97) where Nthermo is the number of crystals submitted to the thermodynamic pipeline. Relaxation and thermodynamic-processing failures count against these rates. Thus, the implementation logs 0.0 eV/atom as stable and 0.1 eV/atom as metastable . In the main results, however, we often follow the common convention that the 0.1 eV/atom threshold is referred to simply as 
+
+stable . The appendix keeps the stricter logger terminology to match the implementation more closely. Finally, we combine thermodynamic competitiveness with the unique-and-novel rate. Let Stable UN and 
+
+Meta UN denote the fractions of unique-and-novel structures that satisfy the 0.0 and 0.1 eV/atom thresholds, respectively. We then define 
+
+SUN = UN × Stable UN , MSUN = UN × Meta UN . (98) Accordingly, when the main text informally treats the 0.1 eV/atom threshold as stability, it is this latter quantity that is being referred to. 
+
+E.2 Crystal structure prediction (CSP) 
+
+Crystal structure prediction is a conditional task. For each test composition, the model generates a crystal conditioned on that composition, and the prediction is compared with the corresponding ground-truth structure Cgt  
+
+> i
+
+using pymatgen ’s StructureMatcher . Unless noted otherwise, we use the same matcher tolerances as in the DNG evaluation: 
+
+stol = 0 .5, ltol = 0 .3, angle _tol = 10 .
+
+A prediction ̂ Ci is counted as correct if StructureMatcher finds a valid match to Cgt  
+
+> i
+
+under these tolerances. The match rate is therefore 
+
+MR = 1
+
+Ntest 
+
+∣∣{i :̂ Ci matches Cgt  
+
+> i
+
+}∣∣, (99) where Ntest is the number of test compositions. For matched pairs, we additionally report the RMS displacement returned by the matcher after alignment. Let 
+
+M = {i :̂ Ci matches Cgt  
+
+> i
+
+}
+
+33 denote the set of matched test cases, and let ri be the corresponding matcher RMS displacement for pair i.We report 
+
+RMSD = 1
+
+|M| 
+
+∑
+
+> i∈M
+
+ri. (100) All CSP results in the main text use this standard single-sample setting. 
+
+E.3 Sample-size intensive and extensive metrics 
+
+An important practical point in de novo generation is that not all metrics behave the same way when the number of generated samples changes. Some metrics describe the quality of a typical generated crystal . Others describe the discovery yield of the entire generated set . We refer to these two cases, by analogy with physics, as sample-intensive and sample-extensive metrics. 
+
+Sample-intensive metrics. A metric is sample-intensive if its target does not depend strongly on the total generation budget n. These are quantities that can be estimated from a random subset of generated crystals without changing their meaning. In our setting, this includes: 
+
+• compositional validity and structural validity, 
+
+• per-sample stability rates, 
+
+• average hull distance or other per-sample property means, 
+
+• distribution metrics such as Wasserstein distances on density or N -ary statistics. For such quantities, a random subset gives an approximation to the same underlying target. In the simplest case, if g(Ci) is a per-sample score or indicator, then ̂
+
+μ m = 1
+
+m
+
+> m
+
+∑
+
+> i=1
+
+g(Ci) (101) is the natural estimator from a subset of size m.
+
+Sample-extensive metrics. A metric is sample-extensive if it depends directly on how many samples were generated. In crystal generation, this happens whenever duplicates matter. As the generation budget grows, duplicate collisions become more common, so the same model can look more or less diverse depending only on how many structures were sampled. In our setting, this includes: 
+
+• uniqueness, 
+
+• the number of distinct discovered structures, 
+
+• novelty when reported as a discovery yield over the generated set, 
+
+• UN ,
+
+• SUN .For example, if Nunique (n) is the number of unique generated structures after drawing n samples, then 
+
+Unique n = Nunique (n)
+
+n , UN n = NUN (n)
+
+n (102) are explicitly functions of n. Evaluating these quantities on a smaller subset does not estimate their value at the full budget. It simply computes the same metric at a different budget. In practice, this usually makes uniqueness and related discovery metrics look artificially better on small subsets. This distinction explains why some metrics can be estimated on subsets and others cannot. Validity, stability, and average property metrics can be approximated on random subsets. By contrast, uniqueness, UN , and 
+
+SUN should be reported together with the number of generated samples and compared only at matched sample budgets. 34 A small caveat is that novelty can be defined in two different ways. If novelty is tested per sample against a fixed reference set, then it behaves like an intensive quantity. In our setting, however, novelty is used as part of the deduplicated discovery pipeline, so it is more natural to treat it together with UN and SUN as a sample-extensive quantity. 
+
+Implication for SUN. This viewpoint also clarifies why it is reasonable to compute UN on the full generated batch, but estimate stability only on a subset of the UN structures. If ̂p ( stable | UN ) denotes the estimated stable fraction within the UN set, then the natural estimator is 
+
+[SUN n = UN n ×̂p(stable | UN) . (103) Here the first factor is a full-batch discovery statistic, while the second factor is a subset-based estimate of thermodynamic quality inside that discovered set. 
+
+Practical recommendation. For DNG evaluation, sample-extensive metrics such as uniqueness, UN , and 
+
+SUN should always be reported together with the generation budget n. Sample-intensive metrics, such as validity, stability, and Wasserstein distances, can be estimated from random subsets when needed. This makes it easier to separate two different questions: whether the model generates good individual crystals , and whether it continues to produce many distinct discoveries as sampling is scaled up. 35 F Additional Results 
+
+F.1 DNG MatterGen evaluation pipeline results 
+
+Here we present our DNG metrics when evaluated using Mattergen evaluation pipeline, so that we can compare different models against ours on a setup that is not designed by us. 
+
+Table 5: Validity, uniqueness, novelty, stability, and relaxation metrics using the MatterGen (Zeni et al., 2025) evaluation pipeline for MP-20. 
+
+Model Validity and Novelty Stability and Relaxation 
+
+Struct. Val. Comp. Val. Unique Novel Stable S.U.N. Avg. Hull Avg. RMSD (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ (eV/atom) ↓ (Å) ↓
+
+MatterGen 100.00 83 .48 97.94 75.02 45 .74 23 .75 0.182 0.153 
+
+ADiT 100.00 90.24 89 .62 43 .15 69.96 17 .17 0.148 0.493 
+
+Crystalite 100.00 84 .62 94 .73 56 .63 64.52 24.26 0.145 0.274 
+
+F.2 GEM effect on DNG Results 
+
+Figure 11 compares the training dynamics of Crystalite with and without the Geometry Enhancement Module (GEM) in the de novo generation setting. Both configurations exhibit the expected decline in the unique-and-novel (UN) rate as training progresses, reflecting the general trade-off between diversity and stability. However, the model with GEM learns substantially faster on the stability axis and maintains higher stability throughout training. As a result, it also achieves a consistently higher Stable, Unique, and Novel (SUN) rate across the full training trajectory. This suggests that injecting periodic pairwise geometry into attention improves the structural quality of generated crystals without causing a disproportionate loss in generative diversity. 100k 200k 300k 400k 500k 600k 700k 800k 900k                  
+
+> Training steps
+> 80
+> 85
+> 90
+> 95
+> 100
+> Percentage (%)
+> UN Rate
+> 100k 200k 300k 400k 500k 600k 700k 800k 900k
+> Training steps
+> 30
+> 35
+> 40
+> 45
+> 50
+> 55
+> 60
+> Stability
+> 100k 200k 300k 400k 500k 600k 700k 800k 900k
+> Training steps
+> 25
+> 30
+> 35
+> 40
+> 45
+> 50
+> SUN Rate
+> GEM On GEM Off
+
+Figure 11: Effect of GEM on de novo generation training dynamics. UN rate (left), stability (middle), and SUN rate (right) as a function of training steps, with and without GEM. 
+
+F.3 GEM effect on CSP Results 
+
+Figure 12 shows the corresponding ablation for crystal structure prediction (CSP). Here, GEM has only a modest effect on Match Rate (MR), but leads to a clearer and more consistent improvement in RMSE throughout training. In other words, GEM appears to have a limited effect on whether the model recovers the correct structural mode, but a stronger effect on how accurately that structure is refined once recovered. This is consistent with the interpretation that the geometric biases introduced by GEM primarily improve local atomic placement and overall structural fidelity during denoising. 36 400k 500k 600k 700k 800k 900k 1M 
+
+Training steps 
+
+0.030 
+
+0.035 
+
+0.040 
+
+0.045 
+
+0.050 
+
+0.055 
+
+0.060 
+
+> RMSE
+
+RMSE 
+
+300k 400k 500k 600k 700k 800k 900k 1M 
+
+Training steps 
+
+60 
+
+62 
+
+64 
+
+66 
+
+68 
+
+70 
+
+> Percentage (%)
+
+Match Rate 
+
+GEM On GEM Off Figure 12: Effect of GEM on crystal structure prediction. RMSE (left) and Match Rate (right) as a function of training steps, with and without GEM. 
+
+F.4 DNG Sensitivity to anti-annealing 
+
+We also ablate the channel-wise anti-annealing settings used at sampling time, varying the strength of anti-annealing for the coordinate and lattice channels while keeping the trained model fixed. 
+
+Table 6: Generative quality, diversity, stability, and distribution metrics for Crystalite across the aa grid. 
+
+AA settings Quality and Diversity Stability and Distribution 
+
+aa coords aa types aa lattice Struct. Val. Comp. Val. Unique Novel U.N. Stable S.U.N. wdist-ρ wdist N-ary (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ (%) ↑ ↓ ↓
+
+0 0 0 99 .76 81 .49 98 .78 86 .04 85 .55 63 .28 49 .07 0.125 0.200 0 0 4 99 .71 83 .30 98 .58 83 .15 82 .37 66 .75 49 .37 0.428 0.221 0 0 10 99 .71 81 .25 99 .02 86 .28 85 .94 62 .74 48 .93 0.131 0.191 
+
+4 0 0 99 .76 80 .91 99 .22 86 .18 85 .99 61 .18 47 .22 0.179 0.249 4 0 4 99 .85 81 .69 98 .44 83 .94 83 .20 68.12 51.42 0.500 0.226 4 0 10 99 .71 80 .57 99 .02 85 .94 85 .55 62 .21 47 .90 0.176 0.248 10 0 0 99.90 81 .59 98 .83 86 .47 86 .04 62 .89 49 .12 0.111 0.205 10 0 4 99 .66 83 .15 98 .58 82 .91 82 .13 66 .80 49 .12 0.421 0.205 10 0 10 99 .76 80 .81 98 .88 85 .79 85 .40 63 .62 49 .22 0.125 0.198 0 10 0 99 .76 81 .49 98 .93 86 .43 85 .99 62 .06 48 .29 0.117 0.199 0 10 4 99 .80 82 .91 98 .54 83 .20 82 .47 67 .04 49 .66 0.401 0.210 0 10 10 99 .66 80 .91 98 .97 86 .33 85 .89 62 .65 48 .78 0.126 0.196 4 10 0 99 .71 80 .03 99 .27 86 .38 86 .13 61 .04 47 .27 0.168 0.247 4 10 4 99 .76 81 .93 98 .63 83 .84 83 .25 67 .33 50 .73 0.482 0.231 4 10 10 99 .80 79 .88 99.32 85 .94 85 .74 60 .64 46 .48 0.155 0.228 10 10 0 99 .85 81 .15 98 .93 86 .43 86 .04 63 .13 49 .41 0.123 0.212 10 10 4 99 .71 83.35 98 .54 82 .81 82 .03 67 .04 49 .27 0.416 0.209 10 10 10 99 .85 81 .79 98 .93 86 .28 85 .84 62 .55 48 .63 0.125 0.210 0 20 0 99 .76 81 .15 98 .93 86.62 86.18 62 .35 48 .78 0.131 0.214 0 20 4 99 .80 82 .96 98 .44 82 .86 81 .98 66 .80 48 .97 0.415 0.215 0 20 10 99 .85 81 .69 98 .97 86 .38 85 .94 63 .04 49 .22 0.120 0.197 4 20 0 99 .85 80 .91 99 .17 86 .18 85 .89 60 .94 46 .92 0.180 0.240 4 20 4 99 .85 82 .13 98 .39 83 .94 83 .11 67 .58 50 .78 0.477 0.226 4 20 10 99 .76 80 .27 99 .07 85 .84 85 .50 60 .94 46 .48 0.187 0.247 10 20 0 99.90 81 .20 98 .93 86 .33 85 .89 62 .89 49 .02 0.133 0.210 10 20 4 99 .66 83.35 98 .63 83 .15 82 .47 67 .04 49 .71 0.412 0.220 10 20 10 99 .85 81 .64 98 .88 86 .38 85 .99 62 .89 49 .12 0.130 0.202 
+
+37 Overall, the results are fairly insensitive to this choice: across a reasonable range of settings, the main conclusions remain unchanged and Crystalite performs consistently well. Although one anti-annealing configuration achieved the highest SUN score, it also produced noticeably worse Wasserstein distances, indicating poorer distributional alignment. For this reason, we do not report the single best-SUN configuration, but instead select a more balanced setting that preserves strong discovery performance while maintaining better agreement with the reference distribution. This suggests that anti-annealing is a useful but non-fragile sampling heuristic, and that the reported results do not depend critically on a finely tuned choice of anti-annealing parameters. 38 G Crystalite S.U.N. Crystals 
+
+(a) Sr 4Eu 8W4O24 (b) LuPt (c) Ga 4Cu 2S8
+
+(d) Y2Nb 2O8 (e) V8Fe 4O22 F2 (f) Tb 5Mn 2O11 
+
+(g) Tb 3DyAs 4Pd 4 (h) Ta 3S5 (i) Ti 4V2ReSn 
+
+Figure 13: A set of stable, unique and novel crystals generated by Crystalite trained on MP-20. 
+
+39
