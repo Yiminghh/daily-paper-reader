@@ -6,44 +6,43 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-04
-- 运行时间：2026-04-04 19:44:48 UTC
+- 最新运行日期：2026-04-05
+- 运行时间：2026-04-05 19:30:15 UTC
 - 运行状态：成功
 - 本次总论文数：7
-- 精读区：0
-- 速读区：7
+- 精读区：1
+- 速读区：6
 
 ### 今日简报（AI）
-今日速览 AI 赋能的材料模拟与能源调度前沿，涵盖从原子级过渡态搜索到宏观电网优化的 7 篇成果。
-重点关注利用机器学习势函数实现高效过渡态搜索，以及轻量化 Transformer 模型 Crystalite 对晶体建模效率的显著提升。
-建议关注轻量化架构与强化学习在复杂物理系统中的跨界应用，以探索从微观材料发现到宏观能源管理的提效方案。
-- 详情：[/202604/04/README](/202604/04/README)
+今日聚焦图生成与大模型图问答，深度解析分层离散流匹配技术。
+重点关注 8.0 分的分层离散流匹配图生成方案，以及如何通过池化 Token 优化 LLM 在图问答任务中的表现。
+建议优先研读分层流匹配论文以掌握前沿生成模型，并关注 LLM 处理结构化数据的效率优化。
+- 详情：[/202604/05/README](/202604/05/README)
 
 ### 精读区论文标签
-- 本次无精读推荐。
+1. [Hierarchical Discrete Flow Matching for Graph Generation](/202604/05/2604.00236v1-hierarchical-discrete-flow-matching-for-graph-generation)  
+   标签：评分：8.0/10、query:molrna
+   evidence：用于高效图生成的层级离散流匹配
 
 ### 速读区论文标签
-1. [Reliable and Efficient Automated Transition-State Searches with Machine-Learned Interatomic Potentials](/202604/04/2604.00405v1-reliable-and-efficient-automated-transition-state-searches-with-machine-learned-interatomic-potentials)  
+1. [Task Scarcity and Label Leakage in Relational Transfer Learning](/202604/05/2603.29914v1-task-scarcity-and-label-leakage-in-relational-transfer-learning)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于分子发现的机器学习原子间势能
-2. [Crystalite: A Lightweight Transformer for Efficient Crystal Modeling](/202604/04/2604.02270v1-crystalite-a-lightweight-transformer-for-efficient-crystal-modeling)  
+   evidence：关系基础模型和用于图表示的消息传递
+2. [Is One Token All It Takes? Graph Pooling Tokens for LLM-based GraphQA](/202604/05/2604.00342v1-is-one-token-all-it-takes-graph-pooling-tokens-for-llm-based-graphqa)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于晶体建模和生成设计的扩散Transformer
-3. [Topology-Aware Graph Reinforcement Learning for Energy Storage Systems Optimal Dispatch in Distribution Networks](/202604/04/2603.26264v1-topology-aware-graph-reinforcement-learning-for-energy-storage-systems-optimal-dispatch-in-distribution-networks)  
+   evidence：通过图池化将复杂的结构信息编码到大语言模型的潜空间中
+3. [Structural Graph Probing of Vision-Language Models](/202604/05/2603.27070v1-structural-graph-probing-of-vision-language-models)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于特征编码的拓扑感知图神经网络
-4. [Automated near-term quantum algorithm discovery for molecular ground states](/202604/04/2603.26359v1-automated-near-term-quantum-algorithm-discovery-for-molecular-ground-states)  
+   evidence：多模态模型中的神经拓扑与相关图
+4. [Discovery of Symbolic Hamiltonian Expressions with Buckingham-Symplectic Networks](/202604/05/2604.00576v1-discovery-of-symbolic-hamiltonian-expressions-with-buckingham-symplectic-networks)  
    标签：评分：6.0/10、query:molrna
-   evidence：AI驱动的分子基态和量子化学发现
-5. [GSR-GNN: Training Acceleration and Memory-Saving Framework of Deep GNNs on Circuit Graph](/202604/04/2603.27156v1-gsr-gnn-training-acceleration-and-memory-saving-framework-of-deep-gnns-on-circuit-graph)  
+   evidence：物理系统的哈密顿表达式与辛网络
+5. [Bridging the Simulation-to-Experiment Gap with Generative Models using Adversarial Distribution Alignment](/202604/05/2604.01169v1-bridging-the-simulation-to-experiment-gap-with-generative-models-using-adversarial-distribution-alignment)  
    标签：评分：6.0/10、query:molrna
-   evidence：大规模图的图表示学习
-6. [Test-Time Instance-Specific Parameter Composition: A New Paradigm for Adaptive Generative Modeling](/202604/04/2603.27665v1-test-time-instance-specific-parameter-composition-a-new-paradigm-for-adaptive-generative-modeling)  
+   evidence：用于科学模拟和分布对齐的生成模型
+6. [Why Gaussian Diffusion Models Fail on Discrete Data?](/202604/05/2604.02028v1-why-gaussian-diffusion-models-fail-on-discrete-data)  
    标签：评分：6.0/10、query:molrna
-   evidence：扩散网络的自适应生成模型范式
-7. [PRISM: PRIor from corpus Statistics for topic Modeling](/202604/04/2603.29406v1-prism-prior-from-corpus-statistics-for-topic-modeling)  
-   标签：评分：6.0/10、query:molrna
-   evidence：单细胞RNA-seq数据的主题建模
+   evidence：离散数据分布的扩散模型
 
 
 <div class="dpr-home-promo-card">

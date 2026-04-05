@@ -1,0 +1,278 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-05T19:29:16.448262+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 1,
+    "deep_cap": 6,
+    "deep_selected": 1,
+    "quick_candidates": 6,
+    "quick_skim_target": 11,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2604.00236v1",
+      "title": "Hierarchical Discrete Flow Matching for Graph Generation",
+      "abstract": "Denoising-based models, including diffusion and flow matching, have led to substantial advances in graph generation. Despite this progress, such models remain constrained by two fundamental limitations: a computational cost that scales quadratically with the number of nodes and a large number of function evaluations required during generation. In this work, we introduce a novel hierarchical generative framework that reduces the number of node pairs that must be evaluated and adopts discrete flow matching to significantly decrease the number of denoising iterations. We empirically demonstrate that our approach more effectively captures graph distributions while substantially reducing generation time.",
+      "authors": [
+        "Yoann Boget",
+        "Pablo Strasser",
+        "Alexandros Kalousis"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-03-31T20:58:12+00:00",
+      "link": "https://arxiv.org/pdf/2604.00236v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Hierarchical discrete flow matching for efficient graph generation",
+      "llm_evidence_cn": "用于高效图生成的层级离散流匹配",
+      "llm_evidence": "用于高效图生成的层级离散流匹配",
+      "canonical_evidence": "用于高效图生成的层级离散流匹配",
+      "llm_tldr_en": "A hierarchical framework using discrete flow matching to scale graph generation and reduce denoising iterations.",
+      "llm_tldr_cn": "一种利用离散流匹配的层级框架，旨在扩展图生成规模并减少去噪迭代。",
+      "llm_tldr": "一种利用离散流匹配的层级框架，旨在扩展图生成规模并减少去噪迭代。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2603.29914v1",
+      "title": "Task Scarcity and Label Leakage in Relational Transfer Learning",
+      "abstract": "Training relational foundation models requires learning representations that transfer across tasks, yet available supervision is typically limited to a small number of prediction targets per database. This task scarcity causes learned representations to encode task-specific shortcuts that degrade transfer even within the same schema, a problem we call label leakage. We study this using K-Space, a modular architecture combining frozen pretrained tabular encoders with a lightweight message-passing core. To suppress leakage, we introduce a gradient projection method that removes label-predictive directions from representation updates. On RelBench, this improves within-dataset transfer by +0.145 AUROC on average, often recovering near single-task performance. Our results suggest that limited task diversity, not just limited data, constrains relational foundation models.",
+      "authors": [
+        "Francisco Galuppo Azevedo",
+        "Clarissa Lima Loures",
+        "Denis Oliveira Correa"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-03-31T15:55:33+00:00",
+      "link": "https://arxiv.org/pdf/2603.29914v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "relational foundation models and message-passing for graph representations",
+      "llm_evidence_cn": "关系基础模型和用于图表示的消息传递",
+      "llm_evidence": "关系基础模型和用于图表示的消息传递",
+      "canonical_evidence": "关系基础模型和用于图表示的消息传递",
+      "llm_tldr_en": "Studies label leakage in relational foundation models using a message-passing architecture for transfer learning.",
+      "llm_tldr_cn": "研究了关系基础模型中的标签泄漏问题，采用消息传递架构进行迁移学习。",
+      "llm_tldr": "研究了关系基础模型中的标签泄漏问题，采用消息传递架构进行迁移学习。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.27070v1",
+      "title": "Structural Graph Probing of Vision-Language Models",
+      "abstract": "Vision-language models (VLMs) achieve strong multimodal performance, yet how computation is organized across populations of neurons remains poorly understood. In this work, we study VLMs through the lens of neural topology, representing each layer as a within-layer correlation graph derived from neuron-neuron co-activations. This view allows us to ask whether population-level structure is behaviorally meaningful, how it changes across modalities and depth, and whether it identifies causally influential internal components under intervention. We show that correlation topology carries recoverable behavioral signal; moreover, cross-modal structure progressively consolidates with depth around a compact set of recurrent hub neurons, whose targeted perturbation substantially alters model output. Neural topology thus emerges as a meaningful intermediate scale for VLM interpretability: richer than local attribution, more tractable than full circuit recovery, and empirically tied to multimodal behavior. Code is publicly available at https://github.com/he-h/vlm-graph-probing.",
+      "authors": [
+        "Haoyu He",
+        "Yue Zhuo",
+        "Yu Zheng",
+        "Qi R. Wang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-28T01:14:40+00:00",
+      "link": "https://arxiv.org/pdf/2603.27070v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Neural topology and correlation graphs in multimodal models",
+      "llm_evidence_cn": "多模态模型中的神经拓扑与相关图",
+      "llm_evidence": "多模态模型中的神经拓扑与相关图",
+      "canonical_evidence": "多模态模型中的神经拓扑与相关图",
+      "llm_tldr_en": "Studies vision-language models through neural topology and correlation graphs to identify influential components.",
+      "llm_tldr_cn": "通过神经拓扑和相关图研究视觉语言模型，以识别具有影响力的内部组件。",
+      "llm_tldr": "通过神经拓扑和相关图研究视觉语言模型，以识别具有影响力的内部组件。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.00342v1",
+      "title": "Is One Token All It Takes? Graph Pooling Tokens for LLM-based GraphQA",
+      "abstract": "The integration of Graph Neural Networks (GNNs) with Large Language Models (LLMs) has emerged as a promising paradigm for Graph Question Answering (GraphQA). However, effective methods for encoding complex structural information into the LLM's latent space remain an open challenge. Current state-of-the-art architectures, such as G-Retriever, typically rely on standard GNNs and aggressive mean pooling to compress entire graph substructures into a single token, creating a severe information bottleneck. This work mitigates this bottleneck by investigating two orthogonal strategies: (1) increasing the bandwidth of the graph-to-LLM interface via multi-token pooling, and (2) enhancing the semantic quality of the graph encoder via global attention mechanisms. We evaluate a suite of hierarchical pruning and clustering-based pooling operators including Top-k, SAGPool, DiffPool, MinCutPool, and Virtual Node Pooling (VNPool) to project graph data into multiple learnable tokens. Empirically, we demonstrate that while pooling introduces significant instability during soft prompt tuning, the application of Low-Rank Adaptation (LoRA) effectively stabilizes specific hierarchical projections (notably VNPool and pruning methods), though dense clustering operators remain challenging. This stabilization allows compressed representations to rival full-graph baselines (achieving ~73% Hit@1 on WebQSP). Conceptually, we demonstrate that a Graph Transformer with VNPool implementation functions structurally as a single-layer Perceiver IO encoder. Finally, we adapt the FandE (Features and Edges) Score to the generative GraphQA domain. Our analysis reveals that the GraphQA benchmark suffers from representational saturation, where target answers are often highly correlated with isolated node features. The implementation is available at https://github.com/Agrover112/G-Retriever/tree/all_good/",
+      "authors": [
+        "Ankit Grover",
+        "Lodovico Giaretta",
+        "Rémi Bourgerie",
+        "Sarunas Girdzijauskas"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-01T00:34:10+00:00",
+      "link": "https://arxiv.org/pdf/2604.00342v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "encoding complex structural information into LLM latent space via graph pooling",
+      "llm_evidence_cn": "通过图池化将复杂的结构信息编码到大语言模型的潜空间中",
+      "llm_evidence": "通过图池化将复杂的结构信息编码到大语言模型的潜空间中",
+      "canonical_evidence": "通过图池化将复杂的结构信息编码到大语言模型的潜空间中",
+      "llm_tldr_en": "Proposes multi-token pooling and global attention to improve graph structural encoding for LLM-based GraphQA.",
+      "llm_tldr_cn": "提出多标记池化和全局注意力机制，以改进基于大语言模型的图问答中的结构编码。",
+      "llm_tldr": "提出多标记池化和全局注意力机制，以改进基于大语言模型的图问答中的结构编码。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.00576v1",
+      "title": "Discovery of Symbolic Hamiltonian Expressions with Buckingham-Symplectic Networks",
+      "abstract": "Hamiltonian systems lie at the heart of modeling the physical world. Their defining scalar, the Hamiltonian, encodes both energy conservation and symplectic geometry in its phase-space trajectories. Recent deep learning approaches model Hamiltonian systems by embedding their properties either in the architecture or in the loss function. However, they typically ignore that: i) a Hamiltonian carries units of energy and/or ii) that every integrable Hamiltonian admits a canonical transformation to action-angle coordinates in which the dynamics reduce to a simple rotation on an invariant torus. We propose BuSyNet, a deep learning architecture that combines these two constraints via a dimensionally-consistent, symplectic transformation. A symplectic layer maps input trajectories to lower-dimensional latent action-angle variables, which are then combined with system parameters to discover a symbolic Hamiltonian expression in units of energy. Evaluated on the harmonic oscillator and the Kepler two-body problem (in 2D and 3D), BuSyNet recovers concise, closed-form Hamiltonians that outperform state-of-the-art neural architectures in long-term prediction accuracy and stability, while maintaining interpretability.",
+      "authors": [
+        "Joe Germany",
+        "Joseph Bakarji",
+        "Sara Najem"
+      ],
+      "primary_category": "physics.comp-ph",
+      "categories": [
+        "physics.comp-ph",
+        "nlin.SI",
+        "physics.data-an"
+      ],
+      "published": "2026-04-01T07:32:52+00:00",
+      "link": "https://arxiv.org/pdf/2604.00576v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Hamiltonian expressions and symplectic networks for physical systems",
+      "llm_evidence_cn": "物理系统的哈密顿表达式与辛网络",
+      "llm_evidence": "物理系统的哈密顿表达式与辛网络",
+      "canonical_evidence": "物理系统的哈密顿表达式与辛网络",
+      "llm_tldr_en": "BuSyNet discovers symbolic Hamiltonian expressions using dimensionally-consistent symplectic transformations.",
+      "llm_tldr_cn": "BuSyNet利用量纲一致的辛变换来发现物理系统的符号哈密顿表达式。",
+      "llm_tldr": "BuSyNet利用量纲一致的辛变换来发现物理系统的符号哈密顿表达式。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.01169v1",
+      "title": "Bridging the Simulation-to-Experiment Gap with Generative Models using Adversarial Distribution Alignment",
+      "abstract": "A fundamental challenge in science and engineering is the simulation-to-experiment gap. While we often possess prior knowledge of physical laws, these physical laws can be too difficult to solve exactly for complex systems. Such systems are commonly modeled using simulators, which impose computational approximations. Meanwhile, experimental measurements more faithfully represent the real world, but experimental data typically consists of observations that only partially reflect the system's full underlying state. We propose a data-driven distribution alignment framework that bridges this simulation-to-experiment gap by pre-training a generative model on fully observed (but imperfect) simulation data, then aligning it with partial (but real) observations of experimental data. While our method is domain-agnostic, we ground our approach in the physical sciences by introducing Adversarial Distribution Alignment (ADA). This method aligns a generative model of atomic positions -- initially trained on a simulated Boltzmann distribution -- with the distribution of experimental observations. We prove that our method recovers the target observable distribution, even with multiple, potentially correlated observables. We also empirically validate our framework on synthetic, molecular, and experimental protein data, demonstrating that it can align generative models with diverse observables. Our code is available at https://kaityrusnelson.com/ada/.",
+      "authors": [
+        "Kai Nelson",
+        "Tobias Kreiman",
+        "Sergey Levine",
+        "Aditi S. Krishnapriyan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cond-mat.mtrl-sci",
+        "q-bio.BM"
+      ],
+      "published": "2026-04-01T17:21:33+00:00",
+      "link": "https://arxiv.org/pdf/2604.01169v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative models for scientific simulation and distribution alignment",
+      "llm_evidence_cn": "用于科学模拟和分布对齐的生成模型",
+      "llm_evidence": "用于科学模拟和分布对齐的生成模型",
+      "canonical_evidence": "用于科学模拟和分布对齐的生成模型",
+      "llm_tldr_en": "Proposes a generative framework to bridge the gap between scientific simulations and experimental data.",
+      "llm_tldr_cn": "提出一种生成式框架，通过对抗分布对齐桥接科学模拟与实验数据之间的差距。",
+      "llm_tldr": "提出一种生成式框架，通过对抗分布对齐桥接科学模拟与实验数据之间的差距。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.02028v1",
+      "title": "Why Gaussian Diffusion Models Fail on Discrete Data?",
+      "abstract": "Diffusion models have become a standard approach for generative modeling in continuous domains, yet their application to discrete data remains challenging. We investigate why Gaussian diffusion models with the DDPM solver struggle to sample from discrete distributions that are represented as a mixture of delta-distributions in the continuous space. Using a toy Random Hierarchy Model, we identify a critical sampling interval in which the density of noisified data becomes multimodal. In this regime, DDPM occasionally enters low-density regions between modes producing out-of-distribution inputs for the model and degrading sample quality. We show that existing heuristics, including self-conditioning and a solver we term q-sampling, help alleviate this issue. Furthermore, we demonstrate that combining self-conditioning with switching from DDPM to q-sampling within the critical interval improves generation quality on real data. We validate these findings across conditional and unconditional tasks in multiple domains, including text, programming code, and proteins.",
+      "authors": [
+        "Alexander Shabalin",
+        "Simon Elistratov",
+        "Viacheslav Meshchaninov",
+        "Ildus Sadrtdinov",
+        "Dmitry Vetrov"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-04-02T13:35:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.02028v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "diffusion models for discrete data distributions",
+      "llm_evidence_cn": "离散数据分布的扩散模型",
+      "llm_evidence": "离散数据分布的扩散模型",
+      "canonical_evidence": "离散数据分布的扩散模型",
+      "llm_tldr_en": "Investigates why Gaussian diffusion models struggle with discrete data and proposes improvements.",
+      "llm_tldr_cn": "研究高斯扩散模型在离散数据上的局限性并提出改进方案。",
+      "llm_tldr": "研究高斯扩散模型在离散数据上的局限性并提出改进方案。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}
