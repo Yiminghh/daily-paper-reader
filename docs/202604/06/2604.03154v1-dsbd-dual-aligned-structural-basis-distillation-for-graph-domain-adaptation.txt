@@ -1,0 +1,1277 @@
+Title: DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation
+
+URL Source: https://arxiv.org/pdf/2604.03154v1
+
+Published Time: Mon, 06 Apr 2026 01:01:31 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation 
+
+# Yingxu Wang ∗
+
+Mohamed bin Zayed University of Artificial Intelligence yingxv.wang@gmail.com 
+
+# Kunyu Zhang ∗
+
+Zhengzhou University kunyu.zky@gmail.com 
+
+# Jiaxin Huang 
+
+Mohamed bin Zayed University of Artificial Intelligence Jiaxin.Huang@mbzuai.ac.ae 
+
+# Mengzhu Wang 
+
+The Hebei University of Technology dreamkily@gmail.com 
+
+# Mingyan Xiao 
+
+California State Polytechnic University mxiao@cpp.edu 
+
+# Siyang Gao, Nan Yin 
+
+The City University of Hong Kong siyangao@cityu.edu.hk, yinnan8911@gmail.com 
+
+## Abstract 
+
+Graph domain adaptation (GDA) aims to transfer knowledge from a labeled source graph to an unlabeled target graph under distribution shifts. However, existing methods are largely feature-centric and overlook structural discrepancies, which become particularly detri-mental under significant topology shifts. Such discrepancies alter both geometric relationships and spectral properties, leading to un-reliable transfer of graph neural networks (GNNs). To address this limitation, we propose Dual-Aligned Structural Basis Distillation (DSBD) for GDA, a novel framework that explicitly models and adapts cross-domain structural variation. DSBD constructs a differ-entiable structural basis by synthesizing continuous probabilistic prototype graphs, enabling gradient-based optimization over graph topology. The basis is learned under source-domain supervision to preserve semantic discriminability, while being explicitly aligned to the target domain through a dual-alignment objective. Specifi-cally, geometric consistency is enforced via permutation-invariant topological moment matching, and spectral consistency is achieved through Dirichlet energy calibration, jointly capturing structural characteristics across domains. Furthermore, we introduce a decou-pled inference paradigm that mitigates source-specific structural bias by training a new GNN on the distilled structural basis. Ex-tensive experiments on graph and image benchmarks demonstrate that DSBD consistently outperforms state-of-the-art methods. 
+
+## CCS Concepts 
+
+• Mathematics of computing → Graph algorithms ; • Comput-ing methodologies → Neural networks. 
+
+ACM Reference Format: 
+
+Yingxu Wang, Kunyu Zhang, Jiaxin Huang, Mengzhu Wang, Mingyan Xiao, and Siyang Gao, Nan Yin. 2018. DSBD: Dual-Aligned Structural Basis  
+
+> ∗Both authors contributed equally to this research. Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+> Conference acronym ’XX, Woodstock, NY
+> ©2018 Copyright held by the owner/author(s). Publication rights licensed to ACM. ACM ISBN 978-1-4503-XXXX-X/2018/06 https://doi.org/XXXXXXX.XXXXXXX
+
+Distillation for Graph Domain Adaptation. In Proceedings of Make sure to enter the correct conference title from your rights confirmation email (Conference acronym ’XX). ACM, New York, NY, USA, 22 pages. https: //doi.org/XXXXXXX.XXXXXXX 
+
+## 1 Introduction 
+
+Graph Domain Adaptation (GDA) has emerged as a critical par-adigm for mitigating the generalization gap caused by distribu-tional shifts in graph-structured data [ 12 , 47 , 56 ]. Its core objective is to bridge the divergence between a label-rich source domain and an unlabeled target domain [ 27 , 38 , 46 ]. This capability makes GDA exceptionally valuable in data-scarce applications, such as biochemical network analysis and cross-platform social mining, where manual annotation for out-of-distribution data is prohibi-tively expensive [37, 52, 71]. To achieve cross-domain transfer, mainstream GDA methods primarily adopt a feature-centric strategy, employing adversarial learning or statistical distribution matching to align feature repre-sentations within a shared latent space [ 6, 28 , 66 ]. Although effec-tive at mitigating feature-level discrepancies, such approaches typi-cally optimize latent representations without explicitly accounting for structural variations across domains [ 8 , 11 ]. However, represen-tations learned by Graph Neural Networks (GNNs) are inherently governed by topology-dependent message passing [ 7, 32 ]. When source and target graphs exhibit divergent connectivity patterns, the aggregation mechanisms learned on the source topology may become mismatched to the neighborhood structures of the target domain [ 25 , 57 ]. This structural mismatch manifests along two complementary aspects: geometric and spectral. Geometrically, al-tered neighborhood compositions distort local relational semantics, leading to misaligned structural representations [ 28 , 70 ]. Spectrally, topological variations reshape the Laplacian spectrum, shifting the effective filtering behavior of GNNs and inducing discrepancies in spectral energy distributions across domains [ 36 , 61 ]. Under substantial topology shift, feature alignment alone is therefore in-sufficient, highlighting the necessity of explicitly modeling and adapting structural discrepancies in GDA [3, 64]. While a few GDA approaches incorporate limited structural regularization, explicit and comprehensive topology adaptation across domains remains challenging. In particular, this difficulty stems from three fundamental bottlenecks. (1) Lack of a Differen-tiable Structural Adaptation Substrate. In conventional GDA,                 
+
+> arXiv:2604.03154v1 [cs.LG] 3 Apr 2026 Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. Source
+> Topology
+> Target
+> Topology
+> Discrete &
+> Non -isomorphic
+> Topological Space
+> Source Geometry Target Geometry
+> Source Spectrum Target Spectrum
+> (c) Entanglement of Source -Specific Bias
+> GNN
+> Training
+> GNN Model
+> With bias
+> Source Target
+> Aggregation Mismatch
+> (b) Geometric and Spectral
+> Misalignment
+> (a) Lack of Differentiable
+> Structural Substrate
+
+Figure 1: The key challenges in GDA: (a) The lack of a differ-entiable structural substrate prevents explicit optimization of cross-domain topology. (b) Geometric alignment does not guarantee spectral consistency, leading to mismatched GNN filtering across domains. (c) Source-specific structural bias en-tangles message passing, resulting in aggregation mismatch under topology shift. 
+
+node features can be projected into a shared continuous embed-ding space for cross-domain alignment [ 37 , 39 ]. In contrast, graph topologies are discrete, non-isomorphic, and often vary in size without canonical node correspondence [ 30 , 51 , 59 ]. Consequently, cross-domain structural variation cannot be directly parameterized or optimized within a unified continuous space [ 20 , 60 ]. (2) Mis-alignment Between Geometric and Spectral Characteristics. 
+
+Structural regularization is often formulated in geometric terms, yet graph geometry and spectral properties govern distinct aspects of GNN message passing [ 53 , 61 , 64 ]. Consequently, geometric sim-ilarity does not imply spectral consistency. Even minor topological perturbations can substantially alter the Laplacian spectrum, lead-ing to shifts in the effective filtering behavior of GNNs. As a result, two domains may appear geometrically aligned under global struc-tural metrics while exhibiting markedly different spectral energy distributions [ 62 , 70 ]. This discrepancy undermines the transferabil-ity of source-calibrated graph filters to the target domain. Therefore, structural objectives defined solely in geometric terms are insuf-ficient for robust cross-domain adaptation. (3) Entanglement of Source-Specific Structural Bias. In standard end-to-end GDA frameworks, GNN parameters are optimized jointly with source-domain semantic supervision [ 27 , 50 , 66 ]. Consequently, the learned message-passing operators become coupled with source-specific connectivity patterns and structural priors [ 30 , 59 ]. When trans-ferred to a target domain with divergent topology, this residual structural bias can induce persistent aggregation mismatch even when latent representations appear statistically aligned [ 48 , 67 , 68 ]. Collectively, these challenges make explicit cross-domain topology adaptation both demanding and underexplored in GDA. In this paper, we propose a paradigm shift from feature-centric alignment to explicit structural adaptation via a differentiable struc-tural substrate. To this end, we introduce Dual-Aligned Structural 
+
+Basis Distillation (DSBD) for graph domain adaptation. DSBD learns a compact set of synthetic prototype graphs that form a continuous and optimizable structural basis. This basis is optimized under source-domain supervision to preserve class-discriminative structures, serving as a semantic anchor for knowledge transfer, while being explicitly aligned to the target domain to capture its intrinsic structural characteristics. Concretely, each synthetic ad-jacency matrix is parameterized by continuous probabilistic vari-ables, enabling gradient-based optimization over graph topology. A dual-alignment objective is then imposed with respect to the target domain: geometrically, permutation-invariant topological moments are matched to capture relational statistics; spectrally, Dirichlet en-ergy calibration aligns Laplacian-induced filtering behaviors across domains. Finally, to eliminate source-specific structural bias, we adopt a decoupled inference paradigm that trains a fresh GNN solely on the distilled basis, isolating the message-passing operator from source-dependent connectivity priors before deployment on the target domain. Extensive experiments conducted on both graph and image benchmarks demonstrate consistent improvements over state-of-the-art baseline methods. Our contributions can be summarized as follows: 
+
+• We identify three key bottlenecks in structural adaptation for GDA: the lack of a differentiable structural substrate, the mis-alignment between geometric and spectral characteristics, and the entanglement of source-specific structural bias. 
+
+• We propose DSBD, a novel framework for explicit structural align-ment via basis distillation. By learning a differentiable structural basis of continuous probabilistic prototype graphs and enforcing dual alignment in both geometric and spectral domains, DSBD enables effective cross-domain topology adaptation. 
+
+• Extensive experiments conducted on both graph and image bench-marks demonstrate that DSBD consistently achieves state-of-the-art performance. 
+
+## 2 Related Work 
+
+Graph Domain Adaptation (GDA). Early GDA approaches adapt classical domain adaptation techniques, such as adversarial learning and statistical distribution matching, to align node- or graph-level representations within a shared latent space [ 26 , 49 , 67 ]. More recent methods incorporate graph-specific inductive biases, e.g., topology-aware contrastive objectives and refined neighborhood aggregation, to better capture relational dependencies during trans-fer [ 4, 6]. Despite these advances, structural adaptation is rarely formulated as an explicit optimization objective [ 50 , 69 ]. Instead, topology discrepancies are typically handled implicitly through representation learning, without a shared differentiable structural substrate for direct optimization. Under substantial topology shift, this implicit treatment becomes insufficient: differences in connec-tivity patterns can distort neighborhood aggregation and induce mismatches in Laplacian-based filtering behavior [ 25 , 27 ]. More-over, geometric similarity does not guarantee spectral consistency, and the resulting mismatch can undermine the transferability of source-calibrated graph filters [ 56 , 64 ]. Existing end-to-end frame-works further entangle propagation operators with source-specific structural priors, limiting generalization. In contrast, we propose DSBD, which explicitly distills a differentiable structural basis with DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Figure 2: Overview of the proposed DSBD, which consists of two key steps: (1) Dual-Aligned Structural Basis Distillation, which constructs a differentiable structural substrate by distilling source knowledge into compact synthetic graphs and enforcing joint geometric and spectral alignment with the target domain; (2) Structurally Calibrated Target Inference, which eliminates source structural bias via decoupled retraining on the distilled basis, ensuring topology-aware transfer under domain shift. 
+
+geometric and spectral alignment, while decoupling source-specific bias for cross-domain generalization. 
+
+Graph Data Distillation. Early graph data distillation approaches focus on matching learning signals between synthetic and real data, e.g., via gradient matching or feature-statistics alignment, to con-dense large-scale graph datasets into representative subsets [ 14 , 17 ,31 ]. More recent methods extend this paradigm by matching train-ing trajectories, capturing longer-horizon optimization dynamics beyond single-step supervision [ 16 , 24 , 72 ]. Despite their effective-ness in improving efficiency, existing graph distillation frameworks are primarily designed for in-domain settings [ 22 , 65 ], where syn-thetic and real graphs follow the same distribution. As a result, they emphasize preserving intra-domain predictive fidelity rather than enhancing cross-domain robustness [ 43 , 54 , 55 ]. Consequently, the potential of graph distillation for domain adaptation remains largely unexplored, as current formulations do not explicitly model struc-tural discrepancies between source and target domains [ 13 , 18 , 29 ]. In contrast, we reinterpret distillation as a mechanism for struc-tural alignment in GDA. By learning a differentiable structural basis, DSBD preserves source-domain semantic discriminability while adapting the synthesized prototypes to target-domain structural characteristics. 
+
+## 3 Methodology 3.1 Problem Formulation 
+
+We study Graph Domain Adaptation (GDA) for graph classification. Let D𝑆 = {(G 𝑠 𝑖 , 𝑦 𝑠 𝑖 )} 𝑁 𝑆  
+
+> 𝑖 =1
+
+denote a labeled source domain and D𝑇 =
+
+{G 𝑡 𝑗 }𝑁 𝑇  
+
+> 𝑗 =1
+
+an unlabeled target domain. Each graph instance is defined as G = (V , E, X), where V, E, and X denote the node set, edge set, and node feature matrix, respectively, associated with a graph-level label 𝑦 ∈ Y . We assume that the source and target domains share the same label space Y but follow different underlying graph distributions, i.e., 𝑃 𝑆 (G) ≠ 𝑃 𝑇 (G) , where the discrepancy may stem from variations in connectivity patterns, structural statistics, or node attributes. Given labeled source data D𝑆 and unlabeled target data D𝑇 , the goal is to learn a Graph Neural Network (GNN) 
+
+𝑓 𝜃 : G → Y that minimizes the expected target risk 
+
+R𝑇 (𝑓 𝜃 ) = E( G ,𝑦 )∼ 𝑃 𝑇 
+
+ℓ (𝑓 𝜃 (G) , 𝑦 ),
+
+by leveraging information from both domains. 
+
+## 3.2 Overview of DSBD 
+
+We present DSBD, a framework for explicit topology adaptation in GDA, as illustrated in Figure 2. The framework consists of two key steps. (1) Dual-Aligned Structural Basis Distillation. To ad-dress the lack of a differentiable structural adaptation substrate, this component adopts a bi-level optimization scheme to learn a con-tinuous probabilistic structural basis. Specifically, source-domain supervision is distilled into a set of synthetic prototype graphs with differentiable adjacency matrices. To align the learned basis with the target domain, we impose dual-alignment objectives on the prototypes, jointly enforcing permutation-invariant topological moment matching for geometric consistency and Dirichlet energy calibration for spectral alignment. (2) Structurally Calibrated Target Inference. To eliminate source-specific structural bias, we adopt a decoupled inference paradigm in which a new GNN is trained solely on the distilled structural basis and then applied to Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 
+
+the target domain. This design isolates the learned message-passing operator from source-dependent connectivity patterns, improving transferability under topology shift. 
+
+## 3.3 Dual-Aligned Structural Basis Distillation 
+
+A central challenge in cross-domain structural adaptation is the absence of a shared and optimizable structural substrate across do-mains [ 5 , 73 ]. Unlike node features, which can be aligned in a con-tinuous latent space, graph topologies are discrete, unpaired, and non-isomorphic, preventing direct parameterization or optimiza-tion of structural variation across domains [ 3 , 30 ]. Moreover, since graph topology governs the Laplacian spectrum, feature alignment alone cannot regulate the filtering behavior of GNNs, leading to mismatches in both geometric relationships and spectral responses. To address these limitations, we propose Dual-Aligned Structural Basis Distillation (DSBD) , a bi-level learning framework that con-structs a differentiable structural basis to serve as a shared substrate for cross-domain topology adaptation. Specifically, DSBD param-eterizes synthetic adjacency matrices as continuous probabilistic variables and optimizes them through coordinated geometric and spectral alignment, realized via permutation-invariant topological moment matching and Dirichlet energy calibration. 
+
+3.3.1 Dual-Aligned Structural Distillation Formulation. We aim to synthesize a compact structural basis Ssyn = {( 𝐴 𝑘 , 𝑋 𝑘 , 𝑌 𝑘 )} 𝐾 𝑘 =1 that preserves source-discriminative semantics while aligning with the target domain’s geometric and spectral characteristics. To enable gradient-based optimization over graph topology, each adjacency matrix 𝐴 𝑘 is parameterized by continuous probabilistic variables, yielding a differentiable relaxation of the structural space for cross-domain topology alignment. To jointly ensure semantic fidelity and structural alignment, we formulate structural distillation as a bi-level optimization problem. Let 𝜃 denote the parameters of a proxy GNN classifier. The objective is defined as: 
+
+min 
+
+> Ssyn
+
+Ltotal (S syn ) = Lsem 
+
+ 𝜃 ∗ (S syn ); D𝑆 
+
+
+
++ 𝜆 1 Lgeo 
+
+ Ssyn , D𝑇 
+
+ + 𝜆 2 Lspec 
+
+ Ssyn , D𝑇 
+
+ , (1a) s.t. 𝜃 ∗ (S syn ) = arg min 
+
+> 𝜃
+
+1
+
+𝐾 
+
+> 𝐾
+
+∑︁ 
+
+> 𝑘 =1
+
+LCE (GNN (𝑋 𝑘 , 𝐴 𝑘 ; 𝜃 ), 𝑌 𝑘 ) . (1b) The inner problem in Eq. (1b) trains the proxy model on the synthe-sized basis, inducing an implicit dependency of 𝜃 ∗ on the structural variables. The outer objective in Eq. (1a) updates the structural basis by jointly (i) preserving source-domain semantic discriminability via Lsem , and (ii) enforcing geometric and spectral alignment with the target domain through Lgeo and Lspec . Here, LCE denotes the standard cross-entropy loss. 
+
+Source Semantic Consistency. The term Lsem serves as a se-mantic anchor that preserves class discriminability during struc-tural distillation. Since labeled supervision is available only in the source domain, we treat the source dataset D𝑆 as the semantic reference. Specifically, the semantic loss evaluates the proxy model 
+
+𝜃 ∗, trained on the synthesized basis Ssyn , over samples drawn from the source distribution: 
+
+Lsem 
+
+ 𝜃 ∗ (S syn ); D𝑆 
+
+ = E(𝑋 ,𝐴,𝑌 )∼D 𝑆 
+
+h
+
+LCE 
+
+ GNN (𝑋, 𝐴 ; 𝜃 ∗ (S syn )) , 𝑌 i
+
+.
+
+Within the bi-level formulation, the probabilistic adjacency ma-trices in Ssyn act as outer-level variables. By differentiating through the inner optimization in Eq. (1b), gradients from Lsem encourage the synthesized graphs to encode the source domain’s discrimi-native structure. Consequently, the distilled prototypes preserve semantic fidelity, avoiding degenerate solutions that are structurally aligned but lack label discriminability. 
+
+Geometry-Preserving Topology Alignment. To mitigate cross-domain structural discrepancies, we align the synthetic basis with the target domain’s geometric characteristics. A key challenge is that synthetic prototypes and target graphs may differ in size and lack canonical node correspondence, rendering node-wise align-ment ill-posed. Moreover, correspondence-based optimal transport methods (e.g., Gromov–Wasserstein) are computationally expen-sive. To address these issues, we adopt a scalable and fully differ-entiable alternative based on permutation-invariant structural mo-ment matching. Specifically, we extract differentiable statistics that capture complementary aspects of connectivity patterns and local clustering structures. For a continuous adjacency matrix 𝐴 ∈ R𝑁 ×𝑁 ,we define a moment set M = {𝜙 deg_mean , 𝜙 deg_std , 𝜙 den , 𝜙 tri }. The mean degree 𝜙 deg_mean is defined as 
+
+𝜙 deg_mean (𝐴 ) = 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+> 𝑁
+
+∑︁ 
+
+> 𝑗 =1
+
+𝐴 𝑖 𝑗 ,
+
+and the degree standard deviation is 
+
+𝜙 deg_std (𝐴 ) =
+
+vuut 1
+
+𝑁 
+
+> 𝑁
+
+∑︁ 
+
+> 𝑖 =1
+> 𝑁
+
+∑︁ 
+
+> 𝑗 =1
+
+𝐴 𝑖 𝑗 − 𝜙 deg_mean (𝐴 )
+
+!2
+
++ 𝜖. 
+
+The graph density is defined as 
+
+𝜙 den (𝐴 ) =
+
+Í𝑁 𝑖 =1
+
+Í𝑁 𝑗 =1 𝐴 𝑖 𝑗 
+
+𝑁 (𝑁 − 1) + 𝜖 ,
+
+and we use a normalized trace-based proxy for triangle intensity: 
+
+𝜙 tri (𝐴 ) = Tr (𝐴 3)
+
+6𝑁 + 𝜖 ,
+
+where 𝜖 is a small constant for numerical stability. The trace term 
+
+Tr (𝐴 3) provides a differentiable approximation of triangle-related structure, allowing gradients to propagate through motif-level con-nectivity. Then, we minimize the empirical discrepancy between target graphs and synthetic prototypes in this moment space: 
+
+Lgeo 
+
+ Ssyn , D𝑇 
+
+ = 1
+
+|D 𝑇 |∑︁ 𝐴 𝑇 ∈ D 𝑇 
+
+"
+
+1
+
+𝐾 
+
+> 𝐾
+
+∑︁ 
+
+> 𝑘 =1
+
+∑︁ 𝑚 ∈ M 
+
+𝛾 𝑚 ∥𝜙 𝑚 (𝐴 𝑘 ) − 𝜙 𝑚 (𝐴 𝑇 )∥ 22
+
+#
+
+,
+
+where 𝛾 𝑚 rescales different moments to account for magnitude differences. By matching these permutation-invariant structural statistics, the probabilistic adjacency variables are encouraged to evolve connectivity patterns that are geometrically consistent with the target domain. DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Spectral Energy Alignment. Geometric alignment alone does not guarantee spectral consistency. Message-passing GNNs can be viewed as Laplacian smoothing operators, whose behavior is governed by topology-induced spectral characteristics. To address spectral mismatch, we introduce a Dirichlet-energy calibration objective that regularizes feature smoothness with respect to the graph Laplacian. For a graph 𝐺 = (𝐴, 𝑋 ), we define the Dirichlet energy functional 
+
+Ω(𝐺 ) = Tr (𝑋 ⊤ ˆ𝐿𝑋 ),
+
+where ˆ𝐿 denotes the normalized Laplacian. This quantity measures the variation of node features over graph structure and serves as a smoothness-sensitive spectral statistic. We then align the syn-thetic basis with the target domain by minimizing the discrepancy between their empirical mean Dirichlet energies: 
+
+Lspec 
+
+ Ssyn , D𝑇 
+
+ = 1
+
+𝐾 
+
+> 𝐾
+
+∑︁ 
+
+> 𝑘 =1
+
+Ω(𝐺 𝑘 ) − 1
+
+|D 𝑇 |∑︁ 𝐺 𝑇 ∈ D 𝑇 
+
+Ω(𝐺 𝑇 )
+
+> 22
+
+.
+
+By matching this spectral statistic, the distilled prototypes are encouraged to reproduce the target domain’s feature smoothness behavior under graph topology. 
+
+3.3.2 Theoretical Analysis of Target Generalization. The proposed bi-level optimization explicitly aligns the distilled structural ba-sis with the target domain. This naturally raises a fundamental question: Is matching a finite set of macroscopic structural statistics sufficient to control adaptation to the target distribution? To address this, we analyze the target generalization error through a structural representation space induced by geometric moments and spectral energies [ 2, 33 ]. Specifically, we embed discrete graphs into a con-tinuous feature space defined by these statistics and derive an upper bound on the target risk. 
+
+Theorem 3.1 (Generalization Bound via Dual-Aligned Struc-tural Basis). Let 𝑓 denote the graph encoder and ℎ the classifier. Let RD𝑇 (ℎ ◦ 𝑓 ) be the expected risk on the target domain D𝑇 , and 
+
+ˆRSsyn (ℎ ◦ 𝑓 ) the empirical risk evaluated on the synthesized structural basis Ssyn . Assume that the loss function ℓ is 𝐿 ℓ -Lipschitz continuous and that the encoder 𝑓 lies in a bounded structural RKHS. Then, with probability at least 1 − 𝛿 , the target risk is bounded as: 
+
+RD𝑇 (ℎ ◦ 𝑓 ) ≤ ˆRSsyn (ℎ ◦ 𝑓 )+ 𝐶 geo E𝐺 ∼D 𝑇 [M ( 𝐺 )] − E𝐺 𝑘 ∼S syn [M ( 𝐺 𝑘 )] 2
+
++ 𝐶 spec E𝐺 ∼D 𝑇 [Ω(𝐺 )] − E𝐺 𝑘 ∼S syn [Ω(𝐺 𝑘 )] + 𝜆 (𝛿 ),
+
+where M and Ω denote the geometric moments and Dirichlet energy, respectively. 𝐶 geo , 𝐶 spec > 0 are capacity-dependent constants, and 
+
+𝜆 (𝛿 ) absorbs the optimal joint risk and the finite-sample generaliza-tion complexity. 
+
+Theorem 3.1 decomposes the target risk into two components: (i) the empirical risk on the synthesized structural basis, and (ii) the structural distribution discrepancy between the synthesized basis and the target domain. Notably, this discrepancy is explicitly characterized by mismatches in geometric moments and spectral energies. Since the proposed dual-alignment objectives directly minimize these quantities, the proposed optimization reduces the dominant terms in the bound, thereby improving target-domain generalization. 
+
+## 3.4 Structurally Calibrated Target Inference 
+
+With the dual-aligned basis Ssyn distilled, the remaining objective is to transfer this structural knowledge to the unlabeled target do-main. Conventional GDA approaches predominantly rely on shared latent-space feature alignment [ 66 , 67 ]. However, the GNN parame-ters learned under such schemes remain implicitly calibrated to the source domain [ 34 , 40 ]. When deployed on structurally divergent target graphs, this implicit calibration leads to topology-induced aggregation mismatches, as message-passing operators are biased toward source-specific connectivity patterns and spectral character-istics. To overcome this limitation, we adopt a decoupled inference paradigm. Instead of directly transferring an implicitly aligned model, we train a new GNN exclusively on Ssyn , thereby isolating structural bias and ensuring compatibility with the target domain. 
+
+3.4.1 Structural Bias Isolation via Re-initialization. To ensure strict structural isolation, we discard both the original source dataset D𝑆 
+
+and the proxy model 𝜃 ∗ employed during distillation. Although 𝜃 ∗
+
+converges on the synthesized basis, it co-evolves with Ssyn through-out the bi-level optimization process. As a result, its parameters inevitably encode the source-biased optimization trajectory, induc-ing structural co-adaptation between the model and the distilled basis. To fully eliminate these residual trajectory-dependent biases, we instantiate a freshly initialized GNN 𝜙 with random parameters and train it exclusively on Ssyn :
+
+𝜙 ∗ = arg min 
+
+> 𝜙
+
+1
+
+𝐾 
+
+> 𝐾
+
+∑︁ 
+
+> 𝑘 =1
+
+LCE 
+
+ GNN (𝑋 𝑘 , 𝐴 𝑘 ; 𝜙 ), 𝑌 𝑘 
+
+, (2) where (𝐴 𝑘 , 𝑋 𝑘 , 𝑌 𝑘 ) ∈ S syn . Because 𝜙 is optimized over a fixed and target-aligned structural space instead of a dynamically coupled joint optimization landscape, it learns a purely calibrated filtering operator that is free from residual source-specific priors. 
+
+3.4.2 Theoretical Analysis of Structural Bias Isolation. The struc-turally calibrated inference stage explicitly discards the proxy model in favor of a freshly initialized GNN. This design raises a funda-mental theoretical question: If the proxy model has already achieved optimal performance on the synthesized basis, why is it necessary to discard it and retrain a fresh model for target generalization? To address this question, we analyze the generalization gap from a statistical learning perspective by characterizing both hypothesis complexity and optimization-induced co-adaptation. 
+
+Theorem 3.2 (Generalization Benefit of Structural Bias Isolation). Let F be the hypothesis class of the GNN. Let 𝜃 ∗ be the proxy model derived from the joint bi-level optimization trajectory, and let 𝜙 ∗ be the fresh model trained exclusively on the fixed, con-verged basis S∗
+
+> syn
+
+. Due to optimization co-adaptation, the effective search space of the proxy model is bounded by the joint empirical Rademacher complexity ℜ(F × S syn ). In contrast, the fresh model is bounded by the conditional complexity ℜ(F | S ∗
+
+> syn
+
+). With probabil-ity at least 1 − 𝛿 , the generalization bounds satisfy a strict dominance relation: Bound (𝜙 ∗) ≤ Bound (𝜃 ∗) − Δtraj ,Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 
+
+Algorithm 1 The framework of DSBD 
+
+Require: Labeled Source Data D𝑆 , Unlabeled Target Data D𝑇 ,Basis Size 𝐾 , Inner-loop steps 𝑇 , Learning rates 𝜂 𝑖𝑛 , 𝜂 𝑜𝑢𝑡 .
+
+Ensure: Target Domain Predictions ˆ𝑌 𝑇 .
+
+1: — Stage 1: Dual-Aligned Structural Basis Distillation — 
+
+2: Initialize synthetic basis Ssyn = {( 𝐴 𝑘 , 𝑋 𝑘 , 𝑌 𝑘 )} 𝐾 𝑘 =1 randomly. 
+
+3: while not converged do 
+
+4: // Inner Loop: Update Proxy Model 
+
+5: Calculate proxy parameters 𝜃 ∗ (S syn ) by taking 𝑇 gradient steps to minimize LCE on Ssyn (Eq. 1b). 
+
+6: // Outer Loop: Update Structural Basis 
+
+7: Compute Source Semantic loss Lsem .
+
+8: Compute Geometric Alignment Loss Lgeo .
+
+9: Compute Spectral Alignment Loss Lspec .
+
+10: Update synthetic basis Ssyn ← S syn − 𝜂 𝑜𝑢𝑡 ∇Ssyn 
+
+ Lsem +
+
+𝜆 1 Lgeo + 𝜆 2 Lspec 
+
+.
+
+11: end while 
+
+12: Output: Dual-Aligned Structural Basis Ssyn .
+
+13: — Stage 2: Structurally Calibrated Target Inference — 
+
+14: // Step 1: Structural Bias Isolation 
+
+15: Discard source data D𝑆 and proxy model 𝜃 ∗.
+
+16: Initialize a fresh target-specific GNN classifier 𝜙 .
+
+17: // Step 2: Target-Calibrated Training 
+
+18: while not converged do 
+
+19: Sample batches from the optimized basis Ssyn .
+
+20: Update 𝜙 by minimizing LCE exclusively on Ssyn (Eq. 2). 
+
+21: end while 
+
+22: Obtain the structurally unbiased optimal model 𝜙 ∗.
+
+23: // Step 3: Prediction 
+
+24: return Predictions on target domain ˆ𝑌 𝑇 = GNN (𝐴 𝑇 , 𝑋 𝑇 ; 𝜙 ∗).
+
+where Δtraj ∝  ℜ(F ×S syn )− ℜ(F | S ∗
+
+> syn
+
+) > 0 represents the strictly positive excess risk penalty induced by trajectory memorization and structural co-adaptation. 
+
+Theorem 3.2 establishes the theoretical foundation of the de-coupled inference paradigm. It shows that the proxy model 𝜃 ∗, by participating in the bi-level synthesis procedure, becomes implic-itly coupled to the transient and source-dependent structural states encountered along the optimization trajectory. 
+
+## 3.5 Learning Framework 
+
+The overall framework of DSBD is summarized in Algorithm 1. We treat the probabilistic adjacency matrices and node features of the synthetic basis Ssyn as learnable variables and optimize them through a bi-level scheme. In the inner loop , the proxy model 𝜃 ∗ is trained exclusively on Ssyn (Line 5), establishing a differentiable dependency between the synthesized structural configurations and the classification objective. In the outer loop , the proxy is evalu-ated on real source data to compute the semantic fidelity loss Lsem ,while geometric and spectral discrepancies with respect to the unla-beled target domain are quantified via Lgeo and Lspec (Lines 7–10). The structural basis is then updated by backpropagating gradients through the inner optimization trajectory. After convergence, we obtain the optimized dual-aligned structural basis Ssyn . During in-ference, we adopt a structurally calibrated inference strategy to 
+
+Table 1: The image classification results (in %) under edge den-sity domain shifts (source → target) on the MNIST and CIFAR-10 datasets. Bold results indicate the best performance.                                                                                                                  
+
+> Methods MNIST CIFAR-10
+> S0 →S1 S1 →S0 S0 →S2 S2 →S0 C0 →C1 C1 →C0 C0 →C2 C2 →C0 G-CRD 48.34 ±2.549.12 ±2.438.45 ±2.147.55 ±2.025.34 ±1.930.45 ±2.127.12 ±2.229.45 ±2.5
+> MuGSI 45.12 ±3.245.67 ±3.135.12 ±3.543.12 ±3.022.11 ±2.627.12 ±3.124.33 ±2.826.11 ±2.7
+> TGS 49.88 ±1.851.22 ±1.939.56 ±2.248.66 ±2.426.55 ±1.631.55 ±1.828.45 ±1.930.55 ±2.1
+> LAD-GNN 51.45 ±2.152.88 ±2.342.10 ±1.950.12 ±2.128.12 ±1.733.22 ±2.030.15 ±2.132.12 ±1.9
+> AdaGMLP 47.22 ±2.748.34 ±2.636.78 ±3.146.33 ±2.524.55 ±2.429.66 ±2.826.55 ±2.628.33 ±2.9
+> ClustGDD 44.67 ±3.646.11 ±3.534.11 ±3.744.22 ±3.621.33 ±3.326.44 ±3.723.11 ±3.525.44 ±3.4
+> SGDA 43.15 ±3.344.22 ±3.432.44 ±3.642.15 ±3.520.12 ±3.125.12 ±3.222.45 ±3.424.15 ±3.3
+> StruRW 52.34 ±1.653.15 ±1.541.25 ±1.851.45 ±1.929.15 ±1.534.15 ±1.631.05 ±1.733.15 ±1.5
+> A2GNN 46.88 ±2.947.55 ±3.035.67 ±3.245.67 ±2.823.44 ±2.828.55 ±3.025.66 ±2.927.66 ±2.8
+> PA-BOTH 50.12 ±2.251.66 ±2.140.55 ±2.549.22 ±2.427.66 ±2.032.44 ±2.229.33 ±2.431.44 ±2.3
+> GAA 41.22 ±3.543.11 ±3.733.88 ±3.441.55 ±3.419.88 ±3.524.33 ±3.621.55 ±3.323.55 ±3.7
+> TDSS 51.98 ±1.753.45 ±1.842.89 ±2.051.88 ±1.729.45 ±1.834.55 ±1.931.22 ±2.033.45 ±1.8
+> DSBD 54.26 ±1.554.81 ±1.844.17 ±2.152.95 ±2.530.49 ±1.435.61 ±1.732.28 ±2.234.66 ±1.3
+
+eliminate residual source bias. Both the source dataset D𝑆 and the proxy model 𝜃 ∗ are discarded (Line 15). A freshly initialized GNN 
+
+𝜙 is then trained from scratch solely on the fixed basis Ssyn (Lines 18–21). The resulting structurally calibrated model 𝜙 ∗ is directly de-ployed on unseen target graphs (Line 24). The complexity analysis can be found in Appendix. E. 
+
+## 4 Experiments 
+
+Datasets. To evaluate the effectiveness of DSBD, we conduct ex-periments on both graph and image benchmarks under three rep-resentative types of domain shifts. (1) Structure-based shifts: 
+
+Structural shifts are simulated on MNIST [ 23 ], CIFAR10 [ 21 ], PRO-TEINS [ 9 ], Mutagenicity [ 19 ], NCI1 [ 45 ], FRANKENSTEIN [ 35 ], and ogbg-molhiv [ 15 ] by partitioning graphs into multiple domains ac-cording to node or edge densities [ 67 , 68 ]. (2) Feature-based shifts: 
+
+We further evaluate on DD, PROTEINS, BZR, BZR_MD, COX2, and COX2_MD, where source and target domains share identical global structures but exhibit significant shifts in node feature distributions. (3) Correlation shifts: To assess robustness against spurious cor-relations, we adopt the synthetic Spurious-Motif dataset [ 58 ], in which the predictive relationship between class labels and specific motif patterns differs across domains. More details of the above datasets are provided in Appendix C. 
+
+Baselines. We compare DSBD against a comprehensive set of competitive methods: (1) Graph distillation methods include G-CRD [ 18 ], MuGSI [ 65 ], TGS [ 55 ], LAD-GNN [ 14 ], AdaGMLP [ 31 ], and ClusterGDD [ 22 ]; (2) Graph domain adaptation methods include SGDA [ 37 ], StruRW [ 27 ], A2GNN [ 25 ], PA-BOTH [ 28 ], GAA [ 11 ], and TDSS [ 6]. More details of baselines can be found in Appendix D. 
+
+Implementation details. We implement DSBD using PyTorch and conduct all experiments on NVIDIA A100 GPUs. By default, a 3-layer GIN [ 63 ] serves as the backbone encoder. The hidden dimension is set to 128, with a dropout rate of 0.2. For the bi-level optimization, both the inner and outer loops are optimized with Adam optimizer. In the inner loop, the proxy model is trained for up to 𝑇 = 20 steps with a learning rate of 1 × 10 −3. In the outer loop, the structural basis is updated using a meta learning rate of 1 × 10 −4
+
+with gradient clipping at 1.0. To balance semantic preservation and structural alignment, we set the loss weights to 𝜆 1 = 0.7 and 
+
+𝜆 2 = 0.5. We report classification accuracy on image datasets (e.g., DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Table 2: Graph classification results (in %) under node and edge density domain shifts on the Mutagenicity dataset, and under correlation shifts (Corr. Shift) and feature shifts (source →target). S, SB, P, D, C, CM, B, and BM denote Spurious-Motif, Spurious-Motif_bias, PROTEINS, DD, COX2, COX2_MD, BZR, and BZR_MD, respectively. Bold indicates the best performance. 
+
+Methods Node Shift Edge Shift Corr. Shift Feature Shift 
+
+M0 →M1 M0 →M2 M0 →M3 M0 →M1 M0 →M2 M0 →M3 S→SB SB →S P→D D→P C→CM CM →C B→BM BM →BG-CRD 60.4 ±0.5 55.3 ±1.1 59.6 ±3.2 73.7 ±0.6 55.3 ±1.0 58.4 ±2.5 52.8 ±2.4 53.1 ±2.5 60.7 ±1.4 71.4 ±1.2 58.7 ±1.5 71.8 ±1.6 63.8 ±1.9 83.9 ±1.1
+
+MuGSI 45.3 ±2.4 48.6 ±3.1 56.2 ±2.0 59.8 ±2.5 55.4 ±2.9 54.2 ±2.1 49.5 ±3.2 50.2 ±2.8 57.5 ±2.2 70.1 ±1.9 55.9 ±2.4 69.4 ±1.8 61.8 ±2.1 80.5 ±2.0
+
+TGS 53.8 ±1.8 58.2 ±1.6 50.7 ±2.5 66.4 ±1.8 63.2 ±2.1 52.8 ±2.1 50.4 ±2.6 52.5 ±2.4 59.1 ±1.6 68.7 ±1.5 57.2 ±1.9 68.1 ±2.3 65.2 ±1.8 82.1 ±1.4
+
+LAD-GNN 58.5 ±2.3 62.4 ±2.8 53.6 ±1.7 71.2 ±2.1 72.5 ±1.7 51.4 ±1.9 51.9 ±2.8 54.0 ±2.2 59.5 ±1.8 71.8 ±1.4 56.5 ±2.1 72.3 ±1.5 64.9 ±2.0 81.8 ±1.7
+
+AdaGMLP 51.2 ±1.9 42.8 ±1.4 55.3 ±2.1 62.1 ±2.4 58.9 ±2.4 55.6 ±2.2 49.2 ±2.5 50.9 ±2.1 55.2 ±2.3 66.9 ±2.1 53.8 ±2.5 67.5 ±2.0 60.1 ±2.4 78.6 ±2.2
+
+ClustGDD 44.9 ±2.6 50.5 ±2.2 49.8 ±2.3 55.3 ±2.6 45.6 ±2.9 56.1 ±2.3 47.5 ±3.5 48.1 ±3.4 56.8 ±2.0 68.3 ±1.8 54.1 ±2.2 68.9 ±2.4 62.3 ±1.6 79.2 ±2.5
+
+SGDA 41.0 ±3.5 52.1 ±1.8 59.8 ±2.1 65.0 ±2.2 50.2 ±1.5 62.2 ±1.9 50.1 ±2.9 51.3 ±2.7 58.2 ±1.7 69.5 ±2.0 56.4 ±1.8 70.2 ±2.1 64.5 ±2.3 81.2 ±1.9
+
+StruRW 59.9 ±1.8 34.1 ±1.6 48.4 ±2.0 74.2 ±1.7 75.6 ±1.9 54.4 ±2.3 49.5 ±2.7 52.7 ±2.5 53.2 ±2.1 65.4 ±1.8 52.8 ±2.3 64.5 ±1.9 61.5 ±2.4 78.2 ±1.5
+
+A2GNN 57.6 ±2.1 34.6 ±2.7 54.8 ±3.1 32.3 ±3.0 37.8 ±2.5 53.5 ±2.7 44.7 ±2.8 46.5 ±3.5 55.8 ±1.9 66.1 ±2.2 51.4 ±1.7 66.2 ±2.5 59.8 ±1.8 77.6 ±2.1
+
+PA-BOTH 54.8 ±1.6 67.3 ±3.0 47.9 ±1.8 68.7 ±2.2 77.0 ±1.5 48.9 ±2.1 51.2 ±2.3 52.9 ±2.1 54.1 ±2.5 63.8 ±1.6 53.9 ±2.0 65.7 ±1.4 62.4 ±2.2 79.1 ±1.8
+
+GAA 40.1 ±3.2 31.3 ±1.4 58.1 ±2.1 70.5 ±1.8 65.9 ±2.2 57.1 ±1.9 47.8 ±2.1 49.3 ±2.4 52.7 ±1.8 64.5 ±2.4 50.6 ±2.1 63.9 ±2.8 60.1 ±2.5 76.8 ±2.3
+
+TDSS 40.1 ±2.0 67.7 ±2.6 52.5 ±2.7 67.7 ±2.1 40.1 ±2.8 55.8 ±2.2 52.1 ±2.5 53.4 ±2.4 56.4 ±2.0 67.2 ±1.5 54.2 ±1.9 67.1 ±2.2 63.5 ±1.7 80.4 ±1.6
+
+DSBD 63.8 ±1.4 69.5 ±2.0 62.7 ±1.5 76.5 ±1.4 79.1 ±1.3 60.8 ±1.7 54.3 ±2.1 55.6 ±1.8 62.4 ±1.5 73.5 ±1.1 60.2 ±1.4 74.1 ±1.3 69.5 ±1.6 85.4 ±1.0
+
+MNIST), TUDataset benchmarks (e.g., PROTEINS) and Spurious-Motif, and AUC on OGB datasets (e.g., ogbg-molhiv). All results are averaged over five independent runs. 
+
+## 4.1 Performance Comparison 
+
+We present the comprehensive results of the proposed DSBD and all baseline methods under three types of domain shifts across different datasets in Tables 1, 2, and 10-20. From these results, we have the following observations: (1) Existing graph distillation approaches (e.g., G-CRD) primarily aim to compress the source dataset into a compact synthetic set by matching gradients, feature statistics, or training trajectories. While effective at preserving source-domain predictive knowledge, these methods are inherently designed for in-domain scenarios and do not explicitly account for cross-domain discrepancies. As a result, the distilled graphs tend to encode source-specific structural patterns, leading to poor generalization when distribution shifts occur in the target domain. (2) Graph domain adaptation methods (e.g., SGDA) alleviate distribution mismatch by aligning representations or reweighting structures using target-domain information. Although some methods incorporate topology-aware mechanisms, the majority still follow a feature-centric par-adigm, where structural adaptation is treated implicitly through message passing or auxiliary regularization. Consequently, these approaches may partially mitigate feature discrepancies but re-main vulnerable under significant topology shifts. (3) The proposed DSBD achieves state-of-the-art performance on both graph and image benchmarks across three types of domain shifts. This superi-ority can be attributed to two key factors. First, by shifting from model-centric adaptation to a data-centric structural basis distil-lation paradigm, DSBD effectively decouples the learning process from source-specific structural biases and mitigates the accumula-tion of predictive errors during transfer. Second, the proposed dual-aligned structural optimization integrates geometry-preserving topology moment matching with Dirichlet energy based spectral alignment, enabling DSBD to capture both geometric and spectral characteristics of the target domain. More experimental results can be found in Appendix F.1. 
+
+(a) DSBD (b) TDSS 
+
+Figure 3: T-SNE visualizations on the Mutagenicity dataset for DSBD and baselines. 
+
+Additionally, we present t-SNE visualizations of DSBD and base-line methods in Figure 3. Compared to baselines (e.g., TDSS), DSBD produces more compact intra-class clusters and clearer inter-class separation across domains. Notably, samples from the source and target domains belonging to the same class are more closely aligned, while those from different classes remain well separated, indicat-ing that DSBD effectively mitigates domain discrepancies. More visualizations are provided in Appendix F.2. 
+
+Table 3: The results of ablation studies on the Mutagenicity dataset. Bold results indicate the best performance.                                     
+
+> Methods M0 →M1 M1 →M0 M0 →M2 M2 →M0 M0 →M3 M3 →M0 DSBD w/o SE 64.2 61.5 65.8 50.3 53.4 54.2 DSBD w/o SP 71.5 68.1 74.2 55.6 56.5 60.1 DSBD w/o GE 69.5 66.4 71.6 53.8 54.2 57.1 DSBD w/o TG 72.4 70.6 73.9 57.1 58.6 62.3 DSBD 76.5 72.3 79.1 59.4 60.8 64.5
+
+## 4.2 Ablation Study 
+
+To systematically examine the contribution of each key compo-nent in DSBD, we conduct ablation studies on four model variants: (1) DSBD w/o SE, which removes the semantic loss Lsem , thereby discarding the supervision that preserves source-domain discrim-inative structures during structural distillation; (2) DSBD w/o SP, Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 
+
+which excludes the spectral alignment loss Lspec , eliminating the constraint that aligns Laplacian-induced filtering behaviors across domains; (3) DSBD w/o GE, which removes the geometric align-ment loss Lgeo , thus preventing the structural basis from matching permutation-invariant topological statistics of the target domain; and (4) DSBD w/o TG, which directly applies the proxy model obtained during the distillation stage to the target domain with-out retraining a new GNN, thereby disabling the structural bias isolation mechanism in the inference stage. Experimental results are shown in Table 3. From the table, we observe that: (1) The semantic loss Lsem plays a critical role in preserving source-discriminative semantics during structural distil-lation. When this component is removed (DSBD w/o SE), perfor-mance drops significantly across all transfer tasks, indicating that without semantic supervision, the synthesized structural basis fails to maintain alignment with source decision boundaries, thereby impairing cross-domain transferability; (2) The spectral alignment loss Lspec is essential for matching the Laplacian-induced filtering behavior between domains. Removing this component (DSBD w/o SP) consistently degrades performance, suggesting that without spectral calibration, the learned structural basis cannot properly capture target-domain frequency characteristics, leading to mis-matched message-passing dynamics; (3) The geometric alignment loss Lgeo enforces consistency in permutation-invariant structural statistics between the synthesized basis and the target domain. When this constraint is removed (DSBD w/o GE), performance de-creases across all settings, demonstrating that geometric alignment is necessary to preserve relational structures under topology shift; (4) The decoupled inference mechanism further contributes to per-formance gains by isolating source-specific structural bias. When this component is disabled (DSBD w/o TG) and the proxy model is directly applied to the target domain, performance degrades con-sistently, indicating that retraining a fresh GNN on the distilled structural basis is crucial for eliminating residual source bias. More results can be found in Appendix. F.3.    
+
+> (a) Synthetic Bases 𝐾 (b) Coefficient ( 𝜆 1,𝜆 2)
+
+Figure 4: Sensitivity analysis of the number of synthetic bases 
+
+𝐾 and balance coefficient ( 𝜆 1, 𝜆 2) on the Mutagenicity dataset. 
+
+## 4.3 Sensitivity Analysis 
+
+We conduct a sensitivity analysis on the structural basis size 𝐾 and the balance coefficients (𝜆 1, 𝜆 2), as illustrated in Figure. 4. Here, 𝐾 
+
+controls the number of synthetic graphs in the dual-aligned struc-tural basis, thereby determining the expressive capacity of the dif-ferentiable structural substrate for modeling cross-domain topology variations. The coefficients 𝜆 1 and 𝜆 2 balance the geometric align-ment loss 𝐿 geo and the spectral alignment loss 𝐿 spec , respectively, governing the trade-off between matching permutation-invariant topological statistics and aligning Laplacian-induced spectral char-acteristics during structural distillation. Figure. 4 illustrates the impact of these hyperparameters on the performance of DSBD on the Mutagenicity dataset. We vary the number of synthetic bases 𝐾 within {5, 10 , 20 , 30 , 40 , 50 }, and set both 𝜆 1 and 𝜆 2 within {0.1, 0.3, 0.5, 0.7, 0.9}. We can find that: (1) As shown in Figure. 4(a), performance improves as 𝐾 increases from 5 to 30, indicating that a larger structural basis enhances ex-pressiveness and better captures cross-domain topology variations. Further increasing 𝐾 yields diminishing returns and slight degra-dation, suggesting redundancy in overly large bases. We therefore set 𝐾 = 30 by default. (2) Figure. 4(b) shows that the best perfor-mance is achieved at 𝜆 1 = 0.7 and 𝜆 2 = 0.5, highlighting the need for a balanced trade-off between geometric and spectral alignment. Smaller values lead to insufficient alignment, while larger ones overemphasize a single objective and disrupt their complementar-ity. More experimental results on other datasets are provided in Appendix F.4. 
+
+Figure 5: Distribution of Dirichlet energy and graph density of distilled basis between DSBD and baselines.      
+
+> (a) Ω=13.47 (b) Ω=22.93 (c) Ω=34.53
+
+Figure 6: Visualizations of the distilled basis of DSBD with different Dirichlet energy Ω.
+
+## 4.4 Qualitative Analysis of Distilled Basis 
+
+To assess whether the distilled structural basis aligns with the tar-get domain, we compare the distributions of Dirichlet energy and graph density between DSBD and baseline methods (e.g., G-CRD and LAD-GNN). As shown in Figure 5, DSBD exhibits a strong over-lap with the target distribution in both metrics, indicating effective alignment in both spectral and geometric aspects. In contrast, base-line methods show noticeable distributional shifts, suggesting their inability to capture the structural patterns of the target domain. We further visualize synthesized graphs with varying Dirichlet energy in Figure 6. These graphs span a diverse range of structures, DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+forming a comprehensive basis that closely matches the energy distribution of the target domain. More visualization of synthesized graphs have been provided in Appendix F.2. 
+
+## 5 Conclusion 
+
+In this paper, we propose DSBD, a novel framework for graph do-main adaptation that explicitly addresses cross-domain structural discrepancies through dual-aligned structural basis distillation. By constructing a differentiable structural substrate and jointly en-forcing geometric and spectral alignment via topological moment matching and Dirichlet energy calibration, DSBD effectively cap-tures both connectivity patterns and Laplacian-induced filtering behaviors of the target domain. Furthermore, we introduce a decou-pled inference paradigm that mitigates source-specific structural bias by training a fresh model on the distilled basis, thereby im-proving generalization under topology shift. Rigorous theoretical analysis further validates that this distillation process effectively minimizes the target risk bound, ensuring robust cross-domain knowledge transfer. Extensive experiments on graph and image benchmarks demonstrate that DSBD consistently outperforms state-of-the-art methods across diverse domain shifts. 
+
+## References 
+
+[1] Peter L Bartlett and Shahar Mendelson. Rademacher and gaussian complexi-ties: Risk bounds and structural results. Journal of machine learning research ,3(Nov):463–482, 2002. [2] Shai Ben-David, John Blitzer, Koby Crammer, Alex Kulesza, Fernando Pereira, and Jennifer Wortman Vaughan. A theory of learning from different domains. 
+
+Machine learning , 79(1):151–175, 2010. [3] Ruichu Cai, Fengzhu Wu, Zijian Li, Pengfei Wei, Lingling Yi, and Kun Zhang. Graph domain adaptation: A generative view. ACM Transactions on Knowledge Discovery from Data , 18(3):1–24, 2024. [4] Wei Chen, Xingyu Guo, Shuang Li, Zhao Zhang, Yan Zhong, Fuzhen Zhuang, et al. Learning adaptive distribution alignment with neural characteristic function for graph domain adaptation. arXiv preprint arXiv:2602.10489 , 2026. [5] Wei Chen, Xingyu Guo, Shuang Li, Yan Zhong, Zhao Zhang, Fuzhen Zhuang, Hon-grui Liu, Libang Zhang, Guo Ye, and Huimei He. Learning structure-semantic evo-lution trajectories for graph domain adaptation. arXiv preprint arXiv:2602.10506 ,2026. [6] Wei Chen, Guo Ye, Yakun Wang, Zhao Zhang, Libang Zhang, Daixin Wang, Zhiqiang Zhang, and Fuzhen Zhuang. Smoothness really matters: A simple yet effective approach for unsupervised graph domain adaptation. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 39, pages 15875–15883, 2025. [7] Quanyu Dai, Xiao-Ming Wu, Jiaren Xiao, Xiao Shen, and Dan Wang. Graph transfer learning via adversarial domain adaptation with graph convolution. IEEE Transactions on Knowledge and Data Engineering , 35(5):4908–4922, 2022. [8] Zhengming Ding, Sheng Li, Ming Shao, and Yun Fu. Graph adaptive knowledge transfer for unsupervised domain adaptation. In Proceedings of the European Conference on Computer Vision. , pages 37–52, 2018. [9] Paul D Dobson and Andrew J Doig. Distinguishing enzyme structures from non-enzymes without alignments. Journal of molecular biology , 330(4):771–783, 2003. [10] Vijay Prakash Dwivedi, Chaitanya K Joshi, Anh Tuan Luu, Thomas Laurent, Yoshua Bengio, and Xavier Bresson. Benchmarking graph neural networks. 
+
+Journal of Machine Learning Research , 24(43):1–48, 2023. [11] Ruiyi Fang, Bingheng Li, Zhao Kang, Qiuhao Zeng, Nima Hosseini Dashtbayaz, Ruizhi Pu, Boyu Wang, and Charles Ling. On the benefits of attribute-driven graph domain adaptation. arXiv preprint arXiv:2502.06808 , 2025. [12] Ruiyi Fang, Bingheng Li, Jingyu Zhao, Ruizhi Pu, Qiuhao Zeng, Gezheng Xu, Charles Ling, and Boyu Wang. Homophily enhanced graph domain adaptation. 
+
+arXiv preprint arXiv:2505.20089 , 2025. [13] Xinyi Gao, Junliang Yu, Tong Chen, Guanhua Ye, Wentao Zhang, and Hongzhi Yin. Graph condensation: A survey. IEEE Transactions on Knowledge and Data Engineering , 37(4):1819–1837, 2025. [14] Xiaobin Hong, Wenzhong Li, Chaoqun Wang, Mingkai Lin, and Sanglu Lu. Label attentive distillation for gnn-based graph classification. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 38, pages 8499–8507, 2024. [15] Weihua Hu, Matthias Fey, Hongyu Ren, Maho Nakata, Yuxiao Dong, and Jure Leskovec. Ogb-lsc: A large-scale challenge for machine learning on graphs. arXiv preprint arXiv:2103.09430 , 2021. [16] Cuiying Huo, Di Jin, Yawen Li, Dongxiao He, Yu-Bin Yang, and Lingfei Wu. T2-gnn: Graph neural networks for graphs with incomplete features and structure via teacher-student distillation. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 37, pages 4339–4346, 2023. [17] Wei Jin, Xianfeng Tang, Haoming Jiang, Zheng Li, Danqing Zhang, Jiliang Tang, and Bing Yin. Condensing graphs via one-step gradient matching. In Proceedings of the International ACM SIGKDD Conference on Knowledge Discovery & Data Mining , pages 720–730, 2022. [18] Chaitanya K Joshi, Fayao Liu, Xu Xun, Jie Lin, and Chuan Sheng Foo. On repre-sentation knowledge distillation for graph neural networks. IEEE transactions on neural networks and learning systems , 35(4):4656–4667, 2022. [19] Jeroen Kazius, Ross McGuire, and Roberta Bursi. Derivation and validation of toxicophores for mutagenicity prediction. Journal of medicinal chemistry ,48(1):312–320, 2005. [20] Shima Khoshraftar and Aijun An. A survey on graph representation learning methods. ACM Transactions on Intelligent Systems and Technology , 15(1):1–55, 2024. [21] Alex Krizhevsky, Geoffrey Hinton, et al. Learning multiple layers of features from tiny images. 2009. [22] Yurui Lai, Taiyan Zhang, and Renchi Yang. Simple yet effective graph distillation via clustering. In Proceedings of the International ACM SIGKDD Conference on Knowledge Discovery & Data Mining , pages 1229–1240, 2025. [23] Yann LeCun, Léon Bottou, Yoshua Bengio, and Patrick Haffner. Gradient-based learning applied to document recognition. Proceedings of the IEEE , 86(11):2278– 2324, 2002. [24] Shiye Lei and Dacheng Tao. A comprehensive survey of dataset distillation. IEEE Transactions on Pattern Analysis and Machine Intelligence , 46(1):17–32, 2023. [25] Meihan Liu, Zeyu Fang, Zhen Zhang, Ming Gu, Sheng Zhou, Xin Wang, and Jiajun Bu. Rethinking propagation for unsupervised graph domain adaptation. 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , pages 13963–13971, 2024. [26] Meihan Liu, Zhen Zhang, Jiachen Tang, Jiajun Bu, Bingsheng He, and Sheng Zhou. Revisiting, benchmarking and understanding unsupervised graph domain adaptation. Proceedings of the Conference on Neural Information Processing Systems ,37:89408–89436, 2024. [27] Shikun Liu, Tianchun Li, Yongbin Feng, Nhan Tran, Han Zhao, Qiang Qiu, and Pan Li. Structural re-weighting improves graph domain adaptation. In Proceedings of the International Conference on Machine Learning , pages 21778–21793. PMLR, 2023. [28] Shikun Liu, Deyu Zou, Han Zhao, and Pan Li. Pairwise alignment improves graph domain adaptation. Proceedings of the International Conference on Machine Learning , 2024. [29] Yang Liu, Deyu Bo, and Chuan Shi. Graph distillation with eigenbasis matching. 
+
+arXiv preprint arXiv:2310.09202 , 2023. [30] Yixin Liu, Ming Jin, Shirui Pan, Chuan Zhou, Yu Zheng, Feng Xia, and Philip S Yu. Graph self-supervised learning: A survey. IEEE transactions on knowledge and data engineering , 35(6):5879–5900, 2022. [31] Weigang Lu, Ziyu Guan, Wei Zhao, and Yaming Yang. Adagmlp: Adaboosting gnn-to-mlp knowledge distillation. In Proceedings of the International ACM SIGKDD Conference on Knowledge Discovery & Data Mining , pages 2060–2071, 2024. [32] Xinhong Ma, Tianzhu Zhang, and Changsheng Xu. Gcan: Graph convolutional adversarial network for unsupervised domain adaptation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 8266– 8276, 2019. [33] Alfred Müller. Integral probability metrics and their generating classes of func-tions. Advances in applied probability , 29(2):429–443, 1997. [34] Ba Hung Ngo, Doanh C Bui, Nhat-Tuong Do-Tran, and Tae Jong Choi. Higda: Hierarchical graph of nodes to learn local-to-global topology for semi-supervised domain adaptation. In Proceedings of the AAAI Conference on Artificial Intelligence ,volume 39, pages 6191–6199, 2025. [35] Francesco Orsini, Paolo Frasconi, and Luc De Raedt. Graph invariant kernels. In 
+
+Proceedings of the International Joint Conference on Artificial Intelligence , 2015. [36] Jinhui Pang, Zixuan Wang, Jiliang Tang, Mingyan Xiao, and Nan Yin. Sa-gda: Spectral augmentation for graph domain adaptation. In Proceedings of the ACM International Conference on Multimedia , pages 309–318, 2023. [37] Ziyue Qiao, Xiao Luo, Meng Xiao, Hao Dong, Yuanchun Zhou, and Hui Xiong. Semi-supervised domain adaptation in graph transfer learning. In Proceedings of the International Joint Conference on Artificial Intelligence , pages 2279–2287, 2023. [38] Lanyu Shang, Yang Zhang, Zhenrui Yue, YeonJung Choi, Huimin Zeng, and Dong Wang. A domain adaptive graph learning framework to early detection of emergent healthcare misinformation on social media. In Proceedings of the International AAAI Conference on Web and Social Media , volume 18, pages 1408– 1421, 2024. Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 
+
+[39] Boshen Shi, Yongqing Wang, Fangda Guo, Jiangli Shao, Huawei Shen, and Xueqi Cheng. Improving graph domain adaptation with network hierarchy. In Proceed-ings of the International Conference on Information and Knowledge Management ,pages 2249–2258, 2023. [40] Yuntao Shou, Xiangyong Cao, Peiqiang Yan, Qiao Hui, Qian Zhao, and Deyu Meng. Graph domain adaptation with dual-branch encoder and two-level alignment for whole slide image-based survival prediction. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 19925–19935, 2025. [41] Bharath K Sriperumbudur, Arthur Gretton, Kenji Fukumizu, Bernhard Schölkopf, and Gert RG Lanckriet. Hilbert space embeddings and metrics on probability measures. The Journal of Machine Learning Research , 11:1517–1561, 2010. [42] Jiachen Sun, Qingzhao Zhang, Bhavya Kailkhura, Zhiding Yu, Chaowei Xiao, and Z Morley Mao. Modelnet40-c: A robustness benchmark for 3d point cloud recognition under corruption. In ICLR 2022 workshop on socially responsible machine learning , volume 7, 2022. [43] Yijun Tian, Shichao Pei, Xiangliang Zhang, Chuxu Zhang, and Nitesh V Chawla. Knowledge distillation on graphs: A survey. ACM Computing Surveys , 57(8):1–16, 2025. [44] Leslie G Valiant. A theory of the learnable. Communications of the ACM ,27(11):1134–1142, 1984. [45] Nikil Wale, Ian A Watson, and George Karypis. Comparison of descriptor spaces for chemical compound retrieval and classification. Knowledge and Information Systems , 14:347–375, 2008. [46] Wei Wang, Gaowei Zhang, Hongyong Han, and Chi Zhang. Correntropy-induced wasserstein gcn: Learning graph embedding via domain adaptation. IEEE Trans-actions on Image Processing , 32:3980–3993, 2023. [47] Yingxu Wang, Victor Liang, Nan Yin, Siwei Liu, and Eran Segal. Sgac: a graph neural network framework for imbalanced and structure-aware amp classification. 
+
+Briefings in Bioinformatics , 27(1):bbag038, 2026. [48] Yingxu Wang, Xinwang Liu, Mengzhu Wang, Siyang Gao, and Nan Yin. Riemann-ian flow matching for disentangled graph domain adaptation. arXiv preprint arXiv:2602.00656 , 2026. [49] Yingxu Wang, Mengzhu Wang, Zhichao Huang, Suyu Liu, and Nan Yin. Nested graph pseudo-label refinement for noisy label domain adaptation learning. In 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , volume 40, pages 26697–26705, 2026. [50] Yingxu Wang, Mengzhu Wang, Houcheng Su, Nan Yin, Quanming Yao, and James Kwok. Degree-conscious spiking graph for cross-domain adaptation. arXiv preprint arXiv:2410.06883 , 2024. [51] Yingxu Wang, Nan Yin, Mingyan Xiao, Xinhao Yi, Siwei Liu, and Shangsong Liang. Dusego: Dual second-order equivariant graph ordinary differential equation. 
+
+ACM Transactions on Knowledge Discovery from Data , 20(1):1–18, 2025. [52] Yingxu Wang, Kunyu Zhang, Jiaxin Huang, Nan Yin, Siwei Liu, and Eran Se-gal. Protomol: enhancing molecular property prediction via prototype-guided multimodal learning. Briefings in Bioinformatics , 26(6):bbaf629, 2025. [53] Yingxu Wang, Kunyu Zhang, Mengzhu Wang, Siyang Gao, and Nan Yin. Usbd: Universal structural basis distillation for source-free graph domain adaptation. 
+
+arXiv preprint arXiv:2602.08431 , 2026. [54] Yuxiang Wang, Xiao Yan, Shiyu Jin, Hao Huang, Quanqing Xu, Qingchen Zhang, Bo Du, and Jiawei Jiang. Self-supervised learning for graph dataset condensa-tion. In Proceedings of the International ACM SIGKDD Conference on Knowledge Discovery & Data Mining , pages 3289–3298, 2024. [55] Lirong Wu, Haitao Lin, Zhangyang Gao, Guojiang Zhao, and Stan Z Li. A teacher-free graph knowledge distillation framework with dual self-distillation. IEEE Transactions on Knowledge and Data Engineering , 36(9):4375–4385, 2024. [56] Man Wu, Shirui Pan, Chuan Zhou, Xiaojun Chang, and Xingquan Zhu. Unsuper-vised domain adaptive graph convolutional networks. In Proceedings of the ACM Web Conference , pages 1457–1467, 2020. [57] Man Wu, Xin Zheng, Qin Zhang, Xiao Shen, Xiong Luo, Xingquan Zhu, and Shirui Pan. Graph learning under distribution shifts: A comprehensive survey on domain adaptation, out-of-distribution, and continual learning. arXiv preprint arXiv:2402.16374 , 2024. [58] Ying-Xin Wu, Xiang Wang, An Zhang, Xiangnan He, and Tat-Seng Chua. Discovering invariant rationales for graph neural networks. arXiv preprint arXiv:2201.12872 , 2022. [59] Zonghan Wu, Shirui Pan, Fengwen Chen, Guodong Long, Chengqi Zhang, and Philip S Yu. A comprehensive survey on graph neural networks. IEEE transactions on neural networks and learning systems , 32(1):4–24, 2020. [60] Feng Xia, Ke Sun, Shuo Yu, Abdul Aziz, Liangtian Wan, Shirui Pan, and Huan Liu. Graph learning: A survey. IEEE Transactions on Artificial Intelligence , 2(2):109–127, 2021. [61] Zhiqing Xiao, Haobo Wang, Ying Jin, Lei Feng, Gang Chen, Fei Huang, and Junbo Zhao. Spa: A graph spectral alignment perspective for domain adaptation. 
+
+Proceedings of the Conference on Neural Information Processing Systems , 36:37252– 37272, 2023. [62] Zhiqing Xiao, Haobo Wang, Xu Lu, Wentao Ye, Gang Chen, and Junbo Zhao. Spa++: Generalized graph spectral alignment for versatile domain adaptation. 
+
+arXiv preprint arXiv:2508.05182 , 2025. [63] Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. How powerful are graph neural networks? arXiv preprint arXiv:1810.00826 , 2018. [64] Liang Yang, Xin Chen, Jiaming Zhuo, Di Jin, Chuan Wang, Xiaochun Cao, Zhen Wang, and Yuanfang Guo. Disentangled graph spectral domain adaptation. In 
+
+Proceedings of the International Conference on Machine Learning , 2025. [65] Tianjun Yao, Jiaqi Sun, Defu Cao, Kun Zhang, and Guangyi Chen. Mugsi: Distill-ing gnns with multi-granularity structural information for graph classification. In Proceedings of the ACM Web Conference , pages 709–720, 2024. [66] Nan Yin, Li Shen, Baopu Li, Mengzhu Wang, Xiao Luo, Chong Chen, Zhigang Luo, and Xian-Sheng Hua. Deal: An unsupervised domain adaptive framework for graph-level classification. In Proceedings of the ACM International Conference on Multimedia , pages 3470–3479, 2022. [67] Nan Yin, Li Shen, Mengzhu Wang, Long Lan, Zeyu Ma, Chong Chen, Xian-Sheng Hua, and Xiao Luo. Coco: A coupled contrastive framework for unsupervised do-main adaptive graph classification. In Proceedings of the International Conference on Machine Learning , pages 40040–40053. PMLR, 2023. [68] Nan Yin, Li Shen, Mengzhu Wang, Xinwang Liu, Chong Chen, and Xian-Sheng Hua. Dream: a dual variational framework for unsupervised graph domain adaptation. IEEE Transactions on Pattern Analysis and Machine Intelligence , 2025. [69] Nan Yin, Xiao Teng, Zhiguang Cao, and Mengzhu Wang. Coupling category alignment for graph domain adaptation. In Proceedings of the International Joint Conference on Artificial Intelligence , pages 3561–3569, 2025. [70] Yuning You, Tianlong Chen, Zhangyang Wang, and Yang Shen. Graph domain adaptation via theory-grounded spectral regularization. In Proceedings of the International Conference on Learning Representations , 2023. [71] Huaiwen Zhang, Shengsheng Qian, Quan Fang, and Changsheng Xu. Multimodal disentangled domain adaption for social media event rumor detection. IEEE Transactions on Multimedia , 23:4441–4454, 2020. [72] Shichang Zhang, Yozen Liu, Yizhou Sun, and Neil Shah. Graph-less neu-ral networks: Teaching old mlps new tricks via distillation. arXiv preprint arXiv:2110.08727 , 2021. [73] Ziwei Zhang, Peng Cui, and Wenwu Zhu. Deep learning on graphs: A survey. 
+
+IEEE Transactions on Knowledge and Data Engineering , 34(1):249–270, 2020. 
+
+## A Proof of Theorem 3.1 
+
+Theorem 3.1 (Generalization Bound via Dual-Aligned Structural Basis) Let 𝑓 denote the graph encoder and ℎ the classifier. Let RD𝑇 (ℎ ◦ 𝑓 )
+
+be the expected risk on the target domain D𝑇 , and ˆRSsyn (ℎ ◦ 𝑓 )
+
+the empirical risk evaluated on the synthesized structural basis Ssyn .Assume that the loss function ℓ is 𝐿 ℓ -Lipschitz continuous and that the encoder 𝑓 lies in a bounded structural RKHS. Then, with probability at least 1 − 𝛿 , the target risk is bounded as: 
+
+RD𝑇 (ℎ ◦ 𝑓 ) ≤ ˆRSsyn (ℎ ◦ 𝑓 )+ 𝐶 geo E𝐺 ∼D 𝑇 [M ( 𝐺 )] − E𝐺 𝑘 ∼S syn [M ( 𝐺 𝑘 )] 2
+
++ 𝐶 spec E𝐺 ∼D 𝑇 [Ω(𝐺 )] − E𝐺 𝑘 ∼S syn [Ω(𝐺 𝑘 )] + 𝜆 (𝛿 ),
+
+(3) 
+
+where M and Ω denote the geometric moments and Dirichlet energy, respectively. 𝐶 geo , 𝐶 spec > 0 are capacity-dependent constants, and 
+
+𝜆 (𝛿 ) absorbs the optimal joint risk and the finite-sample generaliza-tion complexity. 
+
+Proof. Let 𝑃 𝑇 denote the target distribution and 𝑃 syn the empiri-cal distribution induced by the synthesized basis Ssyn . Let 𝐹 (𝐺, 𝑦 ) =
+
+ℓ (ℎ(𝑓 (𝐺 )) , 𝑦 ) denote the composite loss function, and let F be the corresponding function class. According to the foundational do-main adaptation theory based on Integral Probability Metrics (IPM) [ 2, 41 ], the expected target risk RD𝑇 (ℎ ◦ 𝑓 ) is bounded by the source distribution risk R𝑃 syn (ℎ ◦ 𝑓 ), the domain discrepancy, and the optimal joint risk 𝜆 ideal :
+
+RD𝑇 (ℎ ◦ 𝑓 ) ≤ R 𝑃 syn (ℎ ◦ 𝑓 ) + IPM F (𝑃 𝑇 , 𝑃 syn ) + 𝜆 ideal , (4) DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+where the IPM is defined as the supremum of the mean discrepancy over the function class F :
+
+IPM F (𝑃 𝑇 , 𝑃 syn ) = sup  
+
+> 𝐹 ∈ F
+
+E𝐺 ∼𝑃 𝑇 [𝐹 (𝐺 )] − E𝐺 𝑘 ∼𝑃 syn [𝐹 (𝐺 𝑘 )] . (5) By assumption, the encoder 𝑓 lies in a bounded structural RKHS, denoted as H𝜓 , equipped with the structural feature mapping: 
+
+𝜓 (𝐺 ) =
+
+M ( 𝐺 )
+
+Ω(𝐺 )
+
+
+
+∈ R𝑑 geo +1. (6) Given that the loss function ℓ is 𝐿 ℓ -Lipschitz, the composite evalua-tion function 𝐹 ∈ F is bounded and can be expressed via the inner product in H𝜓 according to the Riesz Representation Theorem: 
+
+𝐹 (𝐺 ) = ⟨w𝐹 ,𝜓 (𝐺 )⟩ H𝜓 , s.t. ∥w𝐹 ∥H𝜓 ≤ 𝐶 𝑊 , (7) where 𝐶 𝑊 > 0 is the uniform capacity constant determined by 
+
+𝐿 ℓ and the bounded norm of 𝑓 . Substituting this inner product representation into Eq. 5, the IPM reduces to the Maximum Mean Discrepancy (MMD): 
+
+IPM F (𝑃 𝑇 , 𝑃 syn ) ≤ sup  
+
+> ∥w𝐹 ∥ ≤ 𝐶 𝑊
+
+w𝐹 , E𝑃 𝑇 [𝜓 (𝐺 )] − E𝑃 syn [𝜓 (𝐺 𝑘 )] H𝜓 .
+
+(8) Applying the Cauchy-Schwarz inequality, we extract the norm of the expected structural feature differences: 
+
+IPM F (𝑃 𝑇 , 𝑃 syn ) ≤ 𝐶 𝑊 E𝐺 ∼𝑃 𝑇 [𝜓 (𝐺 )] − E𝐺 𝑘 ∼𝑃 syn [𝜓 (𝐺 𝑘 )] 2
+
+= 𝐶 𝑊 
+
+E𝑃 𝑇 [M ( 𝐺 )] − E𝑃 syn [M ( 𝐺 𝑘 )] 
+
+E𝑃 𝑇 [Ω(𝐺 )] − E𝑃 syn [Ω(𝐺 𝑘 )] 
+
+
+
+> 2
+
+. (9) We decouple the structural mapping 𝜓 (𝐺 ) into the geometric moment component M ( 𝐺 ) and the spectral component Ω(𝐺 ). By invoking the Triangle Inequality on Eq. 9, we obtain: 
+
+IPM F (𝑃 𝑇 , 𝑃 syn ) ≤ 𝐶 geo E𝐺 ∼D 𝑇 [M ( 𝐺 )] − E𝐺 𝑘 ∼S syn [M ( 𝐺 𝑘 )] 2
+
++ 𝐶 spec E𝐺 ∼D 𝑇 [Ω(𝐺 )] − E𝐺 𝑘 ∼S syn [Ω(𝐺 𝑘 )] ,
+
+(10) where 𝐶 geo and 𝐶 spec are capacity coefficients scaled from 𝐶 𝑊 to account for the respective subspace dimensionalities. Next, we establish the relation between the expected risk R𝑃 syn (ℎ◦
+
+𝑓 ) and the empirical risk ˆRSsyn (ℎ ◦ 𝑓 ). Let 𝐾 = |S syn |. By applying McDiarmid’s Inequality, for any 𝛿 ∈ ( 0, 1), with probability at least 
+
+1 − 𝛿 , we have: 
+
+R𝑃 syn (ℎ ◦ 𝑓 ) ≤ ˆRSsyn (ℎ ◦ 𝑓 ) + O  √︂ log (1/𝛿 )
+
+𝐾 
+
+!
+
+. (11) Finally, substituting the decoupled MMD bound in Eq. 10 and the finite-sample empirical bound in Eq. 11 back into the base inequality in Eq. 4, we arrive at: 
+
+RD𝑇 (ℎ ◦ 𝑓 ) ≤ ˆRSsyn (ℎ ◦ 𝑓 )+ 𝐶 geo E𝐺 ∼D 𝑇 [M ( 𝐺 )] − E𝐺 𝑘 ∼S syn [M ( 𝐺 𝑘 )] 2
+
++ 𝐶 spec E𝐺 ∼D 𝑇 [Ω(𝐺 )] − E𝐺 𝑘 ∼S syn [Ω(𝐺 𝑘 )] + 𝜆 (𝛿 ),
+
+where 𝜆 (𝛿 ) ≜ 𝜆 ideal + O( √︁ log (1/𝛿 )) is the residual term, which absorbs both the optimal joint risk and the finite-sample general-ization complexity. □
+
+## B Proof of Theorem 3.2 
+
+Theorem 3.2 (Generalization Benefit of Structural Bias Isolation) Let 
+
+F be the hypothesis class of the GNN. Let 𝜃 ∗ be the proxy model derived from the joint bi-level optimization trajectory, and let 𝜙 ∗
+
+be the fresh model trained exclusively on the fixed, converged basis 
+
+S∗
+
+> syn
+
+. Due to optimization co-adaptation, the effective search space of the proxy model is bounded by the joint empirical Rademacher complexity ℜ(F × S syn ). In contrast, the fresh model is bounded by the conditional complexity ℜ(F | S ∗
+
+> syn
+
+). With probability at least 
+
+1 − 𝛿 , the generalization bounds satisfy a strict dominance relation: Bound (𝜙 ∗) ≤ Bound (𝜃 ∗) − Δtraj , (12) 
+
+where Δtraj ∝  ℜ(F ×S syn )− ℜ(F | S ∗
+
+> syn
+
+) > 0 represents the strictly positive excess risk penalty induced by trajectory memorization and structural co-adaptation. 
+
+Proof. To rigorously establish the strict dominance relation between the generalization bounds of the proxy model 𝜃 ∗ and the fresh model 𝜙 ∗, we analyze the hypothesis complexities via the empirical Rademacher complexity framework [1]. Let Z = X × Y be the sample space, and 𝑚 be the number of basis samples. The empirical Rademacher complexity of a function class H with respect to a sample set 𝑆 = {𝑧 1, . . . , 𝑧 𝑚 } is defined as: 
+
+ˆℜ𝑆 (H ) = E𝝈 
+
+"
+
+sup 
+
+> ℎ∈ H
+
+1
+
+𝑚 
+
+> 𝑚
+
+∑︁ 
+
+> 𝑖 =1
+
+𝜎 𝑖 ℎ(𝑧 𝑖 )
+
+#
+
+, (13) where 𝜎 𝑖 ∈ {− 1, +1} are independent Rademacher random vari-ables. During the bi-level distillation phase, the proxy model 𝜃 ∗ is iter-atively updated alongside the synthetic basis Ssyn . Let S denote the continuous constraint space encompassing all feasible structural basis configurations generated during optimization. The hypothesis 
+
+𝜃 ∗ therefore does not optimize with respect to a fixed empirical distribution. Instead, it effectively operates over the joint hypothe-sis–data product space Hjoint = F × S, where the model parameters and structural basis co-evolve throughout training. Applying the standard PAC-learning generalization bound [ 1, 44 ], with proba-bility at least 1 − 𝛿 , the expected target risk for the proxy model satisfies: 
+
+RD𝑇 (𝜃 ∗) ≤ ˆRSsyn (𝜃 ∗) + Disc F (D 𝑇 , Ssyn ) (14) 
+
++ 2 ˆℜSsyn (F × S) + 3√︂ log (2/𝛿 )
+
+2𝑚 , (15) where Disc F (· , ·) represents the structural Maximum Mean Dis-crepancy bounded in Theorem 3.1. In contrast, during the structurally calibrated inference phase (Stage 2), the basis Ssyn has converged to a fixed optimal set S∗
+
+> syn
+
+.The fresh model 𝜙 ∗ is trained exclusively on this static dataset. Thus, its search space is strictly confined to the standard function class F conditioned on S∗
+
+> syn
+
+. The corresponding bound is: 
+
+RD𝑇 (𝜙 ∗) ≤ ˆRS∗ 
+
+> syn
+
+(𝜙 ∗) + Disc F (D 𝑇 , S∗
+
+> syn
+
+) (16) 
+
++ 2 ˆℜS∗ 
+
+> syn
+
+(F ) + 3√︂ log (2/𝛿 )
+
+2𝑚 . (17) By the properties of Rademacher complexity over product spaces, the joint complexity is upper-bounded by the sum of marginal Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 0 10 20 30 40 50 
+
+Number of Nodes 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> 1.6
+> Frequency
+> ×10 2
+
+(a) Node Distribution       
+
+> F0
+> F1
+> F2
+> F3
+> 020 40 60 80 100 120
+
+Number of Edges 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> Frequency
+> ×10 2
+
+(b) Edge Distribution 
+
+> F0
+> F1
+> F2
+> F3
+
+T-SNE Visualization 
+
+(c) Feature Distribution 
+
+> PROTEINS
+> DD
+
+Figure 7: Visualization of domain shifts across different types. (a) Node distribution shift between sub-datasets of FRANKEN-STEIN. (b) Edge distribution shift between sub-datasets of FRANKENSTEIN. (c) Feature distribution shift between PROTEINS and DD datasets. 
+
+complexities, but fundamentally lower-bounded by either marginal complexity: 
+
+ˆℜ𝑆 (F ) ≪ ˆℜ𝑆 (F ) + ˆℜ𝑆 (S) = ˆℜ𝑆 (F ⊕ S) ≈ ˆℜ𝑆 (F × S). (18) Equivalently, in terms of the 𝜖 -covering number N (· , 𝜖 ), the joint capacity metric strictly dominates the static capacity: 
+
+∫ ∞
+
+> 0
+
+√︁ log N (F × S, 𝜖, 𝐿 2) 𝑑𝜖 >
+
+∫ ∞
+
+> 0
+
+√︁ log N (F , 𝜖, 𝐿 2) 𝑑𝜖. (19) Assuming both optimization procedures successfully converge to comparable empirical risks, i.e., ˆRSsyn (𝜃 ∗) ≈ ˆRS∗ 
+
+> syn
+
+(𝜙 ∗), we sub-tract Eq. 17 from Eq. 15. We define the strictly positive structural trajectory penalty Δtraj as: 
+
+Δtraj ≜ 2
+
+h ˆℜSsyn (F × S) − ˆℜS∗ 
+
+> syn
+
+(F ) 
+
+i
+
+> 0. (20) Consequently, the upper bounds of the two models hold the following strict relationship: Bound (𝜙 ∗) ≤ Bound (𝜃 ∗) − Δtraj . (21) This mathematically guarantees that decoupling the inference op-timization from the synthesis trajectory drops the co-adaptation penalty Δtraj , thereby yielding a strictly tighter generalization bound for the fresh model 𝜙 ∗. □
+
+## C Dataset C.1 Dataset Description 
+
+We conduct extensive experiments on a variety of datasets. The statistics of the datasets are summarized in Table 4. Visualization of domain shifts of these dataset is in Figure 7. The detailed descrip-tions of these dataset are provided as follows: (1) For structure-based domain shifts: 
+
+• PROTEINS. The PROTEINS dataset [ 9] comprises 1,178 protein graphs for graph classification. Each graph models a protein structure, where nodes represent amino acids with categorical attributes and edges indicate spatial or chemical proximity. Following [ 66 ], we partition the dataset into four subsets, denoted as P0, P1, P2, and P3, based on graph-level statistics, specifically node density and edge density. 
+
+• NCI1. The NCI1 dataset [ 45 ] consists of 4,100 molecular graphs for binary graph classification. In each graph, nodes denote atoms and edges represent chemical bonds, capturing the molecular structure of compounds. Each molecule is la-beled according to its ability to inhibit cancer cell growth. Fol-lowing the PROTEINS dataset, we also partition the dataset into four subsets, denoted as N0, N1, N2, and N3, based on graph-level statistics, specifically node density and edge den-sity. 
+
+• Mutagenicity. The Mutagenicity dataset [ 19 ] consists of 4,337 molecular graphs for binary classification. In each graph, nodes represent atoms and edges denote chemical bonds, characterizing the structural composition of chemical compounds. Each molecule is labeled according to its muta-genic effect. Following the PROTEINS dataset, we divide the dataset into four subsets, denoted as M0, M1, M2, and M3, based on graph-level statistics, specifically node density and edge density. 
+
+• FRANKENSTEIN. The FRANKENSTEIN dataset [ 35 ] com-prises 4,337 molecular graphs for graph classification. In each graph, nodes correspond to atoms and edges represent chemical bonds, encoding the structural properties of chem-ical compounds. Each molecule is labeled according to its biological activity. Following the PROTEINS dataset, we split the dataset into four subsets, denoted as F0, F1, F2, and F3, based on graph-level statistics, specifically node density and edge density. 
+
+• ogbg-molhiv. The ogbg-molhiv dataset [ 15 ] consists of 41,127 molecular graphs for binary classification. In each graph, nodes denote atoms and edges represent chemical bonds, capturing the structural characteristics of chemical compounds. Each molecule is labeled according to whether it exhibits HIV inhibitory activity. Following the PROTEINS DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Table 4: Statistics of the experimental datasets. 
+
+Datasets Graphs Avg. Nodes Avg. Edges Classes PROTEINS 1,113 39.1 72.8 2NCI1 4,110 29.87 32.30 2Mutagenicity 4,337 30.32 30.77 2FRANKENSTEIN 4,337 16.9 17.88 2ogbg-molhiv 41,127 25.5 27.5 2CIFAR10 60,000 117.6 941.2 10 MNIST 70,000 70.6 564.5 10 Spurious-Motif 3,000 87.78 124.76 3Spurious-Motif_bias 3,000 18.67 27.83 3DD 1,178 284.32 715.66 2COX2 467 41.22 43.45 2COX2_MD 303 26.28 335.12 2BZR 405 35.75 38.36 2BZR_MD 306 21.30 225.06 2dataset, we split the dataset into four subsets, denoted as H0, H1, H2, and H3, based on graph-level statistics, specifically node density and edge density. 
+
+• MNIST. The MNIST dataset [ 23 ] contains 70,000 grayscale handwritten digit images (60,000 training and 10,000 test samples) spanning 10 classes. We transform each image into a graph, where nodes represent pixels or superpixels and edges encode spatial adjacency relationships. To introduce struc-tural distribution shifts, we partition the resulting graphs into three subsets, denoted as S0, S1, and S2, based on their edge density. 
+
+• CIFAR-10. The CIFAR-10 dataset [ 21 ] consists of 60,000 color images (50,000 training and 10,000 test samples) across 10 object categories. We construct graph representations for each image, where nodes correspond to pixels or super-pixels and edges encode spatial adjacency relationships. To induce structural distribution shifts, we partition the result-ing graphs into three subsets, denoted as C0, C1, and C2, according to their edge density. (2) For feature-based domain shifts: 
+
+• DD. The DD dataset consists of 1,113 protein graphs, each annotated with a binary label indicating whether the protein is an enzyme. In each graph, nodes represent amino acids and edges connect pairs of amino acids whose spatial dis-tance is within 6 Å. Compared to PROTEINS, graphs in DD are generally larger and denser, exhibiting higher structural complexity while sharing similar semantic labels. 
+
+• COX2. The COX2 dataset [ 9 ] comprises 467 molecular graphs for binary classification, while COX2_MD contains 303 struc-turally modified variants derived from COX2. In both datasets, nodes denote atoms and edges represent chemical bonds, encoding molecular structures. COX2_MD introduces sys-tematic structural perturbations relative to COX2 to simulate distribution shifts while preserving the original label seman-tics. 
+
+• BZR. The BZR dataset [ 9] consists of 405 molecular graphs for binary classification, and BZR_MD includes 306 struc-turally modified counterparts derived from BZR. In both cases, nodes correspond to atoms and edges denote chemical bonds. The BZR_MD dataset applies controlled structural modifications to emulate domain shifts while maintaining consistent label semantics. (3) For correlation shifts: 
+
+• Spurious-Motif. The Spurious-Motif dataset [ 58 ] is a syn-thetic benchmark designed to assess robustness under struc-tural correlation shifts. Each graph is generated by attaching a label-determining motif (e.g., house or cycle) to a base graph (e.g., tree or ladder) that defines the environmental context. Node features are deliberately uninformative, requir-ing models to rely solely on topological cues. We construct two variants, each containing 3,000 graphs: a biased version (Spurious-Motif_bias), where specific motifs are strongly cor-related with particular base graphs to induce spurious struc-tural shortcuts, and an unbiased version (Spurious-Motif), where motifs and base graphs are paired uniformly at ran-dom. 
+
+## C.2 Data Processing 
+
+For datasets from TUDataset 1 (e.g., Mutagenicity and FRANKEN-STEIN), we employ the standard preprocessing and normalization pipeline provided by PyTorch Geometric 2. For MNIST and CIFAR10, we reconstruct graph structures via a KNN graph construction based on node spatial coordinates, where edges are re-generated with domain-specific 𝑘 values to systematically control graph den-sity and induce structural distribution shifts [ 10 , 42 ]. For datasets from the Open Graph Benchmark (OGB) 3, such as ogbg-molhiv, we follow the official OGB preprocessing and normalization pro-tocols. For the synthetic Spurious-Motif dataset, we adhere to the  
+
+> 1https://chrsmrrs.github.io/datasets/
+> 2https://pyg.org/
+> 3https://ogb.stanford.edu/ Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al.
+
+generation and processing procedures described in [ 58 ], converting the generated graphs into standard PyTorch Geometric data objects. Node features are initialized as constant one-dimensional vectors to eliminate attribute information, thereby enforcing reliance on struc-tural topology. The dataset is organized into biased and unbiased variants, serving as source and target domains, respectively. 
+
+## D Baselines D.1 Baseline Description 
+
+In this part, we introduce the details of the compared baselines as follows: (1) Graph distillation methods. We compare DSBD with three source six graph domain adaptation methods: 
+
+• G-CRD : G-CRD [ 18 ] presents a graph contrastive repre-sentation distillation method, where a student aligns with a teacher by maximizing cross-model consistency across augmented graph views, effectively transferring structural and semantic knowledge to improve generalization and effi-ciency. 
+
+• MuGSI : MuGSI [ 65 ] introduces a multi-granularity struc-tural distillation framework for graph classification, where a student GNN aligns with a teacher across node-, subgraph-, and graph-level representations, facilitating rich structural knowledge transfer to improve predictive performance and efficiency. 
+
+• TGS : TGS [ 55 ] proposes a teacher-free graph knowledge distillation framework with dual self-distillation, where a single GNN collaboratively distills knowledge across multi-ple views and hierarchical representations, enabling mutual refinement without an external teacher to improve robust-ness and classification performance. 
+
+• LAD-GNN : LAD-GNN [ 14 ] proposes a label-attentive distil-lation framework for GNN-based graph classification, where the student emphasizes class-relevant structural patterns under teacher guidance, leveraging label-aware attention to selectively transfer discriminative knowledge and improve classification accuracy. 
+
+• AdaGMLP : AdaGMLP citelu2024adagmlp proposes an AdaBoost-based GNN-to-MLP knowledge distillation framework, where multiple boosted MLP students are sequentially trained to mimic a GNN teacher, reweighting hard samples to pro-gressively refine decision boundaries and achieve strong performance without graph-structured inference. 
+
+• ClusterGDD : ClusterGDD citelai2025simple proposes a sim-ple yet effective graph distillation method via clustering, where structural prototypes are constructed through graph clustering and used to guide student training, enabling com-pact knowledge transfer and improved graph classification performance with reduced model complexity. (2) Graph Domain Adaptation methods. We compare DSBD with six graph domain adaptation methods: 
+
+• SGDA : SGDA [ 37 ] studies semi-supervised domain adapta-tion for graph transfer learning, where a model leverages limited labeled target data alongside labeled source graphs to align cross-domain representations, mitigating distribution shift while preserving discriminative structural information for improved target performance. 
+
+• StruRW : StruRW [ 27 ] proposes structural re-weighting for graph domain adaptation, where graph components are adaptively reweighted according to their transferability, em-phasizing domain-invariant structures while suppressing domain-specific noise to enhance cross-domain generaliza-tion. 
+
+• A2GNN : A2GNN [ 25 ] rethinks message propagation for un-supervised graph domain adaptation, identifying propagation-induced domain bias and introducing a refined propaga-tion mechanism that decouples structural smoothing from domain-specific signals to learn more transferable graph representations. 
+
+• PA-BOTH : PA-BOTH [ 28 ] proposes pairwise alignment for graph domain adaptation, where cross-domain graph pairs are explicitly aligned at the representation level to reduce distribution discrepancy, thereby enhancing structural con-sistency and improving target-domain generalization. 
+
+• GAA : GAA [ 11 ] investigates attribute-driven graph domain adaptation, demonstrating that leveraging informative node attributes to guide cross-domain alignment improves repre-sentation transferability, mitigates structural bias, and en-hances target-domain performance under distribution shift. 
+
+• TDSS : TDSS [ 6] shows that enforcing representation smooth-ness is critical for unsupervised graph domain adaptation, introducing a simple regularization strategy that promotes local consistency across graphs to enhance transferability and improve target-domain performance. 
+
+## D.2 Implementation Details 
+
+All baseline methods are reimplemented and evaluated on NVIDIA A100 GPUs to ensure a controlled and fair comparison. For consis-tency, all approaches adopt the same training protocol as DSBD, using the Adam optimizer with a learning rate of 1 × 10 −3 and weight decay of 1 × 10 −12 . The hidden embedding dimension is set to 128, and each model comprises three GNN layers. Following [50 , 69 ], all models are trained with labeled source-domain data and adapted to unlabeled target-domain data. We report classification accuracy on TUDataset benchmarks (e.g., NCI1), image dataset (e.g., MNIST), the Spurious-Motif dataset, and AUC on OGB benchmarks (e.g., ogbg-molhiv). All results are averaged over five independent runs. 
+
+## E Complexity Analysis 
+
+In this section, we analyze the computational complexity of DSBD, which consists of bi-level structural basis distillation and structurally calibrated inference. Let 𝐾 denote the number of syn-thetic graphs, each with 𝑁 ′ nodes and 𝐸 ′ edges, 𝑑 the hidden dimen-sion, and 𝐿 the number of GNN layers. During distillation, the inner loop trains the proxy GNN on the synthetic basis with complexity 
+
+O( 𝐼 inner ·𝐾 ·𝐿 · ( 𝐸 ′𝑑 + 𝑁 ′𝑑 2)) . The outer loop evaluates the semantic loss on source data and enforces geometric and spectral alignment. Among these, the dominant overhead arises from triangle-based moment matching, which incurs O( 𝐾 (𝑁 ′)3), while the remaining DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+terms scale linearly with 𝐾 . During inference, training a fresh GNN on the compact basis requires O( 𝐼 infer · 𝐾 · 𝐿 · ( 𝐸 ′𝑑 + 𝑁 ′𝑑 2)) , fol-lowed by standard GNN inference on target graphs with complexity 
+
+O( 𝐿 (𝐸 𝑇 𝑑 + 𝑁 𝑇 𝑑 2)) . In practice, since 𝑁 ′ is typically small, the cu-bic term is negligible, and the overall complexity O  𝐼 inner 𝐾𝐿 (𝐸 ′𝑑 +
+
+𝑁 ′𝑑 2) + 𝐵 𝑆 𝐿 (𝐸 𝑆 𝑑 + 𝑁 𝑆 𝑑 2).
+
+## F More experimental results F.1 More performance comparison 
+
+In this section, we provide additional experimental results com-paring DSBD with all baseline methods across multiple datasets, as summarized in Tables 10–20. The results show that DSBD con-sistently outperforms the baselines across most transfer settings, further demonstrating its effectiveness and robustness. 
+
+## F.2 More Visualizations 
+
+In this part, we provide additional visualizations to further support the analyses presented in the main paper. Specifically, Figure 8 reports the t-SNE visualizations of additional baselines mentioned in Section 4.1, including MuGSI, ClustGDD, and GAA. In addition, Figure 9 presents the complete set of synthesized Dual-Aligned Structural Basis graphs introduced in Section 4.4. These visualiza-tions corroborate the findings in Section 4.4, confirming that the learned basis spans diverse spectral regimes and structural patterns. 
+
+## F.3 More Ablation study 
+
+To further validate the effectiveness of each component in DSBD, we conduct ablation studies on the PROTEINS, NCI1, FRANKENSTEIN, and ogbg-molhiv datasets. Specifically, we evaluate four variants of DSBDd by removing key modules, including DSBD w/o SE, DSBD w/o SP, DSBD w/o GE, and DSBD w/o TG. The results are reported in Tables 6, 7, 8, and 9. Overall, the observed trends are consistent with those in Section 4.2, further confirming the contribution of each component to the overall effectiveness of DSBD. 
+
+## F.4 More Sensitivity Analysis 
+
+In this part, we further analyze the sensitivity of DSBD to the num-ber of synthetic bases 𝐾 and the balance coefficients (𝜆 1, 𝜆 2) on the PROTEINS, NCI1, FRANKENSTEIN, and ogbg-molhiv datasets. The results, summarized in Figures 10 and 11, show trends consistent with the observations in Section 4.3. Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 
+
+(a) MuGSI (b) ClustGDD (c) GAA 
+
+Figure 8: T-SNE visualizations of additional baselines on the Mutagenicity dataset. Table 5: The results of ablation studies on the Mutagenicity dataset (source → target). Bold results indicate the best performance.                                                                         
+
+> Methods M0 →M1 M1 →M0 M0 →M2 M2 →M0 M0 →M3 M3 →M0 M1 →M2 M2 →M1 M1 →M3 M3 →M1 M2 →M3 M3 →M2 DSBD w/o SE 64.2 61.5 65.8 50.3 53.4 54.2 65.1 69.5 48.2 62.8 50.9 48.7 DSBD w/o SP 71.5 68.1 74.2 55.6 56.5 60.1 72.5 76.7 53.4 69.2 56.2 53.8 DSBD w/o GE 69.5 66.4 71.6 53.8 54.2 57.1 69.8 74.2 51.5 65.7 54.1 51.6 DSBD w/o TG 72.4 70.6 73.9 57.1 58.6 62.3 74.1 78.5 54.9 71.4 59.4 55.5 DSBD 76.5 72.3 79.1 59.4 60.8 64.5 76.4 81.2 56.8 73.6 60.3 57.2
+
+Table 6: The results of ablation studies on the PROTEINS dataset (source → target). Bold results indicate the best performance. 
+
+Methods P0 →P1 P1 →P0 P0 →P2 P2 →P0 P0 →P3 P3 →P0 P1 →P2 P2 →P1 P1 →P3 P3 →P1 P2 →P3 P3 →P2 DSBD w/o SE 49.8 58.6 70.2 67.5 59.4 48.3 78.4 45.6 55.2 38.7 61.3 61.2 DSBD w/o SP 52.1 62.1 78.1 68.2 68.5 71.4 72.5 49.3 57.8 45.6 68.2 58.4 DSBD w/o GE 58.4 55.3 75.4 68.8 71.2 70.1 84.1 41.2 63.4 48.0 65.8 64.7 DSBD w/o TG 61.2 66.4 81.3 70.1 62.1 72.8 88.0 53.1 65.5 42.1 70.4 67.9 DSBD 65.6 69.7 84.6 71.9 75.8 75.6 91.2 55.4 68.7 51.2 73.7 70.6 
+
+Table 7: The results of ablation studies on the NCI1 dataset (source → target). Bold results indicate the best performance. 
+
+Methods N0 →N1 N1 →N0 N0 →N2 N2 →N0 N0 →N3 N3 →N0 N1 →N2 N2 →N1 N1 →N3 N3 →N1 N2 →N3 N3 →N2 DSBD w/o SE 50.3 63.8 44.9 55.1 30.5 51.2 49.0 41.6 33.1 46.2 60.5 48.4 DSBD w/o SP 57.8 71.1 51.5 62.4 36.8 59.3 56.2 48.4 38.6 51.2 69.1 54.0 DSBD w/o GE 56.1 67.4 50.2 61.8 34.2 57.5 52.8 47.7 36.5 49.0 65.7 51.9 DSBD w/o TG 61.2 72.5 52.8 64.9 37.1 62.0 58.6 51.1 40.2 54.5 70.8 56.4 DSBD 63.6 75.8 55.6 67.9 39.2 64.3 60.4 53.3 42.5 56.7 73.9 58.2 
+
+Table 8: The results of ablation studies on the FRANKENSTEIN dataset under edge density domain shift (source → target). Bold results indicate the best performance. 
+
+Methods F0 →F1 F1 →F0 F0 →F2 F2 →F0 F0 →F3 F3 →F0 F1 →F2 F2 →F1 F1 →F3 F3 →F1 F2 →F3 F3 →F2 DSBD w/o SE 58.2 49.5 46.8 44.1 50.2 48.6 45.3 59.1 51.4 42.7 60.5 54.2 DSBD w/o SP 67.5 56.1 53.2 52.4 58.7 56.8 52.6 65.4 59.5 50.1 68.3 61.7 DSBD w/o GE 63.8 53.4 54.9 49.7 55.6 54.1 51.0 64.2 55.8 47.9 65.2 59.4 DSBD w/o TG 70.1 58.6 57.8 54.5 60.9 59.2 55.4 69.8 61.2 49.3 71.6 64.5 DSBD 73.4 61.2 60.5 56.8 63.1 61.4 57.2 72.5 63.8 54.6 74.1 66.9 DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY （I） （II ） （III ） （IV ）
+
+Figure 9: Full visualizations of the distilled basis of DSBD with different Dirichlet energy Ω.Table 9: The results of ablation studies on the ogbg-molhiv dataset under edge density domain shift (source → target). Bold results indicate the best performance. 
+
+Methods H0 →H1 H1 →H0 H0 →H2 H2 →H0 H0 →H3 H3 →H0 H1 →H2 H2 →H1 H1 →H3 H3 →H1 H2 →H3 H3 →H2 DSBD w/o SE 53.4 52.1 49.3 51.8 53.2 50.5 51.7 52.6 48.9 51.2 54.3 52.8 DSBD w/o SP 62.1 59.8 51.2 59.2 60.4 57.1 58.6 62.8 57.8 56.4 61.2 62.3 DSBD w/o GE 58.6 56.4 54.8 55.7 57.1 54.8 56.2 55.4 52.3 58.1 58.7 57.9 DSBD w/o TG 64.2 61.7 59.1 61.5 63.8 60.2 62.1 58.1 60.5 61.0 64.5 60.1 DSBD 66.8 64.5 61.2 63.4 65.1 62.7 63.9 66.5 62.1 62.8 66.2 65.4 Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al.    
+
+> (a) PROTEINS (b) FRANKENSTEIN (c) NCI1 (d) ogbg-molhiv
+
+Figure 10: Hyperparameter sensitivity analysis of balance coefficient ( 𝜆 1, 𝜆 2) on the PROTEINS, FRANKENSTEIN, NCI1 and ogbg-molhiv datasets.    
+
+> (a) PROTEINS (b) FRANKENSTEIN (c) NCI1 (d) ogbg-molhiv
+
+Figure 11: Hyperparameter sensitivity analysis of the number of synthetic bases 𝐾 on the PROTEINS, FRANKENSTEIN, NCI1 and ogbg-molhiv datasets. Table 10: The image classification results (in %) on the MNIST and CIFAR-10 datasets under edge density domain shift (source 
+
+→ target). S0, S1, S2 and C0, C1, C2 denote the sub-datasets partitioned with edge density for MNIST and CIFAR-10, respectively. Bold results indicate the best performance. 
+
+Methods MNIST CIFAR-10 
+
+S0 →S1 S0 →S2 S1 →S0 S1 →S2 S2 →S0 S2 →S1 C0 →C1 C0 →C2 C1 →C0 C1 →C2 C2 →C0 C2 →C1 G-CRD 48.34 ±2.5 38.45 ±2.1 49.12 ±2.4 52.34 ±2.8 47.55 ±2.0 53.22 ±2.3 25.34 ±1.9 27.12 ±2.2 30.45 ±2.1 33.12 ±2.7 29.45 ±2.5 37.15 ±2.4
+
+MuGSI 45.12 ±3.2 35.12 ±3.5 45.67 ±3.1 48.45 ±3.4 43.12 ±3.0 49.11 ±2.9 22.11 ±2.6 24.33 ±2.8 27.12 ±3.1 29.44 ±3.5 26.11 ±2.7 34.22 ±3.2
+
+TGS 49.88 ±1.8 39.56 ±2.2 51.22 ±1.9 53.67 ±2.1 48.66 ±2.4 54.67 ±1.7 26.55 ±1.6 28.45 ±1.9 31.55 ±1.8 34.22 ±2.2 30.55 ±2.1 38.66 ±2.0
+
+LAD-GNN 51.45 ±2.1 42.10 ±1.9 52.88 ±2.3 55.44 ±1.8 50.12 ±2.1 56.22 ±2.0 28.12 ±1.7 30.15 ±2.1 33.22 ±2.0 35.88 ±2.3 32.12 ±1.9 40.12 ±1.8
+
+AdaGMLP 47.22 ±2.7 36.78 ±3.1 48.34 ±2.6 51.12 ±2.9 46.33 ±2.5 52.45 ±2.8 24.55 ±2.4 26.55 ±2.6 29.66 ±2.8 32.15 ±3.1 28.33 ±2.9 36.55 ±3.0
+
+ClustGDD 44.67 ±3.6 34.11 ±3.7 46.11 ±3.5 49.33 ±3.2 44.22 ±3.6 49.88 ±3.4 21.33 ±3.3 23.11 ±3.5 26.44 ±3.7 28.66 ±3.6 25.44 ±3.4 33.11 ±3.5
+
+SGDA 43.15 ±3.3 32.44 ±3.6 44.22 ±3.4 47.55 ±3.7 42.15 ±3.5 48.12 ±3.3 20.12 ±3.1 22.45 ±3.4 25.12 ±3.2 27.45 ±3.7 24.15 ±3.3 32.45 ±3.6
+
+StruRW 52.34 ±1.6 41.25 ±1.8 53.15 ±1.5 56.12 ±1.7 51.45 ±1.9 57.15 ±1.4 29.15 ±1.5 31.05 ±1.7 34.15 ±1.6 36.55 ±1.9 33.15 ±1.5 41.15 ±1.7
+
+A2GNN 46.88 ±2.9 35.67 ±3.2 47.55 ±3.0 50.44 ±3.1 45.67 ±2.8 51.34 ±2.7 23.44 ±2.8 25.66 ±2.9 28.55 ±3.0 31.33 ±3.2 27.66 ±2.8 35.44 ±3.1
+
+PA-BOTH 50.12 ±2.2 40.55 ±2.5 51.66 ±2.1 54.22 ±2.3 49.22 ±2.4 55.45 ±2.2 27.66 ±2.0 29.33 ±2.4 32.44 ±2.2 35.12 ±2.5 31.44 ±2.3 39.22 ±2.2
+
+GAA 41.22 ±3.5 33.88 ±3.4 43.11 ±3.7 46.88 ±3.5 41.55 ±3.4 47.66 ±3.6 19.88 ±3.5 21.55 ±3.3 24.33 ±3.6 26.88 ±3.4 23.55 ±3.7 31.88 ±3.4
+
+TDSS 51.98 ±1.7 42.89 ±2.0 53.45 ±1.8 56.45 ±1.9 51.88 ±1.7 57.44 ±1.6 29.45 ±1.8 31.22 ±2.0 34.55 ±1.9 36.95 ±2.1 33.45 ±1.8 41.45 ±1.9
+
+DSBD 54.26 ±1.5 44.17 ±2.1 54.81 ±1.8 57.84 ±1.2 52.95 ±2.5 58.77 ±1.9 30.49 ±1.4 32.28 ±2.2 35.61 ±1.7 38.25 ±2.8 34.66 ±1.3 42.48 ±2.6DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Table 11: The graph classification results (in %) on PROTEINS under node density domain shift (source →target). P0, P1, P2, and P3 denote the sub-datasets partitioned with node density. Bold results indicate the best performance. Methods P0 →P1 P1 →P0 P0 →P2 P2 →P0 P0 →P3 P3 →P0 P1 →P2 P2 →P1 P1 →P3 P3 →P1 P2 →P3 P3 →P2 G-CRD 39.3 ±2.6 60.7 ±1.4 67.9 ±1.2 71.4 ±2.2 67.9 ±2.7 64.3 ±1.8 59.2 ±2.6 32.1 ±1.9 60.7 ±1.7 42.9 ±1.5 48.7 ±1.8 57.6 ±1.7
+
+MuGSI 62.7 ±1.0 40.7 ±2.3 64.7 ±1.3 48.1 ±2.6 33.9 ±1.6 75.7 ±1.3 60.3 ±3.1 55.3 ±1.0 39.1 ±0.8 67.4 ±3.4 42.3 ±3.4 34.0 ±0.9
+
+TGS 51.3 ±1.6 41.2 ±3.4 61.6 ±1.3 61.4 ±2.7 35.9 ±2.0 59.8 ±3.3 41.9 ±2.5 72.1 ±0.7 33.8 ±1.3 53.4 ±1.1 39.4 ±2.4 43.9 ±0.7
+
+LAD-GNN 53.6 ±2.5 25.4 ±3.5 64.3 ±1.1 83.6 ±2.7 45.6 ±2.6 73.3 ±3.4 55.7 ±2.5 44.6 ±2.1 43.9 ±2.7 62.4 ±0.8 31.6 ±2.3 56.7 ±1.4
+
+AdaGMLP 63.4 ±2.5 49.5 ±3.0 41.4 ±1.7 55.7 ±3.3 43.1 ±0.8 63.3 ±2.7 59.1 ±1.7 50.8 ±2.4 22.6 ±1.9 72.3 ±1.1 46.5 ±3.3 52.0 ±3.3
+
+ClustGDD 61.3 ±1.2 85.0 ±0.8 64.7 ±3.4 68.3 ±3.1 42.6 ±1.5 37.0 ±3.2 50.0 ±1.1 58.4 ±2.2 55.5 ±3.1 60.6 ±2.1 36.3 ±1.5 38.6 ±3.3
+
+SGDA 39.3 ±2.7 42.9 ±1.0 60.7 ±1.0 32.1 ±2.1 42.9 ±2.1 46.4 ±2.4 32.1 ±3.0 39.3 ±2.7 57.6 ±2.7 21.4 ±1.5 49.8 ±1.2 57.1 ±1.4
+
+StruRW 45.6 ±0.9 73.7 ±3.2 42.1 ±3.3 71.9 ±1.8 70.2 ±1.7 37.8 ±1.3 57.9 ±2.5 59.7 ±2.0 34.8 ±3.4 64.9 ±2.9 50.9 ±1.9 43.9 ±2.9
+
+A2GNN 56.1 ±0.6 43.9 ±2.8 63.2 ±0.5 71.9 ±1.4 44.6 ±2.3 71.9 ±3.2 59.7 ±1.4 45.6 ±1.3 59.7 ±2.5 59.7 ±3.5 47.0 ±1.9 56.1 ±0.9
+
+PA-BOTH 64.9 ±3.3 70.2 ±3.3 54.4 ±1.3 64.9 ±2.1 58.1 ±1.0 49.1 ±0.5 57.9 ±1.5 50.9 ±3.5 42.3 ±2.0 57.9 ±3.1 39.8 ±0.7 56.1 ±1.4
+
+GAA 59.7 ±1.9 41.6 ±2.8 39.6 ±3.3 54.4 ±1.7 41.5 ±3.3 38.6 ±2.0 61.4 ±2.9 57.9 ±3.2 48.8 ±2.0 43.9 ±3.0 37.0 ±1.3 52.6 ±1.5
+
+TDSS 47.3 ±0.8 71.9 ±2.1 38.6 ±2.5 43.9 ±3.2 52.6 ±0.8 71.9 ±1.4 47.4 ±0.7 33.3 ±3.3 44.6 ±3.4 61.4 ±1.1 40.5 ±3.4 42.1 ±1.8
+
+DSBD 71.1 ±2.7 74.3 ±2.8 68.5 ±3.1 79.1 ±2.7 71.7 ±1.4 73.1 ±2.8 63.6 ±2.9 70.1 ±1.2 60.9 ±2.0 68.6 ±2.7 52.4 ±2.6 59.3 ±1.5
+
+Table 12: The graph classification results (in %) on PROTEINS under edge density domain shift (source →target). P0, P1, P2, and P3 denote the sub-datasets partitioned with edge density. Bold results indicate the best performance. Methods P0 →P1 P1 →P0 P0 →P2 P2 →P0 P0 →P3 P3 →P0 P1 →P2 P2 →P1 P1 →P3 P3 →P1 P2 →P3 P3 →P2 G-CRD 50.0 ±2.4 50.0 ±0.8 64.3 ±1.8 32.1 ±1.8 67.9 ±2.0 64.3 ±1.8 67.9 ±1.4 39.3 ±1.8 60.7 ±3.2 46.9 ±2.0 50.0 ±2.4 67.9 ±0.8
+
+MuGSI 58.1 ±1.5 53.5 ±1.1 80.7 ±0.6 81.2 ±2.3 69.6 ±2.5 58.8 ±0.6 86.2 ±2.0 53.2 ±1.2 52.5 ±2.4 48.6 ±1.0 57.5 ±2.6 51.0 ±1.7
+
+TGS 55.1 ±3.3 30.5 ±0.9 66.0 ±1.5 46.6 ±0.8 60.8 ±3.3 64.9 ±3.1 39.0 ±1.3 43.0 ±2.5 74.3 ±3.0 45.4 ±2.2 63.2 ±2.1 41.5 ±1.2
+
+LAD-GNN 46.0 ±0.8 56.7 ±3.2 69.6 ±3.2 62.2 ±2.4 65.5 ±1.5 58.1 ±1.6 44.8 ±2.7 58.3 ±3.2 57.6 ±3.2 42.0 ±2.8 71.4 ±2.4 43.6 ±0.8
+
+AdaGMLP 54.7 ±1.0 29.9 ±3.2 68.5 ±2.3 59.2 ±0.5 80.6 ±0.8 63.3 ±2.5 54.0 ±0.5 48.2 ±1.0 41.1 ±2.2 43.4 ±2.6 57.5 ±2.5 65.9 ±1.2
+
+ClustGDD 56.3 ±2.6 32.5 ±1.2 78.7 ±1.5 49.5 ±2.7 64.6 ±2.5 68.2 ±3.1 75.8 ±2.5 54.0 ±2.2 48.3 ±0.8 45.0 ±1.6 66.1 ±1.3 65.1 ±1.2
+
+SGDA 57.1 ±1.5 42.9 ±1.7 35.7 ±3.1 32.1 ±1.3 46.4 ±1.9 42.9 ±3.5 32.1 ±2.1 39.3 ±2.3 53.6 ±0.9 25.0 ±3.0 53.6 ±2.3 57.1 ±2.1
+
+StruRW 40.4 ±1.7 59.7 ±2.8 79.5 ±1.2 29.8 ±0.7 77.2 ±1.4 49.1 ±1.0 42.3 ±3.3 45.6 ±2.9 67.2 ±2.4 47.4 ±3.1 67.2 ±2.9 60.2 ±1.1
+
+A2GNN 59.7 ±3.2 64.9 ±2.1 84.2 ±2.9 66.7 ±3.2 77.2 ±1.5 50.9 ±0.8 43.9 ±1.2 49.1 ±1.8 44.0 ±3.0 50.9 ±3.1 70.7 ±0.5 47.4 ±2.0
+
+PA-BOTH 64.9 ±1.8 41.6 ±1.2 71.9 ±0.9 70.2 ±1.5 77.2 ±3.3 73.7 ±1.5 47.5 ±2.1 52.6 ±2.6 59.3 ±1.6 45.6 ±3.4 49.8 ±3.4 69.5 ±1.3
+
+GAA 56.1 ±2.0 41.8 ±1.4 71.9 ±1.4 48.1 ±0.6 52.6 ±2.3 66.7 ±2.0 57.9 ±0.7 46.8 ±1.3 69.0 ±3.2 43.9 ±1.2 52.8 ±0.9 52.6 ±2.0
+
+TDSS 40.4 ±3.5 68.4 ±1.2 76.0 ±2.5 64.9 ±2.8 77.2 ±1.2 66.7 ±2.7 89.5 ±1.6 53.9 ±2.4 49.3 ±2.4 43.9 ±2.1 71.9 ±0.8 48.1 ±3.0
+
+DSBD 65.6 ±3.4 69.7 ±1.7 84.6 ±3.0 71.9 ±2.4 75.8 ±2.9 75.6 ±2.0 91.2 ±2.2 55.4 ±2.0 68.7 ±1.1 51.2 ±2.7 73.7 ±1.3 70.6 ±0.6Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 
+
+Table 13: The classification results (in %) on the NCI1 dataset under node density domain shift (source → target). N0, N1, N2, and N3 denote the sub-datasets partitioned with node density. Bold results indicate the best performance. Methods N0 →N1 N1 →N0 N0 →N2 N2 →N0 N0 →N3 N3 →N0 N1 →N2 N2 →N1 N1 →N3 N3 →N1 N2 →N3 N3 →N2 G-CRD 56.3 ±3.0 50.5 ±1.1 46.6 ±2.6 34.0 ±2.5 51.5 ±3.5 51.5 ±1.9 31.1 ±2.7 55.3 ±2.9 46.6 ±1.3 64.1 ±1.0 58.3 ±2.6 58.3 ±3.2
+
+MuGSI 51.1 ±0.5 27.9 ±3.9 43.9 ±3.9 34.4 ±1.2 33.3 ±2.3 62.4 ±2.0 55.9 ±2.2 51.5 ±1.7 28.2 ±4.5 49.8 ±2.9 69.0 ±2.0 61.3 ±1.1
+
+TGS 54.4 ±0.6 24.5 ±2.5 62.9 ±4.2 40.9 ±1.3 28.1 ±3.0 34.3 ±2.0 50.9 ±3.7 49.0 ±1.3 31.7 ±0.4 46.8 ±0.4 61.1 ±0.8 47.5 ±2.5
+
+LAD-GNN 50.5 ±3.2 38.4 ±2.1 60.5 ±1.6 50.3 ±3.0 31.7 ±2.0 48.2 ±1.2 47.6 ±3.0 47.5 ±2.3 27.6 ±0.9 49.1 ±3.3 68.3 ±1.9 49.4 ±1.5
+
+AdaGMLP 52.1 ±1.4 35.8 ±3.1 48.9 ±1.3 48.6 ±2.4 30.9 ±3.4 52.4 ±2.4 59.9 ±1.8 49.0 ±4.9 35.7 ±1.0 49.9 ±1.9 66.2 ±0.4 46.6 ±1.7
+
+ClustGDD 45.4 ±3.4 36.7 ±1.3 48.6 ±0.3 39.0 ±2.1 32.0 ±0.8 26.9 ±0.9 59.2 ±2.3 49.0 ±2.6 32.0 ±2.8 46.5 ±0.4 53.6 ±1.4 52.1 ±0.3
+
+SGDA 46.6 ±1.1 49.5 ±2.2 61.4 ±3.2 28.2 ±2.4 42.5 ±0.5 32.0 ±2.3 33.0 ±2.2 49.5 ±1.0 45.3 ±2.6 49.7 ±2.6 49.5 ±2.2 49.5 ±1.7
+
+StruRW 49.5 ±1.4 32.3 ±2.0 59.4 ±2.7 72.6 ±1.1 34.2 ±1.0 66.9 ±1.6 51.0 ±2.7 49.7 ±0.6 34.1 ±2.2 47.6 ±0.5 33.0 ±0.6 54.3 ±2.9
+
+A2GNN 51.3 ±0.6 28.3 ±1.1 51.1 ±1.5 27.0 ±1.4 30.9 ±1.9 27.4 ±1.3 51.6 ±4.6 51.3 ±0.6 30.6 ±2.2 50.8 ±1.3 67.6 ±2.3 49.7 ±0.7
+
+PA-BOTH 52.7 ±4.6 30.2 ±0.5 50.7 ±0.4 27.9 ±1.0 33.6 ±1.6 28.0 ±2.8 52.8 ±2.1 50.7 ±2.2 32.9 ±1.8 50.5 ±0.5 70.7 ±4.0 58.7 ±4.2
+
+GAA 50.7 ±1.7 28.8 ±4.3 48.4 ±2.1 27.3 ±2.4 34.1 ±2.7 28.2 ±0.6 58.3 ±5.3 49.2 ±0.6 32.2 ±2.6 49.8 ±2.2 29.4 ±5.1 50.2 ±2.0
+
+TDSS 49.6 ±2.4 39.7 ±0.9 51.3 ±1.1 28.2 ±0.6 32.4 ±0.5 28.4 ±2.9 51.5 ±1.3 51.1 ±1.2 32.9 ±1.1 52.0 ±2.8 68.0 ±0.6 49.6 ±1.9
+
+DSBD 59.5 ±2.2 50.9 ±0.7 63.2 ±3.5 67.9 ±1.0 46.2 ±3.5 71.4 ±2.3 64.3 ±2.2 56.0 ±3.4 47.3 ±1.6 52.2 ±1.8 74.9 ±1.9 62.7 ±2.1
+
+Table 14: The classification results (in %) on the NCI1 dataset under edge density domain shift (source → target). N0, N1, N2, and N3 denote the sub-datasets partitioned with edge density. Bold results indicate the best performance. Methods N0 →N1 N1 →N0 N0 →N2 N2 →N0 N0 →N3 N3 →N0 N1 →N2 N2 →N1 N1 →N3 N3 →N1 N2 →N3 N3 →N2 G-CRD 50.5 ±3.3 52.4 ±3.0 53.0 ±0.6 65.0 ±1.4 36.5 ±2.6 31.1 ±3.5 52.4 ±1.6 49.5 ±2.3 38.9 ±1.0 54.0 ±1.2 45.6 ±1.5 54.4 ±2.0
+
+MuGSI 46.3 ±1.2 28.3 ±3.2 47.0 ±2.4 37.7 ±2.6 34.4 ±1.2 26.4 ±1.4 46.0 ±1.7 48.7 ±1.7 31.3 ±1.6 46.9 ±1.0 67.3 ±1.5 52.4 ±1.1
+
+TGS 60.0 ±3.2 34.0 ±0.7 49.1 ±1.4 48.7 ±2.0 27.6 ±0.4 49.3 ±2.6 45.6 ±2.8 48.5 ±0.7 34.3 ±1.2 52.4 ±2.9 60.1 ±1.2 46.8 ±2.9
+
+LAD-GNN 52.3 ±2.0 62.2 ±1.4 47.6 ±2.4 44.8 ±1.4 26.4 ±1.6 54.4 ±0.4 51.4 ±4.7 53.0 ±1.2 31.4 ±0.3 49.8 ±0.5 63.9 ±1.8 49.8 ±1.4
+
+AdaGMLP 51.1 ±1.3 29.0 ±0.8 48.7 ±1.4 50.7 ±2.4 27.7 ±3.3 43.5 ±1.2 51.5 ±0.7 51.7 ±0.5 29.4 ±1.1 47.6 ±3.5 57.1 ±1.0 48.5 ±1.9
+
+ClustGDD 53.9 ±1.5 54.6 ±1.8 50.6 ±1.9 64.0 ±2.3 33.4 ±2.3 63.1 ±1.8 55.1 ±3.1 52.8 ±1.0 37.3 ±0.9 50.5 ±1.2 58.0 ±1.8 54.4 ±3.2
+
+SGDA 50.5 ±2.5 49.5 ±0.8 53.7 ±1.5 28.2 ±2.5 35.2 ±2.2 60.2 ±1.7 28.2 ±1.5 49.5 ±1.6 40.5 ±3.0 54.2 ±2.2 49.5 ±2.2 50.5 ±2.1
+
+StruRW 59.8 ±1.8 67.0 ±1.8 51.6 ±1.0 61.4 ±4.0 29.3 ±1.0 71.6 ±4.0 54.1 ±0.7 50.6 ±2.2 31.4 ±3.0 49.7 ±1.1 34.5 ±3.3 50.7 ±1.4
+
+A2GNN 49.1 ±2.6 28.1 ±1.6 50.5 ±2.6 30.3 ±0.8 32.1 ±2.4 28.4 ±2.2 50.5 ±0.5 50.7 ±2.3 31.2 ±3.3 49.8 ±2.7 67.8 ±0.7 48.6 ±2.5
+
+PA-BOTH 50.0 ±2.6 27.5 ±2.1 50.1 ±2.2 28.7 ±0.7 33.1 ±2.7 28.1 ±1.1 47.4 ±0.7 50.0 ±0.9 33.0 ±1.1 51.1 ±3.6 68.3 ±0.8 50.8 ±0.9
+
+GAA 48.0 ±0.9 73.4 ±2.1 49.1 ±2.2 30.3 ±3.3 34.0 ±1.0 27.2 ±3.2 49.9 ±6.1 50.5 ±2.3 34.0 ±2.0 49.1 ±2.6 30.0 ±4.1 49.4 ±0.6
+
+TDSS 49.4 ±1.8 73.1 ±0.8 50.1 ±0.3 27.0 ±3.9 29.9 ±3.6 28.2 ±2.5 52.9 ±2.5 51.7 ±3.2 32.3 ±1.1 51.6 ±3.1 70.4 ±1.7 49.2 ±0.6
+
+DSBD 63.6 ±1.5 75.8 ±0.9 55.6 ±2.1 67.9 ±2.6 39.2 ±1.7 64.3 ±2.0 60.4 ±1.9 53.3 ±1.5 42.5 ±1.1 56.7 ±2.2 73.9 ±1.6 58.2 ±1.8
+
+Table 15: The classification results (in %) on the Mutagenicity dataset under node density domain shift (source → target). M0, M1, M2, and M3 denote the sub-datasets partitioned with node density. Bold results indicate the best performance. Methods M0 →M1 M1 →M0 M0 →M2 M2 →M0 M0 →M3 M3 →M0 M1 →M2 M2 →M1 M1 →M3 M3 →M1 M2 →M3 M3 →M2 G-CRD 60.4 ±0.5 55.9 ±3.2 55.3 ±1.1 54.8 ±1.4 59.6 ±3.2 56.8 ±1.3 51.2 ±2.2 63.6 ±2.9 62.2 ±1.7 59.4 ±2.7 63.1 ±1.0 72.3 ±3.1
+
+MuGSI 45.3 ±2.4 52.1 ±1.9 48.6 ±3.1 55.7 ±2.0 56.2 ±2.0 48.9 ±2.3 68.4 ±1.7 60.1 ±2.8 50.8 ±3.2 55.4 ±1.9 58.3 ±1.5 64.2 ±1.9
+
+TGS 53.8 ±1.8 46.5 ±2.2 58.2 ±1.6 49.3 ±1.7 50.7 ±2.5 53.1 ±1.8 71.5 ±2.2 55.9 ±2.0 58.3 ±1.8 61.7 ±2.5 55.9 ±2.8 69.5 ±2.1
+
+LAD-GNN 58.5 ±2.3 54.9 ±2.0 62.4 ±2.8 52.8 ±2.5 53.6 ±1.7 57.2 ±2.1 66.8 ±1.5 64.2 ±1.9 60.5 ±2.4 65.8 ±1.9 63.4 ±1.7 70.3 ±1.5
+
+AdaGMLP 51.2 ±1.9 50.3 ±2.1 42.8 ±1.4 51.5 ±2.2 55.3 ±2.1 51.8 ±1.7 70.2 ±2.6 52.6 ±2.9 54.7 ±1.9 52.9 ±2.1 50.1 ±2.4 59.8 ±2.4
+
+ClustGDD 44.9 ±2.6 49.8 ±1.6 50.5 ±2.2 53.1 ±1.5 49.8 ±2.3 50.5 ±2.8 65.9 ±1.7 57.4 ±2.5 56.2 ±2.9 58.5 ±1.6 52.6 ±2.1 66.1 ±1.8
+
+SGDA 41.0 ±3.5 32.7 ±0.7 52.1 ±1.8 46.5 ±1.1 59.8 ±2.1 52.1 ±0.8 56.7 ±1.4 41.0 ±3.3 56.7 ±2.2 47.9 ±1.9 51.2 ±2.8 32.7 ±2.7
+
+StruRW 59.9 ±1.8 56.2 ±2.0 34.1 ±1.6 50.2 ±2.4 48.4 ±2.0 56.7 ±2.2 70.5 ±1.8 67.3 ±2.3 52.1 ±1.4 70.1 ±1.9 67.7 ±2.1 72.8 ±1.6
+
+A2GNN 57.6 ±2.1 48.4 ±2.0 34.6 ±2.7 48.9 ±1.7 54.8 ±3.1 55.8 ±2.5 67.3 ±2.5 39.6 ±1.1 47.9 ±2.2 39.6 ±1.5 47.5 ±2.9 40.6 ±1.2
+
+PA-BOTH 54.8 ±1.6 45.2 ±2.5 67.3 ±3.0 50.7 ±2.3 47.9 ±1.8 45.6 ±1.4 69.1 ±2.0 67.7 ±1.6 65.9 ±2.5 70.1 ±2.8 66.8 ±3.1 67.7 ±2.5
+
+GAA 40.1 ±3.2 47.9 ±1.1 31.3 ±1.4 54.4 ±2.9 58.1 ±2.1 47.0 ±2.7 75.1 ±1.8 67.7 ±2.2 64.1 ±3.1 63.1 ±2.2 68.2 ±1.5 71.9 ±1.3
+
+TDSS 40.1 ±2.0 53.5 ±3.1 67.7 ±2.6 53.0 ±1.2 52.5 ±2.7 46.5 ±1.9 32.3 ±3.4 58.5 ±2.9 47.5 ±1.7 40.1 ±1.7 47.0 ±2.3 67.7 ±2.9
+
+DSBD 63.8 ±1.4 60.4 ±2.2 69.5 ±2.0 59.2 ±1.8 62.7 ±1.5 61.3 ±2.0 78.6 ±1.4 72.5 ±1.7 68.4 ±1.3 73.8 ±1.9 72.1 ±1.9 75.6 ±1.2DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Table 16: The classification results (in %) on the Mutagenicity dataset under edge density domain shift (source → target). M0, M1, M2, and M3 denote the sub-datasets partitioned with edge density. Bold results indicate the best performance. Methods M0 →M1 M1 →M0 M0 →M2 M2 →M0 M0 →M3 M3 →M0 M1 →M2 M2 →M1 M1 →M3 M3 →M1 M2 →M3 M3 →M2 G-CRD 73.7 ±0.6 68.7 ±3.0 55.3 ±1.0 55.6 ±1.4 58.4 ±2.5 53.0 ±0.8 67.3 ±2.5 62.2 ±3.2 50.2 ±2.6 70.5 ±1.8 57.5 ±2.8 54.0 ±0.8
+
+MuGSI 59.8 ±2.5 52.5 ±2.0 55.4 ±2.9 49.3 ±2.0 54.2 ±2.1 52.7 ±2.4 58.1 ±2.5 60.9 ±2.1 51.2 ±2.6 49.5 ±2.3 50.7 ±1.9 45.1 ±2.3
+
+TGS 66.4 ±1.8 58.9 ±1.9 63.2 ±2.1 53.6 ±1.8 52.8 ±2.1 50.5 ±2.3 65.9 ±1.7 68.4 ±1.8 52.1 ±2.4 55.8 ±2.0 54.2 ±2.2 46.9 ±1.9
+
+LAD-GNN 71.2 ±2.1 64.3 ±2.3 72.5 ±1.7 55.1 ±2.0 51.4 ±1.9 46.8 ±1.7 69.5 ±1.6 75.1 ±1.7 50.4 ±2.4 45.6 ±1.9 56.5 ±2.1 42.5 ±2.0
+
+AdaGMLP 62.1 ±2.4 50.8 ±2.2 58.9 ±2.4 48.7 ±2.0 55.6 ±2.2 56.4 ±2.0 59.2 ±2.4 62.5 ±2.2 49.8 ±2.6 51.2 ±2.2 49.9 ±2.3 48.6 ±2.1
+
+ClustGDD 55.3 ±2.6 47.9 ±2.3 45.6 ±2.9 46.8 ±2.3 56.1 ±2.3 59.2 ±2.1 52.4 ±2.8 55.8 ±2.5 48.3 ±2.8 58.7 ±2.5 47.8 ±2.1 49.5 ±2.3
+
+SGDA 65.0 ±2.2 62.2 ±2.9 50.2 ±1.5 53.5 ±0.9 62.2 ±1.9 50.7 ±2.5 63.6 ±3.3 31.8 ±2.1 55.3 ±1.4 45.2 ±1.2 68.7 ±2.7 37.8 ±2.0
+
+StruRW 74.2 ±1.7 69.6 ±2.1 75.6 ±1.9 56.2 ±2.0 54.4 ±2.3 40.1 ±1.6 70.1 ±1.8 74.2 ±2.0 50.7 ±2.6 47.0 ±1.7 57.6 ±2.2 44.2 ±2.6
+
+A2GNN 32.3 ±3.0 45.2 ±1.9 37.8 ±2.5 45.2 ±1.9 53.5 ±2.7 61.3 ±2.1 61.8 ±2.4 67.7 ±1.7 47.0 ±2.9 32.3 ±3.1 46.5 ±1.8 37.8 ±2.1
+
+PA-BOTH 68.7 ±2.2 60.8 ±2.0 77.0 ±1.5 54.8 ±2.1 48.9 ±2.1 51.2 ±1.8 73.3 ±1.7 78.3 ±1.5 53.9 ±2.3 40.1 ±2.0 51.2 ±2.5 43.3 ±1.8
+
+GAA 70.5 ±1.8 54.4 ±2.3 65.9 ±2.2 50.2 ±1.9 57.1 ±1.9 49.3 ±2.6 68.2 ±1.6 69.1 ±1.9 53.0 ±2.2 71.0 ±1.5 55.8 ±2.3 37.3 ±1.9
+
+TDSS 67.7 ±2.1 45.2 ±3.2 40.1 ±2.8 45.2 ±2.4 55.8 ±2.2 54.8 ±2.0 36.4 ±3.3 37.3 ±2.7 47.5 ±1.9 68.2 ±1.7 46.1 ±2.0 54.8 ±2.2
+
+DSBD 76.5 ±1.4 72.3 ±1.7 79.1 ±1.3 59.4 ±1.9 60.8 ±1.7 64.5 ±1.5 76.4 ±1.3 81.2 ±1.2 56.8 ±1.9 73.6 ±1.4 60.3 ±1.8 57.2 ±1.9
+
+Table 17: The classification results (in %) on the FRANKENSTEIN dataset under node density domain shift (source → target). F0, F1, F2, and F3 denote the sub-datasets partitioned with node density. Bold results indicate the best performance. Methods F0 →F1 F1 →F0 F0 →F2 F2 →F0 F0 →F3 F3 →F0 F1 →F2 F2 →F1 F1 →F3 F3 →F1 F2 →F3 F3 →F2 G-CRD 57.6 ±1.7 60.0 ±2.2 56.2 ±0.9 49.3 ±1.1 55.5 ±1.9 55.8 ±2.9 59.4 ±0.5 57.1 ±2.2 59.9 ±3.3 60.4 ±2.2 57.6 ±1.1 69.1 ±2.7
+
+MuGSI 54.3 ±2.4 58.2 ±1.9 51.5 ±2.8 55.4 ±2.1 53.8 ±2.3 57.1 ±2.0 49.6 ±2.5 56.2 ±2.0 51.2 ±2.4 55.8 ±1.8 49.7 ±2.3 48.9 ±2.6
+
+TGS 59.1 ±1.7 56.5 ±2.0 64.2 ±1.6 58.1 ±1.8 50.4 ±2.5 55.3 ±2.2 58.9 ±1.9 58.0 ±1.7 55.4 ±2.1 49.2 ±2.4 54.8 ±2.1 63.5 ±1.8
+
+LAD-GNN 60.5 ±1.6 58.8 ±1.8 65.4 ±1.5 52.3 ±2.3 54.1 ±2.2 58.6 ±1.9 60.1 ±1.8 56.9 ±1.9 57.3 ±2.0 53.4 ±2.1 58.1 ±2.0 55.6 ±2.2
+
+AdaGMLP 56.8 ±2.0 53.2 ±2.4 59.7 ±2.1 56.8 ±1.9 49.5 ±2.6 52.4 ±2.5 46.8 ±2.8 58.2 ±1.6 50.1 ±2.5 58.3 ±1.9 51.2 ±2.4 49.8 ±2.5
+
+ClustGDD 52.4 ±2.5 57.1 ±2.0 55.3 ±2.4 54.9 ±2.1 55.7 ±2.0 56.8 ±2.1 42.5 ±3.1 55.4 ±2.1 48.6 ±2.6 60.1 ±1.7 47.3 ±2.6 45.2 ±2.8
+
+SGDA 42.4 ±1.6 59.3 ±0.6 43.8 ±2.4 40.1 ±0.6 55.7 ±1.9 56.2 ±0.9 40.1 ±2.1 54.4 ±0.7 43.8 ±2.5 42.4 ±3.5 57.6 ±2.8 33.2 ±2.2
+
+StruRW 61.3 ±1.2 59.9 ±2.1 66.8 ±1.5 59.5 ±1.8 56.2 ±2.3 60.4 ±1.4 62.2 ±1.7 57.6 ±1.9 58.1 ±2.2 42.4 ±3.1 56.2 ±2.0 66.8 ±1.6
+
+A2GNN 57.6 ±1.8 59.0 ±1.5 44.2 ±2.4 57.6 ±2.0 56.2 ±1.9 58.1 ±2.1 41.5 ±3.5 58.5 ±1.2 43.8 ±2.8 57.1 ±1.7 43.8 ±2.5 41.2 ±3.4
+
+PA-BOTH 57.6 ±2.0 60.4 ±1.7 66.8 ±1.3 48.4 ±2.6 42.9 ±3.0 49.8 ±2.4 67.7 ±1.5 57.6 ±1.8 56.2 ±2.1 63.6 ±1.6 62.2 ±1.9 42.5 ±3.2
+
+GAA 57.6 ±1.9 40.5 ±3.2 66.8 ±1.4 59.5 ±1.7 52.5 ±2.2 40.8 ±2.9 42.1 ±3.3 57.6 ±2.0 59.5 ±1.8 41.5 ±2.7 56.7 ±2.1 67.7 ±1.5
+
+TDSS 55.8 ±2.1 59.9 ±1.6 66.8 ±1.5 57.6 ±1.9 56.2 ±2.0 59.5 ±1.8 41.8 ±3.4 57.6 ±1.9 43.8 ±2.7 59.5 ±1.5 43.8 ±2.6 41.9 ±3.5
+
+DSBD 64.5 ±1.4 62.8 ±1.6 70.2 ±1.2 62.1 ±1.5 59.4 ±1.8 63.5 ±1.3 70.6 ±1.4 60.3 ±1.5 61.8 ±1.7 66.2 ±1.4 65.4 ±1.8 71.5 ±1.3
+
+Table 18: The classification results (in %) on the FRANKENSTEIN dataset under edge density domain shift (source → target). F0, F1, F2, and F3 denote the sub-datasets partitioned with edge density. Bold results indicate the best performance. Methods F0 →F1 F0 →F2 F0 →F3 F1 →F0 F1 →F2 F1 →F3 F2 →F0 F2 →F1 F2 →F3 F3 →F0 F3 →F1 F3 →F2 DA 71.0 ±0.8 57.6 ±2.6 40.1 ±2.5 55.2 ±2.9 57.6 ±2.1 47.5 ±1.8 49.3 ±2.9 70.5 ±1.7 59.4 ±1.9 52.6 ±1.5 71.0 ±3.0 57.6 ±1.1
+
+MuGSI 48.2 ±2.4 52.3 ±1.9 56.4 ±2.8 52.8 ±2.1 58.2 ±2.3 50.5 ±2.0 53.4 ±2.5 55.6 ±2.0 54.8 ±2.4 50.1 ±1.8 68.5 ±2.3 60.2 ±2.6
+
+TGS 44.1 ±1.7 45.6 ±2.0 54.1 ±1.6 50.5 ±1.8 56.7 ±2.5 52.1 ±2.2 51.2 ±1.9 68.2 ±1.7 57.3 ±2.1 48.5 ±2.4 71.2 ±2.1 59.5 ±1.8
+
+LAD-GNN 68.1 ±1.6 43.8 ±1.8 53.8 ±1.5 49.9 ±2.3 45.3 ±2.2 55.4 ±1.9 50.8 ±1.8 42.6 ±1.9 52.1 ±2.0 51.2 ±2.1 69.8 ±2.0 43.1 ±2.2
+
+AdaGMLP 42.5 ±2.0 55.2 ±2.4 57.5 ±2.1 53.1 ±1.9 59.1 ±2.6 49.8 ±2.5 49.5 ±2.8 58.9 ±1.6 56.9 ±2.5 49.7 ±1.9 41.7 ±2.4 56.8 ±2.5
+
+ClustGDD 50.1 ±2.5 49.9 ±2.0 52.6 ±2.4 51.4 ±2.1 57.8 ±2.0 51.2 ±2.1 52.3 ±3.1 43.2 ±2.1 50.4 ±2.6 48.8 ±1.7 70.1 ±2.6 61.5 ±2.8
+
+SGDA 70.5 ±1.9 57.6 ±2.5 51.6 ±2.1 50.7 ±3.3 57.6 ±3.3 41.9 ±0.8 50.7 ±1.9 48.1 ±1.6 41.9 ±1.4 50.7 ±0.6 63.6 ±0.9 57.6 ±0.8
+
+StruRW 42.5 ±1.2 42.4 ±2.1 50.7 ±1.5 51.6 ±1.8 57.6 ±2.3 48.4 ±1.4 52.1 ±1.7 70.5 ±1.9 41.9 ±2.2 50.7 ±3.1 70.5 ±2.0 63.6 ±1.6
+
+A2GNN 41.8 ±1.8 44.2 ±1.5 58.1 ±2.4 47.9 ±2.0 41.9 ±1.9 58.1 ±2.1 48.9 ±3.5 43.2 ±1.2 58.1 ±2.8 47.9 ±1.7 70.5 ±2.5 58.1 ±3.4
+
+PA-BOTH 70.5 ±2.0 42.4 ±1.7 53.9 ±1.3 51.6 ±2.6 57.6 ±3.0 53.5 ±2.4 53.0 ±1.5 70.5 ±1.8 59.9 ±2.1 50.7 ±1.6 40.9 ±1.9 42.5 ±3.2
+
+GAA 71.0 ±1.9 57.6 ±3.2 55.8 ±1.4 51.2 ±1.7 59.9 ±2.2 45.6 ±2.9 49.3 ±3.3 53.5 ±2.0 49.8 ±1.8 49.3 ±2.7 71.4 ±2.1 57.6 ±1.5
+
+TDSS 41.3 ±2.1 58.1 ±1.6 58.1 ±1.5 53.9 ±1.9 58.5 ±2.0 53.0 ±1.8 53.9 ±3.4 42.8 ±1.9 56.2 ±2.7 48.9 ±1.5 70.5 ±2.6 63.1 ±3.5
+
+DSBD 73.4 ±1.4 61.2 ±1.6 60.5 ±1.2 56.8 ±1.5 63.1 ±1.8 61.4 ±1.3 57.2 ±1.4 72.5 ±1.5 63.8 ±1.7 54.6 ±1.4 74.1 ±1.8 66.9 ±1.3Conference acronym ’XX, June 03–05, 2018, Woodstock, NY Wang et al. 
+
+Table 19: The classification results (AUC in %) on the ogbg-molhiv dataset under node density domain shift (source → target). H0, H1, H2, and H3 denote the sub-datasets partitioned with node density. Bold results indicate the best performance. Methods H0 →H1 H1 →H0 H0 →H2 H2 →H0 H0 →H3 H3 →H0 H1 →H2 H2 →H1 H1 →H3 H3 →H1 H2 →H3 H3 →H2 G-CRD 55.5 ±1.2 59.8 ±2.9 57.6 ±3.2 47.4 ±0.6 60.3 ±1.4 42.8 ±3.4 48.1 ±2.1 52.0 ±2.4 45.5 ±0.5 46.4 ±2.0 53.4 ±3.5 56.6 ±1.6
+
+MuGSI 54.2 ±2.3 50.5 ±2.0 53.8 ±2.4 51.2 ±1.9 48.6 ±2.1 54.4 ±2.2 51.7 ±2.5 53.0 ±1.8 50.2 ±2.4 51.8 ±1.9 48.5 ±2.3 53.6 ±2.1
+
+TGS 58.1 ±1.6 56.2 ±1.8 57.5 ±1.7 54.9 ±2.0 55.3 ±1.9 51.8 ±2.1 56.8 ±1.8 55.4 ±1.6 58.9 ±2.0 46.5 ±2.2 55.2 ±2.1 56.4 ±1.9
+
+LAD-GNN 56.8 ±1.8 53.4 ±2.1 58.2 ±1.9 57.6 ±1.7 52.9 ±2.3 50.5 ±2.0 54.6 ±2.1 50.2 ±2.2 54.1 ±1.9 49.8 ±2.3 51.6 ±2.2 52.8 ±2.0
+
+AdaGMLP 52.5 ±2.2 48.9 ±2.4 51.4 ±2.3 49.8 ±2.0 46.2 ±2.5 55.6 ±2.1 48.5 ±2.6 52.7 ±1.9 47.3 ±2.5 50.4 ±2.0 45.8 ±2.6 50.1 ±2.2
+
+ClustGDD 53.6 ±2.0 54.8 ±1.9 52.1 ±2.1 52.5 ±2.2 50.8 ±2.0 53.2 ±2.3 55.4 ±2.4 49.6 ±2.1 52.8 ±2.2 49.1 ±1.8 47.5 ±2.5 54.2 ±2.3
+
+SGDA 59.6 ±1.9 49.0 ±3.4 44.8 ±2.6 47.2 ±2.9 41.9 ±0.8 47.5 ±2.4 42.0 ±1.8 43.2 ±2.6 46.2 ±1.7 48.1 ±1.1 58.1 ±3.4 60.2 ±2.5
+
+StruRW 57.6 ±1.2 55.1 ±1.8 55.7 ±1.5 55.7 ±1.9 57.7 ±2.0 52.3 ±1.4 55.9 ±1.7 54.1 ±2.1 61.7 ±1.8 48.4 ±2.2 60.3 ±1.6 57.9 ±1.5
+
+A2GNN 49.3 ±2.4 42.9 ±2.0 54.0 ±1.8 43.7 ±2.2 42.5 ±1.9 53.0 ±2.5 54.2 ±2.1 51.5 ±1.6 41.5 ±2.3 52.5 ±1.8 40.5 ±2.7 51.9 ±2.4
+
+PA-BOTH 46.9 ±1.7 59.8 ±1.5 59.3 ±2.2 59.8 ±1.4 54.7 ±2.1 52.8 ±1.9 59.3 ±1.6 45.3 ±2.0 56.1 ±1.8 44.9 ±2.3 52.9 ±2.1 44.8 ±1.7
+
+GAA 55.6 ±2.1 40.4 ±2.8 42.5 ±2.4 46.4 ±1.7 41.7 ±2.3 44.7 ±2.5 42.1 ±2.2 56.1 ±1.9 42.8 ±2.6 52.6 ±2.0 42.5 ±2.4 41.9 ±2.2
+
+TDSS 50.4 ±1.9 57.7 ±1.6 44.9 ±2.0 45.7 ±2.3 40.5 ±1.8 56.1 ±1.7 43.9 ±2.5 48.6 ±2.1 40.8 ±2.4 47.9 ±1.9 41.1 ±2.3 44.9 ±2.0
+
+DSBD 61.4 ±1.4 63.2 ±1.2 63.8 ±1.5 62.5 ±1.3 62.1 ±1.6 58.4 ±1.1 61.9 ±1.4 59.7 ±1.2 64.5 ±1.5 56.3 ±1.3 64.8 ±1.6 61.2 ±1.4
+
+Table 20: The classification results (AUC in %) on the ogbg-molhiv dataset under edge density domain shift (source → target). H0, H1, H2, and H3 denote the sub-datasets partitioned with edge density. Bold results indicate the best performance. Methods H0 →H1 H1 →H0 H0 →H2 H2 →H0 H0 →H3 H3 →H0 H1 →H2 H2 →H1 H1 →H3 H3 →H1 H2 →H3 H3 →H2 DA 61.1 ±3.1 52.6 ±0.6 58.9 ±2.0 51.3 ±0.7 48.5 ±3.5 33.2 ±1.2 61.5 ±1.6 37.3 ±1.1 40.9 ±0.8 53.1 ±1.1 54.6 ±1.4 54.6 ±2.4
+
+MuGSI 60.5 ±2.1 55.2 ±1.8 49.8 ±2.3 53.4 ±2.0 56.1 ±1.9 51.2 ±2.2 54.8 ±2.0 60.2 ±1.7 50.5 ±2.1 52.1 ±2.0 58.4 ±1.9 55.7 ±2.1
+
+TGS 58.9 ±1.9 59.4 ±1.7 46.2 ±2.5 55.8 ±2.2 61.2 ±1.8 48.9 ±2.4 56.5 ±1.9 59.1 ±1.8 48.2 ±2.5 53.6 ±2.1 61.5 ±1.7 54.2 ±2.2
+
+LAD-GNN 62.1 ±1.7 51.5 ±2.0 52.8 ±2.2 56.4 ±1.9 50.9 ±2.3 53.7 ±2.1 58.2 ±1.8 57.5 ±2.0 51.9 ±2.3 54.8 ±1.9 59.3 ±1.8 51.6 ±2.3
+
+AdaGMLP 57.3 ±2.0 53.1 ±2.2 45.9 ±2.6 51.2 ±2.3 52.6 ±2.1 49.5 ±2.5 53.1 ±2.2 58.4 ±1.9 46.8 ±2.6 51.3 ±2.2 56.9 ±2.0 49.8 ±2.4
+
+ClustGDD 59.8 ±1.9 56.8 ±1.8 50.1 ±2.3 54.5 ±2.1 55.3 ±2.0 52.1 ±2.2 55.9 ±1.9 59.6 ±1.7 49.4 ±2.4 52.7 ±2.0 57.8 ±1.9 52.4 ±2.1
+
+SGDA 64.5 ±1.6 41.2 ±0.5 46.3 ±1.6 49.7 ±2.1 40.0 ±1.0 39.3 ±2.3 61.5 ±2.4 43.2 ±0.6 57.9 ±0.5 46.3 ±1.2 39.1 ±2.8 44.5 ±0.6
+
+StruRW 64.2 ±1.5 45.6 ±2.1 58.4 ±1.8 50.0 ±2.3 45.0 ±2.5 55.1 ±1.9 49.8 ±2.2 63.9 ±1.4 59.2 ±1.6 54.3 ±2.0 55.4 ±1.8 48.8 ±2.4
+
+A2GNN 63.6 ±1.7 62.0 ±1.4 41.5 ±2.5 52.1 ±2.0 63.2 ±1.6 48.5 ±2.2 57.7 ±1.8 61.7 ±1.5 41.0 ±2.6 55.4 ±1.9 60.1 ±1.7 63.7 ±1.5
+
+PA-BOTH 54.9 ±2.2 57.2 ±1.9 42.0 ±2.4 60.5 ±1.5 59.9 ±1.8 40.8 ±2.7 61.7 ±1.6 53.8 ±2.1 42.4 ±2.5 44.4 ±2.3 50.7 ±2.0 47.3 ±2.2
+
+GAA 61.3 ±1.8 42.3 ±2.6 58.5 ±1.7 52.3 ±2.1 45.0 ±2.4 59.8 ±1.5 50.0 ±2.3 56.9 ±1.9 59.3 ±1.7 50.7 ±2.2 63.6 ±1.6 47.5 ±2.5
+
+TDSS 62.0 ±1.6 54.7 ±2.0 47.1 ±2.2 50.8 ±2.4 54.7 ±1.9 47.0 ±2.6 51.2 ±2.1 62.8 ±1.5 46.1 ±2.3 59.8 ±1.7 63.3 ±1.6 53.0 ±2.0
+
+DSBD 66.8 ±1.4 64.5 ±1.3 61.2 ±1.6 63.4 ±1.5 65.1 ±1.2 62.7 ±1.4 63.9 ±1.3 66.5 ±1.2 62.1 ±1.5 62.8 ±1.6 66.2 ±1.3 65.4 ±1.2

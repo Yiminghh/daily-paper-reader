@@ -1,0 +1,450 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-06T19:41:08.540271+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 9,
+    "quick_skim_target": 11,
+    "quick_selected": 9
+  },
+  "deep_dive": [
+    {
+      "id": "2604.02499v1",
+      "title": "CARBON-2D Topological Descriptor (C2DTD): An Interpretable and Physics-Informed Representation for Two-Dimensional Carbon Networks",
+      "abstract": "Two-dimensional (2D) carbon networks, from pristine graphene to defect-rich and amorphous monolayers, exhibit a complex structure-energy landscape governed not only by local bonding but also by medium-range order and network topology. Capturing these multi-scale effects in a compact, interpretable, and data-efficient manner remains a major challenge for machine learning (ML) in low-dimensional materials. In this work, we introduce the CARBON-2D Topological Descriptor (C2DTD), a physically informed structural representation specifically designed for 2D carbon systems. The descriptor integrates local geometric statistics, a compact radial structural signature, and explicit primitive ring topology into a fixed-length, invariant vector that is both computationally efficient and directly interpretable. Benchmarking on diverse datasets of 2D carbon allotropes and defect-engineered graphene sheets demonstrates that C2DTD achieves robust predictive performance in small-data regimes, outperforming generic high-dimensional featurization schemes while preserving physical transparency. Unsupervised manifold analysis reveals a smoother alignment between descriptor space and the DFT energy landscape, and feature-importance and ablation studies confirm that ring topology emerges as a dominant energetic driver, particularly under vacancy-induced reconstruction. Furthermore, controlled simulations with 5-15% random vacancies show that C2DTD naturally captures the progressive transition from hexagon-dominated graphene to topologically disordered networks, enabling both dataset-level and structure-specific interpretation. Owing to its compactness, interpretability, and strong physics-based inductive bias, C2DTD provides a fast and generalizable framework for data-driven modeling, defect analysis, and high-throughput screening of 2D carbon materials.",
+      "authors": [
+        "Felipe Hawthorne",
+        "Marcelo Lopes Pereira Junior",
+        "Fabiano Manoel de Andrade",
+        "Cristiano Francisco Woellner",
+        "Raphael Matozo Tromer"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-04-02T19:59:00+00:00",
+      "link": "https://arxiv.org/pdf/2604.02499v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "topological descriptor for carbon networks",
+      "llm_evidence_cn": "碳网络的拓扑描述符",
+      "llm_evidence": "碳网络的拓扑描述符",
+      "canonical_evidence": "碳网络的拓扑描述符",
+      "llm_tldr_en": "Introduces a physics-informed topological representation for 2D carbon molecular structures.",
+      "llm_tldr_cn": "为二维碳分子结构引入了一种物理启发的拓扑表示方法。",
+      "llm_tldr": "为二维碳分子结构引入了一种物理启发的拓扑表示方法。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.02842v1",
+      "title": "ViraHinter: a dual-modal artificial intelligence framework for predicting virus-host interactions",
+      "abstract": "Protein-protein interactions (PPIs) between a virus and its host govern infection, replication, and pathogenesis. While high-throughput mapping has identified thousands of virus-host associations, much of the virus-host interactome remains uncharacterized due to the labor-intensive nature of experimental screens, the inherent difficulty in capturing transient interactions, and the limited sequence homology across divergent viral families. Here, we introduce ViraHinter, a dual-modal deep learning framework for the precise prediction of virus-host interactions and large-scale inference of interaction landscapes. ViraHinter couples a structure-generation branch with a sequence-representation branch, integrating structure-informed pair representations with ESM-derived embeddings to learn generalizable interaction rules across unseen viruses. We benchmark ViraHinter on pathogenic coronaviruses and influenza A viruses and show that it consistently outperforms RoseTTAFold2-PPI, AlphaFold 3 and RoseTTAFold2-Lite in prioritizing high-confidence candidates even under severe class imbalance and across diverse interface regimes. Notably, it successfully identifies novel functionally relevant host factors and recapitulates the structural plasticity of the complex interfaces. By intersecting predictions across multiple influenza subtypes, ViraHinter reveals 33 shared host factors, offering a roadmap for broad-spectrum antiviral discovery. ViraHinter therefore serves as a robust computational approach for studying virus-host interactions, enabling systematic screening of host factors for all known human-infecting viruses, providing new insights into the shared mechanisms of viral pathogenesis, and accelerating the discovery of novel therapeutic targets and the development of broad-spectrum antivirals.",
+      "authors": [
+        "Weiqiang Bai",
+        "Fei Wang",
+        "Jialin Wang",
+        "Sheng Xu",
+        "Lifeng Qiao",
+        "Juan Li",
+        "Zhuyi Guo",
+        "Xiangyun Hou",
+        "Lei Bai",
+        "Bowen Zhou",
+        "Edward C. Holmes",
+        "Weifeng Shi",
+        "Siqi Sun"
+      ],
+      "primary_category": "q-bio.BM",
+      "categories": [
+        "q-bio.BM"
+      ],
+      "published": "2026-04-03T08:01:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.02842v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "dual-modal framework for protein interactions with structure generation",
+      "llm_evidence_cn": "结合结构生成的蛋白质相互作用双模态框架",
+      "llm_evidence": "结合结构生成的蛋白质相互作用双模态框架",
+      "canonical_evidence": "结合结构生成的蛋白质相互作用双模态框架",
+      "llm_tldr_en": "ViraHinter predicts virus-host interactions using a dual-modal structure-generation and sequence-representation branch.",
+      "llm_tldr_cn": "ViraHinter通过结构生成与序列表示双模态分支预测病毒与宿主的相互作用。",
+      "llm_tldr": "ViraHinter通过结构生成与序列表示双模态分支预测病毒与宿主的相互作用。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.02847v1",
+      "title": "HiDiGen: Hierarchical Diffusion for B-Rep Generation with Explicit Topological Constraints",
+      "abstract": "Boundary representation (B-rep) is the standard 3D modeling format in CAD systems, encoding both geometric primitives and topological connectivity. Despite its prevalence, deep generative modeling of valid B-rep structures remains challenging due to the intricate interplay between discrete topology and continuous geometry. In this paper, we propose HiDiGen, a hierarchical generation framework that decouples geometry modeling into two stages, each guided by explicitly modeled topological constraints. Specifically, our approach first establishes face-edge incidence relations to define a coherent topological scaffold, upon which face proxies and initial edge curves are generated. Subsequently, multiple Transformer-based diffusion modules are employed to refine the geometry by generating precise face surfaces and vertex positions, with edge-vertex adjacencies dynamically established and enforced to preserve structural consistency. This progressive geometry hierarchy enables the generation of more novel and diverse shapes, while two-stage topological modeling ensures high validity. Experimental results show that HiDiGen achieves strong performance, generating novel, diverse, and topologically sound CAD models.",
+      "authors": [
+        "Shurui Liu",
+        "Weide Chen",
+        "Ancong Wu"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-04-03T08:06:51+00:00",
+      "link": "https://arxiv.org/pdf/2604.02847v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "hierarchical diffusion with explicit topological constraints",
+      "llm_evidence_cn": "具有显式拓扑约束的分层扩散模型",
+      "llm_evidence": "具有显式拓扑约束的分层扩散模型",
+      "canonical_evidence": "具有显式拓扑约束的分层扩散模型",
+      "llm_tldr_en": "A hierarchical diffusion framework for generating B-rep structures using explicit topological constraints.",
+      "llm_tldr_cn": "一种利用显式拓扑约束生成边界表示结构的分层扩散框架。",
+      "llm_tldr": "一种利用显式拓扑约束生成边界表示结构的分层扩散框架。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2603.28178v1",
+      "title": "ToLL: Topological Layout Learning with Structural Multi-view Augmentation for 3D Scene Graph Pretraining",
+      "abstract": "3D Scene Graph (3DSG) generation plays a pivotal role in spatial understanding and semantic-affordance perception. However, its generalizability is often constrained by data scarcity. Current solutions primarily focus on cross-modal assisted representation learning and object-centric generation pre-training. The former relies heavily on predicate annotations, while the latter's predicate learning may be bypassed due to strong object priors. Consequently, they could not often provide a label-free and robust self-supervised proxy task for 3DSG fine-tuning. To bridge this gap, we propose a Topological Layout Learning (ToLL) for 3DSG pretraining framework. In detail, we design an Anchor-Conditioned Topological Geometry Reasoning, with a GNN to recover the global layout of zero-centered subgraphs by the spatial priors from sparse anchors. This process is strictly modulated by predicate features, thereby enforcing the predicate relation learning. Furthermore, we construct a Structural Multi-view Augmentation to avoid semantic corruption, and enhancing representations via self-distillation. The extensive experiments on 3DSSG dataset demonstrate that our ToLL could improve representation quality, outperforming state-of-the-art baselines.",
+      "authors": [
+        "Yucheng Huang",
+        "Luping Ji",
+        "Xiangwei Jiang",
+        "Wen Li",
+        "Mao Ye"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-03-30T08:43:52+00:00",
+      "link": "https://arxiv.org/pdf/2603.28178v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "topological layout learning for 3D scene graph pretraining",
+      "llm_evidence_cn": "3D场景图预训练的拓扑布局学习",
+      "llm_evidence": "3D场景图预训练的拓扑布局学习",
+      "canonical_evidence": "3D场景图预训练的拓扑布局学习",
+      "llm_tldr_en": "Proposes a topological layout learning framework for self-supervised 3D scene graph pretraining.",
+      "llm_tldr_cn": "提出了一种用于自监督3D场景图预训练的拓扑布局学习框架。",
+      "llm_tldr": "提出了一种用于自监督3D场景图预训练的拓扑布局学习框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.01622v1",
+      "title": "Expert-Choice Routing Enables Adaptive Computation in Diffusion Language Models",
+      "abstract": "Diffusion language models (DLMs) enable parallel, non-autoregressive text generation, yet existing DLM mixture-of-experts (MoE) models inherit token-choice (TC) routing from autoregressive systems, leading to load imbalance and rigid computation allocation. We show that expert-choice (EC) routing is a better fit for DLMs: it provides deterministic load balancing by design, yielding higher throughput and faster convergence than TC. Building on the property that EC capacity is externally controllable, we introduce timestep-dependent expert capacity, which varies expert allocation according to the denoising step. We find that allocating more capacity to low-mask-ratio steps consistently achieves the best performance under matched FLOPs, and provide a mechanistic explanation: tokens in low-mask-ratio contexts exhibit an order-of-magnitude higher learning efficiency, so concentrating compute on these steps yields the largest marginal return. Finally, we show that existing pretrained TC DLMs can be retrofitted to EC by replacing only the router, achieving faster convergence and improved accuracy across diverse downstream tasks. Together, these results establish EC routing as a superior paradigm for DLM MoE models and demonstrate that computation in DLMs can be treated as an adaptive policy rather than a fixed architectural constant. Code is available at https://github.com/zhangshuibai/EC-DLM.",
+      "authors": [
+        "Shuibai Zhang",
+        "Caspian Zhuang",
+        "Chihan Cui",
+        "Zhihan Yang",
+        "Fred Zhangzhi Peng",
+        "Yanxin Zhang",
+        "Haoyue Bai",
+        "Zack Jia",
+        "Yang Zhou",
+        "Guanhua Chen",
+        "Ming Liu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-04-02T05:01:36+00:00",
+      "link": "https://arxiv.org/pdf/2604.01622v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "expert-choice routing for diffusion language models",
+      "llm_evidence_cn": "扩散语言模型的专家选择路由机制",
+      "llm_evidence": "扩散语言模型的专家选择路由机制",
+      "canonical_evidence": "扩散语言模型的专家选择路由机制",
+      "llm_tldr_en": "Optimizes diffusion language models using expert-choice routing for better generation efficiency.",
+      "llm_tldr_cn": "通过专家选择路由优化扩散语言模型，提升生成效率和性能。",
+      "llm_tldr": "通过专家选择路由优化扩散语言模型，提升生成效率和性能。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.01949v2",
+      "title": "annbatch unlocks terabyte-scale training of biological data in anndata",
+      "abstract": "The scale of biological datasets now routinely exceeds system memory, making data access rather than model computation the primary bottleneck in training machine-learning models. This bottleneck is particularly acute in biology, where widely used community data formats must support heterogeneous metadata, sparse and dense assays, and downstream analysis within established computational ecosystems. Here we present annbatch, a mini-batch loader native to anndata that enables out-of-core training directly on disk-backed datasets. Across single-cell transcriptomics, microscopy and whole-genome sequencing benchmarks, annbatch increases loading throughput by up to an order of magnitude and shortens training from days to hours, while remaining fully compatible with the scverse ecosystem. Annbatch establishes a practical data-loading infrastructure for scalable biological AI, allowing increasingly large and diverse datasets to be used without abandoning standard biological data formats. Github: https://github.com/scverse/annbatch",
+      "authors": [
+        "Ilan Gold",
+        "Felix Fischer",
+        "Lucas Arnoldt",
+        "F. Alexander Wolf",
+        "Fabian J. Theis"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.GN"
+      ],
+      "published": "2026-04-02T12:16:07+00:00",
+      "link": "https://arxiv.org/pdf/2604.01949v2",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "large-scale training of biological data including sequencing",
+      "llm_evidence_cn": "包括测序在内的大规模生物数据训练",
+      "llm_evidence": "包括测序在内的大规模生物数据训练",
+      "canonical_evidence": "包括测序在内的大规模生物数据训练",
+      "llm_tldr_en": "Introduces annbatch for efficient out-of-core training on terabyte-scale biological datasets.",
+      "llm_tldr_cn": "推出annbatch，支持对TB级规模的生物数据集进行高效的离存训练。",
+      "llm_tldr": "推出annbatch，支持对TB级规模的生物数据集进行高效的离存训练。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.02203v1",
+      "title": "QuantumXCT: Learning Interaction-Induced State Transformation in Cell-Cell Communication via Quantum Entanglement and Generative Modeling",
+      "abstract": "Inferring cell-cell communication (CCC) from single-cell transcriptomics remains fundamentally limited by reliance on curated ligand-receptor databases, which primarily capture co-expression rather than the system-level effects of signaling on cellular states. Here, we introduce QuantumXCT, a hybrid quantum-classical generative framework that reframes CCC as the problem of learning interaction-induced state transformations between cellular state distributions. By encoding transcriptomic profiles into a high-dimensional Hilbert space, QuantumXCT trains parameterized quantum circuits to learn a unitary transformation that maps a baseline non-interacting cellular state to an interacting state. This approach enables the discovery of communication-driven changes in cellular state distributions without requiring prior biological assumptions. We validate QuantumXCT using both synthetic data with known ground-truth interactions and single-cell RNA-seq data from ovarian cancer-fibroblast co-culture systems. The model accurately recovers complex regulatory dependencies, including feedback structures, and identifies dominant communication hubs such as the PDGFB-PDGFRB-STAT3 axis. Importantly, the learned quantum circuit is interpretable: its entangling topology can be translated into biologically meaningful interaction networks, while post hoc contribution analysis quantifies the relative influence of individual interactions on the observed state transitions. By shifting CCC inference from static interaction lookup to learning data-driven state transformations, QuantumXCT provides a generative framework for modeling intercellular communication. This work establishes a new paradigm for de novo discovery of communication programs in complex biological systems and highlights the potential of quantum machine learning in single-cell biology.",
+      "authors": [
+        "Selim Romero",
+        "Shreyan Gupta",
+        "Robert S. Chapkin",
+        "James J. Cai"
+      ],
+      "primary_category": "cs.ET",
+      "categories": [
+        "cs.ET",
+        "physics.bio-ph",
+        "physics.data-an",
+        "q-bio.GN"
+      ],
+      "published": "2026-04-02T15:57:12+00:00",
+      "link": "https://arxiv.org/pdf/2604.02203v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "generative modeling for cell-cell communication and state transformations",
+      "llm_evidence_cn": "细胞间通讯与状态转换的生成式建模",
+      "llm_evidence": "细胞间通讯与状态转换的生成式建模",
+      "canonical_evidence": "细胞间通讯与状态转换的生成式建模",
+      "llm_tldr_en": "Uses quantum-classical generative modeling to learn interaction-induced state transformations in transcriptomics.",
+      "llm_tldr_cn": "利用量子-经典混合生成模型学习转录组学中由交互诱导的状态转换。",
+      "llm_tldr": "利用量子-经典混合生成模型学习转录组学中由交互诱导的状态转换。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.02415v1",
+      "title": "Generative models on phase space",
+      "abstract": "Deep generative models such as diffusion and flow matching are powerful machine learning tools capable of learning and sampling from high-dimensional distributions. They are particularly useful when the training data appears to be concentrated on a submanifold of the data embedding space. For high-energy physics data, consisting of collections of relativistic energy-momentum 4-vectors, this submanifold can enforce extremely strong physically-motivated priors, such as energy and momentum conservation. If these constraints are learned only approximately, rather than exactly, this can inhibit the interpretability and reliability of such generative models. To remedy this deficiency, we introduce generative models which are, by construction, confined at every step of their sampling trajectory to the manifold of massless N-particle Lorentz-invariant phase space in the center-of-momentum frame. In the case of diffusion models, the \"pure noise\" forward process endpoint corresponds to the uniform distribution on phase space, which provides a clear starting point from which to identify how correlations among the particles emerge during the reverse (de-noising) process. We demonstrate that our models are able to learn both few-particle and many-particle distributions with various singularity structures, paving the way for future interpretability studies using generative models trained on simulated jet data.",
+      "authors": [
+        "Zachary Bogorad",
+        "Ibrahim Elsharkawy",
+        "Yonatan Kahn",
+        "Andrew J. Larkoski",
+        "Noam Levi"
+      ],
+      "primary_category": "hep-ph",
+      "categories": [
+        "hep-ph",
+        "cs.AI"
+      ],
+      "published": "2026-04-02T18:00:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.02415v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "physically-constrained diffusion models for high-dimensional distributions",
+      "llm_evidence_cn": "物理约束的扩散模型用于高维分布生成",
+      "llm_evidence": "物理约束的扩散模型用于高维分布生成",
+      "canonical_evidence": "物理约束的扩散模型用于高维分布生成",
+      "llm_tldr_en": "Introduces generative models confined to submanifolds to enforce physical priors like conservation laws.",
+      "llm_tldr_cn": "引入了受限于子流形的生成模型，以在采样过程中强制执行能量守恒等物理先验。",
+      "llm_tldr": "引入了受限于子流形的生成模型，以在采样过程中强制执行能量守恒等物理先验。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.02560v1",
+      "title": "Dependency-Guided Parallel Decoding in Discrete Diffusion Language Models",
+      "abstract": "Discrete diffusion language models (dLLMs) accelerate text generation by unmasking multiple tokens in parallel. However, parallel decoding introduces a distributional mismatch: it approximates the joint conditional using a fully factorized product of per-token marginals, which degrades output quality when selected tokens are strongly dependent.   We propose DEMASK (DEpendency-guided unMASKing), a lightweight dependency predictor that attaches to the final hidden states of a dLLM. In a single forward pass, it estimates pairwise conditional influences between masked positions. Using these predictions, a greedy selection algorithm identifies positions with bounded cumulative dependency for simultaneous unmasking. Under a sub-additivity assumption, we prove this bounds the total variation distance between our parallel sampling and the model's joint. Empirically, DEMASK achieves 1.7-2.2$\\times$ speedup on Dream-7B while matching or improving accuracy compared to confidence-based and KL-based baselines.",
+      "authors": [
+        "Liran Ringel",
+        "Ameen Ali",
+        "Yaniv Romano"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-04-02T22:21:24+00:00",
+      "link": "https://arxiv.org/pdf/2604.02560v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "dependency-guided parallel decoding in discrete diffusion models",
+      "llm_evidence_cn": "离散扩散模型中的依赖引导并行解码",
+      "llm_evidence": "离散扩散模型中的依赖引导并行解码",
+      "canonical_evidence": "离散扩散模型中的依赖引导并行解码",
+      "llm_tldr_en": "Proposes a dependency predictor to improve the quality and speed of parallel decoding in discrete diffusion models.",
+      "llm_tldr_cn": "提出一种依赖预测器，旨在提高离散扩散模型并行解码的质量和速度。",
+      "llm_tldr": "提出一种依赖预测器，旨在提高离散扩散模型并行解码的质量和速度。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.02610v1",
+      "title": "Structure-Preserving Multi-View Embedding Using Gromov-Wasserstein Optimal Transport",
+      "abstract": "Multi-view data analysis seeks to integrate multiple representations of the same samples in order to recover a coherent low-dimensional structure. Classical approaches often rely on feature concatenation or explicit alignment assumptions, which become restrictive under heterogeneous geometries or nonlinear distortions. In this work, we propose two geometry-aware multi-view embedding strategies grounded in Gromov-Wasserstein (GW) optimal transport. The first, termed Mean-GWMDS, aggregates view-specific relational information by averaging distance matrices and applying GW-based multidimensional scaling to obtain a representative embedding. The second strategy, referred to as Multi-GWMDS, adopts a selection-based paradigm in which multiple geometry-consistent candidate embeddings are generated via GW-based alignment and a representative embedding is selected. Experiments on synthetic manifolds and real-world datasets show that the proposed methods effectively preserve intrinsic relational structure across views. These results highlight GW-based approaches as a flexible and principled framework for multi-view representation learning.",
+      "authors": [
+        "Rafael Pereira Eufrazio",
+        "Eduardo Fernandes Montesuma",
+        "Charles Casimiro Cavalcante"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG"
+      ],
+      "published": "2026-04-03T00:58:19+00:00",
+      "link": "https://arxiv.org/pdf/2604.02610v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "geometry-aware multi-view embedding and relational information aggregation",
+      "llm_evidence_cn": "几何感知多视图嵌入与关系信息聚合",
+      "llm_evidence": "几何感知多视图嵌入与关系信息聚合",
+      "canonical_evidence": "几何感知多视图嵌入与关系信息聚合",
+      "llm_tldr_en": "Proposes Gromov-Wasserstein based multi-view embedding strategies for structure-preserving data integration.",
+      "llm_tldr_cn": "提出基于Gromov-Wasserstein的最优传输策略，用于保持结构的多视图数据嵌入与集成。",
+      "llm_tldr": "提出基于Gromov-Wasserstein的最优传输策略，用于保持结构的多视图数据嵌入与集成。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.03154v1",
+      "title": "DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation",
+      "abstract": "Graph domain adaptation (GDA) aims to transfer knowledge from a labeled source graph to an unlabeled target graph under distribution shifts. However, existing methods are largely feature-centric and overlook structural discrepancies, which become particularly detrimental under significant topology shifts. Such discrepancies alter both geometric relationships and spectral properties, leading to unreliable transfer of graph neural networks (GNNs). To address this limitation, we propose Dual-Aligned Structural Basis Distillation (DSBD) for GDA, a novel framework that explicitly models and adapts cross-domain structural variation. DSBD constructs a differentiable structural basis by synthesizing continuous probabilistic prototype graphs, enabling gradient-based optimization over graph topology. The basis is learned under source-domain supervision to preserve semantic discriminability, while being explicitly aligned to the target domain through a dual-alignment objective. Specifically, geometric consistency is enforced via permutation-invariant topological moment matching, and spectral consistency is achieved through Dirichlet energy calibration, jointly capturing structural characteristics across domains. Furthermore, we introduce a decoupled inference paradigm that mitigates source-specific structural bias by training a new GNN on the distilled structural basis. Extensive experiments on graph and image benchmarks demonstrate that DSBD consistently outperforms state-of-the-art methods.",
+      "authors": [
+        "Yingxu Wang",
+        "Kunyu Zhang",
+        "Jiaxin Huang",
+        "Mengzhu Wang",
+        "Mingyan Xiao",
+        "Siyang Gao",
+        "Nan Yin"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-03T16:23:59+00:00",
+      "link": "https://arxiv.org/pdf/2604.03154v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "graph domain adaptation and structural variation modeling",
+      "llm_evidence_cn": "图域自适应与结构变异建模",
+      "llm_evidence": "图域自适应与结构变异建模",
+      "canonical_evidence": "图域自适应与结构变异建模",
+      "llm_tldr_en": "Proposes a framework for graph domain adaptation by explicitly modeling cross-domain structural variations.",
+      "llm_tldr_cn": "提出一种通过显式建模跨域结构变化来进行图域自适应的框架。",
+      "llm_tldr": "提出一种通过显式建模跨域结构变化来进行图域自适应的框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

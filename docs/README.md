@@ -6,43 +6,55 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-05
-- 运行时间：2026-04-05 19:30:15 UTC
+- 最新运行日期：2026-04-06
+- 运行时间：2026-04-06 19:43:03 UTC
 - 运行状态：成功
-- 本次总论文数：7
-- 精读区：1
-- 速读区：6
+- 本次总论文数：11
+- 精读区：2
+- 速读区：9
 
 ### 今日简报（AI）
-今日聚焦图生成与大模型图问答，深度解析分层离散流匹配技术。
-重点关注 8.0 分的分层离散流匹配图生成方案，以及如何通过池化 Token 优化 LLM 在图问答任务中的表现。
-建议优先研读分层流匹配论文以掌握前沿生成模型，并关注 LLM 处理结构化数据的效率优化。
-- 详情：[/202604/05/README](/202604/05/README)
+今日深度解析 AI 赋能的二维碳网络拓扑表征与病毒-宿主双模态预测框架。
+核心突破在于物理启发的 C2DTD 描述符提升了材料可解释性，而 ViraHinter 则显著优化了病毒交互预测精度。
+推荐关注拓扑学习在复杂系统建模中的跨学科应用，特别是材料科学与生物信息的结合点。
+- 详情：[/202604/06/README](/202604/06/README)
 
 ### 精读区论文标签
-1. [Hierarchical Discrete Flow Matching for Graph Generation](/202604/05/2604.00236v1-hierarchical-discrete-flow-matching-for-graph-generation)  
+1. [CARBON-2D Topological Descriptor (C2DTD): An Interpretable and Physics-Informed Representation for Two-Dimensional Carbon Networks](/202604/06/2604.02499v1-carbon-2d-topological-descriptor-c2dtd-an-interpretable-and-physics-informed-representation-for-two-dimensional-carbon-networks)  
+   标签：评分：9.0/10、query:molrna
+   evidence：碳网络的拓扑描述符
+2. [ViraHinter: a dual-modal artificial intelligence framework for predicting virus-host interactions](/202604/06/2604.02842v1-virahinter-a-dual-modal-artificial-intelligence-framework-for-predicting-virus-host-interactions)  
    标签：评分：8.0/10、query:molrna
-   evidence：用于高效图生成的层级离散流匹配
+   evidence：结合结构生成的蛋白质相互作用双模态框架
 
 ### 速读区论文标签
-1. [Task Scarcity and Label Leakage in Relational Transfer Learning](/202604/05/2603.29914v1-task-scarcity-and-label-leakage-in-relational-transfer-learning)  
+1. [HiDiGen: Hierarchical Diffusion for B-Rep Generation with Explicit Topological Constraints](/202604/06/2604.02847v1-hidigen-hierarchical-diffusion-for-b-rep-generation-with-explicit-topological-constraints)  
    标签：评分：7.0/10、query:molrna
-   evidence：关系基础模型和用于图表示的消息传递
-2. [Is One Token All It Takes? Graph Pooling Tokens for LLM-based GraphQA](/202604/05/2604.00342v1-is-one-token-all-it-takes-graph-pooling-tokens-for-llm-based-graphqa)  
-   标签：评分：7.0/10、query:molrna
-   evidence：通过图池化将复杂的结构信息编码到大语言模型的潜空间中
-3. [Structural Graph Probing of Vision-Language Models](/202604/05/2603.27070v1-structural-graph-probing-of-vision-language-models)  
+   evidence：具有显式拓扑约束的分层扩散模型
+2. [ToLL: Topological Layout Learning with Structural Multi-view Augmentation for 3D Scene Graph Pretraining](/202604/06/2603.28178v1-toll-topological-layout-learning-with-structural-multi-view-augmentation-for-3d-scene-graph-pretraining)  
    标签：评分：6.0/10、query:molrna
-   evidence：多模态模型中的神经拓扑与相关图
-4. [Discovery of Symbolic Hamiltonian Expressions with Buckingham-Symplectic Networks](/202604/05/2604.00576v1-discovery-of-symbolic-hamiltonian-expressions-with-buckingham-symplectic-networks)  
+   evidence：3D场景图预训练的拓扑布局学习
+3. [Expert-Choice Routing Enables Adaptive Computation in Diffusion Language Models](/202604/06/2604.01622v1-expert-choice-routing-enables-adaptive-computation-in-diffusion-language-models)  
    标签：评分：6.0/10、query:molrna
-   evidence：物理系统的哈密顿表达式与辛网络
-5. [Bridging the Simulation-to-Experiment Gap with Generative Models using Adversarial Distribution Alignment](/202604/05/2604.01169v1-bridging-the-simulation-to-experiment-gap-with-generative-models-using-adversarial-distribution-alignment)  
+   evidence：扩散语言模型的专家选择路由机制
+4. [annbatch unlocks terabyte-scale training of biological data in anndata](/202604/06/2604.01949v2-annbatch-unlocks-terabyte-scale-training-of-biological-data-in-anndata)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于科学模拟和分布对齐的生成模型
-6. [Why Gaussian Diffusion Models Fail on Discrete Data?](/202604/05/2604.02028v1-why-gaussian-diffusion-models-fail-on-discrete-data)  
+   evidence：包括测序在内的大规模生物数据训练
+5. [QuantumXCT: Learning Interaction-Induced State Transformation in Cell-Cell Communication via Quantum Entanglement and Generative Modeling](/202604/06/2604.02203v1-quantumxct-learning-interaction-induced-state-transformation-in-cell-cell-communication-via-quantum-entanglement-and-generative-modeling)  
    标签：评分：6.0/10、query:molrna
-   evidence：离散数据分布的扩散模型
+   evidence：细胞间通讯与状态转换的生成式建模
+6. [Generative models on phase space](/202604/06/2604.02415v1-generative-models-on-phase-space)  
+   标签：评分：6.0/10、query:molrna
+   evidence：物理约束的扩散模型用于高维分布生成
+7. [Dependency-Guided Parallel Decoding in Discrete Diffusion Language Models](/202604/06/2604.02560v1-dependency-guided-parallel-decoding-in-discrete-diffusion-language-models)  
+   标签：评分：6.0/10、query:molrna
+   evidence：离散扩散模型中的依赖引导并行解码
+8. [Structure-Preserving Multi-View Embedding Using Gromov-Wasserstein Optimal Transport](/202604/06/2604.02610v1-structure-preserving-multi-view-embedding-using-gromov-wasserstein-optimal-transport)  
+   标签：评分：6.0/10、query:molrna
+   evidence：几何感知多视图嵌入与关系信息聚合
+9. [DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation](/202604/06/2604.03154v1-dsbd-dual-aligned-structural-basis-distillation-for-graph-domain-adaptation)  
+   标签：评分：6.0/10、query:molrna
+   evidence：图域自适应与结构变异建模
 
 
 <div class="dpr-home-promo-card">
