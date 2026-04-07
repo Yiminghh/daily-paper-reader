@@ -1,0 +1,440 @@
+Title: Probing topological edge states in a molecular synthetic dimension
+
+URL Source: https://arxiv.org/pdf/2604.00745v1
+
+Published Time: Thu, 02 Apr 2026 00:53:26 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# Probing topological edge states in a molecular synthetic dimension 
+
+Adarsh P. Raghuram, 1 Francesca M. Blondell, 1 Jonathan M. Mortlock, 1
+
+Benjamin P. Maddox, 1 Sohail Dasgupta, 2 Holly A. J. Middleton-Spencer, 2
+
+Kaden R. A. Hazzard, 3, 4 Hannah M. Price, 2 Philip D. Gregory, 1 and Simon L. Cornish 1
+
+> 1
+
+Department of Physics, Durham University, South Road, Durham DH1 3LE, United Kingdom. 
+
+> 2
+
+School of Physics and Astronomy, University of Birmingham, Edgbaston, Birmingham B15 2TT, United Kingdom. 
+
+> 3
+
+Department of Physics and Astronomy, Rice University, Houston, Texas 77005, USA. 
+
+> 4
+
+Smalley-Curl Institute, Rice University, Houston, Texas 77005, USA. 
+
+(Dated: April 2, 2026) Engineering synthetic dimensions, where the physics of additional spatial dimensions is simulated within the internal states of a quantum system, allows the realisation of phenomena not otherwise accessible in experiments. Ultracold ground-state polar molecules are an ideal platform to encode synthetic dimensions, offering access to large Hilbert spaces of long-lived internal states associated with the rotational and hyperfine degrees of freedom, that can be coupled together with microwave fields to simulate tunnelling. Here, to benchmark the advantages of ultracold molecules, we encode a 1D synthetic lattice in the rotational states of ultracold RbCs molecules and use it to investigate the well-known Su-Schrieffer-Heeger (SSH) model, a minimal model displaying topological properties. To probe the system, we perform spectroscopy using an auxiliary rotational state and study the time dynamics after deterministic state preparation. We demonstrate long coherence times, typically 
+
+∼ 500 times the lattice tunnelling period, even for a synthetic lattice using 8 rotational states. Observations of dynamics at long times with full site-resolved readout of the synthetic dimension allow us to test the effects of chiral and non-chiral perturbations on the topologically protected edge states. Our work lays the foundation for further quantum simulations using the rich internal structure of molecules, including dipolar string phases in interacting samples of molecules, and adiabatic state preparation of many-body Hamiltonians. 
+
+Ultracold polar molecules combine rich internal struc-tures with access to tunable, long-range and anisotropic dipolar interactions. These properties have led to many proposed applications in quantum computing [1] and quantum simulation [2–4]. Most proposals utilise the ro-tational states of the molecules to encode qubits [5–8], qudits [9], or pseudospins for the simulation of quan-tum spin models [4, 10, 11]. However, an alternative approach, proposed by Sundar et al. [12, 13], is to ex-ploit the rotational states of polar molecules to realise 
+
+synthetic dimensions .Synthetic dimensions describe additional degrees of freedom encoded in the discrete internal states of a sys-tem used to simulate lattice sites in an additional spatial dimension [14–16]. Coherent coupling between the in-ternal states is then interpreted as tunnelling in the syn-thetic lattice. The approach has several advantages: (i) It allows the simulation of higher-dimensional systems. For example, atoms confined in 1D or 2D real-space lattices can be used to simulate higher dimensional physics [17– 19]. (ii) Engineering site-specific complex tunnelling am-plitudes in the synthetic dimension is straightforwardly achieved by controlling the strength and phase of the coupling fields. (iii) Changing the geometry of the syn-thetic dimension simply requires changing the coupling fields, rather than implementing a bespoke optical lattice. (iv) Resolving single sites in the synthetic dimension is readily achieved using state-selective imaging techniques. These advantages have been used to study a range of phe-nomena including synthetic gauge fields [20], Anderson localisation [21], and Thouless pumping [22]. Synthetic dimensions have been implemented in exper-iments with photonic systems [23–27] and cold atomic systems exploiting atomic hyperfine states [28–32], Ryd-berg states [22, 33–37], quantised momentum states [17, 21, 38, 39] and atomic trap states [40]. However, the ro-tational states of polar molecules offer a unique set of ad-vantages as they are connected via strong electric-dipole transitions in microwave domain and benefit from dipo-lar interactions between molecules, while being immune to radiative decay losses. This opens up the possibility of preparing exotic many-body ground states using molec-ular synthetic dimensions [12, 13]. Perhaps the simplest synthetic dimension is a 1D tight-binding model, which can be encoded in a chain of microwave-coupled molecular rotational states. Such a chain can be used to implement the well-known Su-Schrieffer-Heeger (SSH) model that was originally devel-oped to understand the electrical conductivity of trans-polyacetylene [41]. The model is characterised by a 1D chain comprising an even number of sites coupled with al-ternating strengths J1, J 2 as shown in Fig. 1 (a). Despite its simplicity, the SSH model is known to exhibit non-trivial topological features. Moreover, it has served as an excellent benchmark of various experimental platforms, having been studied in both real-space lattices [42, 43] and synthetic dimensions [26, 27, 33, 39]. Here, we report on the realisation of a 1D chain syn-
+
+> arXiv:2604.00745v1 [physics.atom-ph] 1 Apr 2026
+
+2(b) (c)                       
+
+> Ω12 ≡J1
+> Ω23 ≡J2
+> Ω34 ≡J1
+> ΩP
+> (a)
+> J1> J 2
+> Trivial
+> Synthetic dimension Probing
+> (d)
+> JJ2/1Energy ( J1 )021345620-2
+> Microwave Pulses
+> J1< J 2
+> |4
+> |3
+> |2
+> |1
+> |0
+> |N
+> (i) (ii) (ii) (i)
+> Topological RbCs sample
+
+FIG. 1. Encoding the SSH model in the rotational structure of RbCs molecules. (a) An illustration of a lat-tice with the SSH model showing the alternating tunnelling rates J1 and J2. (b) The SSH Hamiltonian is encoded onto a synthetic lattice corresponding to the |1⟩ to |N ⟩ rotational states (where N is the rotational quantum number). The sites are coupled using microwave fields with Rabi frequen-cies Ω N N ′ . The ground state |0⟩ is used as an auxiliary probe state. (c) The target Hamiltonian is implemented strobo-scopically by interleaving resonant microwave pulses which are applied to the sample of molecules confined in an optical trap. (d) The energies of the eigenstates of the 8-level SSH Hamiltonian as a function of J2/J 1. The SSH model exhibits a topological phase transition in the thermodynamic limit at 
+
+J2/J 1 = 1, from (i) a trivial to (ii) a topological regime. This is characterised by the appearance of the two edge eigenstates. 
+
+thetic dimension within the rotational states of ultracold 
+
+> 87
+
+Rb 133 Cs molecules (hereafter RbCs) and study SSH models with up to 8 sites. We probe the phase transition between trivial and non-trivial topological phases by tun-ing the tunnelling rates in the synthetic lattice. We ex-perimentally measure the energies of the SSH eigenstates using a combination of spectroscopic and interferometric methods. We demonstrate the topological protection of the SSH edge states against chiral perturbations, and fi-nally extract the winding number from the dynamics of the system, showing that it changes across the topological phase transition. Our results show excellent agreement with theoretical predictions from exact diagonalisation over many tunnelling periods, highlighting our ability to engineer precisely controlled tunnelling rates between lat-tice sites and the long coherence times available in this system that enable the observation of coherent dynamics. 
+
+Realising a 1D synthetic chain in RbCs 
+
+We encode a 1D synthetic dimension into the rota-tional states of RbCs molecules, with the first rotation-ally excited state ( N = 1) as the first site in the 1D chain, as shown in Fig. 1(b). We label the rotational states (and their corresponding synthetic sites) by the an-gular momentum quantum number N . We use the spin-stretched states where the rotational angular momentum projection and both nuclear spin projections take their maximum values, i.e. mN = N , mRb = IRb = 3 /2, 
+
+mCs = ICs = 7 /2 where mRb , m Cs are the projections of the nuclear spins IRb , I Cs .To drive multiple rotational transitions in a scalable way, we employ a stroboscopic approach, rapidly alter-nating between driving each transition in turn using a single microwave source, as illustrated in Fig. 1(c). The target Hamiltonian is realised as the time average of many pulses, each of which is 40 to 200 times shorter than the characteristic tunnelling times (see Methods). By controlling the amplitudes of the microwave fields we control the effective tunnelling rates, J1 and J2, in the synthetic dimension, shown in Fig. 1(a). This approach is an example of Floquet engineering [44, 45] or equivalently Trotterisation, as would be required in a gate-based sim-ulator [46]. As discussed in the Methods, the Trotter infidelity between the target and applied Hamiltonians is negligible, of the order 10 −4 for the pulse durations used in this work. Probing the synthetic chain with high spectroscopic resolution requires long interrogation times and long-lived coherence between rotational states. We there-fore confine the molecules in a near-magic-wavelength optical trap [47, 48], where tuning the wavelength of the trap allows control of the differential light shifts be-tween rotational states in order to maximise the coher-ence time. [49, 50]. The exact wavelength used for the optical trapping is tailored to each experiment, as de-scribed in the Methods. We note that although we can not reach the exact magic condition for all states used, we conservatively estimate coherence times across 8 ro-tational states that are two orders of magnitude larger than the tunnelling times in the synthetic lattice. 
+
+Probing the edge states of the SSH Hamiltonian 
+
+We use our molecular synthetic dimension to probe the topological phase transition of the SSH model us-ing two complementary approaches: spectroscopic mea-surements of the eigenspectrum and observation of the time dynamics. To set the context for both, we first consider the eigenenergies of the SSH Hamiltonian for a finite chain, shown in Fig. 1(d), where the energies are plotted as a function of the ratio of the tunnelling am-plitudes J2/J 1. The topological phase transition occurs 30 1 2 3 4 5 6                                                           
+
+> J2/J1
+> -1.5
+> -1.0
+> -0.5
+> 0.0 0.0
+> 0.5
+> 1.0
+> 1.5
+> p / J1
+> (a) (i)
+> 4-site
+> 0123456
+> J2/J1
+> -1.5
+> -1.0
+> -0.5
+> 0.0 0.0
+> 0.5
+> 1.0
+> 1.5
+> p / J1
+> (b) (i)
+> 8-site
+> 0123456
+> J2/J1
+> -1.5
+> -1.0
+> -0.5
+> 0.0 0.0
+> 0.5
+> 1.0
+> 1.5
+> p / J1
+> (ii)
+> 0123456
+> J2/J1
+> -1.5
+> -1.0
+> -0.5
+> 0.0 0.0
+> 0.5
+> 1.0
+> 1.5
+> p / J1
+> (ii)
+> 0
+> 1(iii)
+> J2/J1
+> = 0
+> 0
+> 1
+> Normalised
+> molecule number
+> J2/J1= 1
+> -1.0 -0.5 0.0 0.0 0.5 1.0
+> p/J1
+> 0
+> 1
+> J2/J1= 6
+> 0
+> 1(iii)
+> J2/J1
+> = 0
+> 0
+> 1
+> Normalised
+> molecule number
+> J2/J1= 1
+> -1.0 -0.5 0.0 0.0 0.5 1.0
+> p/J1
+> 0
+> 1
+> J2/J1= 5.4
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Normalised molecule number in N = 0
+
+FIG. 2. Spectroscopy of the dressed eigenstates of the SSH Hamiltonian. We observe loss of molecules from N = 0 when the probe field is tuned close to resonance to an eigenstate. Results are shown for (a) 4-site and (b) 8-site SSH chains. For each, we show (i) a theoretical prediction and (ii) experimental measurements of the normalised number of molecules remaining in N = 0 as a function of probe detuning and the SSH tunnelling ratio J2/J 1. In panel (i), the red dashed lines indicate the eigenenergies calculated by exact diagonalisation of the applied Hamiltonian. Panel (iii) shows the experimental measurements at specific ratios of J2/J 1 (indicated inset) corresponding to the system in the trivial phase, at the transition boundary, and in the non-trivial topological phase. The solid lines indicate the theoretical predictions at the calibrated Rabi frequencies, with the shaded regions denoting the 1-σ error surface. Error bars on all plots show 1 σ confidence intervals. 
+
+at J2/J 1 = 1. When J2/J 1 < 1, the system is in the trivial (or normal) phase. When J2/J 1 > 1, the sys-tem enters a non-trivial topological phase, characterised by the emergence of two edge eigenstates which are lo-calised on the ends of the chain. In an n-site SSH chain, these edge eigenstates are given by the hybridi-sation of the odd 
+
+
+
+|ϕodd ⟩ = Pn/ 2 
+
+> i=1
+
+a2i−1 |2i − 1⟩
+
+
+
+and even 
+
+
+
+|ϕeven ⟩ = Pn/ 2 
+
+> i=1
+
+a2i |2i⟩
+
+
+
+modes, where a2i−1/a 1 =(−1) i−1e−(i−1) /ξ and a2i/a n = (−1) n/ 2−ie−(n/ 2−i)/ξ 
+
+with ξ = 1 / ln( J2/J 1) being the edge localisation length. To realise an SSH chain, we set the ratios of tun-nelling rates to have alternating strengths. We begin with a 4-site chain, the shortest chain compatible with the SSH geometry, by setting the Rabi frequencies Ω N N ′
+
+coupling neighbouring states N, N ′ such that Ω 12 = J1,Ω23 = J2 and Ω 34 = J1. We investigate the energy level structure for a range of tunnelling rate ratios, fix-ing J1 = 2 .3(2) kHz and varying J2, by performing spec-troscopy using the auxiliary N = 0 probe level as shown in Fig. 1(b). With the molecules prepared in N = 0, we apply a weak probe field with a bare Rabi frequency Ωp = 257(12) Hz that addresses site |1⟩. The probe field is also pulsed stroboscopically, alternating with the SSH driving fields. We set the total probe time to be approx-imately π/ Ωp.We measure the number of molecules remaining in N =0 as a function of the detuning of the probe field ∆ p for a range of J2/J 1. The results are shown in Fig. 2(a). With the SSH driving fields present in the sequence, the molecule number drops when the probe is resonant with a transition to one of the dressed eigenstates of the SSH Hamiltonian. The transition strength to each dressed state is reduced from that of the bare transition, and is given by Fermi’s golden rule such that the on-resonance Rabi coupling to a given dressed state β is Ω ′ 
+
+> p
+
+= Ω p ⟨β|1⟩.The spectral width of the coupling originates from the finite probe pulse time. In the limit where the number of sites n → ∞ , this measurement is analogous to measuring the local density of states at site |1⟩ of the synthetic chain. 40 2 4                      
+
+> 0
+> 0.25
+> 0.5
+> 0.75
+> 1
+> Normalised
+> molecule number
+> (a)
+> |1
+> |2
+> |3
+> |4
+> 12 14 16 30 32 34
+> Evolution time (ms)
+> 60 62 64 100 102 104
+> 024
+> 0
+> 0.25
+> 0.5
+> 0.75
+> 1
+> Normalised
+> molecule number
+> (b)
+> 12 14 16 30 32 34
+> Evolution time (ms)
+> 60 62 64 100 102 104
+
+FIG. 3. The time evolution of the site populations under the 4-site SSH Hamiltonian after initialising in (a) an edge eigenstate and (b) a superposition of the edge eigenstates. (a) We initialise the molecule in the state 
+
+|Φe+⟩ = 1√2 (|1⟩ + |4⟩) and evolve under the SSH Hamiltonian with J1 = 2 .30(2) kHz and J2 = 13 .9(2) kHz. We see that the population remains equally split between |1⟩ and |4⟩, indicating that |Φe+⟩ is a good approximation of an eigenstate. (b) Keeping 
+
+J1 and J2 the same, we initialise in site |1⟩, which is a linear superposition of the two edge eigenstates 1√2 (|Φe+⟩ + |Φe−⟩), and again evolve under the SSH Hamiltonian. The population now oscillates between |1⟩ and |4⟩ with a frequency determined by 
+
+EΦe+ − EΦe− . From a fit to the data, we obtain an oscillation frequency of 379.0(7) Hz, in agreement with the predicted value of 371(13) Hz. The solid lines in both (a) and (b) are the theoretical predictions for J1 = 2 .31 kHz and J2 = 13 .7 kHz. Error bars on all plots show 1 σ confidence intervals. 
+
+Although the 4-site chain is minimal, we observe the key features associated with the topological phase tran-sition of the SSH model. When J2/J 1 = 0, we see two dips in the populations at ∆ p = ±J1/2 corresponding to even and odd superpositions of the neighbouring sites (|1⟩ ± | 2⟩)/√2. This trivial case is identical to a 3-level Autler-Townes system as previously observed with RbCs rotational transitions in [51]. At the transition bound-ary, J2/J 1 = 1, all the SSH eigenstates are hybridised across all the lattice sites, and we see 4 distinct peaks in the central panel of Fig. 2(a)(iii). As J2/J 1 is in-creased, we see the localisation of two of the eigenstates onto |1⟩. These eigenstates correspond to the SSH edge eigenstates. When J2 ≫ J1, we can approximate the edge eigenstates as the even and odd superpositions of the sites at the two ends of the chain, |Φe±⟩ = ( |1⟩±| 4⟩)/√2. As expected, the energies of these eigenstates tend to-wards ∆ p = 0 as J2/J 1 → ∞ .Increasing the length of the chain leads to a more pro-nounced phase transition and smaller energy-splitting be-tween the edge states. We therefore increase the chain length to 8 sites, by coupling rotational states up to 
+
+N = 8. The results are shown in Fig. 2(b). For the 8-site chain, we use a lower tunnelling rate J1 = 0 .47(2) kHz and probe Rabi frequency Ω p = 62(4) Hz. Now at the phase transition J2/J 1 = 1, the wavefunctions of all 8 eigenstates have similar contributions from site |1⟩. This leads to each eigenstate having little transition strength and results in small variations in the number of detected molecules over a broad range of probe detunings, as shown in the central panel of Fig. 2(b)(iii). As J2/J 1 is increased, the two edge eigenstates strongly localise onto site |1⟩, and quickly become too close together in energy to resolve using our probe parameters. With J2/J 1 = 5 .4, this energy splitting is predicted to be 3 .1 Hz ≃ J1/150, whereas the Fourier-limited resolution of the probe pulse is 124(8) Hz ≃ J1/3 . Later we show how such small en-ergy splittings can be measured using an interferometric technique. Next we study the time dynamics of the molecules un-der the 4-site SSH Hamiltonian. To do this, we prepare the molecules in a chosen initial state using a series of co-5herent π and π/ 2 pulses [52]. We then switch on the SSH driving fields in the topological regime with J2/J 1 ≈ 6and allow the system to evolve for a variable time, af-ter which we measure the number of molecules present in each rotational state (see Methods). The results are shown in Fig. 3. We begin by preparing the molecules in the superposi-tion |Φe+ ⟩ = ( |1⟩+|4⟩)/√2. This is identical to one of the edge states in the limit J2/J 1 → ∞ . The time evolution for this initial state is shown in Fig. 3(a). We see that the populations in sites |1⟩ and |4⟩ remain invariant with time to within the experimental noise, indicating that |Φe+⟩ is a good approximation of an eigenstate. Indeed, we cal-culate the overlap between the prepared state |Φe+ ⟩ and the actual eigenstate of the system with J2/J 1 = 6 to be 0.973. Next, we prepare the population in site |1⟩. This is not an eigenstate of the SSH Hamiltonian and is pro-jected primarily onto an equal superposition of the two edge eigenstates. We observe that the population under-goes long-range tunnelling between sites |1⟩ and |4⟩, as shown in Fig. 3(b), as the relative phase of the two edge eigenstates evolves with time. The frequency of these os-cillations is equal to ∆ e, the energy splitting between the two edge states. This interferometric technique allows us to measure the energy splitting ∆ e = 379 .0(7) Hz with Hertz-level precision. The long coherence times afforded by our magic-wavelength trap allow measurements out to evolution times greater than 100 ms. Crucially, the coherence times we achieve are significantly larger than the tunnelling times of the driven transitions τ1 = 2 /J 1 ≃ 213 μs and 
+
+τ2 = 2 /J 2 ≃ 36 μs. Previous measurements of long-range tunnelling in synthetic dimensions realised with Rydberg atoms were limited to coherence times ∼ 10 τ1
+
+[35]. Here, we see minimal dephasing over significantly longer timescales, up to ∼ 500 τ1. This is an advantage of molecules that allows precise measurements of Hamil-tonians engineered in synthetic dimensions. For an n-site SSH chain, the energy splitting between the edge states is predicted to decrease exponentially with n, such that ∆ e ∼ (J1/J 2)n/ 2. We test this by projecting the initial state |1⟩ onto SSH chains of vary-ing length, with J1 = 470(15) Hz and J2 = 2 .5(1) kHz. In each case, we measure the population in site |1⟩ as a function of time, as shown in Fig. 4(a), and fit the oscil-lations using a damped sine wave to extract ∆ e. For con-sistency, we keep the wavelength of the magic trap fixed at the value found to be optimum for the 8-site chain, re-sulting in coherence times for the 4-site and 6-site cases that are below their individually optimised values. We find that as the lattice length increases, the energy split-ting decreases exponentially, as shown in Fig. 4(b). The smallest energy splitting we observe is 3.31(13) Hz for the 8-site chain, and the dependence on the chain length is in good agreement with the theoretical expectation. 0 10 20                  
+
+> 0.0
+> 0.5
+> 1.0
+> Normalised
+> Molecule number
+> (a) 4 sites
+> 060 120
+> Evolution time (ms)
+> 6 sites
+> 0150 300
+> 8 sites
+> 468
+> Number of sites in the SSH chain
+> 10 0
+> 10 1
+> 10 2
+> Energy splitting/ h (Hz)
+> (b)
+> FIG. 4. Dependence of the energy splitting between the edge states on the length of the SSH chain. (a) We study dynamics in SSH chains of varying length, with
+> J1= 470(15) Hz and J2= 2 .5(1) kHz, and the system ini-tialised in site |1⟩. In each case, the evolution of the popula-tion in site |1⟩with time is plotted and the energy splitting of the edge states is extracted by fitting the observed oscilla-tions to a damped sinusoid. (b) The fitted edge-state energy splitting as a function of the number of sites in the SSH chain. As expected, we observe that the energy splitting reduces ex-ponentially as the length of the SSH chain increases, with the blue line showing the expected behaviour, and the shaded area the 1-σerror bounds from the uncertainties in Rabi fre-quencies. Error bars on all plots show 1 σconfidence intervals.
+> Topological protection of the edge states
+
+The edge states of the SSH Hamiltonian are topo-logically protected from perturbations that preserve chi-ral symmetry, while remaining susceptible to perturba-tions that do not. The unperturbed SSH model is bi-partite; odd and even sites form sublattices, that we la-bel A and B, respectively, and the coupling is only be-tween the two sublattices. In this basis, the Hamilto-nian is of the form HSSH = MAB |A⟩ ⟨ B| + M† 
+
+> AB
+
+|B⟩ ⟨ A|,where |A⟩ = Pn/ 2 
+
+> i=1
+
+|2i − 1⟩ and |B⟩ = Pn/ 2 
+
+> i=1
+
+|2i⟩, and 
+
+MAB is the matrix element in the sublattice basis A, B .The Hamiltonian obeys the anti-commutation relation 
+
+{H SSH , Γ} = 0, where Γ = |A⟩ ⟨ A| − | B⟩ ⟨ B| is the chiral operator. Perturbations of the Rabi frequencies only modify the MAB terms without adding additional terms in the bipartite basis. In the thermodynamic limit, these perturbations leave the twofold degeneracy of the 6Topologicaly protected               
+
+> Ω34 = 1.08(1) Ω12 and Δ34 = 0 Topologicaly unprotected
+> Ω34 =Ω12 and Δ34 = 0.10(1) Ω12
+
+FIG. 5. Topological protection of the edge eigenstates in the 4-site SSH Hamiltonian. We implement perturbed versions of the 4-site SSH Hamiltonian, and show that the edge eigenstates are protected against chiral perturbations, but not against non-chiral ones. We again initialise the molecules in the SSH eigenstate |Φe+ ⟩ (upper panels) and site |1⟩ (lower panels), and plot the population dynamics for all four sites. The unperturbed tunnelling rates J1 and J2 are the same as in Fig. 3. (a) A chiral perturbation, with imbalanced Rabi frequencies. We see that the state |Φe+ ⟩ remains a good approximation of the eigenstate, as evidenced by the absence of population dynamics in the upper panels. Comparing the frequency of the oscillations in the lower panels with that from Fig. 3 shows that the eigenergies are altered by the perturbation. (b) A non-chiral perturbation, with ∆ 34 ̸ = 0, which raises the energy of site |4⟩. The significant oscillations when the system is initialised in 
+
+|Φe+ ⟩ show that |Φe+ ⟩ is no longer a good representation of the eigenstate. The solid lines in both (a) and (b) show the theoretical predictions for the evolution of the populations at the experimental parameters. Error bars on all plots show 1 σ
+
+confidence intervals. 
+
+zero-energy eigenstates unchanged [53]. However, adding non-uniform detunings introduces terms like |A⟩ ⟨ A| and 
+
+|B⟩ ⟨ B|, in which case the chiral symmetry no longer holds, and the edge states are no longer present. We experimentally examine the effects of chiral (perturbed Rabi frequencies) and non-chiral (non-uniform detun-ings) perturbations by repeating the measurements in Fig. 3 whilst applying perturbed versions of the 4-site SSH Hamiltonian. To realise a chiral perturbation, we break the symme-try of the tunnelling rates by setting Ω 12 ̸ = Ω 34 . Fig. 5(a) shows the time dynamics of molecules initialised in |Φe+ ⟩
+
+(upper panels) and |1⟩ (lower panels) with a coupling ratio of Ω 34 /Ω12 = 1 .08(1). We see that, as before, when the population is initialised in the state |Φe+ ⟩, the state composition remains unaffected by the perturbed SSH Hamiltonian. This indicates that the state |Φe+ ⟩
+
+remains a good approximation of an eigenstate of the system. When the system is initialised in site |1⟩, and evolved under this perturbed Hamiltonian, we see os-cillations as before, but with an increased frequency of 406(3) Hz compared to the unperturbed SSH Hamilto-nian. This increase in energy splitting agrees well with our theoretical simulations shown by the solid lines in Fig. 5. We use these simulations to estimate the fidelity (F) between the perturbed and unperturbed eigenstates, finding 1 − F ≈ 2 × 10 −4.For a non-chiral perturbation, the microwave driving the |2⟩ → | 3⟩ transition is detuned from resonance to effectively add a local potential offset to site |4⟩ of the synthetic chain, thereby introducing a non-zero diagonal term to the Hamiltonian. Figure 5 (b) shows the time dynamics of molecules initialised in |Φe+ ⟩ (upper panels) and |1⟩ (lower panels) when evolved under a non-chiral perturbation with ∆ 34 = 0 .10(1) J1. Now, when we ini-tialise in |Φe+ ⟩, we see large population oscillations, in-dicating that |Φe+ ⟩ is no longer a good approximation of an eigenstate of the system. When the system is ini-tialised in site |1⟩, the population oscillations no longer have full contrast, as |1⟩ is no longer an equal superpo-sition of two eigenstates of the system. The fidelity be-tween the perturbed and unperturbed edge eigenstates is 70.0 0.2 0.4 0.6 0.8 1.0                                     
+
+> Evolution time (ms)
+> 4
+> 0
+> 4
+> 2C(t)
+> J2/J1=5.0(1)
+> (a)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Evolution time (ms)
+> 4
+> 0
+> 4
+> 2C(t)  J2/J1= 0.308(6)
+> (b)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Averaging time -(ms)
+> 0
+> 1
+> 2
+> 3
+> 4
+> 2 C( )
+> (c)
+> FIG. 6. Measurement of the mean chiral displacement in a 4-site SSH chain. (a) Initialising in site |3⟩, we mea-sure twice the chiral displacement, 2 C(t), in the topologi-cal case with J2/J 1= 5 .0(1) using complete site-resolved de-tection. (b) The same measurement in the trivial case with
+> J2/J 1= 0 .308(6). In (c), we plot twice the mean chiral dis-placement, 2 ⟨C(τ)⟩, obtained by averaging C(t) in (a) and (b) over an increasing time window, τ. For the infinite-site SSH model, 2 ⟨C(τ)⟩τ→∞ converges to the winding number: W= 1 in the topological regime and W= 0 in the trivial regime. For the 4-site system studied here, we expect 2 ⟨C(τ)⟩τ→∞
+> to be 0.02 for the trivial case and 0.86 for topological case. These values are indicated by the dashed horizontal lines in each panel. The solid lines are the theory predictions for the applied SSH parameters with shaded areas denoting 1 σcon-fidence intervals. Error bars on all plots show 1 σconfidence intervals.
+
+calculated again, with the error 1 − F = 0 .021(2), which is significantly larger than the chirally perturbed case. 
+
+> Measurement of the winding number
+
+The winding number, W, of the Bloch states around the Brillouin zone is a quantised topological invariant that characterises one-dimensional chiral lattice models. For a chiral symmetric model, the number of edge states is given by 2 |W| [54]. For the SSH model in the ther-modynamic limit, we expect that W = 0 in the trivial regime and W = 1 in the topological regime. The winding number of the system can be extracted experimentally by finding the mean chiral displacement, 
+
+⟨C(τ )⟩, in the long time limit, as W ≈ 2⟨C(τ )⟩τ →∞ [55]. The chiral displacement of the system at time t is defined as C(t) = Γ ˆ m(t), where Γ is the chiral operator defined earlier and ˆm is the position operator that labels the position of a lattice site in unit cells, as defined in [55]. Each unit cell of the SSH model consists of adjacent sites (one odd and one even), resulting in a diagonal matrix ˆm = diag(1 , 1, 2, 2... ). Evaluating C(t) for the 4-site SSH thus yields 
+
+C(t) = P|1⟩(t) − P|2⟩(t) + 2[ P|3⟩(t) − P|4⟩(t)] (1) where P|N ⟩(t) is the fractional population in site |N ⟩.We measure the chiral displacement for the 4-site SSH chain in the trivial and topological regimes. We initialise the system in site |3⟩ and measure the population of each site as a function of the evolution time under the SSH driving fields. We then use Eq. 1 to extract the chiral dis-placement as a function of time. Here, we use tunnelling ratios of J2/J 1 = 0 .308(6) for the trivial regime and 
+
+J2/J 1 = 5 .0(1) for the topological regime. Our results are shown in Fig. 6(a,b), alongside a no-free-parameter model, shown by the solid lines. We see periodic oscilla-tions in the chiral displacement for both the trivial and topological regimes, but in the topological case (Fig. 6(a)) the oscillations are offset from zero. In Fig. 6(c), we show the mean chiral displacement as a function of time, obtained by averaging the measured chiral displacements shown in Fig. 6(a) and (b) over an increasing time window, i.e. ⟨C(τ )⟩ = 1 /τ R τ 
+
+> 0
+
+C(t)dt .The measurements are performed over a time of 1 ms, larger than the characteristic oscillation periods in both cases. The solid lines in Fig. 6 again show the no-free-parameter model, accounting for the discrete times at which the experimental measurements are performed. The root-mean-square errors (RMSE) between the the-ory and experiment are 0.06 for the topological case and 0.09 for the trivial case, where RMSE is defined as q 1
+
+> n
+
+Pni=1 (xi − x′
+
+> i
+
+)2, confirming close agreement with the expected behaviour. In each case, the mean chiral dis-placement converges to a distinct value. In the topologi-cal case, twice the mean chiral displacement is expected to converge to 0.86, while in the trivial case it converges to 0.02. These values are shown in Fig. 6 by the dashed lines. The discrepancy from W = 0 or 1 is due to the finite size of the system. 
+
+> OUTLOOK
+
+The experiments we present are the first realisation of a synthetic dimension in ultracold polar molecules. 8While the 1D chain geometry we encode here is rela-tively simple, more complex and arbitrary patterns of coupling strength and detuning along the chain can be easily achieved [14]. Moreover, utilising the hyperfine structure of the molecules would allow more complex synthetic lattices, including 2D lattices and loop geome-tries simulating 1D chains with periodic boundary condi-tions [12]. The long coherence times available could also enable adiabatic preparation of ground states [56–58] in many-body molecule systems with synthetic dimensions. In related theoretical work, we have developed compu-tational techniques for identifying ideal sets of states for different synthetic lattice geometries [59]. Interesting possibilities arise from combining real and synthetic dimensions in ensembles of molecules. Real-space dipolar interactions allow the exchange of ro-tational energy between molecules, with interaction strengths that depend on the relative positions of the molecules in the ensemble. Sundar et al. have stud-ied the combination of 1D and 2D real-space dimensions with 1D synthetic chains. [13] For molecules pinned to sites in the real dimension, they predict the spontaneous formation of 1D synthetic strings or membranes when the dipolar interactions are strong compared to the cou-plings along the synthetic chain. Beyond this, ultracold molecules uniquely allow the combination of dipolar in-teractions with tunnelling between sites in a real-space lattice; the work we have presented demonstrates that coherence in the synthetic dimension can persist for suf-ficiently long times that molecular motion could affect the dynamics. In conclusion, we have encoded a coupled 1D chain of lattice sites in the rotational states of ultracold RbCs molecules. We have used this to study the SSH model for up to 8 sites, demonstrating and benchmarking the use of molecules for engineering synthetic dimensions. We have observed the phase transition between trivial and non-trivial phases, characterised by a change in the winding number and the emergence of topologically pro-tected edge states. Our experiments pave the way to a new paradigm for quantum simulation with ultracold molecules where the internal degrees of freedom of the molecule provide the means to study new models with complex geometries, synthetic gauge fields or mixed real and synthetic dynamics. 
+
+> METHODS Preparation and state-sensitive detection of ultracold RbCs molecules
+
+We prepare ultracold RbCs molecules in a single hy-perfine level of the X 1Σ ground state by association from a pre-cooled mixture of Rb and Cs atoms; details of the molecule preparation and imaging can be found in [60, 61]. In brief, we merge optically trapped samples of ultracold Rb and Cs atoms to form a high phase-space-density mixture. We then create molecules by magne-toassociation via a magnetic field ramp across an inter-species Feshbach resonance at 197 G [62]. These weakly bound molecules are then transferred optically to their rovibronic ground state using stimulated Raman adia-batic passage [63, 64] and the remaining atoms removed using resonant laser light. The ground-state transfer is performed in free space by briefly switching off the trap light to avoid spatially varying light shifts that otherwise limit the efficiency of this process. Following the ground-state transfer, the molecules are recaptured in the same optical trap as the initial atomic mixture. We detect the molecules using the site-resolved fluo-rescence imaging method we reported in [60]. After the microwave interrogation, the molecules are pinned in a deep 1064 nm optical lattice (trap depths of ≈ 400 μKfor RbCs), and then dissociated to form atom pairs by reversing the STIRAP and sweeping the magnetic field back across the 197 G Feshbach resonance. After removal of the Rb atoms with resonant light, we image the re-maining Cs atoms by detecting fluorescence from D2 op-tical molasses. A high-numerical-aperture objective al-lows us to detect the locations of individual Cs atoms in the pinning lattice, and each atom marks the lattice site previously occupied by a RbCs molecule. We typically detect around 400 molecules, and observe a background signal of 3 +5 -2 Cs atoms in the absence of the return STI-RAP pulse. We ascribe this background predominantly to the imperfect removal of the Cs atoms used to create the molecules. Crucially, STIRAP is state selective, therefore only molecules in the |0⟩ state are dissociated to an atom pair and thus detected. To detect molecules in other rota-tional states we must transfer them to |0⟩ with a series of coherent π-pulses before they are pinned. We measure 
+
+π-pulse fidelities of ≥ 99% for the pulses used to initialise and read out all the different molecular states by compar-ing the molecule numbers in sequences with and without an additional 10 π-pulses per transition. We typically utilise Rabi frequencies of ≈ 10 kHz for the initialisation and readout pulses. 
+
+> Magic-wavelength optical dipole trap
+
+The molecules are confined to an optical dipole trap formed by a single beam. This beam is linearly polarised parallel to the applied magnetic field of 181.6 G, and has an elliptical profile characterised by beam waists of 8 μmvertically and 150 μm horizontally. This geometry is cho-sen to reduce the intensity required to hold the molecules against gravity. The molecules are held in this trap for 50 ms after association to allow them to equilibrate with the trap, while all other trapping and cooling beams are 9blocked by mechanical shutters. The molecules then un-dergo microwave interrogation according to the experi-mental sequence. The lifetime of the molecules in this trap is > 1 s. The trap light is frequency-stabilised with reference to a high-finesse optical cavity with an ultra-low expansion glass spacer. The frequency of the light is ≈ 185 GHz blue-detuned from the (X 1Σ+, v = 0 , N = 1 , M F = 6) to (b 3Π0, v = 0 , N ′ = 1 , M ′ 
+
+> F
+
+= 5) transition. By care-fully tuning the laser frequency we can eliminate the dif-ferential polarisability between a given pair of rotational states [47–49]. However, the trap cannot be made exactly magic for all rotational transitions at the same time [50]. For the spectroscopy measurements in Fig. 2, we choose the laser frequency to maximise the shortest coherence time present in the chain. A different laser frequency is required to achieve this for the 4-site chain compared to the 8-site chain. In each case, the maximum differen-tial light shift is present between the states at the ends of the chain. For the 4-site chain, we use a detuning of 185.243 GHz. Assuming decoherence solely from thermal motion in the trap, with temperature T ≈ 2 μK and peak trap intensity I ≈ 6.5 kW/cm 2, we estimate a minimum 1/e coherence time for the 4-site chain of ≈ 60 ms. For the 8-site SSH, we use a detuning of 184.989 GHz, with a shorter estimated 1 /e coherence time of ≈ 35 ms. These are worst case estimates, considering the state combina-tion with the largest differential light shifts. The light-shifts could be reduced further by minimising the inten-sity sampled by each molecule, using a colder molecular gas in a tighter trap or in an optical lattice. Coherence times between 10 states of about 1 s have been predicted for RbCs molecules in optical tweezers[50]. The total mi-crowave interrogation time for the 4-site and 8-site spec-troscopy measurements was 2 ms and 8 ms respectively, significantly shorter than these coherence times. The measurements in Figs. 3 - 5 benefit from a long co-herence time specifically between the states at the ends of the chain. We therefore set the trap detuning to max-imise the coherence time for that pair of states. For the measurements shown in Figs. 3 and 5, the trap detuning was set to be magic for the states |1⟩ and |4⟩, which we de-termined to be 184.93(4) GHz, by measuring the contrast in Ramsey experiments as in [47]. For these experiments with the 4-site chain, we expect a coherence time for the edge states exceeding 300 ms, limited by the uncertainty with which we have measured the magic wavelength. To ensure consistency in the measurements in Fig. 4, we set the trap detuning to be magic for the |1⟩ and |8⟩
+
+state combination, even when probing the shorter chains. We measure the magic condition between the |1⟩ and |8⟩
+
+states to be at a detuning of 184.53(1) GHz, for which we expect a coherence time of > 1 s. Fitting the results presented in Fig. 4, we extract 1 /e damping times for the edge-state tunnelling of 0.09(6) s, 0.09(2) s, and 0.9(5) s for the 4-, 6-, and 8-site cases, respectively. 
+
+> Microwave control and calibrations
+
+All the microwaves used in our experiment are gener-ated by a single microwave source based on a direct dig-ital synthesiser with a 9 GHz sampling frequency (AMD RFSoC 4x2 controlled with QICK firmware [65]). This hardware enables fast frequency switching with ns-scale latency. To maximise microwave power on the molecules, we utilise the two channels of the RFSoC for differ-ent microwave frequency ranges. The first channel is used for microwave frequencies below 4 GHz, while the second channel is operated in the mix-mode configura-tion to address frequencies above the Nyquist frequency of 4.925 GHz. The output from each channel is ampli-fied and then combined onto a single microwave antenna placed just outside of the ultra-high vacuum glass cell in which the experiments are performed. For the mea-surements presented in Figs. 2 - 5, each microwave pulse is τpulse = 1 μs long. This is significantly shorter than the lattice tunnelling times τ1 and τ2 (equivalently the 
+
+π-times of the Rabi couplings) as τpulse ≃ τ1 
+
+> 200
+
+≃ τ2 
+
+> 40
+
+.For measurements in Fig. 6, as the dynamics occur on shorter timescales, the pulses were set to be 200 ns long. We measure the rise time of the pulses to be 8 ns, and hence assume that the pulses used in our stroboscopic approach are square in our analysis. For the 4-site chain, we are limited to Rabi frequencies 
+
+< 15 kHz due to off-resonant coupling to other nearby hyperfine states [51]; transitions to non-stretched states are allowed in our apparatus as the microwaves are unpo-larised. However, the Rabi frequencies in the 8-site chain are limited by the radiation efficiency of the antenna used at 4 .901 GHz, the frequency of the N = 4 to N = 5 tran-sition. In this case, the maximum Rabi frequency we are able to reach with continuous-wave driving is 10 kHz, or 2.5 kHz in a stroboscopic sequence with a 25% duty cycle. Our experiments are sensitive to microwave detunings on the scale ≃ 50 Hz. We therefore perform spectroscopy of all the transitions in the magic wavelength trap to a precision of ≤ 10 Hz as part of our calibration rou-tine. We also calibrate the relationship between the mi-crowave power and the Rabi frequencies for each transi-tion by driving Rabi oscillations between individual pairs of states. 
+
+> Data acquisition and normalisation
+
+For Fig. 2, the data used are the average of two exper-imental runs, taken in blocks with ∆ p varied randomly for each fixed value of J2. The data are normalised by the molecule number in the cases with the largest detuning for each block. The data for the other figures are the av-erage of at least three experimental runs. The data here are normalised by the total molecule number present in the sequence. When measuring the population in differ-10 ent states, a small correction factor ( < 1.05) is used to account for the finite fidelity of the π-pulses. 
+
+Analysis of Trotter Errors 
+
+In the experiment, the target SSH Hamiltonian, 
+
+HSSH , is implemented stroboscopically with each se-quence implementing a single microwave pulse, Hi =
+
+Ji,i +1 (|i⟩ ⟨ i + 1 | + |i + 1 ⟩ ⟨ i|). This accrues Trotter errors of the order of O[( Jwτ )2], where τ is the pulse time. This can be seen by decomposing the unitary evolution as U =QN −1 
+
+> i=1
+
+Ui where Ui = e−iHiτ . It is straightforward to confirm that U = e−iHSSH τ + τ 22    
+
+> PN−1
+> i=1 [Hi,Hi+1 ]+ O[( Jwτ)3]
+
+.We calculate the Trotter infidelity, 1 − F β ≈ 0.5 × 10 −5
+
+for the 4-site chain, where Fβ = | ⟨ βexp |βSSH ⟩ | 2 and βexp 
+
+(βSSH ) labels the eigenstate of the effective experimental Hamiltonian (actual SSH Hamiltonian). 
+
+Theoretical model of the SSH Hamiltonian 
+
+We compare the behaviour of our system against exact diagonalisation of the target SSH Hamiltonian assuming continuous-wave driving fields. We fix the Rabi frequen-cies to the values we independently measure by driving each transition in isolation, and set the detunings to zero for on-resonance driving, or at the experimentally mea-sured value when non-zero in Fig. 5(b). We propagate the uncertainties on the Rabi frequencies and detunings through this model via a Monte Carlo approach. We as-sume a Gaussian distribution of the errors and perform multiple simulations with parameters drawn from these distributions, from which a 1-σ error is calculated. 
+
+DATA AVAILABILITY 
+
+All data presented in this work are available at doi:10.15128/r1pr76f3548 
+
+ACKNOWLEDGEMENTS 
+
+We thank Tom Hepworth for insightful discus-sions on the magic wavelength optical trapping and for helping to develop the control of the RFSoC device. We acknowledge support from the UK Engineering and Physical Sciences Research Coun-cil (EPSRC) Grants EP/P01058X/1, EP/W00299X/1, EP/W016141/1, EP/Y01510X/1 and UKRI2226 funded through the Programme Grant Scheme, UK Re-search and Innovation (UKRI) Frontier Research Grant EP/X023354/1, the Royal Society, and Durham Uni-versity. PDG is supported by a Royal Society Univer-sity Research Fellowship URF/R1/231274 and HP by a Royal Society University Research Fellowship UF160112. K.H.’s work was supported in part by the National Sci-ence Foundation (DGE-2346014) and the W. M. Keck Foundation (Grant No. 995764). 
+
+[1] D. DeMille, Quantum Computation with Trapped Polar Molecules, Physical Review Letters 88 , 067901 (2002). [2] A. V. Gorshkov, S. R. Manmana, G. Chen, J. Ye, E. Demler, M. D. Lukin, and A. M. Rey, Tunable su-perfluidity and quantum magnetism with ultracold polar molecules, Physical Review Letters 107 , 115301 (2011). [3] S. L. Cornish, M. R. Tarbutt, and K. R. A. Hazzard, Quantum computation and quantum simulation with ul-tracold molecules, Nature Physics 20 , 730 (2024). [4] A. Micheli, G. K. Brennen, and P. Zoller, A toolbox for lattice-spin models with polar molecules, Nature Physics 
+
+2, 341 (2006). [5] P. D. Gregory, J. A. Blackmore, S. L. Bromley, J. M. Hutson, and S. L. Cornish, Robust storage qubits in ul-tracold polar molecules, Nature Physics 17 , 1149 (2021). [6] L. R. B. Picard, A. J. Park, G. E. Patenotte, S. Gebret-sadkan, D. Wellnitz, A. M. Rey, and K.-K. Ni, Entangle-ment and iSWAP gate between molecular qubits, Nature 
+
+637 , 821 (2025). [7] S. F. Yelin, K. Kirby, and R. Cˆ ot´ e, Schemes for robust quantum computation with polar molecules, Physical Re-view A 74 , 050301 (2006). [8] K.-K. Ni, T. Rosenband, and D. D. Grimes, Dipolar ex-change quantum logic gate with polar molecules, Chem-ical Science 9, 6830 (2018). [9] R. Sawant, J. A. Blackmore, P. D. Gregory, J. Mur-Petit, D. Jaksch, J. Aldegunde, J. M. Hutson, M. R. Tarbutt, and S. L. Cornish, Ultracold polar molecules as qudits, New Journal of Physics 22 , 013027 (2020). [10] S. L. Cornish, M. R. Tarbutt, and K. R. A. Hazzard, Quantum Computation and Quantum Simulation with Ultracold Molecules (2024), arXiv:2401.05086. [11] R. Barnett, D. Petrov, M. Lukin, and E. Demler, Quan-tum Magnetism with Multicomponent Dipolar Molecules in an Optical Lattice, Physical Review Letters 96 , 190401 (2006). [12] B. Sundar, B. Gadway, and K. R. Hazzard, Synthetic di-mensions in ultracold polar molecules, Scientific Reports 
+
+8, 1 (2018). [13] B. Sundar, M. Thibodeau, Z. Wang, B. Gadway, and K. R. A. Hazzard, Strings of ultracold molecules in a syn-thetic dimension, Physical Review A 99 , 013624 (2019). [14] T. Ozawa and H. M. Price, Topological quantum matter in synthetic dimensions, Nature Reviews Physics 1, 349 (2019). [15] O. Boada, A. Celi, J. I. Latorre, and M. Lewenstein, Quantum Simulation of an Extra Dimension, Physical Review Letters 108 , 133001 (2012). [16] D. Yu, W. Song, L. Wang, R. Srikanth, S. K. Sridhar, T. Chen, C. Huang, G. Li, X. Qiao, X. Wu, Z. Dong, Y. He, M. Xiao, X. Chen, A. Dutt, B. Gadway, and L. Yuan, Comprehensive review on developments of syn-thetic dimensions, Photonics Insights 4, R06 (2025). [17] K. Viebahn, M. Sbroscia, E. Carter, J.-C. Yu, and U. Schneider, Matter-Wave Diffraction from a Quasicrys-11 
+
+talline Optical Lattice, Physical Review Letters 122 ,110404 (2019). [18] H. Price, O. Zilberberg, T. Ozawa, I. Carusotto, and N. Goldman, Four-Dimensional Quantum Hall Effect with Ultracold Atoms, Physical Review Letters 115 ,195303 (2015). [19] J.-B. Bouhiron, A. Fabre, Q. Liu, Q. Redon, N. Mittal, T. Satoor, R. Lopes, and S. Nascimbene, Realization of an atomic quantum Hall system in four dimensions, Sci-ence 384 , 223 (2024). [20] A. Celi, P. Massignan, J. Ruseckas, N. Goldman, I. Spiel-man, G. Juzeli¯ unas, and M. Lewenstein, Synthetic Gauge Fields in Synthetic Dimensions, Physical Review Letters 
+
+112 , 043001 (2014). [21] E. J. Meier, F. A. An, A. Dauphin, M. Maffei, P. Massig-nan, T. L. Hughes, and B. Gadway, Observation of the topological Anderson insulator in disordered atomic wires, Science 362 , 929 (2018). [22] M. Trautmann, I. Sodemann Villadiego, and J. Dei-glmayr, Realization of topological Thouless pumping in a synthetic Rydberg dimension, Physical Review A 110 ,L040601 (2024). [23] Q. Lin, M. Xiao, L. Yuan, and S. Fan, Photonic Weyl point in a two-dimensional resonator lattice with a syn-thetic frequency dimension, Nature Communications 7,13731 (2016), publisher: Nature Publishing Group. [24] A. Dutt, Q. Lin, L. Yuan, M. Minkov, M. Xiao, and S. Fan, A single photonic cavity with two independent physical synthetic dimensions, Science 367 , 59 (2020). [25] L. Yuan, Q. Lin, M. Xiao, and S. Fan, Synthetic dimen-sion in photonics, Optica 5, 1396 (2018). [26] G. Li, L. Wang, R. Ye, Y. Zheng, D.-W. Wang, X.-J. Liu, A. Dutt, L. Yuan, and X. Chen, Direct extraction of topological Zak phase with the synthetic dimension, Light: Science & Applications 12 , 81 (2023). [27] Z.-A. Wang, X.-D. Zeng, Y.-T. Wang, J.-M. Ren, C. Ao, Z.-P. Li, W. Liu, N.-J. Guo, L.-K. Xie, J.-Y. Liu, Y.-H. Ma, Y.-Q. Wu, X.-W. Luo, S. Wang, J.-S. Tang, C.-F. Li, and G.-C. Guo, Versatile photonic frequency synthetic dimensions using a single programmable on-chip device, Nature Communications 16 , 7780 (2025). [28] M. Mancini, G. Pagano, G. Cappellini, L. Livi, M. Rider, J. Catani, C. Sias, P. Zoller, M. Inguscio, M. Dalmonte, and L. Fallani, Observation of chiral edge states with neutral fermions in synthetic Hall ribbons, Science 349 ,1510 (2015). [29] B. K. Stuhl, H.-I. Lu, L. M. Aycock, D. Genkina, and I. B. Spielman, Visualizing edge states with an atomic Bose gas in the quantum Hall regime, Science 349 , 1514 (2015). [30] S. Kolkowitz, S. L. Bromley, T. Bothwell, M. L. Wall, G. E. Marti, A. P. Koller, X. Zhang, A. M. Rey, and J. Ye, Spin–orbit-coupled fermions in an optical lattice clock, Nature 542 , 66 (2017). [31] L. Livi, G. Cappellini, M. Diem, L. Franchi, C. Clivati, M. Frittelli, F. Levi, D. Calonico, J. Catani, M. Ingus-cio, and L. Fallani, Synthetic Dimensions and Spin-Orbit Coupling with an Optical Clock Transition, Physical Re-view Letters 117 , 220401 (2016). [32] T. Chalopin, T. Satoor, A. Evrard, V. Makhalov, J. Dal-ibard, R. Lopes, and S. Nascimbene, Probing chiral edge dynamics and bulk topology of a synthetic Hall system, Nature Physics 16 , 1017 (2020). [33] S. K. Kanungo, J. D. Whalen, Y. Lu, M. Yuan, S. Das-gupta, F. B. Dunning, K. R. A. Hazzard, and T. C. Killian, Realizing topological edge states with Rydberg-atom synthetic dimensions, Nature Communications 13 ,972 (2022). [34] Y. Lu, C. Wang, S. K. Kanungo, F. B. Dunning, and T. C. Killian, Probing the topological phase transition in the Su-Schrieffer-Heeger Hamiltonian using Rydberg-atom synthetic dimensions, Physical Review A 110 ,023318 (2024). [35] Y. Lu, C. Wang, S. K. Kanungo, S. Yoshida, F. B. Dun-ning, and T. C. Killian, Wave-packet dynamics and long-range tunneling within the Su-Schrieffer-Heeger model using Rydberg-atom synthetic dimensions, Physical Re-view A 109 , 032801 (2024). [36] T. Chen, C. Huang, B. Gadway, and J. P. Covey, Quan-tum Walks and Correlated Dynamics in an Interacting Synthetic Rydberg Lattice, Physical Review Letters 133 ,120604 (2024). [37] T. Chen, C. Huang, I. Velkovsky, K. R. A. Hazzard, J. P. Covey, and B. Gadway, Strongly interacting Ryd-berg atoms in synthetic dimensions with a magnetic flux, Nature Communications 15 , 2675 (2024). [38] M. Lohse, C. Schweizer, H. M. Price, O. Zilberberg, and I. Bloch, Exploring 4D quantum Hall physics with a 2D topological charge pump, Nature 553 , 55 (2018). [39] E. J. Meier, F. A. An, and B. Gadway, Observation of the topological soliton state in the Su–Schrieffer–Heeger model, Nature Communications 7, 13986 (2016). [40] C. Oliver, A. Smith, T. Easton, G. Salerno, V. Guarrera, N. Goldman, G. Barontini, and H. M. Price, Bloch oscil-lations along a synthetic dimension of atomic trap states, Physical Review Research 5, 033001 (2023). [41] W. P. Su, J. R. Schrieffer, and A. J. Heeger, Solitons in Polyacetylene, Physical Review Letters 42 , 1698 (1979). [42] S. De L´ es´ eleuc, V. Lienhard, P. Scholl, D. Barredo, S. We-ber, N. Lang, H. P. B¨ uchler, T. Lahaye, and A. Browaeys, Observation of a symmetry-protected topological phase of interacting bosons with Rydberg atoms, Science 365 ,775 (2019). [43] M. Atala, M. Aidelsburger, J. T. Barreiro, D. Abanin, T. Kitagawa, E. Demler, and I. Bloch, Direct Measure-ment of the Zak phase in Topological Bloch Bands, Na-ture Physics 9, 795 (2013). [44] J. Choi, H. Zhou, H. S. Knowles, R. Landig, S. Choi, and M. D. Lukin, Robust Dynamic Hamiltonian Engi-neering of Many-Body Spin Systems, Physical Review X 
+
+10 , 031002 (2020). [45] S. Geier, N. Thaicharoen, C. Hainaut, T. Franz, A. Salzinger, A. Tebben, D. Grimshandl, G. Z¨ urn, and M. Weidem¨ uller, Floquet Hamiltonian engineering of an isolated many-body spin system, Science 374 , 1149 (2021). [46] S. Lloyd, Universal Quantum Simulators, Science 273 ,1073 (1996). [47] P. D. Gregory, L. M. Fernley, A. L. Tao, S. L. Bromley, J. Stepp, Z. Zhang, S. Kotochigova, K. R. A. Hazzard, and S. L. Cornish, Second-scale rotational coherence and dipolar interactions in a gas of ultracold polar molecules, Nature Physics , 1 (2024). [48] D. K. Ruttley, T. R. Hepworth, A. Guttridge, and S. L. Cornish, Long-lived entanglement of molecules in magic-wavelength optical tweezers, Nature 637 , 827 (2025). 1
+
+[49] Q. Guan, S. L. Cornish, and S. Kotochigova, Magic con-ditions for multiple rotational states of bialkali molecules in optical lattices, Physical Review A 103 , 043311 (2021). [50] T. R. Hepworth, D. K. Ruttley, F. von Gierke, P. D. Gre-gory, A. Guttridge, and S. L. Cornish, Long-lived mul-tilevel coherences and spin-1 dynamics encoded in the rotational states of ultracold molecules, Nature Commu-nications 16 , 7131 (2025). [51] J. A. Blackmore, P. D. Gregory, S. L. Bromley, and S. L. Cornish, Coherent manipulation of the internal state of ultracold 87Rb133Cs molecules with multiple microwave fields, Physical Chemistry Chemical Physics 22 , 27529 (2020). [52] P. D. Gregory, J. Aldegunde, J. M. Hutson, and S. L. Cornish, Controlling the rotational and hyperfine state of ultracold 87Rb133Cs molecules, Physical Review A 94 ,041403 (2016). [53] For a finite system, there are two approximate zero-energy states with an energy gap that is exponentially small in the system size. Under chiral perturbations, there still exist two states which are exponentially close to zero energy. [54] J. K. Asb´ oth, L. Oroszl´ any, and A. P´ alyi, A Short Course on Topological Insulators , Lecture Notes in Physics, Vol. 919 (Springer International Publishing, Cham, 2016). [55] M. Maffei, A. Dauphin, F. Cardano, M. Lewenstein, and P. Massignan, Topological characterization of chiral mod-els through their long time dynamics, New Journal of Physics 20 , 013023 (2018). [56] M. Born and V. Fock, Beweis des adiabatensatzes, Zeitschrift f¨ ur Physik 51 , 165 (1928). [57] U. Farooq, A. Bayat, S. Mancini, and S. Bose, Adiabatic many-body state preparation and information transfer in quantum dot arrays, Phys. Rev. B 91 , 134303 (2015). [58] A. Venegas-Gomez, J. Schachenmayer, A. S. Buyskikh, W. Ketterle, M. L. Chiofalo, and A. J. Daley, Adiabatic preparation of entangled, magnetically ordered states with cold bosons in optical lattices, Quantum Science and Technology 5, 045013 (2020). [59] T. R. Hepworth, S. L. Cornish, and P. D. Gregory, Isolated quantum-state networks in ultracold molecules (2025). [60] J. M. Mortlock, A. P. Raghuram, B. P. Maddox, P. D. Gregory, and S. L. Cornish, Multi-state detec-tion and spatial addressing in a microscope for ultracold molecules, Nature Communications 17 , 518 (2025). [61] A. J. Matthies, J. M. Mortlock, L. A. McArd, A. P. Raghuram, A. D. Innes, P. D. Gregory, S. L. Bromley, and S. L. Cornish, Long-distance optical-conveyor-belt transport of ultracold 133Cs and 87Rb atoms, Physical Review A 109 , 023321 (2024). [62] P. K. Molony, P. D. Gregory, A. Kumar, C. R. Le Sueur, J. M. Hutson, and S. L. Cornish, Production of Ultra-cold 87Rb133Cs in the Absolute Ground State: Com-plete Characterisation of the Stimulated Raman Adia-batic Passage Transfer, ChemPhysChem 17 , 3811 (2016). [63] N. V. Vitanov, A. A. Rangelov, B. W. Shore, and K. Bergmann, Stimulated Raman adiabatic passage in physics, chemistry, and beyond, Reviews of Modern Physics 89 , 015006 (2017). [64] K. Bergmann, H. Theuer, and B. W. Shore, Coherent population transfer among quantum states of atoms and molecules, Reviews of Modern Physics 70 , 1003 (1998). [65] L. Stefanazzi, K. Treptow, N. Wilcer, C. Stoughton, C. Bradford, S. Uemura, S. Zorzetti, S. Montella, G. Can-celo, S. Sussman, A. Houck, S. Saxena, H. Arnaldi, A. Agrawal, H. Zhang, C. Ding, and D. I. Schuster, The QICK (Quantum Instrumentation Control Kit): Read-out and control for qubits and detectors, Review of Sci-entific Instruments 93 , 044709 (2022).

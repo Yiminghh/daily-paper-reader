@@ -6,55 +6,66 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-06
-- 运行时间：2026-04-06 19:43:03 UTC
+- 最新运行日期：2026-04-07
+- 运行时间：2026-04-07 19:54:21 UTC
 - 运行状态：成功
-- 本次总论文数：11
-- 精读区：2
+- 本次总论文数：15
+- 精读区：6
 - 速读区：9
 
 ### 今日简报（AI）
-今日深度解析 AI 赋能的二维碳网络拓扑表征与病毒-宿主双模态预测框架。
-核心突破在于物理启发的 C2DTD 描述符提升了材料可解释性，而 ViraHinter 则显著优化了病毒交互预测精度。
-推荐关注拓扑学习在复杂系统建模中的跨学科应用，特别是材料科学与生物信息的结合点。
-- 详情：[/202604/06/README](/202604/06/README)
+今日聚焦分子动力学轨迹生成与大语言扩散模型，深度解析 15 篇 AI for Science 前沿进展。
+重点推荐通过
+- 详情：[/202604/07/README](/202604/07/README)
 
 ### 精读区论文标签
-1. [CARBON-2D Topological Descriptor (C2DTD): An Interpretable and Physics-Informed Representation for Two-Dimensional Carbon Networks](/202604/06/2604.02499v1-carbon-2d-topological-descriptor-c2dtd-an-interpretable-and-physics-informed-representation-for-two-dimensional-carbon-networks)  
+1. [Align Your Structures: Generating Trajectories with Structure Pretraining for Molecular Dynamics](/202604/07/2604.03911v1-align-your-structures-generating-trajectories-with-structure-pretraining-for-molecular-dynamics)  
+   标签：评分：10.0/10、query:molrna
+   evidence：基于扩散的分子结构生成与预训练
+2. [MolDA: Molecular Understanding and Generation via Large Language Diffusion Model](/202604/07/2604.04403v1-molda-molecular-understanding-and-generation-via-large-language-diffusion-model)  
+   标签：评分：10.0/10、query:molrna
+   evidence：结合掩码扩散模型与混合图编码器的分子语言模型
+3. [Generative Chemical Language Models for Energetic Materials Discovery](/202604/07/2604.03304v1-generative-chemical-language-models-for-energetic-materials-discovery)  
    标签：评分：9.0/10、query:molrna
-   evidence：碳网络的拓扑描述符
-2. [ViraHinter: a dual-modal artificial intelligence framework for predicting virus-host interactions](/202604/06/2604.02842v1-virahinter-a-dual-modal-artificial-intelligence-framework-for-predicting-virus-host-interactions)  
+   evidence：用于分子发现的生成式化学语言模型
+4. [The limits of bio-molecular modeling with large language models : a cross-scale evaluation](/202604/07/2604.03361v1-the-limits-of-bio-molecular-modeling-with-large-language-models--a-cross-scale-evaluation)  
+   标签：评分：9.0/10、query:molrna
+   evidence：大语言模型在生物分子发现中的评估
+5. [A Generative Foundation Model for Multimodal Histopathology](/202604/07/2604.03635v1-a-generative-foundation-model-for-multimodal-histopathology)  
+   标签：评分：9.0/10、query:molrna
+   evidence：分子RNA谱的生成式基础模型
+6. [Fine-tuning DeepSeek-OCR-2 for Molecular Structure Recognition](/202604/07/2604.03476v1-fine-tuning-deepseek-ocr-2-for-molecular-structure-recognition)  
    标签：评分：8.0/10、query:molrna
-   evidence：结合结构生成的蛋白质相互作用双模态框架
+   evidence：微调视觉语言模型用于分子结构识别
 
 ### 速读区论文标签
-1. [HiDiGen: Hierarchical Diffusion for B-Rep Generation with Explicit Topological Constraints](/202604/06/2604.02847v1-hidigen-hierarchical-diffusion-for-b-rep-generation-with-explicit-topological-constraints)  
+1. [The Geometric Alignment Tax: Tokenization vs. Continuous Geometry in Scientific Foundation Models](/202604/07/2604.04155v1-the-geometric-alignment-tax-tokenization-vs-continuous-geometry-in-scientific-foundation-models)  
+   标签：评分：8.0/10、query:molrna
+   evidence：生物科学基础模型中的连续几何
+2. [A Persistent Homology Design Space for 3D Point Cloud Deep Learning](/202604/07/2604.04299v1-a-persistent-homology-design-space-for-3d-point-cloud-deep-learning)  
+   标签：评分：8.0/10、query:molrna
+   evidence：用于3D点云深度学习的持续同调
+3. [Eigencone Constellations on Ranked Spheres](/202604/07/2604.03554v1-eigencone-constellations-on-ranked-spheres)  
    标签：评分：7.0/10、query:molrna
-   evidence：具有显式拓扑约束的分层扩散模型
-2. [ToLL: Topological Layout Learning with Structural Multi-view Augmentation for 3D Scene Graph Pretraining](/202604/06/2603.28178v1-toll-topological-layout-learning-with-structural-multi-view-augmentation-for-3d-scene-graph-pretraining)  
+   evidence：利用谱质量将空间图嵌入球面壳层
+4. [Entropy, Disagreement, and the Limits of Foundation Models in Genomics](/202604/07/2604.04287v1-entropy-disagreement-and-the-limits-of-foundation-models-in-genomics)  
+   标签：评分：7.0/10、query:molrna
+   evidence：基因组学基础模型的局限性
+5. [Locally Confident, Globally Stuck: The Quality-Exploration Dilemma in Diffusion Language Models](/202604/07/2604.00375v1-locally-confident-globally-stuck-the-quality-exploration-dilemma-in-diffusion-language-models)  
    标签：评分：6.0/10、query:molrna
-   evidence：3D场景图预训练的拓扑布局学习
-3. [Expert-Choice Routing Enables Adaptive Computation in Diffusion Language Models](/202604/06/2604.01622v1-expert-choice-routing-enables-adaptive-computation-in-diffusion-language-models)  
+   evidence：用于序列生成的扩散语言模型
+6. [Probing topological edge states in a molecular synthetic dimension](/202604/07/2604.00745v1-probing-topological-edge-states-in-a-molecular-synthetic-dimension)  
    标签：评分：6.0/10、query:molrna
-   evidence：扩散语言模型的专家选择路由机制
-4. [annbatch unlocks terabyte-scale training of biological data in anndata](/202604/06/2604.01949v2-annbatch-unlocks-terabyte-scale-training-of-biological-data-in-anndata)  
+   evidence：分子系统中的拓扑边缘态
+7. [VeloTree: Inferring single-cell trajectories from RNA velocity fields with varifold distances](/202604/07/2604.02380v1-velotree-inferring-single-cell-trajectories-from-rna-velocity-fields-with-varifold-distances)  
    标签：评分：6.0/10、query:molrna
-   evidence：包括测序在内的大规模生物数据训练
-5. [QuantumXCT: Learning Interaction-Induced State Transformation in Cell-Cell Communication via Quantum Entanglement and Generative Modeling](/202604/06/2604.02203v1-quantumxct-learning-interaction-induced-state-transformation-in-cell-cell-communication-via-quantum-entanglement-and-generative-modeling)  
+   evidence：从RNA速度场推断单细胞轨迹
+8. [Multimodal Structure Learning: Disentangling Shared and Specific Topology via Cross-Modal Graphical Lasso](/202604/07/2604.03953v1-multimodal-structure-learning-disentangling-shared-and-specific-topology-via-cross-modal-graphical-lasso)  
    标签：评分：6.0/10、query:molrna
-   evidence：细胞间通讯与状态转换的生成式建模
-6. [Generative models on phase space](/202604/06/2604.02415v1-generative-models-on-phase-space)  
+   evidence：通过图Lasso解耦共享与特定的拓扑结构
+9. [Towards protein folding pathways by reconstructing protein residue networks with a policy-driven model](/202604/07/2604.04677v1-towards-protein-folding-pathways-by-reconstructing-protein-residue-networks-with-a-policy-driven-model)  
    标签：评分：6.0/10、query:molrna
-   evidence：物理约束的扩散模型用于高维分布生成
-7. [Dependency-Guided Parallel Decoding in Discrete Diffusion Language Models](/202604/06/2604.02560v1-dependency-guided-parallel-decoding-in-discrete-diffusion-language-models)  
-   标签：评分：6.0/10、query:molrna
-   evidence：离散扩散模型中的依赖引导并行解码
-8. [Structure-Preserving Multi-View Embedding Using Gromov-Wasserstein Optimal Transport](/202604/06/2604.02610v1-structure-preserving-multi-view-embedding-using-gromov-wasserstein-optimal-transport)  
-   标签：评分：6.0/10、query:molrna
-   evidence：几何感知多视图嵌入与关系信息聚合
-9. [DSBD: Dual-Aligned Structural Basis Distillation for Graph Domain Adaptation](/202604/06/2604.03154v1-dsbd-dual-aligned-structural-basis-distillation-for-graph-domain-adaptation)  
-   标签：评分：6.0/10、query:molrna
-   evidence：图域自适应与结构变异建模
+   evidence：通过节点和边策略重建蛋白质残基网络
 
 
 <div class="dpr-home-promo-card">
