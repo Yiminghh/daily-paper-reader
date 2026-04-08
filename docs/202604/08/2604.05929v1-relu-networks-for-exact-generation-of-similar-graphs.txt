@@ -1,0 +1,2406 @@
+Title: ReLU Networks for Exact Generation of Similar Graphs
+
+URL Source: https://arxiv.org/pdf/2604.05929v1
+
+Published Time: Wed, 08 Apr 2026 01:10:59 GMT
+
+Number of Pages: 46
+
+Markdown Content:
+# ReLU Networks for Exact Generation of Similar Graphs 
+
+Mamoona Ghafoor and Tatsuya Akutsu Bioinformatics Center, Institute for Chemical Research, Department of Intelligence Sciences and Technology, Kyoto University, Uji 611-0011, Japan Email: mamoona.ghafoor@kuicr.kyoto-u.ac.jp; takutsu@kuicr.kyoto-u.ac.jp April 8, 2026 
+
+Abstract 
+
+Generation of graphs constrained by a specified graph edit distance from a source graph is important in applications such as cheminformatics, network anomaly synthesis, and structured data augmentation. Despite the growing demand for such constrained generative models in areas including molecule design and network perturbation analysis, the neural architectures required to provably generate graphs within a bounded graph edit distance remain largely unexplored. In addition, existing graph generative models are predominantly data-driven and depend heavily on the availability and quality of training data, which may result in generated graphs that do not satisfy the desired edit distance constraints. In this paper, we address these challenges by the-oretically characterizing ReLU neural networks capable of generating graphs within a prescribed graph edit distance from a given graph. In particular, we show the existence of constant depth and O(n2d) size ReLU networks that deterministically generate graphs within edit distance d from a given input graph with n vertices, thereby eliminating the reliance on training data and guaranteeing the validity of the generated graphs. Experimental evaluations demonstrate that the proposed network successfully generates valid graphs for instances with up to 1400 vertices and edit distance bounds up to 140, whereas the baseline generative models GraphRNN and GraphGDP fail to generate any graph with the desired graph edit distance. These results, sup-ported by experiments demonstrating both scalability and exactness of the proposed networks, provide a theoretical foundation for constructing compact generative models with guaranteed validity, offering a new paradigm for graph generation that moves beyond probabilistic sampling toward exact synthesis under similarity constraints. An implementation of the proposed networks is available at https://github.com/MGANN-KU/GraphGen_ReLUNetworks .
+
+1
+
+> arXiv:2604.05929v1 [cs.LG] 7 Apr 2026
+
+Keywords: Generative networks; ReLU function; graphs; graph edit distance; label matrix; adjacency matrix 
+
+# 1 Introduction 
+
+Generative networks, a powerful class of machine learning algorithms, excel at cap-turing the underlying patterns and distributions of training data. This fundamental ability to model complex data structures allows them to synthesize new, realistic sam-ples, making them invaluable beyond data generation for tasks like imputation and representation learning [1, 2, 3]. These models have seen widespread adoption across numerous fields. Their applications range from natural language processing and data augmentation to DNA sequence synthesis and drug discovery [4, 5, 6, 7]. The im-pact on bioinformatics is particularly notable, where they are employed for molecule generation, motif discovery, drug discovery, cancer research, secondary structure pre-diction, and single-cell RNA sequencing analysis [8, 9, 10, 11]. Generative models comprise a diverse set of architectures. Autoencoders like VAEs [12] and DAEs [13] learn compressed data representations through encoding and decoding. Generative adversarial networks (GANs) [14], including deep convolu-tional GAN [15], use a competitive generator-discriminator framework to create real-istic data. Probabilistic models like deep Boltzmann machines capture complex data distributions [16], while autoregressive models (e.g., PixelCNN [17], PixelRNN [18]) generate data sequentially. The deep recurrent attentive writer (DRAW) model [19] integrates recurrent neural networks with attention mechanisms to generate images by focusing on specific regions of the data during the generation process. Recently, diffusion models have become prominent. They work by learning to reverse a gradual noising process; starting from pure noise, a neural network is trained to iteratively denoise the data to generate coherent samples [20, 21]. The selection of a machine learning model’s function family and architecture is a critical yet non-trivial trade-off. An overly broad family risks overfitting and high computational cost, while an overly constrained one may lack predictive accuracy, with no universal solution for all problems [22]. Although the universal approxi-mation theorem guarantees that even shallow networks can approximate complex functions, this often necessitates an infeasibly large number of nodes [23]. Research 2has thus shifted to the efficiency of different architectures, showing that depth ex-ponentially enhances representational power for certain functions [24, 25, 26]. For example, deep networks can model periodic functions more effectively, with specific width-depth trade-offs established [27, 28]. The choice of activation function also determines expressive capacity. Networks with piecewise linear activations, for instance, do not exponentially increase their complexity [29]. Furthermore, studies have proven that neural networks with var-ious activations (sigmoidal, tanh, ReLU) can approximate other model classes like decision trees and random forests [22, 30, 31]. Recent work has even demonstrated the existence of compact generative networks with ReLU activations capable of pro-ducing strings within a specific edit distance [32]. Graph edit distance (GED) introduced by Sanfeliu and Fu [33] in 1983 emerged as an important tool for measuring similarity between graphs, extending the notion of string and tree edit distances to general graph structures. Since then, GED has found widespread applications in pattern recognition, computer vision, bioinformat-ics, chemoinformatics, and network analysis [34, 35, 36]. The exact computation of GED was later shown to be an NP-hard problem [37], which motivated extensive research on approximate solutions. Early approaches relied on exact exponential-time algorithms or heuristic methods. To improve efficiency, several works refor-mulated GED as a quadratic assignment problem enabling the use of combinatorial optimization techniques and approximate solvers [38]. More recently, approximate and learning-based methods, including continuous relaxations and neural network approaches, have been proposed to scale GED computation to larger graphs while maintaining reasonable accuracy [39, 40]. Recent advances in structured generative networks have produced powerful mod-els that balance empirical performance with structural validity. Autoregressive ap-proaches, such as GraphRNN [41] and its variants [42], sequentially construct graphs, with some learning dynamic generation orders for state-of-the-art molecular design, while others like AutoGraph [43] leverage transformers to frame graph generation as a sequence modeling task. In parallel, diffusion models have emerged as a dominant paradigm. Frameworks like GraphGDP [44] and BetaDiff [45] generate permutation-invariant graphs and jointly model discrete and continuous graph attributes. Akey innovation is the enforcement of hard constraints, as seen in models that use 3specialized noise mechanisms to guarantee properties like planarity and acyclicity throughout the diffusion process [46]. Despite these empirical successes, a fundamental limitation persists. Current models provide probabilistic guarantees that are inherently dependent on the quality and coverage of their training data. Consequently, they are unable to perform exact enumeration of the underlying combinatorial space or offer comprehensive guarantees of complete structural validity and coverage [47, 48]. This data-driven paradigm leaves a critical gap for applications requiring rigorous, rather than probabilistic, certainty over the space of generated structures. Recently, Ghafoor and Akutsu [32, 49] studied the existence of ReLU generative networks to generate similar strings and trees with the desired string and tree edit distance, respectively. In this paper, we propose a novel framework for the exact generation of vertex-labeled graphs within a specified graph edit distance from a given graph. We theoret-ically establish the existence of constant-depth ReLU networks capable of generating graphs that satisfy the desired edit distance constraints, thereby providing formal guarantees that are typically absent in data-driven generative models. We further demonstrate the practical applicability of the proposed approach through extensive experiments on graphs with up to 1400 vertices, and compare it with the base-line generative models GraphRNN [41] and GraphGDP [44]. An implementation of the proposed networks is available at https://github.com/MGANN-KU/GraphGen_ ReLUNetworks .The paper is organized as follows: Preliminaries are discussed in Section 2. The existence of ReLU networks to generate any graph with graph edit distance at most 
+
+d due to substitution (resp., deletion, insertion) operations is discussed in Section 3 (resp., Section 4, Section 5). The generation of any graph with graph edit distance at most d due to simultaneous application of deletion, substitution, and insertion operations by using a ReLU network is discussed in Section 6. Computational ex-periments are discussed in Section 7. A conclusion and future directions are given in Section 8. 42 Preliminaries 
+
+Let G be a vertex-labeled graph with n vertices and labels from the symbol set Σ = {1, 2, . . . , m }, and let v1, v 2, . . . , v n be an arbitrary sequence of vertices of G.We represent the graph G by using a column matrix L(G) = ( ℓi), called label matrix such that ℓi is the label of the vertex vi, and an n × n adjacency matrix A(G) = ( aik )such that aik = 1 (resp., 0) if there is an edge between vertices vi and vk (resp., otherwise) as shown in Fig. 1(a) and (b). When the underlying graph is fixed, then we simply use the notation L and A. Three edit operations, deletion, substitution, and insertion, can be performed on a vertex-labeled graph. There are two types of deletion operations: vertex deletion, which removes an isolated vertex, and edge deletion, which removes an edge, as illustrated in Fig. 1(c). The substitution operation changes the label of a vertex, as shown in Fig. 1(d). Similarly, there are two types of insertion operations: vertex insertion, which adds an isolated vertex, and edge insertion, which adds a new edge, as illustrated in Fig. 1(e). Observe that the 1. deletion operation on a vertex vi of G can be viewed as the deletion operation at the i-th entry of L and i-th row and column of A, whereas the deletion of an edge between the vertices vi and vk can be viewed as simply replacing 1 by 0 at the ( i, k )-th entry of A as illustrated in Fig. 1(f), 2. substitution operation on a vertex vi of G can be viewed as the substitution operation at the i-th entry of L, as illustrated in Fig. 1(e), 3. insertion operation of a vertex can be viewed as the insertion of a new entry at the end of L and by adding a new row and column with all entries 0 at the end of A, whereas the insertion of an edge between the vertices vi and vk is simply replacing 0 by 1 at the ( i, k )-th entry of A as illustrated in Fig. 1(g). The graph edit distance between two vertex-labeled graphs G and H is defined to be GED( G, H ) = min τ ∈T (G,H )
+
+P 
+
+> e∈τ
+
+c(e) where T (G, H ) denotes the set of edit paths transforming G into H, and c(e) denotes the cost of each edit operation e [50]. To ensure that each path of edit operations results in a valid graph without dangling edges, a vertex may be deleted only after all its incident edges have been removed and an edge may be inserted only if its endpoint vertices already exist or have 5been inserted beforehand [51]. Throughout this paper, we use a random sequence 
+
+x1, x 2, . . . , x k, k ≥ 2, with integers xj ∈ [1 , n ], unless stated otherwise, to indicate the indices of the vertices v1, v 2, . . . , v n in a graph. For any real numbers p, q and θ, the ReLU function is defined as ReLU( p) = max(0 , p ), the function δ is defined as δ(p, q ) = 1 if p = q, and δ(p, q ) = 0 otherwise; the threshold function [ ] is defined as [ p ⩾ θ] = 1 for p ⩾ θ, and [ p ⩾ θ] = 0 otherwise; and the Heaviside function H is defined as H(p) = 1 when p ⩾ 0, and 
+
+H(p) = 0 otherwise. For the logical AND operation a∧b between two binary variables 
+
+a, b ∈ { 0, 1}, it holds that a ∧ b = ReLU( a + b − 1). 6Figure 1: (a) A vertex-labeled graph G with five vertices, an arbitrary sequence 
+
+v1, v 2, v 3, v 4, v 5 of vertices and labels from Σ = {1, 2, 3, 4, 5}. (b) The representation of G with the label matrix L and the adjacency matrix A. (c) A graph G1 obtained from G after deleting the edge incident to v2 and v3 and then deleting the vertex 
+
+v3. (d) A graph G2 obtained from G after substituting the label of the vertices v3
+
+and v5. (e) A graph G3 obtained from G after inserting a vertex v6 with label 5 and then an edge connecting the vertices v4 and v6. (f), (g) and (h) are the matrix representations of the graphs obtained in (c), (d) and (e), respectively. Observe that GED( G, G 1) = GED( G, G 2) = GED( G, G 3) = 2. 73 GS d-generative ReLU 
+
+For a vertex-labeled graph G with n vertices, a label set Σ = {1, 2, . . . , m } with an arbitrary vertex sequence v1, v 2, . . . , v n, and a non-negative integer d, we define a 
+
+GS d-generative ReLU to be a ReLU neural network that generates any graph over Σ whose graph edit distance is at most d from G due to the substitution of labels of the vertices indicated by a random sequence x = x1, x 2, . . . , x 2d, where xj ∈ { 1, . . . , n }
+
+indicates the index of the vertices and xj+d ∈ Σ indicates the new label of the vertex 
+
+vxj . Note that the adjacency matrices of G and G′ will be the same. The existence of the such network is discussed in Theorem 1. 
+
+Theorem 1. For a vertex-labeled graph G with n vertices over Σ = {1, 2, . . . , m },and a non-negative integer d, there exists a GS d-generative ReLU network with size 
+
+O(n2d) and constant depth. 
+
+Proof. Suppose G and G′ are two vertex-labeled graphs with n vertices over Σ, with 
+
+L = ( ℓi) and L′ = ( ℓ′
+
+> i
+
+) label columns, resp., such that G′ can be obtained from G with appropriate substitution operations defined by a sequence x = x1, x 2, . . . , x 2d. We demonstrate that the process of obtaining G′ from G with substitution operations can be simulated with the ReLU function using the following system of equations, where C ≫ max( m, n ), j ∈ { 1, 2, . . . , d } and i ∈ { 1, 2, . . . , n }.
+
+ej = max 
+
+
+
+xj − C ·
+
+> j−1
+
+X
+
+> k=1
+
+(δ(xj , x k), 0) 
+
+
+
+, (1) 
+
+fi = max 
+
+
+
+ℓi − C ·
+
+> d
+
+X
+
+> j=1
+
+(δ(ej , i ), 0) 
+
+
+
+, (2) 
+
+gi =
+
+> d
+
+X
+
+> j=1
+
+
+
+max  xj+d − C(1 − δ(ej , i )) , 0
+
+, (3) 
+
+ℓ′ 
+
+> i
+
+= fi + gi. (4) The variable ej ignores repetition in the sequence x1, x 2, . . . , x d. fi stores the values 
+
+ℓi that remain unchanged after substitution operations. The variable gi stores the values that should be substituted. Finally, the required label column L′ = ( ℓ′
+
+> i
+
+) is obtained by adding fi and gi, since exactly one of them is non-zero. 8The maximum and δ functions can be simulated using the ReLU activation func-tion, as shown in [32, Propositions 1 and 2]. As a result, there exists a GS d-generative ReLU network of size O(n2d) and constant depth. 
+
+Example 1. Consider the graph G given in Fig. 1, d = 3 and x = 5 , 3, 3, 5, 2, 3, where the first three ( d) entries correspond to the indices, and the next three entries correspond to the new labels. In Fig. 1, x′ is obtained by removing repeated indices from x; for example, index 3 appears in positions 2 and 3, and therefore x′ 
+
+> 3
+
+= 0 in 
+
+x′ as depicted in red. Matrix F stores the labels of the vertices which will remain unchanged in the resultant graph. F is obtained from L by setting to zero the labels corresponding to the indices that appear in x′; for example, f3 = 0 since 3 appears in x′
+
+> 2
+
+. All such zeros in F are depicted in red in Fig. 1. The matrix G is obtained by keeping the new labels corresponding to the indices that appear in x′ as shown in red. Finally, L′ is the resulting label matrix after substitution, obtained by adding 
+
+F and G, where the new labels 2 and 5 are assigned to the vertices with indices 3 and 5, respectively. The resultant graph G′ obtained by applying the substitution operations on G due to the given x is shown in Fig. 2. We demonstrate the process of obtaining L′ for G′ by using Eqs. (1)- (4) as follows. 9{Figure 2: An illustration of simulation of GS d-generative ReLU network for a graph 
+
+G, d = 3 and the input layer x = 5 , 3, 3, 5, 2, 3. The graph G is represented by a column vector of labels L and an adjacency matrix A, while the output graph G′ is generated as a column vector of labels L′ and an adjacency matrix A′.
+
+xj Indicates vertex index when j ≤ d, and labels to be substituted otherwise (when j ≥ d + 1) 
+
+ej Eliminates repeated entries from x for j ∈ { 1, . . . , d } by setting duplicate values to 0. In this example, e3 = 0, while e1 = x1 and e2 = x2.
+
+fi Stores the labels that will not be changed, i.e., fi = 0 if index i appears in e,otherwise fi = ℓi. In this case, F = ( fi) = [3 , 5, 0, 2, 0], as shown in Fig. 2, where f1 = 3 (resp., f3 = 0) since index 1 (resp., 3) does not appear (resp., appears) in x.10 gi Stores the labels that will be substituted, i.e., gi = 0 if index i does not appear in e, otherwise gi = xj+d when ej = i. Therefore, G = ( gi) = [0 , 0, 2, 0, 5] as shown in Fig. 2, where g1 = 0 (resp., g3 = 2) since index 1 (resp., 3) does not appear in e (resp., appears at e2 and x2+3 = 2). 
+
+ℓ′ 
+
+> i
+
+The entries of the resultant label column of the output graph G′ by adding F
+
+and G. In this case, L′ = ( ℓ′
+
+> i
+
+) = [3 , 5, 2, 2, 5]. 
+
+# 4 GD d-generative ReLU 
+
+For a vertex-labeled graph G with n vertices, a label set Σ = {1, 2, . . . , m } with an arbitrary vertex sequence v1, v 2, . . . , v n, and a non-negative integer d, we define the GD d-generative ReLU to be a ReLU neural network that generates any graph over Σ whose graph edit distance is at most d from G by deleting its edges and/or vertices. These deletions are indicated by a random sequence x = x1, x 2, . . . , x 2d over 
+
+{1, . . . , n }, where xj corresponds to the vertex index such that the ReLU network deletes - the edge, if it exists, between vxj and vxj+d when xj̸ = xj+d, and - the vertex vxj if xj = xj+d and vxj is an isolated vertex. To ensure a fixed number of vertices in the resultant graph, the network pads the label matrix L (resp., adjacency matrix A) with d entries (resp., d rows and d columns) of B, where B ≫ m. We denote the padded matrices by U = ( ui) and V = ( vik ). The label matrix L′ = ( ℓ′
+
+> i
+
+) and adjacency matrix A′ = ( a′
+
+> ik
+
+) of the resultant graph G′
+
+can be obtained by removing Bs from the matrices generated by the network. The computation process of such a network is given in Fig. 3 by considering the random sequence 5 , 3, 3, 5, 2, 3, and d = 3. The matrix T ′ in Fig. 3 shows that the network deletes the edge incident to the vertices v2 and v3 since x2 = 3 and x5 = 2. The matrices W and V ′ in Fig. 3 show that the network deletes an isolated vertex v3
+
+since x3 = x6 = 3, and the network ignores x1 = x4 = 5 because vx1 = v5 is not an isolated vertex. The resultant graph is obtained by removing Bs accordingly. The existence and complexity of such a network is discussed in Theorem 2. 11 Theorem 2. For a vertex-labeled graph G with n vertices, label set Σ = {1, 2, . . . , m },and a non-negative integer d, there exists a GD d-generative ReLU network with size 
+
+O(n2d) and constant depth. 
+
+Proof. Suppose G and G′ are two vertex-labeled graphs with n vertices such that G′
+
+can be obtained from G by deleting the edges and vertices indicated by a random sequence x1, x 2, . . . , x 2d. We claim that the process of deleting edges and vertices to obtain G′ can be simulated by the ReLU function through the following three systems of equations: the first models edge deletion, the second performs row deletion, and the third deletes columns from the adjacency matrix to execute vertex deletion. In these systems, B and C are large numbers such that C ≫ B ≫ max( m, n ), 
+
+j ∈ { 1, 2, . . . , d } and i, k ∈ { 1, 2, . . . , n + d} unless stated otherwise. Edge deletion: An edge between the vertices with indices xj and xj+d can be deleted by using the following two equations. 
+
+tik =
+
+> d
+
+X
+
+> j=1
+
+
+
+ReLU  δ(xj , i ) ∧ δ(xj+d, k ) − δ(xj , x j+d)+ReLU  δ(xj , k ) ∧ δ(xj+d, i ) − δ(xj , x j+d)
+
+, (5) 
+
+t′ 
+
+> ik
+
+= ReLU( vik − tik ). (6) 
+
+tik identifies the ( i, k )-th entry of the padded adjacency matrix V of the graph G,which is intended to be set to 0. 
+
+t′ 
+
+> ik
+
+stores the entries after edge deletion. Deletion of rows: To delete the vertices with indices xj such that xj = xj+d for 
+
+j ∈ { 1, 2, . . . , d }, we must check whether the vertex corresponding to xj is an isolated vertex in T ′ = ( t′
+
+> ik
+
+). A vertex is isolated if the sum of all entries in its corresponding row/column is 0. To remove an isolated vertex, first delete the rows corresponding 12 to these vertices by using the following system of equations. 
+
+t′′  
+
+> i
+
+=
+
+> n
+
+X
+
+> k=1
+
+t′ 
+
+> ik
+
+for i ∈ { 1, 2, . . . , n }, (7) 
+
+x′ 
+
+> j
+
+= max 
+
+
+
+xj − C 1 −
+
+> n
+
+X
+
+> i=1
+
+(δ(xj , i ) ∧ δ(t′′  
+
+> i
+
+, 0) , 0
+
+
+
+, (8) 
+
+eik = max 
+
+
+
+1 −
+
+> d
+
+X
+
+> j=1
+
+ δ(x′ 
+
+> j
+
+, x j+d) ∧ δ(x′ 
+
+> j
+
+, i ), 0
+
+
+
+, (9) 
+
+e′ 
+
+> i
+
+= max 
+
+
+
+1 −
+
+> d
+
+X
+
+> j=1
+
+ δ(x′ 
+
+> j
+
+, x j+d) ∧ δ(x′ 
+
+> j
+
+, i ), 0
+
+
+
+, (10) 
+
+fik = max 
+
+
+
+B
+
+> i
+
+X
+
+> j=1
+
+eij − C · δ(eik , 0) , 0
+
+
+
+, (11) 
+
+f ′ 
+
+> i
+
+= max 
+
+
+
+B
+
+> i
+
+X
+
+> j=1
+
+e′ 
+
+> i
+
+− C · δ(e′
+
+> i
+
+, 0) , 0
+
+
+
+, (12) 
+
+gjik =
+
+h
+
+iB ≤ f(i+j−1) k ≤ iB + 1 
+
+i
+
+for j ∈ { 1, 2, . . . , d + 1 },i ∈ { 1, 2, . . . , n }, (13) 
+
+g′ji =
+
+h
+
+iB ≤ f ′ 
+
+> i+j−1
+
+≤ iB + 1 
+
+i
+
+for j ∈ { 1, 2, . . . , d + 1 },i ∈ { 1, 2, . . . , n }, (14) 
+
+hjik = max 
+
+
+
+t′ 
+
+> (i+j−1) k
+
+− C(1 − gjik ), 0
+
+
+
+for j ∈ { 1, 2, . . . , d + 1 },i ∈ { 1, 2, . . . , n }, (15) 
+
+h′ji = max 
+
+
+
+u(i+j−1) − C(1 − g′ji ), 0
+
+
+
+for j ∈ { 1, 2, . . . , d + 1 },i ∈ { 1, 2, . . . , n }, (16) 
+
+wik =
+
+> d
+
+X
+
+> j=1
+
+hjik for i ∈ { 1, 2, . . . , n }, (17) 
+
+u′ 
+
+> i
+
+=
+
+> d
+
+X
+
+> j=1
+
+h′ji for i ∈ { 1, . . . , n }. (18) 13 Vertex vi is isolated if and only if t′′  
+
+> i
+
+= 0. If xj = i does not correspond to an isolated vertex, it represents an invalid input and is ignored by assigning x′ 
+
+> j
+
+= 0. The variables eik and e′ 
+
+> i
+
+indicate the rows that need to be preserved in order to obtain the resultant adjacency and label matrices V ′ and U ′, respectively. fik and 
+
+f ′ 
+
+> i
+
+assign weights to the preserved rows. gjik , hjik and g′ji , h′ji are used to determine the positions of rows to be preserved in V and U respectively. wik and u′ 
+
+> i
+
+give the matrices after deleting the specified rows from V and U , respectively. Deleting columns: In order to complete the deletion operation of the vertices with index xj satisfying xj = xj+d, next eliminate the corresponding columns by applying the following equations. 
+
+pik = max 
+
+
+
+1 −
+
+> d
+
+X
+
+> j=1
+
+ δ(x′ 
+
+> j
+
+, x j+d) ∧ δ(x′ 
+
+> j
+
+, k ), 0
+
+
+
+for i ∈ { 1, . . . , n }, (19) 
+
+qik = max 
+
+
+
+B
+
+> k
+
+X
+
+> j=1
+
+pij − C · δ(pik , 0) , 0
+
+
+
+for i ∈ { 1, . . . , n }, (20) 
+
+rjik =
+
+h
+
+kB ≤ qi(k+j−1) ≤ kB + 1 
+
+i
+
+for j ∈ { 1, . . . , d + 1 }, i, k ∈ { 1, . . . , n }, (21) 
+
+sjik = max 
+
+
+
+wi(k+j−1) − C(1 − rjik ), 0
+
+
+
+for i, k ∈ { 1, . . . , n }, j ∈ { 1, . . . , d + 1 }, (22) 
+
+v′ 
+
+> ik
+
+=
+
+> d′
+
+X
+
+> j=1
+
+sjik for i, k ∈ { 1, 2, . . . , n }. (23) 
+
+pik and qik specify and assign weights to the columns to be preserved in the padded adjacency matrix V ′ of the resulting graph, respectively. rjik and sjik indicate the positions of columns to be maintained to get V ′. Finally, V ′ = ( v′
+
+> ik
+
+) is the matrix obtained by deleting columns from W = ( wik ). By removing B from U ′ = ( u′
+
+> i
+
+) and 
+
+V ′ = ( v′
+
+> ik
+
+), we get the label and adjacency matrices L′ and A′, resp., of the required graph G′.The maximum function, the δ and the threshold functions used in the preceding equations can be effectively simulated by the ReLU activation function, by using [32, Propositions 1 and 2]. As a result, a GD d-generative ReLU network of size O(n2d)and constant depth can be constructed. The simulation process of GD d-generative ReLU network is demonstrated in Ex-14 ample 2. 
+
+Example 2. Consider the graph G given in Fig. 1, d = 3 and a random sequence 
+
+x = 5 , 3, 3, 5, 2, 3 which indicates the deletion of vertices or edges depending on the condition xj = xj+d; for example, x2 = 3 ̸ = 2 = x5 indicates the deletion of the edge between v3 and v2. The edges to be deleted are depicted in red in G and A.
+
+U is obtained by padding three Bs to L to make its size n + d = 5 + 3, so that the size of the network output remains the same. T is obtained by setting the encircled entries of A to zero (i.e., performing edge deletion) and padding three rows and three columns with entries B to make its dimension 8 ×8. In other words, T ′ is obtained by performing all edge deletion operations and the padding operation. Vertex deletion is then performed in three steps: (i) check the condition xj = xj+d. In this case, 
+
+x3 = x6 = 3, which means that vertex 3 is a candidate for deletion; (ii) check in 
+
+T ′ whether the row (3rd) corresponding to the vertex 3 has all entries either zero or B, which is true in this case. This confirms that vertex 3 is an isolated vertex and should be deleted; hence, its row is marked in red in T ′ with the corresponding entry in U . Note that the same condition does not hold for vertex 5; (iii) delete the rows from T ′ and the labels from U corresponding to the vertices to be deleted to obtain U ′ and W , and finally obtain V ′ by deleting the columns corresponding to those vertices from W . In this case, vertex 3 has been deleted. To keep the size of the network output the same, additionally delete padded rows and columns from 
+
+T ′ and W so that the total deletion count equals d. In this case, the number of vertex deletions is 1; therefore, two padded rows and columns marked in red in T ′
+
+and W are removed to obtain U ′ and V ′. The matrices L′ and A′ of the resultant graph G′ are obtained by performing the unpadding operation. The resultant graph 
+
+G′ obtained by applying the deletion operations on G due to x is shown in Fig. 3. We demonstrate the process of obtaining L′ and A′ of G′ by using Eqs. (5)- (23) as follows. 15 Figure 3: An illustration of the simulation of GD d-generative ReLU for a given graph G with an arbitrary vertex sequence v1, . . . , v 5, d = 3 and the input layer 
+
+x = 5 , 3, 3, 5, 2, 3. U ′ and W are obtained from U and T ′, resp., by row deletion. Graph G is represented by the label matrix L and the adjacency matrix A, whereas the output graph G′ is represented by the label matrix L′ and the adjacency matrix 
+
+A′. The entries in red in T ′ indicate the deleted edges, whereas the red ellipses indicate the rows and columns to be deleted to obtain the desired graph G′.
+
+xj Identifies the vertices and edges to be deleted. In this case x = 5 , 3, 3, 5, 2, 3. The values x2 = 3 and x5 = 2 refer to the deletion of the edge between v3 and 
+
+v2, while x1 = x4 = 5 and x3 = x6 = 3 refer to the deletion of vertices v5 and 
+
+v3. The row and column corresponding to x3 = x6 = 3 are deleted because v3
+
+becomes an isolated vertex after edge deletion as shown in the matrix T ′ in Fig. 3. However, the case x1 = x4 = 5 is ignored because v5 is not an isolated vertex. 16 tik A binary variable that equals 1 when the corresponding entry vik in the padded adjacency matrix V is set to 0, indicating that the edge between vertices vi
+
+and vk should be removed. In this case t3,2 = t2,3 = 1. All other values are 0. 
+
+t′ 
+
+> ik
+
+The entries of the modified V after setting indicated entries to zero. In this example, t′ 
+
+> 3,2
+
+= t′ 
+
+> 2,3
+
+= 0. All other values of t′ 
+
+> ik
+
+are same as vik . The matrix 
+
+T ′ = ( t′
+
+> ik
+
+) is shown in Fig. 3, where t′ 
+
+> 3,2
+
+= t′ 
+
+> 2,3
+
+= 0 are in red color. 
+
+t′′  
+
+> i
+
+After edge deletion, this variable checks if vi is an isolated vertex using T ′ =(t′
+
+> ik
+
+). More precisely, the i-th vertex is isolated if and only if t′′  
+
+> i
+
+= 0. In this example, t′′  
+
+> 1
+
+= t′′  
+
+> 4
+
+= 2, t′′  
+
+> 2
+
+= t′′  
+
+> 5
+
+= 3, t′′  
+
+> 3
+
+= 0, which shows that only the third vertex is isolated in the matrix T ′.
+
+x′ 
+
+> j
+
+Sets the input xj = 0 if it corresponds to a non-isolated vertex. Specifically, when t′′  
+
+> xj
+
+> 0, the vertex cannot be deleted, so x′ 
+
+> j
+
+= 0. Hence, for this case 
+
+x′ 
+
+> 1
+
+= 0. 
+
+eik A binary variable that takes the value eik = 1 when the i-th row is retained to keep the vertex vi, otherwise eik = 0 for all k ∈ { 1, . . . , n + 2 }. In this example 
+
+e3k = 0 for k ∈ { 1, . . . , n + 2 }. All other entries eik = 1 for i̸ = 3. 
+
+e′ 
+
+> i
+
+A binary variable that takes the value e′ 
+
+> i
+
+= 1 when the i-th label is retained to keep the vertex vi, otherwise e′ 
+
+> i
+
+= 0. For instance, e′ 
+
+> 3
+
+= 0 because only the label corresponding to the vertex v3 in matrix U needs to be deleted. All other values are 1. 
+
+fik Assigns weights to the preserved rows, i.e,. the rows for which eik = 1 for 
+
+k ∈ { 1, . . . , n + 2 }, in the ascending order. For the third row in this example 
+
+f3k = 0 because e3k = 0 whereas f1k = B, f2k = 2 B, f4k = 3 B, f5k = 4 B,
+
+f6k = 5 B, f7k = 6 B for k ∈ { 1, . . . , n + 2 }.
+
+f ′ 
+
+> i
+
+Allocates weights to the retained values of e′ 
+
+> i
+
+in ascending order. Here, f ′ =[B, 2B, 0, 3B, 4B, 5B, 6B]. 
+
+gjik This variable tracks how far each non-deleted row is shifted forward in the resulting matrix. Since at most d non-padded rows can be deleted from the matrix V = ( vik ), the maximum shift for any row is d. In this case g11,k = g12,k =1 because there is no row deleted before rows i = 1 , 2, resulting in a shift of 
+
+j − 1 = 0. Similarly, g2 
+
+> i,k
+
+= 1 for i̸ = 1, as these rows experience a forward shift of j − 1 = 1 due to the deletion of one row before the rows i = 3 , 4, . . . , n + d.All other values are set to 0. 17 g′j i Similar to gj ik , this variable represents the shift in each non-deleted entry of the padded column matrix U = ( ui). Thus, g′11 = g′12 = 1 because no entry is deleted before i = 1 , 2, resulting in a shift of j − 1 = 0. Likewise, g′23 = g′24 =
+
+g′25 = g′26 = g′27 = 1, since one entry is deleted before i = 3 , 4, . . . , n + d, giving a forward shift of j − 1 = 1. All other values are 0. 
+
+hjik This variable shows that a given position ( i, k ) in the matrix can take the value t′
+
+> (i+j−1) k
+
+, for some j, depending on the number of zero rows pre-ceding fik or on the shift on each row given by gjik . In this example 
+
+h11k = t′ 
+
+> (1+1 −1) k
+
+= [0 , 1, 0, 0, 1, B, B ], h12k = t′ 
+
+> (2+1 −1) k
+
+= [1 , 0, 0, 1, 1, B, B ], 
+
+h23k = t′ 
+
+> (3+2 −1) k
+
+= [0 , 1, 0, 0, 1, B, B ], h24k = t′ 
+
+> (4+2 −1) k
+
+= [1 , 1, 0, 1, 0, B, B ]. Whereas, h21k = h31k = h41k = h22k = h32k = h42k = h13k = h33k = h43k = h14k =
+
+h34k = h44k = h15k = h35k = h45k = [0 , 0, 0, 0, 0, 0, 0]. 
+
+h′ji This variable indicates that the value at position i in the resulting vector of labels may be assigned from u(i+j−1) , for some j, based on how many zero entries precede f ′ 
+
+> i
+
+or on the shift on each entry given by g′ji . Here, h′11 = 3, 
+
+h′12 = 5, h′23 = 2, h′24 = 4, and h′25 = B. All other values are 0. 
+
+wik For a fixed i and k, by using the non-zero entries of hjik , this variable stores the entries of the resultant matrix W of order n × n + d obtained by the deletion of appropriate rows. In this case, w1k = [0 , 1, 0, 0, 1, B, B ], 
+
+w2k = [1 , 0, 0, 1, 1, B, B ], w3k = [0 , 1, 0, 0, 1, B, B ], w4k = [1 , 1, 0, 1, 0, B, B ]. The matrix W is shown in Fig. 3. 
+
+u′ 
+
+> i
+
+For a fixed value of i, the non-zero entries of h′ji , form u′
+
+> i
+
+. This variable constructs a label matrix U ′ by deleting the required rows as depicted in Fig. 3. 
+
+pik For a fixed k, it is a binary variable that equals 1 when the k-th column is kept to preserve the vertex vi, otherwise, pik = 0. In this example pi3 = 0 for 
+
+i ∈ { 1, . . . , n }. All other entries pik = 1 for k̸ = 3. 
+
+qik A variable that assigns weights to the preserved columns in increasing order. For instance, qi3 = 0 because pi3 = 0, indicating that no weight is assigned to the third column as its corresponding vertex v3 needs to be deleted. Whereas, 
+
+qi4 = 3 B signifies that there are three non-zero (preserved) columns until k = 4 in the matrix Q = ( qik ). Similarly, qi1 = B, qi2 = 2 B, qi5 = 4 B, qi6 = 5 B,
+
+qi7 = 6 B for i ∈ { 1, . . . , n }.18 rjik This variable records the forward shift on each non-deleted column in the resulting adjacency matrix. Since at most d original (non-padded) columns can be removed from the matrix W = ( wik ), the maximum shift experienced by any column is d. In this case r1 
+
+> i1
+
+= r1 
+
+> i2
+
+= 1 because there is j − 1 = 0 shift in first and second columns, as no column needs to be removed before first and second columns. Whereas, r2 
+
+> i3
+
+= r2 
+
+> i4
+
+= r2 
+
+> i5
+
+= 1 because the remaining columns have a shift of j − 1 = 1. All other values are 0. 
+
+sjik This variable shows that a given position ( i, k ) in the resulting adjacency matrix can take the value wi(k+j−1) , for some j, depending on the number of zero columns preceding the qik . For example s1 
+
+> i1
+
+= wi(1+1 −1) = [0 , 1, 0, 1, B ], 
+
+s1 
+
+> i2
+
+= wi(2+1 −1) = [1 , 0, 1, 1, B ], s2 
+
+> i3
+
+= wi(3+2 −1) = [0 , 1, 0, 1, B ], s2 
+
+> i4
+
+= wi(4+2 −1) =[1 , 1, 1, 0, B ], and s2 
+
+> i5
+
+= wi(5+2 −1) = [ B, B, B, B, B ]. All other values of sjik are 0. 
+
+v′ 
+
+> ik
+
+This variable specifies the positions where sjik takes non-zero values for fixed i
+
+and k and gives the required output matrix V ′ as shown in Fig. 3. For example 
+
+v′ 
+
+> i1
+
+= s1 
+
+> i1
+
+= [0 , 1, 0, 1, B ], v′ 
+
+> i2
+
+= s1 
+
+> i2
+
+= [1 , 0, 1, 1, B ], v′ 
+
+> i3
+
+= s2 
+
+> i3
+
+= [0 , 1, 0, 1, B ], 
+
+v′ 
+
+> i4
+
+= s2 
+
+> i4
+
+= [1 , 1, 1, 0, B ], and v′ 
+
+> i5
+
+= s2 
+
+> i5
+
+= [ B, B, B, B, B ] . 
+
+# 5 GI d-generative ReLU 
+
+For a vertex-labeled graph G with n vertices, a label set Σ = {1, 2, . . . , m } with an arbitrary vertex sequence v1, v 2, . . . , v n, and a non-negative integer d, we define a GI d-generative ReLU to be a ReLU neural network that generates any graph over Σ whose graph edit distance is at most d from G due to the insertion of edges and/or vertices indicated by a random sequence x = x1, x 2, . . . , x 3d such that xj ∈ { 1, 2, . . . , n +d−1},1 ≤ j ≤ 2d and x2d+j ∈ Σ, 1 ≤ j ≤ d. The network inserts - a vertex with label x2d+j corresponding to xj whenever xj = xj+d, and - an edge between xj and xj+d when xj̸ = xj+d, excluding the invalid inputs given in Table 3. To ensure a fixed number of nodes in the output, we pad the label column L with d
+
+entries of Bs, and extend the adjacency matrix A by d rows and d columns with all 19 B entries, where B ≫ m. The resulting padded matrices are denoted by U = ( ui)and V = ( vik ). Observe that the total number d′ of vertex insertions is equal to the number of js such that xj = xj+d. Therefore the output label column U ′ = ( u′
+
+> i
+
+) has 
+
+d − d′ Bs and the adjacency matrix V ′ = ( v′
+
+> ik
+
+) has d − d′ rows and d − d′ columns with all Bs. Finally, by removing all Bs, we can get the label column L′ = ( ℓ′
+
+> i
+
+) and the adjacency matrix A′ = ( a′
+
+> ik
+
+) of the resultant graph G′ as shown in Fig. 3. Due to the random nature of x, some inputs may turn out to be invalid, and therefore require refinements to perform insertion operations. Such invalid inputs and their refinements are listed in Table 3. Sr. no. Invalid Inputs Refinements (i) xj̸ = xj+d, x j = xk, x j+d = xk+d, k < j xj := 0 (ii) xj̸ = xj+d, x j > n + d′ xj := 0 (iii) xj̸ = xj+d, x j+d > n + d′ xj+d := 0 Table 3: Invalid inputs and their refinements. To ignore the labels xj+2 d corresponding to the valid edge insertions, set xj+2 d := 
+
+B whenever xj̸ = xj+d holds. We discuss the existence of such networks in Theo-rem 3. 
+
+Theorem 3. For a vertex-labeled graph G with n vertices from Σ = {1, 2, . . . , m },and a non-negative integer d, there exists a GI d-generative ReLU network with size 
+
+O(n2d) and constant depth. 
+
+Proof. Consider two vertex-labeled graphs G and G′ of order n over Σ, such that the graph G′ can be obtained from G by using the insertion of vertices and/or edges indicated by a sequence x1, x 2, . . . , x 3d. We claim that the construction of 
+
+G′ can be simulated by the following system of equations, where j ∈ { 1, 2, . . . , d },
+
+i, k ∈ { 1, 2, . . . , n + d} unless stated otherwise. The constants B, C are chosen to be large, with C ≫ B ≫ max( m, n ). Refinements of the input x: The refinement (i) is carried out by Eqs. (24), (25); refine-ment (ii) is performed by Eqs. (26), (27); refinement (iii) is performed by Eqs. (28), (29); and refinement (iv) is performed by Eq. (30). Eqs. (31) and (32) are applied 20 to arrange xj+2 d in ascending order, ensuring that B appears as the last entry of the output label column to ignore them easily. 
+
+ejk = max 
+
+ 1 − δ(xj , x j+d) ∧ δ(xj , x k) ∧ δ(xj+d, x k+d), 0
+
+
+
+, (24) 
+
+e′ 
+
+> j
+
+= max 
+
+
+
+xj − C ·
+
+> j−1
+
+X
+
+> k=1
+
+ejk , 0
+
+
+
+, (25) 
+
+fj = max 
+
+ 1 − δ(e′ 
+
+> j
+
+, x j+d) ∧ H(e′ 
+
+> j
+
+− n − d′ − 1) , 0
+
+
+
+, (26) 
+
+x1 
+
+> j
+
+= max 
+
+
+
+e′ 
+
+> j
+
+− Cf j , 0
+
+
+
+, (27) 
+
+f ′ 
+
+> j
+
+= max 
+
+ 1 − δ(xj , x j+d) ∧ H(xj+d − n − d′ − 1) , 0
+
+
+
+, (28) 
+
+x2 
+
+> j
+
+= max 
+
+
+
+xj+d − Cf ′ 
+
+> j
+
+, 0
+
+
+
+, (29) 
+
+gj = max 
+
+
+
+xj+2 d − C(1 − δ(xj , x j+d)) , 0
+
+
+
++ max 
+
+
+
+B − C δ (xj , x j+d), 0
+
+
+
+, (30) 
+
+g′ 
+
+> j
+
+=
+
+> d
+
+X
+
+> k=1
+
+H(gj − gk) −
+
+> d
+
+X
+
+> k=j
+
+δ(gj , g k), (31) 
+
+x3 
+
+> j
+
+=
+
+> d
+
+X
+
+> i=1
+
+max 
+
+
+
+gi − C(1 − δ(j, g ′ 
+
+> i
+
++ 1)) , 0
+
+
+
+. (32) Vertex insertion: To insert d′ isolated vertices corresponding to xj such that xj =
+
+xj+d, replace the entries in U with B by the labels x3 
+
+> j
+
+by using the Eqs. (33), (34) and set all B entries of the d′ number of rows and columns in the padded adjacency 21 matrix V into 0 by using Eqs. (35)-(39). 
+
+hi =
+
+> d
+
+X
+
+> j=1
+
+max 
+
+
+
+x3 
+
+> j
+
+− C 1 − δ(i, n + j), 0
+
+
+
+, (33) 
+
+u′ 
+
+> i
+
+= max 
+
+
+
+ℓi − C 1 − H(n − i), 0
+
+
+
++ max 
+
+
+
+hi − C 1 − H(i − n − 1) , 0
+
+
+
+, (34) 
+
+pik = max 
+
+
+
+H(n + d′ − i) ∧ H(i − n − 1) ∧ H(n + d′ − k), 0
+
+
+
+, (35) 
+
+p′ 
+
+> ik
+
+= max 
+
+
+
+B − C(1 − pik ), 0
+
+
+
+, (36) 
+
+qik = max 
+
+
+
+H(n + d′ − k) ∧ H(k − n − 1) ∧ H(n − i), 0
+
+
+
+, (37) 
+
+q′ 
+
+> ik
+
+= max 
+
+
+
+B − C(1 − qik ), 0
+
+
+
+, (38) 
+
+rik = vik −  p′ 
+
+> ik
+
++ q′
+
+> ik
+
+. (39) Edge insertion: In order to insert the edges corresponding to x1 
+
+> j
+
+= x2 
+
+> j
+
+for j ∈{1, 2, . . . , d }, by replacing 0 with 1 in ( x1 
+
+> j
+
+, x 2 
+
+> j
+
+)-th and ( x2 
+
+> j
+
+, x 1 
+
+> j
+
+)-th entries of the matrix 
+
+R = ( rik ) as follows. 
+
+sjik = max 
+
+
+
+(1 − δ(x1 
+
+> j
+
+, x 2 
+
+> j
+
+)) ∧ δ(x1 
+
+> j
+
+, i ) ∧ δ(x2 
+
+> j
+
+, k ), 0
+
+
+
++max 
+
+
+
+(1 − δ(x1 
+
+> j
+
+, x 2 
+
+> j
+
+)) ∧ δ(x1 
+
+> j
+
+, k ) ∧ δ(x2 
+
+> j
+
+, i ), 0
+
+
+
+, (40) 
+
+s′ 
+
+> ik
+
+=
+
+> d
+
+X
+
+> j=1
+
+sjik , (41) 
+
+v′ 
+
+> ik
+
+= s′ 
+
+> ik
+
++ max 
+
+
+
+rik − Cs ′
+
+> ik
+
+, 0
+
+
+
+. (42) For a fixed j, Sj = ( sjik ) is the matrix with entries ( x1 
+
+> j
+
+, x 2 
+
+> j
+
+)-th and ( x2 
+
+> j
+
+, x 1 
+
+> j
+
+)-th equal to 1 when “ x1 
+
+> j
+
+= i and x2 
+
+> j
+
+= k” or “ x1 
+
+> j
+
+= k and x2 
+
+> j
+
+= i”, and 0 elsewhere. S′ = ( s′
+
+> ik
+
+) is a binary matrix that keeps the sum of entries of sjik for fixed i and k. The final matrix 
+
+V = ( v′
+
+> ik
+
+) is then obtained by applying the vertex and edge insertions specified by the input. To obtain the required graph G′, we remove B from U ′ = ( u′
+
+> i
+
+) and eliminate from V ′ = ( v′
+
+> ik
+
+) all rows and columns of Bs. This yields the label and adjacency 22 matrices L′ and A′ of G′, respectively. Furthermore, the maximum function, δ and threshold functions appearing in the preceding equations can be realized using the ReLU activation function, as demonstrated in [32, Propositions 1 and 2]. As a result, a GI d-generative ReLU network of size O(n2d) and constant depth can be constructed. 
+
+Example 3. Consider the graph G given in Fig. 1, d = 3 and x = 4 , 3, 7, 6, 3, 2, 1, 5, 2, where the first six (2 d) entries indicate the indices of vertices for edge or vertex insertion, and the last three ( d) entries are the labels of newly inserted vertices, as depicted in red in Fig. 4. Edge (resp., vertex) insertion is performed when xj̸ = xj+d
+
+(resp., xj = xj+d). If an edge insertion is detected, the corresponding label entry 
+
+xj+2 d is ignored by setting it to B. Finally, the updated labels x1+2 d, . . . , x d+2 d are arranged in ascending order. For example, in this case, x1 = 4 ̸ = 6 = x4 (resp., 
+
+x2 = 3 = x5) implies an edge insertion (resp., vertex insertion). Therefore, x7 is set to B. The indices greater than n = 5 are set to zero; for example, x3 = 7 is set to zero, and hence x3+ d and x3+2 d are ignored. The updated x is shown in Fig. 4 as x1, x 2, x 3, where the indices set to zero and the labels after rearrangement are depicted in red. Vertex insertion is performed as follows. The matrix L is updated by inserting the label 5 of a new vertex, as depicted in red in U ′, and by padding two Bs to make the size n + d = 5 + 3, thereby ensuring a fixed-size output from the network. Similarly, A is updated to R by adding a row and a column of zeros corresponding to the new vertex, as depicted in red in R. The index of the new vertex is 6, and it is an isolated vertex at this stage; therefore, the corresponding entries in R are 0. Additionally, two rows and two columns, each filled with Bs, are padded to maintain a fixed-size output. Edge insertion is performed between vertices 4 and 6, since x1 = 4 ̸ = 6 = x4, by changing the corresponding entry from 0 (as marked in red in R) to 1 in S′, also depicted in red. The entries of the padded rows and columns are set to zero. Finally, the resultant matrix V ′, incorporating both vertex and edge insertions, is obtained by adding R and S′. The resultant graph G′ is obtained by applying the insertion operations on G due to the given x is shown in Fig. 4. We demonstrate the process of obtaining L′ and A′ of G′ by using Eqs. (5)-(23) as follows. 23 {{{Figure 4: A demonstration of obtaining G′ from G using a GI d-generative ReLU, where d = 3 and the input layer x = 4 , 3, 7, 6, 3, 2, 5, 1, 2. 
+
+xj Indicates vertex indices (resp., label of new vertices) when 1 ≤ j ≤ 2d (resp., 2d + 1 ≤ j ≤ 3d). 
+
+ejk An indicator that takes value 1 whenever there exists an index k < j with 
+
+xj = xk and xj+d = xk+d, provided xj̸ = xj+d for j, k ∈ { 1, . . . , d } to avoid invalid inputs. In this example, ejk = 0 for every j, k .
+
+e′ 
+
+> j
+
+Nullifies the repeated input xj if for any k < j , ejk = 1. In this case e′ 
+
+> j
+
+= xj
+
+for j ∈ { 1, . . . , d }.
+
+fj A binary variable to identify if e′ 
+
+> j
+
+is greater than n+d′. In this example, f3 = 1 whereas f1 = f2 = 0. 
+
+x1 
+
+> j
+
+Sets e′ 
+
+> j
+
+to 0 if it is greater than n + d′. That is, x1 
+
+> j
+
+= 0 if fj = 1 and x1 
+
+> j
+
+= e′
+
+> j
+
+otherwise. 24 f ′ 
+
+> j
+
+Identifies whether xj+d, if it is greater than n + d′. Here, f ′ 
+
+> j
+
+= 0 for all 
+
+j ∈ { 1, . . . , d }.
+
+x2 
+
+> j
+
+Nullifies xj+d if it is greater than n+d′. That is, x2 
+
+> j
+
+= 0 if f ′ 
+
+> j
+
+= 1 and x2 
+
+> j
+
+= xj+d
+
+otherwise. In this case x2 
+
+> j
+
+= xj+d for all j ∈ { 1, . . . , d }.
+
+gj Sets xj+2 d = B, if xj̸ = xj+d for a fixed j ∈ { 1, . . . , d }. In this example 
+
+g2 = x8 = 5 and g1 = g3 = B.
+
+g′ 
+
+> j
+
+Assigns a number from 0 to d − 1 to each value of gj to arrange them in ascending order. Here, g′ 
+
+> 1
+
+= 1, g′ 
+
+> 2
+
+= 0 and g′ 
+
+> 3
+
+= 2. 
+
+x3 
+
+> j
+
+Arrange g′ 
+
+> j
+
+in ascending order. In this case, x31 = 5, x32 = B and x33 = B.
+
+hi A variable that stores the labels to be inserted, i.e., hi = 0 for i ≤ n and 
+
+hi = x3 
+
+> j
+
+for i ≥ n + j. Here, h = [0 , 0, 0, 0, 0, 5, B, B ]. 
+
+u′ 
+
+> i
+
+Entries of the resultant label column. The first n entries are from the label column L, next d′ entries are the labels of the newly inserted vertices and last 
+
+d − d′ entries are B. Here, U ′ = ( u′
+
+> i
+
+) = [3 , 5, 4, 2, 4, 5, B, B ]T .
+
+pik Entries of a binary matrix which is 1 if i ∈ [n + 1 , n + d′] and k ≤ n + d′ to indicate the rows corresponding to vertices in the padded adjacency matrix. In this case, p6k = 1 for k ≤ 6. All other values are 0. 
+
+p′ 
+
+> ik
+
+Entries of a matrix which are B when pik = 1 and 0 otherwise. Here p′ 
+
+> 6k
+
+= B
+
+for k ≤ 6. 
+
+qik Entries of a binary matrix which are 1 if k ∈ [n + 1 , n + d′] and i ≤ n to indicate the columns corresponding to new vertices in the padded adjacency matrix. Here, qi6 = 1 for i ≤ 5. All other values are 0. 
+
+q′ 
+
+> ik
+
+Entries of a matrix which are B for i and k such that qik = 1 and 0 otherwise. In this example, q′ 
+
+> i6
+
+= B for i ≤ 5. 
+
+rik A matrix with entries 0 if i ∈ [n+1 , n +d′], k ≤ n + d′ and for k ∈ [n+1 , n +d′], 
+
+i ≤ n. All other entries are same as padded matrix V . Here, ri6 = 0 for i ≤ 5and r6k = 0 for k ≤ 6. The matrix R = ( rik ) is shown in Fig. 4. 
+
+sjik For a fixed j, sjik = 1 when x1
+
+> j
+
+̸ = x2 
+
+> j
+
+, i = x1 
+
+> j
+
+and k = x2 
+
+> j
+
+, or when i = x2 
+
+> j
+
+and 
+
+k = x1 
+
+> j
+
+; otherwise sjik = 0. In this example only s16,4 = s14,6 = 1. 
+
+s′ 
+
+> ik
+
+A binary variable which is 1 whenever sjik = 0 and 0 otherwise. Here, s′ 
+
+> 6,4
+
+=
+
+s′ 
+
+> 4,6
+
+= 1 in the matrix S′ = ( s′
+
+> ik
+
+) as shown in Fig. 4 25 v′ 
+
+> ik
+
+Entry of the final padded adjacency matrix that is 1 whenever s′ 
+
+> ik
+
+= 1. All other entries are same as the padded adjacency U . In this example v′ 
+
+> 6,4
+
+=
+
+v′ 
+
+> 4,6
+
+= 1 that represents newly inserted edge in the given graph G, as shown in Fig. 4. 
+
+# 6 GE d-generative ReLU 
+
+For a vertex-labeled graph G with n vertices, a label set Σ = {1, 2, . . . , m } with an arbitrary vertex sequence v1, v 2, . . . , v n, and a non-negative integer d, we define a 
+
+GE d-generative ReLU to be a ReLU neural network that generates any graph over Σ whose graph edit distance is at most d from G due to substitution of vertices and deletion and insertion of edges and/or vertices indicated by a random sequence 
+
+x = x1, x 2, . . . , x 7d, where each xj ∈ [0 , 1) has the form xj = i · ∆, with i an integer and ∆ ≤ 1 a small positive constant. The sub-sequence x1, x 2, . . . , x 2d (resp., 
+
+x2d+1 , x 2d+2 , . . . , x 5d and x5d+1 , x 5d+2 , . . . , x 7d) corresponds to the substitution (resp., insertion and deletion) operations. The conditions for the substitution, vertex/edge deletion, and vertex/edge insertion are explained in Sections 3, 4, and 5, respectively. As a preprocessing step, the random inputs xj are converted into integers considering their corresponding operations as follows - xj for 1 ≤ j ≤ d or 5 d + 1 ≤ j ≤ 7d indicates indices of vertices for substitution and deletion operations, and are converted into integers in {0, . . . , n } if xj ∈
+
+ (i − 1) /n, i/n ,- xj for 2 d + 1 ≤ j ≤ 4d, indicates indices of vertices for insertion, and are con-verted into integers in {0, . . . , n +d−1} if xj ∈  (i−1) /n + d − 1, i/n + d − 1,- xj for d + 1 ≤ j ≤ 2d or 4 d + 1 ≤ j ≤ 5d indicates labels for substitution and insertion, and are converted into integers in Σ if xj ∈  (i − 1) /m, i/m , for 
+
+i = 1, xj ∈ (i − 1) /m, i/m  otherwise. For example, when n = 5, d = 3 and m = 10, the conversion scheme is given in Table 5. To output a fixed number of nodes, we assume that the label matrix L (resp., adjacency matrix A) of a given graph G is padded with 2 d B s (resp., 2 d of rows and column with all B entries) to get the matrices U (resp., V ), where B ≫ max( m, n ). 26 The required label and adjacency matrices, L′ and A′ resp., can be obtained by removing B from U ′ and V ′. Moreover, if d1, d2 and d3 are the number of operations performed for substitution, insertion and deletion resp., therefore d1 + d2 + d3 ≤ d.The existence of GE d-generative ReLU networks is discussed in Theorem 4. For positions xj with 1 ≤ j ≤ d
+
+and 5 d + 1 ≤ j ≤ 7d
+
+For positions xj with 2d + 1 ≤ j ≤ 4d
+
+For values xj with 
+
+d + 1 ≤ j ≤ 2d and 4d + 1 ≤ j ≤ 5d
+
+(−1/5, 0] → 0 (−1/7, 0] → 0 [0 , 1/10] → 1(0 , 1/5] → 1 (0 , 1/7] → 1 (1 /10 , 2/10] → 2(1 /5, 2/5] → 2 (1 /7, 2/7] → 2 (2 /10 , 3/10] → 3(2 /5, 3/5] → 3 (2 /7, 3/7] → 3 (3 /10 , 4/10] → 4(3 /5, 4/5] → 4 (3 /7, 4/7] → 4 (4 /10 , 5/10] → 5(4 /5, 5/5] → 5 (4 /7, 5/7] → 5 (5 /10 , 6/10] → 6(5 /7, 6/7] → 6 (6 /10 , 7/10] → 7(6 /7, 7/7] → 7 (7 /10 , 8/10] → 8(8 /10 , 9/10] → 9(9 /10 , 10 /10] → 10 Table 5: Conversion table from real numbers to integers. 
+
+Theorem 4. Given a vertex-labeled graph G with n vertices over the alphabet set Σ = {1, 2, . . . , m }, and a non-negative integer d, there exists a GE d-generative ReLU network with size O(n2d) and constant depth. 
+
+Proof. Let G and G′ be two vertex-labeled graphs with n vertices such that G′ can be constructed from G through the graph edit operations (substitution, insertion and deletion) indicated by a sequence x1, x 2, . . . , x 7d. We claim that the process of obtaining G′ from G can be simulated with the following system of equations, where 
+
+B and C are large numbers with C ≫ B ≫ max( m, n ). Conversion of input into integers: First, convert the input xj into integers by using 27 the following equations. 
+
+pji = [( i − 1) /n ≤ xj ≤ i/n ] − δ(xj , (i − 1) /n ),
+
+for i ∈ { 0, 1, . . . , n }, j ∈ { 1, . . . , d, 5d + 1 , . . . , 7d}, (43) 
+
+qji = [( i − 1) /n + d − 1 ≤ xj ≤ i/n + d − 1] − δ(xj , (i − 1) /n + d − 1) ,
+
+for i ∈ { 0, 1, . . . , (n + d − 1) }, j ∈ { 2d + 1 , . . . , 4d}, (44) 
+
+rji =
+
+
+
+[( i − 1) /m ≤ xj ≤ i/m ] if i = 1 ,
+
+[( i − 1) /m ≤ xj ≤ i/m ] − if i ∈ { 2, . . . , m },δ(xj , (i − 1) /m ),
+
+for j ∈ { d + 1 , . . . , 2d, 4d + 1 , . . . , 5d}, (45) 
+
+p′ 
+
+> j
+
+=
+
+> n
+
+X
+
+> i=0
+
+pji · i for j ∈ { 1, . . . , d, 5d + 1 , . . . , 7d}, (46) 
+
+q′ 
+
+> j
+
+=
+
+> n+d−1
+
+X
+
+> i=0
+
+qji · i for j ∈ { 2d + 1 , . . . , 4d}, (47) 
+
+r′ 
+
+> j
+
+=
+
+> m
+
+X
+
+> i=1
+
+rji · i for j ∈ { d + 1 , . . . , 2d, 4d + 1 , . . . , 5d}. (48) The variables pji , qji and rji indicate whether the j-th input lies in the i-th interval, for 
+
+i ∈ { 0, . . . , n }, i ∈ { 0, . . . , n + d − 1} and i ∈ { 1, . . . , m }, respectively. The variables 
+
+p′ 
+
+> j
+
+, q′ 
+
+> j
+
+and r′ 
+
+> j
+
+represent the integer values corresponding to xj within their respective intervals. Therefore, the input in integer form is given as: 
+
+x′ 
+
+> j
+
+=
+
+
+
+p′ 
+
+> j
+
+for j ∈ { 1, . . . , d },r′ 
+
+> j
+
+for j ∈ { d + 1 , . . . , 2d},q′ 
+
+> j
+
+for j ∈ { 2d + 1 , . . . , 4d},r′ 
+
+> j
+
+for j ∈ { 4d + 1 , . . . , 5d},p′ 
+
+> j
+
+for j ∈ { 5d + 1 , . . . , 7d}.
+
+(49) Elimination of invalid inputs: To avoid redundant substitution, insertion, and dele-28 tion operations, we first eliminate repeated inputs. Since x′ 
+
+> j
+
+, 1 ≤ j ≤ 2d, is responsi-ble for substitution operations, the repetition from x′ 
+
+> j
+
+, 1 ≤ j ≤ d is removed by using 
+
+ej of Eq. (1), and variables ejk and e′ 
+
+> j
+
+of Eqs. (24), (25) are used to remove the repe-tition from x′ 
+
+> j
+
+, 2 d + 1 ≤ j ≤ 3d, the sequence that is used in the insertion operation. To handle the redundant deletion operation, repetition from x′ 
+
+> j
+
+, 5 d + 1 ≤ j ≤ 6d is removed by using the following equations. 
+
+sjk = max 
+
+
+
+δ(x′ 
+
+> j
+
+, x ′
+
+> k
+
+) ∧ δ(x′
+
+> j+d
+
+, x ′
+
+> k+d
+
+), 0
+
+
+
+for j ∈ { 5d + 1 , . . . , 6d}. (50) 
+
+s′ 
+
+> j
+
+= max 
+
+
+
+x′ 
+
+> j
+
+− C ·
+
+> j−1
+
+X
+
+> k=1
+
+sjk , 0
+
+
+
+for j ∈ { 5d + 1 , . . . , 6d}. (51) Let x′′ denote the resultant sequence such that: 
+
+x′′  
+
+> j
+
+=
+
+
+
+ej for j ∈ { 1, . . . , d },x′ 
+
+> j
+
+for j ∈ { d + 1 , . . . , 2d},e′ 
+
+> j
+
+for j ∈ { 2d + 1 , . . . , 3d},x′ 
+
+> j
+
+for j ∈ { 3d + 1 , . . . , 5d},s′ 
+
+> j
+
+for j ∈ { 5d + 1 , . . . , 6d},x′ 
+
+> j
+
+for j ∈ { 6d + 1 , . . . , 7d}.
+
+(52) Removal of extra edit operations: Since d1 + d2 + d3 should not exceeds d, there may exist some excess edit operations. To find the number of such operations, the following equations are used. 
+
+tj =
+
+
+
+max 
+
+
+
+1 − δ(x′′  
+
+> j
+
+, 0) , 0
+
+
+
+for j ∈ { 1, . . . , d },
+
+max 
+
+
+
+1 −  δ(x′′  
+
+> j
+
+, 0) + δ(x′′ 
+
+> j+d
+
+, 0) , 0
+
+
+
+for j ∈ { 2d + 1 , . . . , 3d},
+
+max 
+
+
+
+1 −  δ(x′′  
+
+> j
+
+, 0) + δ(x′′ 
+
+> j+d
+
+, 0) , 0
+
+
+
+for j ∈ { 5d + 1 , . . . , 6d},
+
+(53) 
+
+t′ 
+
+> j
+
+=
+
+" j
+
+X
+
+> k=1
+
+tk ≥ d + 1 
+
+#
+
+for j ∈ { 1, . . . , d, 2d + 1 , . . . , 3d, 5d + 1 , . . . , 6d}. (54) 29 The excess positions can be removed by assigning them value 0 as follows: 
+
+wj = max( x′′  
+
+> j
+
+− C · t′ 
+
+> j
+
+, 0) for j ∈ { 1, . . . , d, 2d + 1 , . . . , 3d, 5d + 1 , . . . , 6d}. (55) Because in the insertion portion, xj = xj+d = 0 which results in δ(xj , x j+d) = 1. To handle this issue, replace 0 with B in wj for 2 d + 1 ≤ j ≤ 3d using the following equations: 
+
+w′ 
+
+> j
+
+= max 
+
+
+
+wj − C · δ(wj , 0) , 0
+
+
+
++ max 
+
+
+
+B − C(1 − δ(wj , 0)) , 0
+
+
+
+. (56) The preprocessed input Xj for edit operations is finally obtained as follows: 
+
+Xj =
+
+
+
+wj for j ∈ { 1, . . . , d },x′′  
+
+> j
+
+for j ∈ { d + 1 , . . . , 2d},w′ 
+
+> j
+
+for j ∈ { 2d + 1 , . . . , 3d},x′′  
+
+> j
+
+for j ∈ { 3d + 1 , . . . , 5d},wj for j ∈ { 5d + 1 , . . . , 6d},x′′  
+
+> j
+
+for j ∈ { 6d + 1 , . . . , 7d}.
+
+(57) Application of edit operations: Apply substitution operations on padded label and adjacency matrices U and V resp,. by using Eqs. (2)-(4) of Theorem 1 and Xj ,
+
+j ∈ { 1, . . . , 2d} as inputs to get the matrices U 1 and V 1. Apply insertion operations on U 1 and V 1 by using Eqs. (30)- (42) of Theorem 3, with Xj , j ∈ { 2d + 1 , . . . , 5d},to get U 2 and V 2. Apply deletion operations on U 2 and V 2 according to Theorem 2 and Xj , j ∈ { 5d + 1 , . . . , 7d} to get U ′ and V ′. Finally, the label and adjacency matrices L′ and A′ of the required graph G′ can be obtained by eliminating Bs from 
+
+U ′ and V ′.All equations utilize the maximum function, δ or [ a ≥ θ] function, and therefore, by Theorems 2, 1 and 3, there exists a GE d-generative ReLU network of size O(n2d)and constant depth. 30 Example 4. Reconsider the graph G shown in Fig. 1, d = 3, m = 10, and input 
+
+x = 0 .45 , 0, 0.59 , 0, 0.4, 0.15 , 0.11 , 0.05 , 0.88, 0 .55 , 0.44 , 0.93 , 0.52, 0.87, 0.03, 0.33, 0.4, 0, 0.79, 0.65, 0.9, where the first 2 d entries are used for substitution, the next 3 d
+
+entries are used for insertion, and the final 2 d entries are used for deletion operations. In the first step, decimals are converted into integers using the conversion Table 5 to obtain the vector x′ = [3 , 0, 3, 1, 4, 2, 1, 1, 7, 4, 4, 0, 6, 9, 1, 2, 2, 5, 4, 4, 5]. For example, the index entry (resp., value/label entry) x1 = 0 .45 (resp., x4 = 0) belongs to (2 /5, 3/5] (resp., [0 , 1/10]), and therefore x′ 
+
+> 1
+
+= 3 (resp., x′ 
+
+> 4
+
+= 1). In the second step, repetitions are removed from the indices for substitution, insertion, and deletion to obtain x′′ = [3 , 0, 0, 1, 4, 2, 1, 0, 7, 4, 4, 0, 6, 9, 1, 2, 0, 5, 4, 4, 5]. For example, the indices 
+
+x′ 
+
+> 1
+
+= x′ 
+
+> 3
+
+= 3 correspond to substitution; therefore, x′′  
+
+> 3
+
+= 0 to ignore it. Similarly, the index pairs ( x′
+
+> 7
+
+, x ′
+
+> 10
+
+) = ( x′
+
+> 8
+
+, x ′
+
+> 11
+
+) = (1 , 4) correspond to insertion; therefore, x′′  
+
+> 8
+
+=0 to ignore it. Likewise, ( x′
+
+> 16
+
+, x ′
+
+> 19
+
+) = ( x′
+
+> 17
+
+, x ′
+
+> 20
+
+) = (2 , 4) correspond to deletion; therefore, x′′  
+
+> 17
+
+= 0 to ignore it. In the third step, edit operations exceeding d are ignored to obtain X = [3 , 0, 0, 1, 4, 2, 1, B, 7, 4, 4, 0, 6, 9, 1, 2, 0, 0, 4, 4, 5]. For example, the indices x′′  
+
+> 1
+
+= 3, ( x′′  
+
+> 7
+
+, x ′′ 
+
+> 10
+
+) = (1 , 4), and ( x′′ 
+
+> 16
+
+, x ′′ 
+
+> 19
+
+) = (2 , 4) are the only valid substitution, insertion, and deletion operations, respectively, until the fourth valid edit operation (a deletion) ( x′′ 
+
+> 18
+
+, x ′′ 
+
+> 21
+
+) = (5 , 5), the count of which exceeds d = 3; hence, 
+
+X18 = 0 to ignore it. Finally, zero indices corresponding to insertion operations are set to B, as the proposed network for insertion cannot handle zero indices. In this case, the index x′′  
+
+> 8
+
+= 0 corresponds to insertion and is therefore set to X8 = B so that it can be ignored. We illustrate the process of obtaining these vectors to get 
+
+G′ by using Theorem 4. The meanings of Eqs. (49)-(57) are explained in Example 4, while the details of the deletion, substitution, and insertion operations are given in Examples 2, 1 and 3. 
+
+pji This variable specifies the interval for the position xj , where j ∈ { 1, . . . , d, 5d+1, . . . , 7d}. pji = 1 means that xj lies in the i-th interval, i.e., the interval (( i − 1) /n, i/n ]. In this case p13 = p20 = p33 = p16 2 = p17 2 = p18 5 = p19 4 = p20 4 =
+
+p21 5 = 1. All other values are zero. 
+
+qji Specifies the interval for each label xj , where j ∈ { 2d + 1 , . . . , 4d}. qji = 1 means that the j-th input lies in the i-th interval, i.e., xj lies in [( i − 1) /(n +
+
+d − 1) , i/ (n + d − 1)]. In this case, q71 = q81 = q97 = q10 4 = q11 4 = q12 0 = 1, and all other values are zero. 31 rji It specifies the interval for each label xj , where j ∈ { d + 1 , . . . , 2d, 4d +1, . . . , 5d}. rji = 1 means that the j-th input lies in the i-th interval, i.e., (( i − 1) /m, i/m ]. In this case, r41 = r54 = r62 = r13 6 = r14 9 = r15 1 = 1, and all other values are zero. 
+
+p′ 
+
+> j
+
+This variable assigns each position xj an integer i if xj belongs to the i-th interval, i.e., if pji = 1 then p′j = i. Here, p′ 
+
+> 1
+
+= 3, p′ 
+
+> 2
+
+= 0, p′ 
+
+> 3
+
+= 3, p′ 
+
+> 16
+
+= 2, 
+
+p′ 
+
+> 17
+
+= 2, p′ 
+
+> 18
+
+= 5, p′ 
+
+> 19
+
+= 4, p′ 
+
+> 20
+
+= 4, p′ 
+
+> 21
+
+= 5. 
+
+q′ 
+
+> j
+
+It assigns each position xj an integer i if xj belongs to the i-th interval, i.e., if 
+
+qji = 1 then q′ 
+
+> j
+
+= i. In this example, q′ 
+
+> 7
+
+= 1, q′ 
+
+> 8
+
+= 1, q′ 
+
+> 9
+
+= 7, q′ 
+
+> 10
+
+= 4, q′ 
+
+> 11
+
+= 4, 
+
+q′ 
+
+> 12
+
+= 0. 
+
+r′ 
+
+> j
+
+This variable assigns each label xj an integer i if xj belongs to the i-th interval, i.e., if rji = 1 then r′ 
+
+> j
+
+= i. In this example, r′ 
+
+> 4
+
+= 1, r′ 
+
+> 5
+
+= 4, r′ 
+
+> 6
+
+= 2, r′ 
+
+> 13
+
+= 6, 
+
+r′ 
+
+> 14
+
+= 9, r′ 
+
+> 15
+
+= 1. 
+
+x′ 
+
+> j
+
+It combines the conversions of all parts of the input. Therefore, x′ =[3 , 0, 3, 1, 4, 2, 1, 1, 7, 4, 4, 0, 6, 9, 1, 2, 2, 5, 4, 4, 5]. 
+
+sjk To avoid the extra deletion operations, this variable indicates the indices in the deletion portion that are repeated. sjk = 1 if x′ 
+
+> j
+
+= x′ 
+
+> k
+
+and x′ 
+
+> j+d
+
+= x′
+
+> k+d
+
+. In this case s16 ,16 = s16 ,17 = s17 ,17 = 1. For all other values sjk = 0. 
+
+s′ 
+
+> j
+
+It nullifies the effect of repeated index by converting it into 0. In this case, 
+
+s′ 
+
+> 17
+
+= 0. All other values are same as x′ 
+
+> j
+
+.
+
+x′′  
+
+> j
+
+It combines the integer conversion of the input after the removal of repeated indices for each edit operation. In this case, x′′ =[3 , 0, 0, 1, 4, 2, 1, 0, 7, 4, 4, 0, 6, 9, 1, 2, 0, 5, 4, 4, 5]. 
+
+tj This variable indicates the possible indices where the edit operation can be applied. Here, for substitution (resp., insertion and deletion) there is only one (resp., one and two) non-zero index on which edit operation can be applied, i.e., 
+
+x′′  
+
+> 1
+
+= 3 (resp., x′′  
+
+> 7
+
+= 1 and x′′  
+
+> 16
+
+= 2, x′′  
+
+> 18
+
+= 5). Therefore, t1 = t7 = t16 = t18 = 1. All other values are 0. 
+
+t′ 
+
+> j
+
+Since d1 + d2 + d3 ≤ d, this variable indicates the exceeded indices. Thus, 
+
+t′ 
+
+> jk
+
+= 1 if sum of number of indices on which edit operation can be applied exceeds d. In this case t′ 
+
+> 18
+
+= 1. For all other values t′ 
+
+> j
+
+= 0. 
+
+wj This variable nullifies the exceeded indices. Thus, wj = 0 if t′ 
+
+> j
+
+= 1. In this case w18 = 0. All other values are the same as x′′  
+
+> j
+
+.32 w′ 
+
+> j
+
+This variable is used to ignore the effect of xj = xj+d = 0 which would other-wise result in δ(xj , x j+d) = 1 in the insertion case, by replacing 0 with B in wj
+
+for 2 d + 1 ≤ j ≤ 3d. Thus, w′ 
+
+> 8
+
+= B. All other j, w′ 
+
+> j
+
+= wj .
+
+Xj This variable gives the final input for all three edit operations. Thus, X =[3 , 0, 0, 1, 4, 2, 1, B, 7, 4, 4, 0, 6, 9, 1, 2, 0, 0, 4, 4, 5]. 
+
+# 7 Computational Results and Discussion 
+
+To evaluate the scalability of the proposed networks for generating graphs with the number of vertices n and a desired graph edit distance d, we conducted a series of computational experiments by varying both parameters to generate graphs by performing insertion, deletion and substitution operations using the proposed GE d
+
+network. The experiments were performed on a Linux-based server equipped with an Intel Xeon Gold 5222 CPU (3.80 GHz, 16 cores). The server also contains an NVIDIA A100 PCIe GPU with 40 GB of memory (CUDA 11.2), although the experiments reported in this study were conducted using the CPU only. In these experiments, the number of vertices n ranged from 100 to 1400, while the desired graph edit distance 
+
+d ranged from 10 to 140. For each pair ( n, d ), we measured the computational time in seconds required by the proposed networks to generate a graph satisfying the specified edit distance constraint. In our experimental design, we considered parameter combinations under the condition d ≤ n. Consequently, the parameter pairs such as d = 110 with n = 100 were not evaluated. The experiments were conducted progressively by increasing both n and d in order to examine how the computational cost grows with the problem size. For each value of d, the number of vertices was increased until the computation encountered memory limitations. When the required memory exceeded the available resources, the corresponding experiment could not be completed, and larger instances for that configuration were not tested. For example, when d = 120 and n = 300, the computation resulted in a memory-out issue; therefore, larger instances for this parameter setting were not evaluated. The results are presented in Table 7 and Fig. 5 which indicate that the compu-tational time increases steadily with the number of vertices n. For example, when 
+
+d = 10, the running time grows from 6 seconds for n = 100 to 1250 seconds for 
+
+n = 1400. A similar trend is observed when the number of vertices is fixed and the 33 edit distance increases. For instance, when n = 200, the running time rises from 19 seconds for d = 10 to 1560 seconds for d = 140, indicating that larger edit distances require substantially more computation. Comparing these two observations shows that the increase in running time is more pronounced when d grows while n is fixed, whereas the growth is more gradual when n increases for a fixed d. This suggests that the desired edit distance has a stronger influence on the computational effort, as larger values of d significantly expand the space of feasible graph transformations that must be explored. Overall, the experiments show that the proposed method can handle graphs with up to 1400 vertices for smaller edit distances. However, the computational cost increases considerably as d grows, limiting the range of instances for larger edit distances.                                                                                           
+
+> d\n100 200 300 400 500 600 700 800 900 1000 1100 1200 1300 1400 10 619 42 74 123 173 245 337 511 697 816 949 1090 1250 20 14 42 87 146 239 333 444 633 946 1288 30 27 73 141 229 376 527 668 953 40 46 112 204 328 528 757 916 1298 50 73 162 283 448 705 1013 1199 1739 60 109 223 373 574 902 1258 70 159 301 481 767 1134 80 222 390 616 986 1416 90 304 503 784 1225 100 406 643 1022 110 813 1261 120 1009 130 1249 140 1560
+
+Table 7: Computation time (sec.) for different values of n and d to generate desired graphs with the proposed network GE d.Additionally, we conducted a comparative analysis by generating graphs with a given edit distance using two state-of-the-art graph generative models, GraphRNN by You et al. [41] and GraphGDP by Huang et al. [44]. For this purpose, we selected six input graphs with the number of vertices n = 10 , 20 , 30 , 40 , 50 , 100 and the number 34 110 100 1000 100 1000 Time (sec.) 
+
+n
+
+> d=10 d=20 d=30 d=40
+> d=50
+> d=60
+> d=70
+> d=80 d=90 d=100
+> d=110 d=120
+> d=130 d=140
+
+Figure 5: Log-log plot between n and computation time for different edit distance d.of edges |E| = 9 , 20 , 130 , 250 , 918 , 1536, respectively. For each graph, we generated graphs with at most edit distance d = 5 , 10 , 15 , 20 , 25 , 50, respectively, using the proposed network GE d as well as GraphRNN and GraphGDP. To evaluate the quality of the generated graphs, we approximated the graph edit distance between the generated graphs and the corresponding input graph. For a consistent approximation, we considered unlabeled graphs and allowed only edge deletion and insertion operations when generating graphs with the proposed network GE d. Under this setting, all generated graphs must have the same number of vertices as the input graph and the number of edges must lie within the range [ |E|− d, |E|+d], and graph edit distance at most d. Furthermore, the edit distance between the underlying graphs is the symmetric difference of the edges of the graphs [52]. For each triplet ( n, |E|, d ), 500 unlabeled graphs were generated using the pro-posed network GE d. The proposed GE d network requires no training, unlike GraphRNN and GraphGDP. GraphRNN (dependent Bernoulli variant) and GraphGDP were trained on graphs obtained by GE d using a 4-layer RNN and a 4-layer GNN, respec-tively, each with hidden neuron size 128. Training was performed for approximately 3000 epochs with batch size 32, using learning rates of 0.003 for GraphRNN and 35 0.00002 for GraphGDP. For both models, 80% of the generated graphs were used for training and the remaining 20% for testing, while the default settings were used for the other parameters. After training, 500 graph samples were generated for each input graph using GraphRNN [41] and GraphGDP [44]. The graph edit distances between these generated graphs and the corresponding input graph were approx-imated. The number of edges and the graph edit distance of the graphs with n
+
+vertices generated by these models are illustrated in Fig. 6. A summary of these results is given in Table 8, which reports the number Nn of generated graphs with 
+
+n vertices, the number N|E| of graphs whose edge counts lie within the acceptable range [ |E| − d, |E| + d], and the number Nd of graphs whose graph edit distance from the input graph is at most d.The results show that the proposed method GE d consistently satisfies all the re-quired constraints. For every tested configuration, all 500 generated graphs preserve the number of vertices ( Nn = 500), have edge counts within the acceptable range (N|E| = 500), and achieve the desired graph edit distance ( Nd = 500). This indi-cates that the proposed approach reliably generates graphs that strictly satisfy the structural and edit distance constraints imposed by the input graph. In contrast, the graphs generated by GraphRNN frequently violate these con-straints. Although GraphRNN occasionally produces graphs with acceptable edge counts or vertex numbers, none of the generated graphs achieve the required edit dis-tance ( Nd = 0 for all cases). Moreover, the number of valid graphs with respect to vertex and edge constraints decreases as the graph size increases. For example, when 
+
+n = 100, only 438 out of 500 graphs preserve the correct number of vertices and none satisfy the edge constraint, indicating a significant degradation in structural consistency for larger graphs. GraphGDP performs slightly better in preserving the number of vertices, with 
+
+Nn = 500 for all configurations, and often produces graphs whose edge counts fall within the acceptable range. However, similar to GraphRNN, none of the generated graphs satisfy the required edit distance constraint ( Nd = 0 across all cases). In particular, the number of graphs with acceptable edge counts decreases significantly for larger graphs; for instance, when n = 100, only 60 out of 500 generated graphs fall within the acceptable edge range. Overall, the results demonstrate that the proposed GE d network is significantly 36 more reliable for generating graphs under explicit structural constraints. Unlike the baseline generative models, the proposed method consistently produces valid graphs that simultaneously satisfy the vertex, edge, and edit distance requirements across all tested instances. The input graphs and the resultant graphs obtained in these experiments are available at https://github.com/MGANN-KU/GraphGen_ReLUNetworks .37 0510 15 20 25 110 19 28 37 46 55 64 73 82 91 100 109 118 127 136 145 154 163 172 181 190 199 208 217 226 235 (10, 5, GraphRNN) |E| Dist. 
+
+0510 15 20 25 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (10, 5, GraphGDP) |E| Dist. 
+
+0510 15 20 25 30 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (20, 10, Proposed) |E| Dist. 
+
+010 20 30 40 50 60 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (20, 10, GraphGDP) |E| Dist. 
+
+0510 15 20 25 30 35 40 45 50 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (20, 10, GraphRNN) |E| Dist. 
+
+020 40 60 80 100 120 140 160 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (30, 15, Proposed) |E| Dist. 
+
+050 100 150 200 250 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (30, 15, GraphRNN) |E| Dist. 
+
+050 100 150 200 250 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (30, 15, GraphGDP) |E| Dist. 
+
+050 100 150 200 250 300 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (40, 20, Proposed) |E| Dist. 
+
+050 100 150 200 250 300 350 400 118 35 52 69 86 103 120 137 154 171 188 205 222 239 256 273 290 307 324 341 358 375 392 409 426 443 460 477 (40, 20, GraphRNN) |E| Dist. 
+
+050 100 150 200 250 300 350 400 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (40, 20, GraphGDP) |E| Dist. 
+
+0100 200 300 400 500 600 700 800 900 1000 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (50, 25, Proposed) |E| Dist. 
+
+0100 200 300 400 500 600 700 800 118 35 52 69 86 103 120 137 154 171 188 205 222 239 256 273 290 307 324 341 358 375 392 409 426 443 460 477 (50, 25, GraphRNN) |E| Dist. 
+
+0100 200 300 400 500 600 700 800 900 1000 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (50, 25, GraphGDP) |E| Dist. 
+
+0200 400 600 800 1000 1200 1400 1600 1800 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (100, 50, Proposed) |E| Dist. 
+
+0200 400 600 800 1000 1200 1400 1600 1800 2000 117 33 49 65 81 97 113 129 145 161 177 193 209 225 241 257 273 289 305 321 337 353 369 385 401 417 433 (100, 50, GraphRNN) |E| Dist. 
+
+0500 1000 1500 2000 2500 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (100, 50, GraphGDP) |E| Dist. 
+
+0246810 12 14 16 119 37 55 73 91 109 127 145 163 181 199 217 235 253 271 289 307 325 343 361 379 397 415 433 451 469 487 (10, 5, Proposed) |E| Dist. Figure 6: Plots of the number of edges |E| (blue) and the graph edit distances (Dist. in orange) of the graphs with n vertices generated by the proposed network, GraphRNN [41] and GraphGDP [44] for different pairs of n and d.38 n |E| d Proposed GE d GraphRNN [41] GraphGDP [44] 
+
+N|E| Nn Nd N|E| Nn Nd N|E| Nn Nd
+
+10 9 5 500 500 500 441 240 0 498 500 020 20 10 500 500 500 500 499 0 498 500 030 130 15 500 500 500 500 499 0 369 500 040 250 20 500 500 500 270 487 0 491 500 050 918 25 500 500 500 0 483 0 394 500 0100 1536 50 500 500 500 0 438 0 60 500 0Table 8: Comparison of the proposed network GE d with GraphRNN [41] and GraphGDP [44] models to generate valid graphs with the desired edit distance. 
+
+# 8 Conclusion 
+
+In this study, we investigated the existence of ReLU-based generative networks ca-pable of generating graphs similar to a given graph under the graph edit distance metric. In our framework, a vertex-labeled graph is represented by its label and adjacency matrices, which serve as both the input and output of the proposed archi-tecture. We showed that graphs obtained through substitution, deletion, or insertion operations within a bounded edit distance can be generated by constant depth ReLU networks whose size scales as O(n2d). Furthermore, we established that, when these operations are combined, a constant depth ReLU network of size O(n2d) can gener-ate any graph within edit distance d from the input graph, providing a deterministic generative model for generating the desired graphs. The scalability experiments indicate that the running time of the proposed GE d
+
+network increases with both the number of vertices n and the edit distance d, with 
+
+d having a stronger impact on the computational cost. Nevertheless, the method successfully handles graphs with up to 1400 vertices for moderate edit distances up to 140 in a reasonable time, demonstrating good scalability for large graph instances. The comparative experiments show that the proposed GE d network consistently gen-erates valid graphs, with all generated graphs satisfying the vertex, edge, and edit distance constraints for every tested configuration. In contrast, GraphRNN by You 39 et al. [41] and GraphGDP by Huang et al. [44] fail to produce any graph satisfying the required edit distance in all cases, and their structural validity deteriorates for larger graphs (e.g., only 438/500 graphs preserve the vertex count and 60/500 satisfy the edge constraint when n = 100). These results demonstrate the clear advantage of the proposed method for constrained graph generation. Future research may explore several directions to further enhance the proposed approach. First, reducing the size or depth of the neural network architecture could improve computational efficiency and scalability while maintaining expressive power. Second, developing techniques that enable the uniform generation of graphs, ensuring that each feasible graph is produced with approximately equal probability, would be an important advancement. Finally, extending the framework to real-world graph generation tasks, such as social, biological, and communication networks, would help demonstrate its broader practical applicability. An implementation of the proposed networks is available at https://github. com/MGANN-KU/GraphGen_ReLUNetworks .
+
+# Author contributions 
+
+Conceptualization, M.G. and T.A.; methodology, M.G. and T.A.; software, M.G. validation, M.G.; formal analysis, M.G. and T.A.; investigation, M.G. data curation, M.G.; writing—original draft preparation, M.G.; writing—review and editing, M.G. and T.A..; supervision, T.A.; project administration, T.A. All authors have read and agreed to the published version of the manuscript. 
+
+# Acknowledgments 
+
+The work of Tatsuya Akutsu was supported in part by Grants 22H00532 and 22K19830 from Japan Society for the Promotion of Science (JSPS), Japan. The authors would like to thank Dr. Naveed Ahmed Azam, Quaid-i-Azam University Pakistan, for the useful technical discussions. 40 Conflict of interest 
+
+All authors have no conflicts of interest in this paper. 
+
+# References 
+
+[1] C. H. Wan, S. P. Chuang, and H. Y. Lee. Towards audio-to-scene image synthesis using generative adversarial network. In Proceedings of the IEEE International Conference on Acoustics, Speech and Signal Processing , 2019. [2] A. Van Den Oord, S. Dieleman, H. Zen, K. Simonyan, O. Vinyals, A. Graves, N. Kalchbrenner, A. Senior, and K. Kavukcuoglu. Wavenet: A generative model for raw audio. arXiv Preprint arXiv:1609.03499 , 2016. [3] N. Aldausari, A. Sowmya, N. Marcus, and G. Mohammadi. Video generative adversarial networks: A review. ACM Computing Surveys , 55:1–25, 2022. [4] N. Killoran, L. J. Lee, A. Delong, D. Duvenaud, and B. J. Frey. Generating and designing dna with deep generative models. arXiv Preprint arXiv:1712.06148 ,2017. [5] T. Buschmann and L. V. Bystrykh. Levenshtein error-correcting barcodes for multiplexed dna sequencing. BMC Bioinformatics , 14:1–10, 2013. [6] B. Al Kindhi, M. A. Hendrawan, D. Purwitasari, T. A. Sardjono, and M. H. Purnomo. Distance-based pattern matching of dna sequences for evaluating primary mutation. In Proceedings of the 2017 Second International Conference on Information Technology, Information Systems and Electrical Engineering ,pages 310–314, 2017. [7] G. Hinton, L. Deng, D. Yu, G. E. Dahl, A. R. Mohamed, N. Jaitly, A. Senior, V. Vanhoucke, P. Nguyen, T. N. Sainath, and B. Kingsbury. Deep neural net-works for acoustic modeling in speech recognition: The shared views of four research groups. IEEE Signal Processing Magazine , 29:82–97, 2012. 41 [8] J. Zhou and O. Troyanskaya. Deep supervised and convolutional generative stochastic network for protein secondary structure prediction. In Proceedings of the International Conference on Machine Learning , 2014. [9] J. Lim, S. Ryu, J. W. Kim, and W. Y. Kim. Molecular generative model based on conditional variational autoencoder for de novo molecular design. Journal of Cheminformatics , 10:1–9, 2018. [10] D. Schwalbe-Koda and R. G´ omez-Bombarelli. Generative models for automatic chemical design. In Machine Learning Meets Quantum Physics , pages 445–467. 2020. [11] C. H. Gronbech, M. F. Vording, P. N. Timshel, C. K. Sonderby, T. H. Pers, and O. Winther. scvae: Variational auto-encoders for single-cell gene expression data. Bioinformatics , 36:4415–4422, 2020. [12] D. P. Kingma and M. Welling. An introduction to variational autoencoders. 
+
+Foundations and Trends in Machine Learning , 12:307–392, 2019. [13] Y. Bengio, L. Yao, G. Alain, and P. Vincent. Generalized denoising auto-encoders as generative models. In Advances in Neural Information Processing Systems , volume 26, 2013. [14] I. Goodfellow, J. Pouget-Abadie, M. Mirza, B. Xu, D. Warde-Farley, S. Ozair, A. Courville, and Y. Bengio. Generative adversarial networks. Communications of the ACM , 63:139–144, 2020. [15] F. Gao, Y. Yang, J. Wang, J. Sun, E. Yang, and H. Zhou. A deep convolu-tional generative adversarial networks-based semi-supervised method for object recognition in synthetic aperture radar images. Remote Sensing , 10:846, 2018. [16] G. Hinton and R. Salakhutdinov. Deep boltzmann machines. In Journal of Machine Learning Research Workshop and Conference Proceedings , 2009. [17] A. Van Den Oord. Conditional image generation with pixelcnn decoders. In 
+
+Advances in Neural Information Processing Systems , volume 29, 2016. 42 [18] A. Van Den Oord, N. Kalchbrenner, and K. Kavukcuoglu. Pixel recurrent neural networks. In Proceedings of the International Conference on Machine Learning ,2016. [19] K. Gregor, I. Danihelka, A. Graves, D. Rezende, and D. Wierstra. Draw: A re-current neural network for image generation. In Proceedings of the International Conference on Machine Learning , 2015. [20] J. Ho, A. Jain, and P. Abbeel. Denoising diffusion probabilistic models. In Pro-ceedings of the Advances in Neural Information Processing Systems (NeurIPS) ,volume 33, pages 6840–6851, 2020. [21] L. Yang, Z. Zhang, Y. Song, S. Hong, R. Xu, Y. Zhao, W. Zhang, B. Cui, and M.-H. Yang. Diffusion models: A comprehensive survey of methods and applications. ACM Computing Surveys , 56:1–39, 2023. [22] S. Kumano and T. Akutsu. Comparison of the representational power of random forests, binary decision diagrams, and neural networks. Neural Computation ,34:1019–1044, 2022. [23] K. Hornik, M. Stinchcombe, and H. White. Multilayer feedforward networks are universal approximators. Neural Networks , 2:359–366, 1989. [24] G. F. Mont´ ufar, R. Pascanu, K. Cho, and Y. Bengio. On the number of linear regions of deep neural networks. In Proceedings of Advances in Neural Informa-tion Processing Systems , volume 27, pages 1–9, 2014. [25] M. Raghu, B. Poole, J. Kleinberg, S. Ganguli, and J. S. Dickstein. On the expressive power of deep neural networks. In Proceedings of the International Conference on Machine Learning , volume 70, pages 2847–2854, 2017. [26] M. Telgarsky. Representation benefits of deep feedforward networks. arXiv Preprint arXiv:1509.08101 , 2015. [27] L. Szymanski and B. McCane. Deep networks are effective encoders of period-icity. IEEE Transactions on Neural Networks and Learning Systems , 25:1816– 1827, 2014. 43 [28] V. Chatziafratis, S. G. Nagarajan, I. Panageas, and X. Wang. Depth-width trade-offs for relu networks via sharkovsky’s theorem. arXiv Preprint arXiv:1912.04378 , 2019. [29] B. Hanin and D. Rolnick. Complexity of linear regions in deep networks. In 
+
+Proceedings of the International Conference on Machine Learning , pages 2596– 2604, 2019. [30] Y. Bengio, O. Delalleau, and C. Simard. Decision trees do not generalize to new variations. Computational Intelligence , 26:449–467, 2010. [31] G. Biau, E. Scornet, and J. Welbl. Neural random forests. Sankhy¯ a: The Indian Journal of Statistics, Series A , 81:347–386, 2019. [32] M. Ghafoor and T. Akutsu. On the generative power of relu network for gener-ating similar strings. IEEE Access , 12:52603–52622, 2024. [33] A. Sanfeliu and K. S. Fu. A distance measure between attributed relational graphs for pattern recognition. IEEE Transactions on Systems, Man, and Cy-bernetics , SMC-13:353–362, 1983. [34] X. Gao, B. Xiao, D. Tao, and X. Li. A survey of graph edit distance. Pattern Analysis and Applications , 13:113–129, 2010. [35] R. Ibragimov, M. Malek, J. Guo, and J. Baumbach. Gedevo: An evolutionary graph edit distance algorithm for biological network alignment. In German Conference on Bioinformatics , pages 68–79, 2013. [36] K. Riesen, M. Ferrer, R. Dornberger, and H. Bunke. Greedy graph edit distance. In International Workshop on Machine Learning and Data Mining in Pattern Recognition , pages 3–16. Springer, 2015. [37] Z. Zeng, A. K. Tung, J. Wang, J. Feng, and L. Zhou. Comparing stars: On approximating graph edit distance. Proceedings of the VLDB Endowment , 2:25– 36, 2009. 44 [38] S. Bougleux, L. Brun, V. Carletti, P. Foggia, B. Ga¨ uzere, and M. Vento. Aquadratic assignment formulation of the graph edit distance. arXiv Preprint arXiv:1512.07494 , 2015. [39] Y. Bai, H. Ding, K. Gu, Y. Sun, and W. Wang. Learning-based efficient graph similarity computation via multi-scale convolutional set matching. In Proceed-ings of the AAAI Conference on Artificial Intelligence , volume 34, pages 3219– 3226, 2020. [40] Y. Bai, H. Ding, S. Bian, T. Chen, Y. Sun, and W. Wang. Graph edit distance computation via graph neural networks. arXiv Preprint arXiv:1808.05689 , 2018. [41] J. You, R. Ying, X. Ren, W. Hamilton, and J. Leskovec. Graphrnn: Generating realistic graphs with deep auto-regressive models. In Proceedings of the 35th International Conference on Machine Learning , pages 5708–5717, 2018. [42] Z. Wang, J. Shi, N. Heess, A. Gretton, and M. K. Titsias. Learning-order autoregressive models with application to molecular graph generation. arXiv Preprint arXiv:2503.05979 , 2025. [43] D. Chen, M. Krimmel, and K. Borgwardt. Flatten graphs as sequences: Trans-formers are scalable graph generators. arXiv Preprint arXiv:2502.02216 , 2025. [44] H. Huang, L. Sun, B. Du, Y. Fu, and W. Lv. Graphgdp: Generative diffusion processes for permutation invariant graph generation. In Proceedings of the 2022 IEEE International Conference on Data Mining (ICDM) , pages 201–210, 2022. [45] X. Liu, Y. He, B. Chen, and M. Zhou. Advancing graph generation through beta diffusion. arXiv Preprint arXiv:2406.09357 , 2025. [46] M. Madeira, C. Vignac, D. Thanou, and P. Frossard. Generative modelling of structurally constrained graphs. In Proceedings of the 38th Conference on Neural Information Processing Systems , pages 137218–137262, 2024. [47] S. Verma, A. Goyal, A. Mathur, A. Anand, and S. Ranu. Grail: Graph edit distance and node alignment using llm-generated code. arXiv Preprint arXiv:2505.02124 , 2025. 45 [48] A. Bommakanti, H. R. Vonteri, S. Ranu, and P. Karras. Eugene: Explainable unsupervised approximation of graph edit distance with generalized edit costs. 
+
+arXiv Preprint arXiv:2402.05885 , 2024. [49] M. Ghafoor and T. Akutsu. Designing relu generative networks to enumerate trees with a given tree edit distance. arXiv Preprint arXiv:2510.10706 , 2025. DOI: 10.48550/arXiv.2510.10706. [50] Kaspar Riesen and Horst Bunke. Approximate graph edit distance computation by means of bipartite graph matching. Image and Vision Computing , 27(7):950– 959, June 2009. [51] S´ ebastien Bougleux, Luc Brun, Vincenzo Carletti, Pasquale Foggia, Benoit Ga¨ uz` ere, and Mario Vento. Graph edit distance as a quadratic assignment problem. Pattern Recognition Letters , 87:38–46, 2017. [52] Ryan Martin. The edit distance function and symmetrization. The Electronic Journal of Combinatorics , 20(3):P26, 2013. 46

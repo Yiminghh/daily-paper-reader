@@ -1,0 +1,515 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-08T20:38:18.239283+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 11,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2604.04403v2",
+      "title": "MolDA: Molecular Understanding and Generation via Large Language Diffusion Model",
+      "abstract": "Large Language Models (LLMs) have significantly advanced molecular discovery, but existing multimodal molecular architectures fundamentally rely on autoregressive (AR) backbones. This strict left-to-right inductive bias is sub-optimal for generating chemically valid molecules, as it struggles to account for non-local global constraints (e.g., ring closures) and often accumulates structural errors during sequential generation. To address these limitations, we propose MolDA (Molecular language model with masked Diffusion with mAsking), a novel multimodal framework that replaces the conventional AR backbone with a discrete Large Language Diffusion Model. MolDA extracts comprehensive structural representations using a hybrid graph encoder, which captures both local and global topologies, and aligns them into the language token space via a Q-Former. Furthermore, we mathematically reformulate Molecular Structure Preference Optimization specifically for the masked diffusion. Through bidirectional iterative denoising, MolDA ensures global structural coherence, chemical validity, and robust reasoning across molecule generation, captioning, and property prediction.",
+      "authors": [
+        "Seohyeon Shin",
+        "HanJun Choi",
+        "Jun-Hyung Park",
+        "Hong Kook Kim",
+        "Mansu Kim"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-06T04:04:14+00:00",
+      "link": "https://arxiv.org/pdf/2604.04403v2",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Molecular language model with masked diffusion and hybrid graph encoder",
+      "llm_evidence_cn": "结合掩码扩散模型与混合图编码器的分子语言模型",
+      "llm_evidence": "结合掩码扩散模型与混合图编码器的分子语言模型",
+      "canonical_evidence": "结合掩码扩散模型与混合图编码器的分子语言模型",
+      "llm_tldr_en": "Proposes MolDA, a multimodal framework using diffusion models and graph encoders for molecular generation.",
+      "llm_tldr_cn": "提出MolDA框架，利用扩散模型和图编码器改进分子的多模态理解与生成。",
+      "llm_tldr": "提出MolDA框架，利用扩散模型和图编码器改进分子的多模态理解与生成。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05622v1",
+      "title": "CVT Archives and Chemical Embedding Measures for Multi-Objective Quality Diversity in Molecular Design",
+      "abstract": "Nonlinear optical (NLO) materials are essential for photonic technologies, yet discovering optimal NLO molecules requires balancing multiple competing objectives across vast chemical spaces. Previous work showed that Multi-Objective MAP-Elites (MOME) with grid-based archives discovers diverse, high-quality molecules for electro-optic applications. However, uniform grid partitioning wastes archive capacity on chemically infeasible regions while undersampling high-density areas. We apply MOME with Centroidal Voronoi Tessellation (CVT) archives whose cells are defined by learned embeddings from ChemBERTa-2 Multi-Task Regression reduced via UMAP, capturing chemical similarity beyond simple structural features. We investigate a four-objective NLO molecular design problem: maximizing the $β/ γ$ hyperpolarizability ratio, constraining HOMO-LUMO gap and linear polarizability to target ranges, and minimizing energy per atom. Our results demonstrate that embedding-based measures in CVT archives yield significantly higher median global hypervolume and multi-objective quality diversity scores, while filling nearly all native archive niches.",
+      "authors": [
+        "Dominic Mashak",
+        "Jacob Schrum"
+      ],
+      "primary_category": "physics.comp-ph",
+      "categories": [
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-07T09:22:52+00:00",
+      "link": "https://arxiv.org/pdf/2604.05622v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "molecular design using learned embeddings and quality diversity",
+      "llm_evidence_cn": "利用学习到的嵌入和质量多样性进行分子设计",
+      "llm_evidence": "利用学习到的嵌入和质量多样性进行分子设计",
+      "canonical_evidence": "利用学习到的嵌入和质量多样性进行分子设计",
+      "llm_tldr_en": "Uses CVT archives and ChemBERTa embeddings to improve multi-objective quality diversity in molecular design.",
+      "llm_tldr_cn": "利用CVT存档和ChemBERTa嵌入来提高分子设计中的多目标质量多样性。",
+      "llm_tldr": "利用CVT存档和ChemBERTa嵌入来提高分子设计中的多目标质量多样性。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.04273v1",
+      "title": "Loop-Extrusion Linkage: Spectral Ordering and Interval-Based Structure Discovery for Continuous Optimization",
+      "abstract": "The rapid growth of nature-inspired metaheuristics has exposed a persistent gap between metaphorical novelty and genuine algorithmic advancement. Motivated by the biophysics of chromatin loop extrusion -- a well-characterized genome-folding process driven by SMC motor complexes and conditional barriers -- we introduce the Loop-Extrusion Linkage (LEL) operator, a structure-learning wrapper that combines online variable-interaction estimation, spectral seriation via the Fiedler vector, and adaptive interval-based subspace search. LEL constructs a sparse interaction graph from successful optimization steps, derives a heuristic one-dimensional variable ordering, and generates overlapping evaluation subsets through stochastic interval growth modulated by learned boundary-crossing probabilities. We evaluate LEL on six synthetic diagnostic functions at d=96 designed to probe specific structural hypotheses -- contiguous blocks, permuted blocks, overlapping windows, banded chains, separable controls, and dense rotated couplings -- across 10^4 and 5 x 10^4 evaluation budgets with 15 independent seeds. Results are assessed via the Wilcoxon signed-rank test with Holm-Bonferroni correction and Vargha-Delaney A12 effect sizes. At 10^4 evaluations, Full LEL achieves the best median log-gap on 3 of 6 functions significantly outperforming all ablations and jSO on the structured tasks. At 5 x 10^4 evaluations, simpler ablations and baselines often surpass the full method, indicating that the adaptive barrier mechanism may over-constrain late-stage search on uniformly partitioned landscapes. The strongest supported finding is that learned spectral ordering consistently improves over graph-only grouping and random variable ordering, suggesting that interaction-graph seriation is the most valuable component of the proposed framework.",
+      "authors": [
+        "Eren Unlu"
+      ],
+      "primary_category": "cs.NE",
+      "categories": [
+        "cs.NE"
+      ],
+      "published": "2026-04-05T21:26:21+00:00",
+      "link": "https://arxiv.org/pdf/2604.04273v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "biophysics-inspired structure discovery and spectral graph ordering",
+      "llm_evidence_cn": "受生物物理启发的结构发现与谱图排序",
+      "llm_evidence": "受生物物理启发的结构发现与谱图排序",
+      "canonical_evidence": "受生物物理启发的结构发现与谱图排序",
+      "llm_tldr_en": "Uses chromatin loop extrusion biophysics to guide spectral graph ordering and structure discovery in optimization.",
+      "llm_tldr_cn": "利用染色质环挤压生物物理学指导优化中的谱图排序和结构发现。",
+      "llm_tldr": "利用染色质环挤压生物物理学指导优化中的谱图排序和结构发现。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05002v1",
+      "title": "Learning Stable Predictors from Weak Supervision under Distribution Shift",
+      "abstract": "Learning from weak or proxy supervision is common when ground-truth labels are unavailable, yet robustness under distribution shift remains poorly understood, especially when the supervision mechanism itself changes. We formalize this as supervision drift, defined as changes in P(y | x, c) across contexts, and study it in CRISPR-Cas13d experiments where guide efficacy is inferred indirectly from RNA-seq responses. Using data from two human cell lines and multiple time points, we build a controlled non-IID benchmark with explicit domain and temporal shifts while keeping the weak-label construction fixed. Models achieve strong in-domain performance (ridge R^2 = 0.356, Spearman rho = 0.442) and partial cross-cell-line transfer (rho ~ 0.40). However, temporal transfer fails across all models, with negative R^2 and near-zero correlation (e.g., XGBoost R^2 = -0.155, rho = 0.056). Additional analyses confirm this pattern. Feature-label relationships remain stable across cell lines but change sharply over time, indicating that failures arise from supervision drift rather than model limitations. These findings highlight feature stability as a simple diagnostic for detecting non-transferability before deployment.",
+      "authors": [
+        "Mehrdad Shoeibi",
+        "Elias Hossain",
+        "Ivan Garibay",
+        "Niloofar Yousefi"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-05T23:46:49+00:00",
+      "link": "https://arxiv.org/pdf/2604.05002v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "CRISPR-Cas13d experiments and RNA-seq responses",
+      "llm_evidence_cn": "CRISPR-Cas13d实验和RNA-seq响应",
+      "llm_evidence": "CRISPR-Cas13d实验和RNA-seq响应",
+      "canonical_evidence": "CRISPR-Cas13d实验和RNA-seq响应",
+      "llm_tldr_en": "Studies robust prediction of CRISPR guide efficacy from RNA-seq data under distribution shift.",
+      "llm_tldr_cn": "研究了分布偏移下根据RNA-seq数据稳健预测CRISPR引导效力的方法。",
+      "llm_tldr": "研究了分布偏移下根据RNA-seq数据稳健预测CRISPR引导效力的方法。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.04636v1",
+      "title": "Interpretation of Crystal Energy Landscapes with Kolmogorov-Arnold Networks",
+      "abstract": "Characterizing crystalline energy landscapes is essential to predicting thermodynamic stability, electronic structure, and functional behavior. While machine learning (ML) enables rapid property predictions, the \"black-box\" nature of most models limits their utility for generating new scientific insights. Here, we introduce Kolmogorov-Arnold Networks (KANs) as an interpretable framework to bridge this gap. Unlike conventional neural networks with fixed activation functions, KANs employ learnable functions that reveal underlying physical relationships. We developed the Element-Weighted KAN, a composition-only model that achieves state-of-the-art accuracy in predicting formation energy, band gap, and work function across large-scale datasets. Crucially, without any explicit physical constraints, KANs uncover interpretable chemical trends aligned with the periodic table and quantum mechanical principles through embedding analysis, correlation studies, and principal component analysis. These results demonstrate that KANs provide a powerful framework with high predictive performance and scientific interpretability, establishing a new paradigm for transparent, chemistry-based materials informatics.",
+      "authors": [
+        "Gen Zu",
+        "Ning Mao",
+        "Claudia Felser",
+        "Yang Zhang"
+      ],
+      "primary_category": "cond-mat.dis-nn",
+      "categories": [
+        "cond-mat.dis-nn",
+        "cond-mat.mtrl-sci",
+        "cs.LG"
+      ],
+      "published": "2026-04-06T12:37:03+00:00",
+      "link": "https://arxiv.org/pdf/2604.04636v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "interpretable representation learning for molecular energy landscapes",
+      "llm_evidence_cn": "分子能量景观的可解释表示学习",
+      "llm_evidence": "分子能量景观的可解释表示学习",
+      "canonical_evidence": "分子能量景观的可解释表示学习",
+      "llm_tldr_en": "Introduces Kolmogorov-Arnold Networks for interpretable prediction of crystal energy and molecular properties.",
+      "llm_tldr_cn": "引入 KAN 网络用于晶体能量景观和分子属性的可解释预测。",
+      "llm_tldr": "引入 KAN 网络用于晶体能量景观和分子属性的可解释预测。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05250v1",
+      "title": "DualDiffusion: A Speculative Decoding Strategy for Masked Diffusion Models",
+      "abstract": "Masked Diffusion Models (MDMs) offer a promising alternative to autoregressive language models by enabling parallel token generation and bidirectional context modeling. However, their inference speed is significantly limited by the inability to cache key-value pairs due to bidirectional attention, requiring $O(N^2)$ computations at each generation step. While recent methods like FastDLLM and DkvCache improve inference speed through attention approximations and caching strategies, they achieve speedups at the cost of generation quality. We propose DualDiffusion, a speculative decoding framework for MDMs that combines fast drafter models (using efficient approximations) with slower, more accurate verifier models. By running multiple steps of a lightweight drafter followed by a single verification step, DualDiffusion achieves a superior Pareto frontier between generation steps and accuracy compared to existing approaches. We evaluate our method on MMLU and GSM8K, demonstrating that DualDiffusion maintains high accuracy while reducing the number of generation steps required, effectively pushing the quality-efficiency trade-off curve for masked diffusion language models.",
+      "authors": [
+        "Satyam Goyal",
+        "Kushal Patel",
+        "Tanush Mittal",
+        "Arjun Laxman"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.CL"
+      ],
+      "published": "2026-04-06T23:23:57+00:00",
+      "link": "https://arxiv.org/pdf/2604.05250v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "speculative decoding strategy for masked diffusion models",
+      "llm_evidence_cn": "掩码扩散模型的投机解码策略",
+      "llm_evidence": "掩码扩散模型的投机解码策略",
+      "canonical_evidence": "掩码扩散模型的投机解码策略",
+      "llm_tldr_en": "DualDiffusion accelerates masked diffusion model inference using a speculative decoding framework.",
+      "llm_tldr_cn": "DualDiffusion通过投机解码框架加速了掩码扩散模型的推理速度。",
+      "llm_tldr": "DualDiffusion通过投机解码框架加速了掩码扩散模型的推理速度。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.05769v1",
+      "title": "ORION: Unifying Top-Down and Bottom-Up Chemical Space Sampling for a Universal Organic Force Field",
+      "abstract": "Empirical force fields remain the primary tool for large-scale molecular simulation, yet their limited flexibility and transferability often hinder predictive modeling in chemically complex condensed-phase systems. Here we present ORION, a universal machine-learning force field for C, H, O, N, S, and P systems developed within the Neuroevolution Potential (NEP) framework. To enhance transferability across diverse chemical environments, ORION was trained on a chemically rich dataset constructed through an integrated top-down and bottom-up strategy, enabling accurate descriptions of complex organic configurations, reactive intermediates, and weak intermolecular interactions. ORION achieves near-density-functional-theory accuracy while retaining the efficiency required for large-scale molecular dynamics simulations. On the test set, it predicts atomic forces with substantially higher accuracy than ReaxFF while running 215.5 times faster under identical hardware conditions, making simulations on the hundreds-of-nanoseconds timescale readily accessible. The model provides a balanced description of bond breaking and formation, aromatic growth, hydrogen bonding, van der Waals interactions, and π-stacking, demonstrating strong transferability across both reactive and nonreactive systems. These results establish ORION as a practical and general force field for predictive simulations in chemistry and materials science, and provide an effective route toward universal machine-learning force fields with both high accuracy and broad applicability.",
+      "authors": [
+        "Zherui Chen",
+        "Jiayu Zhang",
+        "Yuxuan Tian",
+        "Zhoulin Liu",
+        "Sining Dai",
+        "Yanghui Li",
+        "Cong Chen",
+        "Dingyuan Tang",
+        "Yajun Deng",
+        "Qingxia Liu"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-04-07T12:11:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.05769v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "universal machine-learning force field for organic systems",
+      "llm_evidence_cn": "有机系统的通用机器学习力场",
+      "llm_evidence": "有机系统的通用机器学习力场",
+      "canonical_evidence": "有机系统的通用机器学习力场",
+      "llm_tldr_en": "Presents ORION, a universal ML force field for organic molecules trained on diverse chemical environments.",
+      "llm_tldr_cn": "介绍了ORION，这是一个针对有机分子的通用机器学习力场，在多种化学环境下训练而成。",
+      "llm_tldr": "介绍了ORION，这是一个针对有机分子的通用机器学习力场，在多种化学环境下训练而成。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05551v1",
+      "title": "FastDiSS: Few-step Match Many-step Diffusion Language Model on Sequence-to-Sequence Generation--Full Version",
+      "abstract": "Self-conditioning has been central to the success of continuous diffusion language models, as it allows models to correct previous errors. Yet its ability degrades precisely in the regime where diffusion is most attractive for deployment: few-step sampling for fast inference. In this study, we show that when models only have a few denoising steps, inaccurate self-conditioning induces a substantial approximation gap; this mistake compounds across denoising steps and ultimately dominate the sample quality. To address this, we propose a novel training framework that handles these errors during learning by perturbing the self-conditioning signal to match inference noise, improving robustness to prior estimation errors. In addition, we introduce a token-level noise-awareness mechanism that prevents training from saturation, hence improving optimization. Extensive experiments across conditional generation benchmarks demonstrate that our framework surpasses standard continuous diffusion models while providing up to 400x faster inference speed, and remains competitive against other one-step diffusion frameworks.",
+      "authors": [
+        "Dat Nguyen-Cong",
+        "Tung Kieu",
+        "Hoang Thanh-Tung"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-07T07:52:08+00:00",
+      "link": "https://arxiv.org/pdf/2604.05551v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "diffusion models for sequence generation",
+      "llm_evidence_cn": "用于序列生成的扩散模型",
+      "llm_evidence": "用于序列生成的扩散模型",
+      "canonical_evidence": "用于序列生成的扩散模型",
+      "llm_tldr_en": "Improves few-step sampling in diffusion language models for sequence-to-sequence generation.",
+      "llm_tldr_cn": "改进了用于序列到序列生成的扩散语言模型中的少步采样。",
+      "llm_tldr": "改进了用于序列到序列生成的扩散语言模型中的少步采样。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.05774v1",
+      "title": "GenomeQA: Benchmarking General Large Language Models for Genome Sequence Understanding",
+      "abstract": "Large Language Models (LLMs) are increasingly adopted as conversational assistants in genomics, where they are mainly used to reason over biological knowledge, annotations, and analysis outputs through natural language interfaces. However, existing benchmarks either focus on specialized DNA models trained for sequence prediction or evaluate biological knowledge using text-only questions, leaving the behavior of general-purpose LLMs when directly exposed to raw genome sequences underexplored. We introduce GenomeQA, a benchmark designed to provide a controlled evaluation setting for general-purpose LLMs on sequence-based genome inference tasks. GenomeQA comprises 5,200 samples drawn from multiple biological databases, with sequence lengths ranging from 6 to 1,000 base pairs (bp), spanning six task families: Enhancer and Promoter Identification, Splice Site Identification, Taxonomic Classification, Histone Mark Prediction, Transcription Factor Binding Site Prediction, and TF Motif Prediction. Across six frontier LLMs, we find that models consistently outperform random baselines and can exploit local sequence signals such as GC content and short motifs, while performance degrades on tasks that require more indirect or multi-step inference over sequence patterns. GenomeQA establishes a diagnostic benchmark for studying and improving the use of general-purpose LLMs on raw genomic sequences.",
+      "authors": [
+        "Weicai Long",
+        "Yusen Hou",
+        "Junning Feng",
+        "Houcheng Su",
+        "Shuo Yang",
+        "Donglin Xie",
+        "Yanlin Zhang"
+      ],
+      "primary_category": "q-bio.GN",
+      "categories": [
+        "q-bio.GN",
+        "cs.CL"
+      ],
+      "published": "2026-04-07T12:14:20+00:00",
+      "link": "https://arxiv.org/pdf/2604.05774v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "benchmarking LLMs for genome sequence understanding",
+      "llm_evidence_cn": "基因组序列理解的 LLM 基准测试",
+      "llm_evidence": "基因组序列理解的 LLM 基准测试",
+      "canonical_evidence": "基因组序列理解的 LLM 基准测试",
+      "llm_tldr_en": "Benchmarks general-purpose LLMs on their ability to understand and infer from raw genome sequences.",
+      "llm_tldr_cn": "评估通用大语言模型对原始基因组序列的理解和推理能力。",
+      "llm_tldr": "评估通用大语言模型对原始基因组序列的理解和推理能力。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05732v1",
+      "title": "Graph Topology Information Enhanced Heterogeneous Graph Representation Learning",
+      "abstract": "Real-world heterogeneous graphs are inherently noisy and usually not in the optimal graph structures for downstream tasks, which often adversely affects the performance of GRL models in downstream tasks. Although Graph Structure Learning (GSL) methods have been proposed to learn graph structures and downstream tasks simultaneously, existing methods are predominantly designed for homogeneous graphs, while GSL for heterogeneous graphs remains largely unexplored. Two challenges arise in this context. Firstly, the quality of the input graph structure has a more profound impact on GNN-based heterogeneous GRL models compared to their homogeneous counterparts. Secondly, most existing homogenous GRL models encounter memory consumption issues when applied directly to heterogeneous graphs. In this paper, we propose a novel Graph Topology learning Enhanced Heterogeneous Graph Representation Learning framework (ToGRL).ToGRL learns high-quality graph structures and representations for downstream tasks by incorporating task-relevant latent topology information. Specifically, a novel GSL module is first proposed to extract downstream task-related topology information from a raw graph structure and project it into topology embeddings. These embeddings are utilized to construct a new graph with smooth graph signals. This two-stage approach to GSL separates the optimization of the adjacency matrix from node representation learning to reduce memory consumption. Following this, a representation learning module takes the new graph as input to learn embeddings for downstream tasks. ToGRL also leverages prompt tuning to better utilize the knowledge embedded in learned representations, thus enhancing adaptability to downstream tasks. Extensive experiments on five real-world datasets show that our ToGRL outperforms state-of-the-art methods by a large margin.",
+      "authors": [
+        "He Zhao",
+        "Zhiwei Zeng",
+        "Yongwei Wang",
+        "Chunyan Miao"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.IR"
+      ],
+      "published": "2026-04-07T11:35:45+00:00",
+      "link": "https://arxiv.org/pdf/2604.05732v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "graph representation learning and topology enhancement",
+      "llm_evidence_cn": "图表示学习与拓扑增强",
+      "llm_evidence": "图表示学习与拓扑增强",
+      "canonical_evidence": "图表示学习与拓扑增强",
+      "llm_tldr_en": "Enhances heterogeneous graph representation learning by optimizing graph topology structures.",
+      "llm_tldr_cn": "通过优化图拓扑结构来增强异构图表示学习。",
+      "llm_tldr": "通过优化图拓扑结构来增强异构图表示学习。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.05775v1",
+      "title": "PhageBench: Can LLMs Understand Raw Bacteriophage Genomes?",
+      "abstract": "Bacteriophages, often referred to as the dark matter of the biosphere, play a critical role in regulating microbial ecosystems and in antibiotic alternatives. Thus, accurate interpretation of their genomes holds significant scientific and practical value. While general-purpose Large Language Models (LLMs) excel at understanding biological texts, their ability to directly interpret raw nucleotide sequences and perform biological reasoning remains underexplored. To address this, we introduce PhageBench, the first benchmark designed to evaluate phage genome understanding by mirroring the workflow of bioinformatics experts. The dataset contains 5,600 high-quality samples covering five core tasks across three stages: Screening, Quality Control, and Phenotype Annotation. Our evaluation of eight LLMs reveals that general-purpose reasoning models significantly outperform random baselines in phage contig identification and host prediction, demonstrating promising potential for genomic understanding. However, they exhibit significant limitations in complex reasoning tasks involving long-range dependencies and fine-grained functional localization. These findings highlight the necessity of developing next-generation models with enhanced reasoning capabilities for biological sequences.",
+      "authors": [
+        "Yusen Hou",
+        "Weicai Long",
+        "Haitao Hu",
+        "Houcheng Su",
+        "Junning Feng",
+        "Yanlin Zhang"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "q-bio.GN"
+      ],
+      "published": "2026-04-07T12:14:23+00:00",
+      "link": "https://arxiv.org/pdf/2604.05775v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "LLMs for raw nucleotide sequences and biological reasoning",
+      "llm_evidence_cn": "用于原始核苷酸序列和生物推理的大语言模型",
+      "llm_evidence": "用于原始核苷酸序列和生物推理的大语言模型",
+      "canonical_evidence": "用于原始核苷酸序列和生物推理的大语言模型",
+      "llm_tldr_en": "Introduces PhageBench to evaluate LLMs on understanding raw bacteriophage genomes across multiple biological tasks.",
+      "llm_tldr_cn": "引入PhageBench基准，评估大语言模型在理解原始噬菌体基因组及执行生物任务方面的能力。",
+      "llm_tldr": "引入PhageBench基准，评估大语言模型在理解原始噬菌体基因组及执行生物任务方面的能力。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05778v1",
+      "title": "Effective Dynamics and Transition Pathways from Koopman-Inspired Neural Learning of Collective Variables",
+      "abstract": "The ISOKANN (Invariant Subspaces of Koopman Operators Learned by Artificial Neural Networks) framework provides a data-driven route to extract collective variables (CVs) and effective dynamics from complex molecular systems. In this work, we integrate the theoretical foundation of Koopman operators with Krylov-like subspace algorithms, and reduced dynamical modeling to build a coherent picture of how to describe metastable transitions in high-dimensional systems based on CVs. Starting from the identification of CVs based on dominant invariant subspaces, we derive the corresponding effective dynamics on the latent space and connect these to transition rates and times, committor functions, and transition pathways. The combination of Koopman-based learning and reduced-dimensional effective dynamics yields a principled framework for computing transition rates and pathways from simulation data. Numerical experiments on one-, two-, and three-dimensional benchmark potentials illustrate the ability of ISOKANN to reconstruct the coarse-grained kinetics and reproduce transition times across enthalpic and entropic barriers.",
+      "authors": [
+        "Alexander Sikorski",
+        "Luca Donati",
+        "Marcus Weber",
+        "Christof Schütte"
+      ],
+      "primary_category": "math.DS",
+      "categories": [
+        "math.DS",
+        "physics.chem-ph",
+        "stat.ML"
+      ],
+      "published": "2026-04-07T12:16:14+00:00",
+      "link": "https://arxiv.org/pdf/2604.05778v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "representation learning for complex molecular systems",
+      "llm_evidence_cn": "复杂分子系统的表示学习",
+      "llm_evidence": "复杂分子系统的表示学习",
+      "canonical_evidence": "复杂分子系统的表示学习",
+      "llm_tldr_en": "Extracts collective variables and effective dynamics from molecular systems using Koopman operators.",
+      "llm_tldr_cn": "利用 Koopman 算子从分子系统中提取集体变量和有效动力学。",
+      "llm_tldr": "利用 Koopman 算子从分子系统中提取集体变量和有效动力学。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05929v1",
+      "title": "ReLU Networks for Exact Generation of Similar Graphs",
+      "abstract": "Generation of graphs constrained by a specified graph edit distance from a source graph is important in applications such as cheminformatics, network anomaly synthesis, and structured data augmentation. Despite the growing demand for such constrained generative models in areas including molecule design and network perturbation analysis, the neural architectures required to provably generate graphs within a bounded graph edit distance remain largely unexplored. In addition, existing graph generative models are predominantly data-driven and depend heavily on the availability and quality of training data, which may result in generated graphs that do not satisfy the desired edit distance constraints. In this paper, we address these challenges by theoretically characterizing ReLU neural networks capable of generating graphs within a prescribed graph edit distance from a given graph. In particular, we show the existence of constant depth and O(n^2 d) size ReLU networks that deterministically generate graphs within edit distance d from a given input graph with n vertices, eliminating reliance on training data while guaranteeing validity of the generated graphs. Experimental evaluations demonstrate that the proposed network successfully generates valid graphs for instances with up to 1400 vertices and edit distance bounds up to 140, whereas baseline generative models fail to generate graphs with the desired edit distance. These results provide a theoretical foundation for constructing compact generative models with guaranteed validity.",
+      "authors": [
+        "Mamoona Ghafoor",
+        "Tatsuya Akutsu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.DM"
+      ],
+      "published": "2026-04-07T14:31:19+00:00",
+      "link": "https://arxiv.org/pdf/2604.05929v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "graph generation for molecule design with edit distance constraints",
+      "llm_evidence_cn": "具有编辑距离约束的分子设计图生成",
+      "llm_evidence": "具有编辑距离约束的分子设计图生成",
+      "canonical_evidence": "具有编辑距离约束的分子设计图生成",
+      "llm_tldr_en": "Theoretically characterizes ReLU networks for generating graphs within specific edit distances for molecule design.",
+      "llm_tldr_cn": "从理论上表征了用于在特定编辑距离内生成图的 ReLU 网络，适用于分子设计。",
+      "llm_tldr": "从理论上表征了用于在特定编辑距离内生成图的 ReLU 网络，适用于分子设计。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

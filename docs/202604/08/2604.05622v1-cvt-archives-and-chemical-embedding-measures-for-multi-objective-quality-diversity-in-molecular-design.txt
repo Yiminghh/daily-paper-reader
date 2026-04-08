@@ -1,0 +1,285 @@
+Title: CVT Archives and Chemical Embedding Measures for Multi-Objective Quality Diversity in Molecular Design
+
+URL Source: https://arxiv.org/pdf/2604.05622v1
+
+Published Time: Wed, 08 Apr 2026 00:48:40 GMT
+
+Number of Pages: 4
+
+Markdown Content:
+# CVT Archives and Chemical Embedding Measures for Multi-Objective Quality Diversity in Molecular Design 
+
+## Dominic Mashak 
+
+Southwestern University Georgetown, Texas, USA mashakd@southwestern.edu 
+
+## Jacob Schrum 
+
+Southwestern University Georgetown, Texas, USA schrum2@southwestern.edu 
+
+Abstract 
+
+Nonlinear optical (NLO) materials are essential for photonic tech-nologies, yet discovering optimal NLO molecules requires balanc-ing multiple competing objectives across vast chemical spaces. Previous work showed that Multi-Objective MAP-Elites (MOME) with grid-based archives discovers diverse, high-quality molecules for electro-optic applications. However, uniform grid partitioning wastes archive capacity on chemically infeasible regions while un-dersampling high-density areas. We apply MOME with Centroidal Voronoi Tessellation (CVT) archives whose cells are defined by learned embeddings from ChemBERTa-2 Multi-Task Regression reduced via UMAP, capturing chemical similarity beyond simple structural features. We investigate a four-objective NLO molecu-lar design problem: maximizing the 𝛽 /𝛾 hyperpolarizability ratio, constraining HOMO-LUMO gap and linear polarizability to target ranges, and minimizing energy per atom. Our results demonstrate that embedding-based measures in CVT archives yield significantly higher median global hypervolume and multi-objective quality diversity scores, while filling nearly all native archive niches. 
+
+CCS Concepts 
+
+• Applied computing → Chemistry ; • Computing methodolo-gies → Molecular simulation .
+
+Keywords 
+
+Multi-Objective optimization, Quality Diversity, Computational Chemistry, Centroidal Voronoi Tessellation 
+
+1 Introduction 
+
+Nonlinear optical (NLO) materials encompass photonic devices such as electro-optic (EO) modulators, optical switches, and frequency converters [ 14 , 18 ]. An effective EO modulator exploits the Pockels effect [ 18 ], a second-order NLO process proportional to the first hy-perpolarizability ( 𝛽 ): high 𝛽 enables stronger modulation at smaller device footprints. However, practical performance requires opti-mizing four properties: a high 𝛽 /𝛾 ratio to favor second-order over competing third-order optical responses (defined by 𝛾 ); moderate linear polarizability ( 𝛼 ∈ [ 100 , 500 ] a.u.) for strong charge transfer without excessive optical loss or dispersion; a HOMO-LUMO gap (Δ𝐸 ) of 2–4 eV, providing visible-range transparency while sus-taining NLO-active charge-transfer character; and thermodynamic stability, proxied by minimizing total energy per heavy atom. Previous work [ 12 ] systematically compares NSGA-II [ 3], MAP-Elites [ 15 ], MOME [ 17 ], (𝜇 +𝜆 ) evolution, and simulated annealing on this four-objective NLO problem using SMILES-encoded organic molecules evaluated with ab initio Hartree-Fock (HF) calculations via PySCF [ 19 ] and the 3-21G basis set. MOME (Multi-Objective MAP Elites [ 17 ]) combines multiobjective and quality diversity (QD) optimization, seeking diverse genotypes exhibiting various objective tradeoffs. Results showed that MOME with a fine-grained uniform grid archive best populates diverse, high-quality niches, but exposed a key limitation: fixed grid cells waste archive capacity on chemically infeasible measure combinations (e.g., bond counts that cannot correspond to valid molecules) while undersampling high-density regions of chemical space [12]. This work utilizes CVT-MOME, which replaces the fixed grid with a Centroidal Voronoi Tessellation (CVT) archive [ 21 ] whose cells are defined by learned chemical embeddings. SMILES strings are encoded with ChemBERTa-2 MTR [ 1], a transformer pre-trained on over 10 million PubChem compounds, then projected to a com-pact 10-dimensional manifold via UMAP [ 13 ]. CVT centroids are seeded from this manifold, placing niches where molecules actually cluster in chemical space rather than in chemically uninhabited corners of a uniform grid. The result is an archive that partitions diversity along axes of genuine chemical similarity, providing more semantically coherent niches for evolutionary search, resulting in improved objective performance, as evidenced by the significantly higher global hypervolume score. 
+
+2 Methods 
+
+Molecule properties are calculated using the PySCF library[ 19 ] and the same HF quantum chemistry method with 3-21G basis set used in previous work [ 11 ]. SMILES (Simplified Molecular Input Line Entry System [ 22 ]) encodes molecular structures as ASCII strings for evolution, and are also manipulated as in prior work [ 9 , 10 ]. We restrict molecules to C, N, O, and H atoms using single ( -) and double ( =) bonds only. Canonical SMILES from RDKit [ 7 ] ensure unique representations. Mutation operations convert the parent SMILES to an editable molecular graph, apply the modification, and regenerate a canonical SMILES. Invalid results are discarded and retried up to 20 times before attempting a different mutation. Seven mutation operators are used: changing bond type, inserting an atom, adding a branch, deleting an atom, changing an atom type, adding a ring, and deleting a ring bond [ 12 ]. Crossover is not used to maintain chemical validity without complex repair mechanisms. Multi-dimensional Archive of Phenotypic Elites (MAP-Elites) [ 15 ]maintains an archive of elite solutions across a discretized measure space. Multiobjective MAP-Elites (MOME) [ 17 ] extends MAP-Elites by storing local Pareto fronts within each archive bin rather than single elites. Each bin maintains a mutually non-dominated Pareto front of objective trade-offs. Solutions are generated by randomly sampling the archive, and assigned to bins based on their measures.  
+
+> arXiv:2604.05622v1 [physics.comp-ph] 7 Apr 2026 , , Dominic Mashak and Jacob Schrum
+
+They remain in their assigned bin if it is empty, or if they are non-dominated with respect to the previous occupants. Old occupants are only discarded if new occupants dominate them. Grid-based MOME uses atom and bond counts as behavior de-scriptors. Centroidal Voronoi Tessellation (CVT) archives [ 21 ] re-place the uniform grid with 𝑁 Voronoi cells whose centroids {c𝑘 }𝑁 𝑘 =1
+
+are computed by 𝑘 -means clustering [ 8] of a set of sample points in measure space. Each molecule is assigned to the cell of its nearest centroid: 
+
+𝑘 ∗ = arg min  
+
+> 𝑘
+
+∥m − c𝑘 ∥2 (1) where m is the molecule’s measure vector. A KD-tree supports efficient nearest-centroid lookup. Each cell stores a local Pareto front following the MOME semantics. The specific measure space we use with CVT-MOME is based on learned embeddings capturing emergent chemical similarity. For embedding, we use ChemBERTa-2 Multi-Task Regression (MTR) [ 1 ], a BERT-style [ 4] transformer with 77 million parameters pre-trained on over 10 million SMILES strings from PubChem and fine-tuned on multiple molecular property regression tasks, giving its representa-tions physicochemical grounding beyond the base language model. A SMILES string is tokenized using a chemical-aware byte-pair en-coding (BPE) tokenizer, then passed through 12 transformer layers producing contextual token embeddings of dimension 768. A single fixed-length molecular fingerprint h is obtained by mean pooling the final hidden states across all non-padding token positions: 
+
+h =
+
+Í𝑇 𝑡 =1 𝑚 𝑡 h𝑡 
+
+Í𝑇 𝑡 =1 𝑚 𝑡 
+
+(2) where h𝑡 ∈ R768 is the hidden state at position 𝑡 , 𝑚 𝑡 ∈ { 0, 1} is the attention mask, and 𝑇 is the sequence length. This yields h ∈ R768 
+
+per molecule. Because CVT archives require low-dimensional measures for effi-cient Voronoi lookup, the 768-dimensional fingerprints are reduced to 𝑑 = 10 dimensions using UMAP (Uniform Manifold Approxima-tion and Projection [ 13 ]) with cosine distance ( 𝑛 _𝑛𝑒𝑖𝑔ℎ𝑏𝑜𝑟𝑠 = 30 ,
+
+𝑚𝑖𝑛 _𝑑𝑖𝑠𝑡 = 0.1). UMAP is fitted once on 10,000 randomly generated molecules at the start of each run, establishing a fixed manifold for all subsequent embeddings. The fitted embeddings of the initializa-tion sample also seed CVT centroid generation, ensuring centroids are placed in inhabited regions rather than empty ones. 
+
+3 Experiment 
+
+Code used to run our experiments is available at this url: https://github.com/DominicMashak/Molecular-Evolution. These experiments focus on comparing MOME and CVT-MOME approaches to evolving molecules for their NLO properties, and compare to NSGA-II [3], a multiobjective but non-QD method. MOME and CVT-MOME seed archives with 50 random molecules, then mutate randomly selected archive members for 1,800 iterations. NSGA-II uses 𝜇 = 𝜆 = 20 over 90 generations. All experiments use 20 random seeds. Initial populations are generated from common scaffolds (e.g., C, C=C, C-C-N) by applying multiple random muta-tions to create valid, unique molecules. Molecules are restricted to 5-30 heavy atoms (non-hydrogen), forming a single connected com-ponent. All algorithms optimize four objectives: (1) 𝛽 /𝛾 : maximize 0 250 500 750 1000 1250 1500 1750 
+
+> Function Evaluations
+> 0.000
+> 0.005
+> 0.010
+> 0.015
+> 0.020
+> 0.025
+> Global Hypervolume
+> MOME
+> CVT-MOME
+> NSGA-II
+
+Figure 1: Median global hypervolume across function evaluations (20 runs each). CVT-MOME consistently achieves the highest median hypervolume throughout evolution. 
+
+to favor second-order NLO responses over third-order; (2) 𝑓 𝛼 : de-viation from target 𝛼 ∈ [ 100 , 500 ] a.u. [ 16 ]; (3) 𝑓 Δ𝐸 : deviation from target HOMO-LUMO gap 2–4 eV; and (4) 𝐸 𝑡𝑜𝑡𝑎𝑙 /𝑁 𝑎𝑡𝑜𝑚𝑠 : minimize total HF energy per heavy atom as a thermodynamic stability proxy; molecules with positive values (convergence failures or strained geometries) are rejected (Section 4.1). Standard grid-based archives use two measures: 𝑚 1, the heavy-atom count (range 5–30), and 𝑚 2, the heavy-atom bond count where each bond is counted once regardless of type (range 4–32). Both measures are discretized evenly into a 20 × 20 grid (400 cells total). This approach does not provide a one-to-one mapping between measure values and bins. Some adjacent measure values map to the same bin. Molecules with measure values beyond the boundaries are assigned to the nearest bin. CVT-MOME uses 𝑁 = 100 centroids in the 10-dimensional UMAP embedding space. While the grid archive contains 400 po-tential cells, previous studies [ 12 ] indicate that fewer than 20% of those cells are ever occupied due to the sparse distribution of valid chemical structures. We selected 𝑁 = 100 based on preliminary testing, which suggested that this centroid count provides a compa-rable number of "active" niches to the grid-based baseline. Centroid generation is data-driven: the 10,000 UMAP-embedded molecules used to fit the manifold are directly passed to 𝑘 -means as the sample set, so centroids are placed where molecules actually live in the manifold rather than in uninhabited regions. As a result, no archive capacity is wasted on chemically impossible combinations as the grid archive does (e.g., more bonds than atoms). 
+
+4 Results 
+
+MOME, CVT-MOME, and NSGA-II are compared in terms of the following results produced by each of their 20 distinct runs using different random seeds. In general, results across runs do not fol-low a normal distribution, so we favor median scores to compare algorithm performance and assess statistical differences with the Kruskal-Wallis and Mann-Whitney U tests. 
+
+4.1 Median Global Hypervolume 
+
+We compute a Pareto front across all molecules generated in each run and calculate its hypervolume (HV) using pymoo [2 ]. HV is the Lebesgue measure of the objective space dominated by the Pareto front relative to a fixed reference point [ 23 ], providing a scalar summary of multiobjective quality. CVT Archives and Chemical Embedding Measures for Multi-Objective Quality Diversity in Molecular Design , , MOME CVT-MOME NSGA-II 
+
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> Global Hypervolume
+> MWU p=2.227e-02
+> Kruskal-Wallis: H=13.52, p=1.159e-03
+
+Figure 2: Box-and-whisker plots of final global hypervolume across 20 runs per algorithm. 
+
+However, hypervolume is sensitive to differences in objective scale and to extreme outliers [ 23 ], making normalization of objec-tive scores necessary. Furthermore, the HF calculations we use can sometimes be distorted by systemic errors [20]. To ensure physical coherence, we prune any molecule whose 𝛽 
+
+or 𝛾 violates the Kuzyk limit [ 6]. For every candidate, we extract the total number of electrons 𝑁 𝑒 and the formal charge directly from its canonical SMILES string. The computed Δ𝐸 (converted to Hartree) serves as the first excitation energy 𝐸 10 . The bounds in atomic units are: 
+
+𝛽 max = 31/4 𝑁 3/2
+
+> 𝑒
+
+𝐸 7/210 
+
+, 𝛾 max = 4 𝑁 2
+
+> 𝑒
+
+𝐸 510 
+
+, 𝛾 min = −0.25 𝛾 max (3) Any molecule satisfying |𝛽 | > 𝛽 max or 𝛾 ∉ [𝛾 min , 𝛾 max ] is discarded. Some molecules also have extreme values for 𝛼 , HOMO-LUMO gap, and average energy, and these extreme values would make a molecule unsuitable as an EO modulator despite high 𝛽 /𝛾 . Based on this knowledge, we discard molecules that exceed any of these specific property ranges: 𝛽 ∈ [ 0, 50000 ] and 𝛾 ∈ [ 10 , 10000 ] [ 5 ]. The lower bound of 10 on 𝛾 is imposed to prevent numerical in-stability in the 𝛽 /𝛾 objective: when 𝛾 approaches zero, the ratio diverges, producing artificially large scores disconnected from gen-uine second-order NLO performance rather than reflecting a high 
+
+𝛽 . These bounds are consistent with the plausible range of hyperpo-larizability values for synthesizable organic chromophores [ 5 , 11 ]. We then normalize objective scores to the following ranges: 𝛽 /𝛾 :
+
+[0, 500 ] (unitless), 𝑓 𝛼 : [0, 100 ] (a.u.), 𝑓 Δ𝐸 : [0, 8] (eV), 𝐸 𝑡𝑜𝑡𝑎𝑙 /𝑁 𝑎𝑡𝑜𝑚𝑠 :
+
+[− 55 , −10 ] (Hartree). The 𝛽 /𝛾 normalization ceiling of 500 caps scores at an achievable saturation point within the imposed ab-solute maximum of 50 ,000 /10 = 5,000 , consistent with observa-tions in viable organic NLO chromophores [ 5 ]; the 𝑓 𝛼 bound of 100 a.u. caps the penalty at the target window half-width; 𝑓 Δ𝐸 of 8 eV spans C/N/O molecules under HF/3-21G [ 20 ]; and the energy range [− 55 , −10 ] Hartree reflects the per-heavy-atom HF/3-21G energetics of our candidate molecules, whose constituent atomic energies establish the physical lower bound while the upper bound excludes convergence failures [ 20 ]. These ranges map each objec-tive to [0, 1] before performing the HV calculation with reference point ®0.Figure 1 shows median hypervolume scores across evaluations. We call these global hypervolumes to distinguish them from scores associated with MOQD (Section 4.2). CVT-MOME’s median global hypervolume rises more steeply and reaches a substantially higher plateau than MOME’s. By the end of evolution, CVT-MOME achieves a median normalized HV of 0.0273 compared to 0.0095 for MOME and 0.0068 for NSGA-II. Figure 2 confirms this advantage holds across the full distribution of runs: a Kruskal-Wallis test yields 
+
+𝐻 = 13 .52 , 𝑝 = 1.16 × 10 −3, and a Mann-Whitney U test between MOME and CVT-MOME gives 𝑝 = 2.23 × 10 −2, confirming sta-tistically significant differences. CVT-MOME also exhibits lower inter-run variance than MOME, whose wide interquartile range reflects greater sensitivity to random seed. 
+
+4.2 Median Multiobjective QD Score 
+
+The paper introducing MOME also introduced the MOQD score, or multiobjective QD score [ 17 ]. Recall that MOME bins can contain multiple solutions representing a Pareto front across objectives. Because HV represents the quality of a Pareto front, the quality of a MOME bin is the hypervolume of that bin, and MOQD score is the sum of all hypervolumes across all occupied bins in the archive. Figure 3a shows that MOME consistently occupies more cells of the 20 ×20 grid archive than CVT-MOME, as its diversity pressure directly operates in atom-count × bond-count space. CVT-MOME maintains diversity in the 10-dimensional embedding space; when rebinned into the 2D grid, its solutions cluster in fewer structural bins. Rebinned into the CVT archive (Figure 3b), CVT-MOME fills 91 of 100 centroids versus only 52 for MOME and 21 for NSGA-II, demonstrating broader chemical diversity that grid coverage alone fails to capture. Despite occupying fewer grid cells, CVT-MOME achieves a sub-stantially higher median MOQD score in the grid archive (Fig-ure 3c): 0.065 for CVT-MOME versus 0.034 for MOME and 0.013 for NSGA-II. The cells CVT-MOME occupies contain Pareto fronts of considerably higher quality, more than compensating for reduced grid coverage. When MOQD is computed in the CVT archive (Fig-ure 3d), CVT-MOME’s advantage grows further: 0.098 versus 0.032 
+
+for MOME and 0.014 for NSGA-II. 
+
+4.3 Mega Archive Hypervolume Heatmaps 
+
+Figure 4 shows the mega-archive HV heatmaps, pooling all molecules from all 20 seeds. MOME distributes solutions broadly along the structural diagonal. CVT-MOME covers a somewhat narrower struc-tural range but concentrates its highest-quality Pareto fronts at the small-molecule end, consistent with embedding-guided search pressure toward chemically promising regions. Notably, NSGA-II achieves the highest single-cell hypervolume among algorithms, reflecting its focused population pressure, though at the cost of the diversity that QD methods provide. 
+
+5 Conclusions 
+
+We demonstrate that CVT archives defined in a learned chemi-cal embedding space substantially improve multi-objective quality diversity in NLO molecular design. CVT-MOME achieves a signifi-cantly higher median global hypervolume, grid-based MOQD, and CVT-based MOQD. While MOME occupies more cells in the struc-tural grid archive, CVT-MOME fills almost all of its native CVT centroids compared to half for MOME, demonstrating substantially broader chemical diversity in embedding space. By placing niches , , Dominic Mashak and Jacob Schrum 0 250 500 750 1000 1250 1500 1750 
+
+> Function Evaluations
+> 0
+> 10
+> 20
+> 30
+> 40
+> Occupied Cells
+> MOME
+> CVT-MOME
+> NSGA-II
+
+(a) Count 𝐺𝑟𝑖𝑑 0 250 500 750 1000 1250 1500 1750  
+
+> Function Evaluations
+> 0
+> 20
+> 40
+> 60
+> 80
+> Occupied Cells
+> MOME
+> CVT-MOME
+> NSGA-II
+
+(b) Count 𝐶𝑉 𝑇 0 250 500 750 1000 1250 1500 1750  
+
+> Function Evaluations
+> 0.00
+> 0.01
+> 0.02
+> 0.03
+> 0.04
+> 0.05
+> 0.06
+> MOQD Score
+> MOME
+> CVT-MOME
+> NSGA-II
+
+(c) MOQD 𝐺𝑟𝑖𝑑 0 250 500 750 1000 1250 1500 1750  
+
+> Function Evaluations
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> MOQD Score
+> MOME
+> CVT-MOME
+> NSGA-II
+
+(d) MOQD 𝐶𝑉 𝑇 
+
+Figure 3: Grid-based and CVT Archive Median Scores Across 20 Runs of Each Algorithm: (a) Median bin count with grid-based archive. (b) Median bin count with CVT archive. (c) Median MOQD with grid-based archive. (d) Median MOQD with CVT archive. 5 10 15 20 25 30 
+
+> Number of Atoms
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> Number of Bonds
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> Hypervolume
+
+(a) MOME 5 10 15 20 25 30  
+
+> Number of Atoms
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> Number of Bonds
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> Hypervolume
+
+(b) CVT-MOME 5 10 15 20 25 30  
+
+> Number of Atoms
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> Number of Bonds
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> Hypervolume
+
+(c) NSGA-II 
+
+Figure 4: Grid-based Mega Archive Hypervolume Heatmaps: Archives pooling solutions from all 20 seeds per algorithm, with color scale showing each bin’s HV score. The x-axis denotes the atom count, and the y-axis denotes the bond count. 
+
+where molecules actually cluster, using ChemBERTa-2 MTR embed-dings projected to a 10-dimensional UMAP manifold, CVT-MOME avoids wasting archive capacity on structurally infeasible atom-count/bond-count combinations. These results demonstrate that embedding-informed archive structures significantly enhance the quality and diversity of discovered NLO molecules. Future work will explore this approach on drug-discovery tasks and compare it with other leading molecular optimization strategies. 
+
+Acknowledgments 
+
+The authors acknowledge that Generative AI (Claude) was used to refine the matplotlib code that produced all the result figures. 
+
+References 
+
+[1] Walid Ahmad, Elana Simon, Seyone Chithrananda, Gabriel Grand, and Bharath Ramsundar. 2022. ChemBERTa-2: Towards Chemical Foundation Models. arXiv preprint arXiv:2209.01712 (2022). [2] J. Blank and K. Deb. 2020. pymoo: Multi-Objective Optimization in Python. IEEE Access 8 (2020), 89497–89509. [3] K. Deb, A. Pratap, S. Agarwal, and T. Meyarivan. 2002. A fast and elitist multiobjec-tive genetic algorithm: NSGA-II. IEEE Transactions on Evolutionary Computation 
+
+6, 2 (2002), 182–197. doi:10.1109/4235.996017 [4] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2019. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. In 
+
+Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies . Association for Computational Linguistics, 4171–4186. [5] David R. Kanis, Mark A. Ratner, and Tobin J. Marks. 1994. Design and con-struction of molecular assemblies with large second-order optical nonlinear-ities. Quantum chemical aspects. Chemical Reviews 94, 1 (1994), 195–242. arXiv:https://doi.org/10.1021/cr00025a007 doi:10.1021/cr00025a007 [6] M.G. Kuzyk. 2001. Quantum limits of the hyper-Rayleigh scattering susceptibility. 
+
+IEEE Journal of Selected Topics in Quantum Electronics 7, 5 (2001), 774–780. [7] Greg Landrum. 2010. RDKit: Open-source cheminformatics . https://www.rdkit.org [8] Stuart P. Lloyd. 1982. Least Squares Quantization in PCM. IEEE Transactions on Information Theory 28, 2 (1982), 129–137. [9] Dominic Mashak and Steven Alexander. 2025. Finding Molecules with Large Hyperpolarizabilities. In MATCH Commun. Math. Comput. Chem. , Vol. 94. [10] Dominic Mashak and Steven Alexander. 2025. Finding Molecules with Spe-cific Properties: Simulated Annealing vs. Evolution. In Genetic and Evolutionary Computation Conference Companion . ACM, NY, 759–762. [11] Dominic Mashak and S. A. Alexander. 2025. Benchmarking Hartree-Fock and DFT for Molecular Hyperpolarizability: Implications for Evolutionary Design. arXiv:2511.17767 [physics.chem-ph] https://arxiv.org/abs/2511.17767 [12] Dominic Mashak, Jacob Schrum, and S. A. Alexander. 2026. Multi-Objective Evolutionary Design of Molecules with Enhanced Nonlinear Optical Properties. arXiv:2602.16044 [physics.comp-ph] [13] Leland McInnes, John Healy, and James Melville. 2018. UMAP: Uniform Man-ifold Approximation and Projection for Dimension Reduction. arXiv preprint arXiv:1802.03426 (2018). [14] R.A. Minasian. 2005. Modulation and Demodulation of Optical Signals. In 
+
+Encyclopedia of Modern Optics . Elsevier, Oxford, 129–138. [15] Jean-Baptiste Mouret and Jeff Clune. 2015. Illuminating search spaces by mapping elites. arXiv:1504.04909 [cs.AI] https://arxiv.org/abs/1504.04909 [16] Lucjan Piela. 2020. The Molecule Subject to Electric or Magnetic Fields. In Ideas of Quantum Chemistry (Third Edition) . Elsevier, 253–335. [17] Thomas Pierrot, Guillaume Richard, Karim Beguir, and Antoine Cully. 2022. Multi-objective quality diversity optimization. In Genetic and Evolutionary Computation Conference . ACM, NY, 139–147. [18] Bahaa E. A. Saleh and Malvin Carl Teich. 1991. Electro-Optics . John Wiley & Sons, Ltd, NY, Chapter 18, 696–736. doi:10.1002/0471213748.ch18 [19] Q. Sun, X. Zhang, S. Banerjee, P. Bao, M. Barbry, N. S. Blunt, N. A. Bogdanov, G. H. Booth, J. Chen, Zhi-Hao Cui, J. J. Eriksen, Y. Gao, S. Guo, J. Hermann, M. R. Hermes, K. Koh, P. Koval, S. Lehtola, Z. Li, J. Liu, N. Mardirossian, J. D. McClain, M. Motta, B. Mussard, H. Q. Pham, A. Pulkin, W. Purwanto, P. J. Robinson, E. Ronca, E. R. Sayfutyarova, M. Scheurer, H. F. Schurkus, J. E. T. Smith, C. Sun, Shi-Ning Sun, S. Upadhyay, L. K. Wagner, X. Wang, A. White, J. D. Whitfield, M. J. Williamson, S. Wouters, J. Yang, J. M. Yu, T. Zhu, T. C. Berkelbach, S. Sharma, A. Y. Sokolov, and G. Kin-Lic Chan. 2020. Recent developments in the PySCF program package. Journal of Chemical Physics 153, 2 (2020). [20] Attila Szabó and Neil S. Ostlund. 1996. Modern Quantum Chemistry: Introduction to Advanced Electronic Structure Theory . Dover Publications, NY. [21] Vassilios Vassiliades, Konstantinos Chatzilygeroudis, and Jean-Baptiste Mouret. 2018. Using Centroidal Voronoi Tessellations to Scale Up the Multidimensional Archive of Phenotypic Elites Algorithm. IEEE Transactions on Evolutionary Computation 22, 4 (2018), 623–630. [22] David Weininger. 1988. SMILES, a chemical language and information system. 1. Introduction to methodology and encoding rules. Journal of Chemical Information and Computer Sciences 28, 1 (1988), 31–36. [23] E. Zitzler, L. Thiele, M. Laumanns, C.M. Fonseca, and V.G. da Fonseca. 2003. Performance assessment of multiobjective optimizers: an analysis and review. 
+
+IEEE Transactions on Evolutionary Computation 7, 2 (2003), 117–132.

@@ -1,0 +1,420 @@
+Title: Graph Topology Information Enhanced Heterogeneous Graph Representation Learning
+
+URL Source: https://arxiv.org/pdf/2604.05732v1
+
+Published Time: Wed, 08 Apr 2026 00:56:53 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+# Graph Topology Information Enhanced Heterogeneous Graph Representation Learning 
+
+# He Zhao 
+
+Nanyang Technological University Joint NTU-UBC Research Centre of Excellence in Active Living for the Elderly Singapore ZHAO0378@e.ntu.edu.sg 
+
+# Zhiwei Zeng 
+
+Nanyang Technological University Joint NTU-UBC Research Centre of Excellence in Active Living for the Elderly Singapore zhiwei.zeng@ntu.edu.sg 
+
+# Yongwei Wang 
+
+Nanyang Technological University Singapore yongweiw@outlook.com 
+
+# Chunyan Miao 
+
+Nanyang Technological University Joint NTU-UBC Research Centre of Excellence in Active Living for the Elderly Singapore ASCYMiao@ntu.edu.sg 
+
+## ABSTRACT 
+
+Recent studies indicate that the performance of GNNs largely de-pends on the quality of the input graph structure. Real-world het-erogeneous graphs are inherently noisy and usually not in the optimal graph structures for downstream tasks, which often ad-versely affects the performance of GRL models in downstream tasks. Although Graph Structure Learning (GSL) methods have been proposed to learn graph structures and downstream tasks simultaneously, existing methods are predominantly designed for homogeneous graphs, while GSL for heterogeneous graphs re-mains largely unexplored. Two challenges arise in this context. Firstly, the quality of the input graph structure has a more pro-found impact on GNN-based heterogeneous GRL models compared to their homogeneous counterparts. Secondly, most existing ho-mogenous GRL models encounter memory consumption issues when applied directly to heterogeneous graphs. In this paper, we propose a novel Graph To pology learning Enhanced Heterogeneous 
+
+Graph Representation Learning framework (ToGRL). ToGRL learns high-quality graph structures and representations for downstream tasks by incorporating task-relevant latent topology information. Specifically, a novel GSL module is first proposed to extract down-stream task-related topology information from a raw graph struc-ture and project it into topology embeddings. These embeddings are utilized to construct a new graph with smooth graph signals. This two-stage approach to GSL separates the optimization of the adjacency matrix from node representation learning to reduce mem-ory consumption. Following this, a representation learning module takes the new graph as input to learn embeddings for downstream  
+
+> Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than ACM must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+> Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+> ©2018 Association for Computing Machinery. ACM ISBN 978-1-4503-XXXX-X/18/06. . . $15.00 https://doi.org/XXXXXXX.XXXXXXX
+
+tasks. ToGRL also leverages prompt tuning to better utilize the knowledge embedded in learned representations, thus enhancing adaptability to downstream tasks. Extensive experiments on five real-world datasets show that our ToGRL outperforms state-of-the-art methods by a large margin. In addition, ToGRL achieves good performance in terms of memory consumption, addressing the out-of-memory issues prevalent in existing GSL models. 
+
+## CCS CONCEPTS 
+
+• Information systems → Data mining .
+
+## KEYWORDS 
+
+Heterogeneous Graph Representation, Graph Structure Learning, Prompt Tuning 
+
+ACM Reference Format: 
+
+He Zhao, Zhiwei Zeng, Yongwei Wang, and Chunyan Miao. 2018. Graph Topology Information Enhanced Heterogeneous Graph Representation Learning. In Proceedings of Make sure to enter the correct conference title from your rights confirmation email (Conference acronym ’XX). ACM, New York, NY, USA, 11 pages. https://doi.org/XXXXXXX.XXXXXXX 
+
+## 1 INTRODUCTION 
+
+Graphs are widely used data structures for modeling complex real-world interaction systems, such as social networks, recommender systems, and knowledge graphs. Graph Representation Learning (GRL) aims to embed graph information into low-dimension repre-sentations while preserving important graph topology and node attributes. Recently, Heterogeneous GRL (HGRL) models have been developed to incorporate heterogeneous structural and attribute information, achieving remarkable performances on various down-stream tasks, such as node classification [ 14 , 39 ], link prediction [8, 31], and recommendation [25]. Given the superiority of Graph Neural Networks (GNNs) in learn-ing node representations, existing GRL methods often adopt GNNs as learning backbones [ 17 , 30 , 36 ]. Studies have shown that GNNs are highly sensitive to the quality of input graph structures [ 7 , 34 ],  
+
+> arXiv:2604.05732v1 [cs.LG] 7 Apr 2026 Conference acronym ’XX, June 03–05, 2018, Woodstock, NY He Zhao, Zhiwei Zeng, Yongwei Wang, and Chunyan Miao
+
+and hence, noisy or suboptimal input graphs often lead to unsatis-factory graph representations. Most GNNs are designed with the implied hypothesis that the input graphs are reliable and contain adequate information related to downstream tasks [ 7, 41 ]. However, in real-world applications, the quality of raw input graphs is usually poor. For instance, in the e-commerce recommendation scenario, a user may mistakenly click on items of no interest, resulting in a noisy user-item interaction graph. Additionally, raw graphs are often not optimized for downstream tasks, as they are typically extracted using manually defined rules while overlooking the re-quirements of downstream tasks. This process may also introduce redundant information into graphs [41]. The quality of the input graph structure has an even more pro-found impact on GNN-based HGRL methods than on homogeneous GRL methods. Existing HGRL models typically learn embeddings from different meta-paths separately to capture various semantic meanings [ 5] and then fuse them into final embeddings [ 8, 32 ]. Consequently, the use of the meta-paths mechanism, in a sense, proliferates the noises in the original input graphs, introducing additional noises to HGRL models. On the one hand, a single noisy node can generate multiple pairs of meta-path-based neighbors, which are then used as inputs to HGRL models [8, 31, 32]. This “hub” effect [40] enlarges the effect of the single noisy node and degrades model performance. On the other hand, meta-path-induced homogeneous graphs often contain incomplete information. These problems will be further discussed in Section 4.1. As a result, HGRL models are more susceptible to noise in original input graphs than homogeneous GRL models. Therefore, to improve the quality of representations learned from heterogeneous graphs and enhance downstream task performance, it is essential to learn high-quality input graphs that contain less noise and are optimized for downstream tasks. This need has moti-vated the line of research in Graph Structure Learning (GSL), which aims to learn an optimized graph structure and its corresponding representations simultaneously. GSL has been applied to homoge-neous graphs and achieved very promising results [ 1, 6]. However, these efforts on homogeneous graphs can not be easily transferred to HGRL, as they suffer from severe memory consumption problems when directly applied to heterogeneous graphs. In this work, we propose a novel Graph To pology Learning En-hanced Heterogeneous Graph Representation Learning framework (ToGRL). To learn high-quality graph structures and representa-tions optimized for downstream tasks, ToGRL utilizes downstream task-relevant latent topology information to guide the represen-tation learning process. This approach allows for capturing more underlying mechanisms of downstream tasks in the learned repre-sentations. Specifically, our ToGRL employs a two-stage approach that separates the optimization of the adjacency matrix from node representation learning. First, our ToGRL utilizes a graph struc-ture learning module to extract downstream task-relevant latent topology information into topology embeddings. Inspired by the graph theory in Graph Signal Processing (GSP), the learned topol-ogy embeddings are utilized to construct a new sparse graph in which the graph signals are smooth [ 4 , 15 ]. Then, a representation learning module takes the input as the newly constructed graphs to learn the final embeddings. This two-stage approach significantly improves memory efficiency by avoiding the need to model the entire adjacency matrix of the new graph as parameters that are jointly trained via GNNs based on the labels of downstream tasks. To further enhance the performance on downstream tasks, ToGRL also innovatively introduces prompt-tuning into the graph domain, which better utilizes the knowledge embedded in learned represen-tations for downstream tasks. During the downstream evaluation stage, we find that the number of labels is often limited in down-stream tasks, which means a simple decoder may not be fully trained and fails to effectively utilize the knowledge learned during repre-sentation learning. In other words, there is a gap between graph representation learning and downstream tasks in the graph domain. Recently, Prompt Tuning [ 12 , 20 ] has been proposed as a new para-digm to narrow the gap between pre-training and fine-tuning in Natural Language Processing (NLP). By designing proper prompt templates, model performance can be significantly improved in limited label settings. Inspired by the success of prompt tuning in NLP, we propose to leverage a prompt-tuning inspired downstream task decoder for the heterogeneous graphs representation learn-ing task that can further improve downstream task performance through more effective utilization of the learned representations. A task-specific prompt embedding is incorporated and jointly learned with the decoder. Extensive experiments are performed on five real-world datasets on two downstream tasks and show that our proposed method outperforms existing baselines. Ablation studies reveal that the new graph can obtain all the meta-path information and can better facilitate learning embeddings for downstream tasks. The prompt-enhanced decoder can efficiently extract knowledge contained in the embeddings. Besides, analysis results show that our framework can also significantly reduce memory consumption compared with GSL methods to the level of traditional HGSL methods. Our major contributions can be summarized as follows: 
+
+• We propose a novel heterogeneous graph representation learning framework enhanced by graph topology learning that can be trained efficiently in a two-stage learning process. 
+
+• We design a novel graph structure learning module that can effectively mine latent graph topology information together with downstream tasks. A new graph containing both topol-ogy and downstream task information is learned to facilitate learning downstream task embeddings. 
+
+• To bridge the gap between embedding learning and down-stream tasks, we propose to leverage prompt tuning for het-erogeneous graphs on downstream tasks to help the decoder effectively utilize the knowledge of embeddings. 
+
+• We perform extensive experiments on five real-world datasets on node classification and link prediction tasks. Experimen-tal results and ablation studies show the effectiveness of the proposed HGRL framework. 
+
+## 2 RELATED WORK 
+
+In this section, we present a brief review of existing studies related to our work. In Section 2.1, we overview existing typical hetero-geneous graph representation learning methods. In Section 2.2, we summarize related graph structure learning methods and then introduce prompt tuning methods in Section 2.3. Graph Topology Information Enhanced Heterogeneous Graph Representation Learning Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+## 2.1 Graph Representation Learning 
+
+Graph representation learning aims to learn a low-dimensional em-bedding for each node in a graph that can be used in downstream tasks. Graph Neural Networks (GNNs) have achieved promising re-sults following a message-passing scheme, i.e., GNNs aggregate and transform neighbors information of each node [ 17 , 30 , 36 ]. However, these models are designed for homogeneous graphs, which ignore the rich heterogeneity information in heterogeneous graphs. Re-cently, many heterogeneous graph representation learning methods have been proposed to address this problem. Metapath2Vec [ 5 ] uti-lizes random walks sampled according to meta-paths to model the heterogeneous information following a homogeneous graph embed-ding learning scheme [ 11 ]. To utilize the powerful learning ability of GNNs, Heterogeneous Graph Neural Networks (HGNNs) are developed. HAN [ 32 ] and HGT [ 14 ] are representative HGNNs that learn embeddings from meta-paths induced homogeneous graphs. MAGNN [ 8] follows the message-passing scheme of HGNNs and ex-tends HAN by considering not only the meta-path-based neighbors but also neighbors along each meta-path instance. SimpleHGN [ 25 ]adopts a simpler scheme that abandons meta-paths and extends on GAT by incorporating edge embeddings of different relation types. The success of SimpleHGN also doubts the efficacy of the usage of meta-paths. Recent efforts have been made to develop Heteroge-neous Graph Representation Learning (HGRL) methods which are unsupervised using mutual information. HeCo [ 33 ] proposes to use a cross-view contrastive learning method on network schema views and meta-path views of a same heterogeneous graph. HGIB [ 37 ] uses Information Bottleneck (IB) theory to maximize mutual information related to labels while minimizing the specific infor-mation between different meta-path induced homogeneous graphs. CKD [ 31 ] adopts knowledge distillation to jointly learn embeddings among different meta-paths and within each meta-path. Despite the success of HGNN and HGRL models, they are de-veloped based on an assumption that the input graphs are reliable. However, real-world heterogeneous graphs are usually noisy and may not be the optimal graph structure for downstream tasks, which often limits the performance of HGRL models. 
+
+## 2.2 Graph Structure Learning 
+
+Real-world graphs are usually noisy and there usually exists a gap between the extraction of graphs and the requirement of down-stream tasks. Besides, some datasets do not have a readily available graph structure. Recently, Graph Structure Learning (GSL) has been proposed to address these challenges. To infer a new graph struc-ture, one typical type of approach is to construct a sparse top-k Nearest Neighbor (kNN) graph based on a certain similarity metric. In [ 10 ], a fixed kNN graph is constructed by calculating the cosine similarity of node features. CoGSL [ 19 ] first fuses different basic views such as adjacency matrix and diffusion matrix, and learns a minimal sufficient graph structure based on mutual information compression. HGSL [ 41 ] focuses on heterogeneous graph structure learning by constructing multiple similarity graphs and semantic graphs and fusing them via attention weights together with the original graph structure. Another popular type of method tries to directly optimize the adjacency matrix which can be jointly trained with downstream tasks. An adjacency matrix is first initialized as a full parameter (or generated by an MLP), then a sparsification operation is applied to obtain the adjacency matrix used as input for GNNs. SLAPS [ 6 ] infers the new graph by jointly training with a downstream node classification task and a node feature reconstruc-tion task. IDGL [ 1] learns the graph structure and node embeddings iteratively. SUBLIME [ 24 ] adopts contrastive learning on a learner view and an anchor view in an unsupervised manner. A main drawback of the first type of method is that the learned graph depends on the manually defined fixed graphs (e.g., similarity graphs) which cannot automatically generate new edges that do not exist in the input graphs. The second type of approach usually suffers from the memory consumption problem as they directly optimize on the adjacency matrix that is often of huge size in real applications. 
+
+## 2.3 Prompt Tuning 
+
+Pre-training Language Models (PLMs) [ 3, 23 ] have achieved promis-ing performances in natural language processing. PLMs follow a ‘pre-training and fine-tuning’ paradigm, in which the models are first pre-trained on a large corpus as language models and then fine-tuned with different downstream tasks. Objective engineer-ing [ 20 ] is often applied to make LMs adapt to downstream tasks. These methods have a drawback that the pre-training knowledge is not fully utilized and the performance is not satisfying especially when sufficient training data is not available. Recently, prompt tuning methods [ 9, 21 , 26 , 27 ] are proposed to effectively utilize the knowledge learned during the pre-training stage and close the gap between pre-training and fine-tuning. By designing proper prompts, the pre-trained language model can be directly used to give the desired output and can perform well using limited labels. Early works [ 2 , 16 ] apply a manually defined textual template (a.k.a discrete or hard prompts), e.g., ‘I felt so _ ’ and let the language model fill the slot with an emotional world. One limitation is that the hard prompt needs to be specially designed for different tasks. Recently, soft prompts [ 18 , 42 ] are proposed to automatically learn a continuous template that can let the language model fit for down-stream tasks. There also exist works [ 13 , 22 ] that use a hybrid prompt tuning method that inserts trainable parameters into hard templates instead of using a purely learnable soft template. In this work, we propose to adopt a heterogeneous graph prompt tuning method to narrow the gap between heterogeneous graph representation learning and downstream tasks. 
+
+## 3 PRELIMINARIES 
+
+In this section, we give formal definitions of concepts and essential notations related to this work. 
+
+Definition 1. Heterogeneous Graph . A heterogeneous graph is defined as G = {V , E, 𝑋, 𝜙,𝜓 }, where V is a node set, E denotes an edge set and 𝑋 ∈ R| V | × 𝑑 represents a node feature matrix where 𝑑 denote the dimension of a node feature. 𝜙 and 𝜓 denote a node type mapping function 𝜙 : V → T and an edge type mapping function 𝜓 : E → R , where T and R are predefined node type set and edge type set, respectively. A heterogeneous graph satisfies a restriction that |T | + |R| > 2; otherwise, it degrades to a homogeneous graph. Conference acronym ’XX, June 03–05, 2018, Woodstock, NY He Zhao, Zhiwei Zeng, Yongwei Wang, and Chunyan Miao 
+
+Definition 2. Meta-path . Meta-paths have been widely used to extract heterogeneous information with specific semantic meanings. A meta-path is manually defined in the form of 𝑇 1
+
+> 𝑅 1
+
+−→ 𝑇 2
+
+> 𝑅 2
+
+−→ · · · 𝑅 𝑘 
+
+−→ 𝑇 𝑘 +1, usually represented as 𝑇 1 ◦ 𝑇 2 ◦ · · · ◦ 𝑇 𝑙 +1, where ◦
+
+denotes a composite operation and 𝑇 𝑖 ∈ T , 𝑅 𝑗 ∈ R . Usually, the head node type and the tail node type are the same in a meta-path. A meta-path instance is a sampled node sequence according to a meta-path. Given a meta-path 𝑃 , a meta-path induced homogeneous graph G𝑃 indicates that, for each edge in G𝑃 , there exists at least one meta-path instance between the head node and tail node. 
+
+Definition 3. Graph Neural Networks . GNNs aim to project node information into low-dimensional vectors ℎ𝑖 ∈ R𝑑 where 𝑑 is the embedding dimension. GNNs follow a message-passing scheme that information on each node is aggregated from its neighboring nodes to update its own embedding. Graph Convolution Network (GCN) and Graph Attention Network (GAT) [ 17 ] are representative GNNs, which are briefly introduced as follows. 
+
+Graph Convolution Network (GCN). In a GCN, the 𝑙 -th layer can be mathematically expressed as: 
+
+H(𝑙 ) = 𝜎 ( ˆAH (𝑙 −1) W(𝑙 ) ) (1) 
+
+ˆA = D− 12 (A + I)D− 12 (2) where ˆ𝐴 is a normalized adjacency matrix, 𝐻 (𝑙 ) is the updated node representation and 𝑊 (𝑙 ) is the weight matrix in the 𝑙 -th layer. 
+
+Graph Attention Network (GAT). GAT extends GCN by re-placing the average operation in each layer by attention weights over each edge 𝑒 𝑖 𝑗 :
+
+𝛼 𝑖 𝑗 = exp (LeakyReLU (𝑎 𝑇 [Wℎ𝑖 || Wℎ𝑗 ])) 
+
+Í𝑘 ∈ N 𝑖 exp (LeakyReLU (𝑎 𝑇 [Wℎ𝑖 || Wℎ𝑘 ])) (3) where 𝑊 and 𝑎 are learnable parameters, |·| denotes a concatenation operation, and N𝑖 is the neighbor node set of node 𝑖 . Note that ho-mogeneous graph neural networks can also handle heterogeneous graphs by treating node type and edge type to be the same. 
+
+## 4 METHODOLOGY 
+
+In this section, we propose a novel To pology learning Enhanced het-erogeneous Graph Representation Learning framework (ToGRL). The ToGRL method has three major steps: 1) mining latent graph topology information and constructing a new graph; 2) learning node representations based on the new graph; and 3) evaluating embeddings using a prompt tuning enhanced decoder. We describe the details of each step in the following sections. An overview of the whole framework is given in Fig. 1. 
+
+## 4.1 Mining Latent Graph Topology Information 
+
+GNNs have achieved promising results in recent years and have shown their powerful expressive capability in learning node repre-sentations by aggregating information from neighborhood nodes. Thus, most existing HGRL models adopt GNNs as learning back-bones to learn heterogeneous graph representations. However, sim-ply applying GNNs on the raw heterogeneous graph is not the optimal choice for two reasons: 
+
+1. Noisy meta-path-based neighbors. As proposed in Zhang’s work[ 40 ], the “hub” effect will enlarge the effect of one noise node by generating multiple meta-path-based neighbor pairs. For exam-ple, in the Fig 2, one noise node 𝐴 1 can generate meta-path-based neighbor pairs, e.g. (𝑃 1, 𝑃 3), (𝑃 2, 𝑃 3), making these nodes have di-rect relationships within each other. However, in homogeneous GNNs, the relationship is two-hop. To this end, the noise effect is enlarged in heterogeneous models. 
+
+2. Incomplete information of meta-paths induced homo-geneous graphs . Most HGRL methods [ 14 , 31 , 32 ] apply GNNs on several meta-paths induced homogeneous graphs. Although such homogeneous graphs well represent each meta-path information, specific information (e.g., Author A writes Paper P in Venue V ) is ignored in such a homogeneous graph. In this case, the model only knows the co-venue relationship among authors while it has no idea how a pair of authors have such relations. Specifically, there are two cases that two authors have a co-author relationship: one is that the authors have a direct co-author relationship, and the other is that they contribute to different papers but their papers are in the same venue. Apparently, two authors in the first case have more chances to be in the same research field than that in the second case. Thus, models learned from these graphs will lead to a degradation in performance. To learn graphs with less noise and fully extract semantic infor-mation, we propose a Graph Structure Learning Module based on a novel labeled random walk strategy by exploring the latent topology information of the original graph together with down-stream tasks information. Different from existing GSL methods [6 , 19 ] which jointly optimize the graph structure and downstream task, our ToGRL operates in a two-stage manner which is memory effecient by firstly learning one new graph and then node embed-dings are learned in the following module based on the fixed new graph. Furthermore, in our framework, we aim to learn a new uni-fied graph that is amenable for downstream tasks, thus we sample paths using Node2Vec[ 11 ] instead of Metapath2Vec[ 5], which sam-ple paths based on one given meta-path (there can be multiple meta-paths for one dataset). We first extract latent graph topology information and project it into Topology Embeddings based on random walk. Our intuition is that a path that is fully walked on the graph can contain the meta-path information and preserve the above missing information. Given a heterogeneous graph G = {V , E, 𝑋, 𝜙,𝜓 }, we apply the walking strategy used in Node2Vec [ 11 ], in which the walks are generated by: 
+
+𝑃 (𝑐 𝑖 = 𝑎 |𝑐 𝑖 −1 = 𝑏 ) =
+
+ 𝜋 𝑎𝑏  
+
+> 𝑍
+
+if (𝑎, 𝑏 ) ∈ 𝐸 
+
+0 otherwise (4) 
+
+𝜋 𝑎𝑏 = 𝛼 𝑝𝑞 (𝑡, 𝑎 ) =
+
+ 
+
+> 1
+> 𝑝
+
+if 𝑑 𝑡𝑎 = 01 if 𝑑 𝑡𝑎 = 1 
+
+> 1
+> 𝑞
+
+if 𝑑 𝑡𝑎 = 2
+
+(5) where 𝜋 𝑎𝑏 is the transition probability, 𝑍 is a normalized constant, 
+
+𝑝, 𝑞 are hyper-parameters and 𝑑 𝑡𝑎 is the shortest distance between node 𝑡 and 𝑎 . Assuming that the walk has just traversed edge (𝑡, 𝑎 ),
+
+𝑝 controls the likelihood of immediately revisiting a node in the walk, and 𝑞 controls the walking preference between Breadth-first Sampling(BFS) and Depth-first Sampling (DFS). Given the sampled random walks, the training objective is a skip-gram loss which maximizes the log probability that observing Graph Topology Information Enhanced Heterogeneous Graph Representation Learning Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Figure 1: An overview of our ToGRL framework. First, a graph structure learning module is used to mine latent graph topology together with downstream task information. The learned topology embeddings are utilized to construct a new graph. Then, a representation learning module is used to learn final node representations. Finally, a prompt tuning decoder is used to evaluate embeddings on downstream tasks. 
+
+Figure 2: Noise effect is enlarged by changing from two-hop relationships (in homogeneous models on the right) to one-hop relationships(in heterogeneous models on the left). 
+
+node 𝑣 ’s neighborhood 𝑁 𝑣 based on its feature. In practice, we apply negative sampling and the objective loss function is defined as: 
+
+min 
+
+> 𝑓
+
+∑︁ 𝑣 ∈𝑉 
+
+©«∑︁ 𝑢 ∈𝑁 +
+
+> 𝑣
+
+−log (𝑓 (𝑣 ) · 𝑓 (𝑢 )) + ∑︁   
+
+> 𝑘 ∈𝑁 −
+> 𝑣
+
+−log (1 − 𝑓 (𝑣 ) · 𝑓 (𝑘 )) ª®¬
+
+(6) where 𝑁 + 
+
+> 𝑣
+
+is the positive neighbors based on the given walks and 𝑁 −
+
+> 𝑣
+
+is the negative set, 𝑓 (𝑣 ) is the learned topology embedding through a graph neural network. In this work, we mainly focus on applying GCN [ 17 ] and GAT [ 30 ] as typical learning backbones. Yet, our choice can be readily extended to other types of GNNs. Besides, the random walk strategy can be extended to more advanced choices, such as Metapath2Vec[ 5 ] to further improve the performance. In this work, we just use Node2Vec as a simple example. To build a new graph that can better facilitate downstream tasks, the topology embeddings also need to include downstream tasks’ relevant information. We propose to incorporate such information by constraining the downstream task label of each node in the sampled walk to be the same. In practice, we put the nodes existing in the sampled walks in each batch and their neighbor nodes into the networks and learn topology embedding with the above objective function. Containing latent topology information and downstream tasks information, the topology embeddings are then utilized to construct a new graph. In Graph Signal Processing (GSP), a typical approach is to infer a graph with the hypothesis that the smoothness of obser-vation with respect to underlying graph structure [ 4, 15 ]. In GSP, given graph signal 𝑦 ∈ 𝑅 𝑁 , the smoothness is defined as follows: 
+
+𝑆𝑚𝑜𝑜𝑡ℎ𝑛𝑒𝑠𝑠 = 𝑦 𝑇 L𝑦 = 12∑︁ (𝑖,𝑗 ) ∈ E 
+
+𝑤 𝑖 𝑗 (𝑦 𝑖 − 𝑦 𝑗 )2 (7) where 𝑤 𝑖,𝑗 is the weight of edge (𝑖, 𝑗 ) and L = D−A is the Laplacian matrix of graph G. A visual illustration is given in Fig. 3. Specifically, this smoothness requires that the distance between nodes along each edge be as small as possible. Inspired by this Conference acronym ’XX, June 03–05, 2018, Woodstock, NY He Zhao, Zhiwei Zeng, Yongwei Wang, and Chunyan Miao 
+
+Figure 3: An illustration of smoothness on graphs. The ar-rows represent node signals. The two graphs has the same graph signals while having different graph structures. The left one is smoother than the right one. In ToGRL, we treat the topology embeddings as the node signals and aim to con-struct a smooth graph. 
+
+hypothesis, we build a new graph with a similar intuition. In this work, we treat the topology embeddings as the graph signals of the new graph to be inferred. To obtain a smooth and sparse graph, we calculate the Euclidean distance between all target nodes and preserve the top-k closest neighbors for each node. The new graph 
+
+˜G = ( ˜V, ˜E, ˜𝑋 ) is defined as follows: 
+
+˜V = {𝑣 |𝑣 ∈ V 𝑡𝑎𝑟 },
+
+˜E = {( 𝑣, 𝑢 )| 𝑣 ∈ ˜V, 𝑢 ∈ {𝑇𝑜𝑝 − 𝑘 closest to || 𝑓 (𝑣 ) − 𝑓 (𝑢 )|| 22 }} ,
+
+˜X = {𝑓 (𝑣 )| 𝑣 ∈ ˜V} 
+
+(8) and the node feature matrix ˜X is the topology embedding matrix. 
+
+## 4.2 Graph Representation Learning 
+
+In this part, a representation learning module takes input as the new graph ˜G and learns the final node embeddings. CKD [31] uti-lizes knowledge distillation to learn node embeddings and achieves promising results. The CKD model takes input as several meta-paths induced homogeneous graphs which are first processed by graph diffusion. Knowledge distillation is performed on sub-graph level embeddings named regional knowledge, and meta-path level embeddings named as knowledge with both intra-meta-path col-laborative distillation and inter-meta-path collaborative distillation. Different from CKD, our embedding just takes input as one graph, thus we only apply its intra-meta-path distillation. In our representation learning module, given the new graph ˜G ,the embedding of each node is firstly learned by a GCN based on its one-hop sub-graph. In each subgraph, only the centered node embedding ℎ𝑖 , 𝑖 ∈ V , is used for further computing and down-stream tasks. Context sub-graph embedding is modeled as regional knowledge reflecting the relationships among the neighbors of the central node, which is defined as follows: 
+
+𝑙 𝑖 = 𝜎 ©«
+
+1
+
+𝐾 ∑︁ 𝑗 ∈ V ˜G𝑖 
+
+ℎ𝑗 
+
+ª®®¬
+
+(9) where 𝜎 is the sigmoid function 𝜎 (𝑥 ) = 1/( 1 + exp (− 𝑥 )) and V𝐺 𝑖 
+
+is the neighbor node set of centered node 𝑖 . To preserve the global connection pattern, graph embedding is modeled as the global knowledge, which is defined as follows: 
+
+𝑝 = 𝜎 ©«
+
+1
+
+| ˜V | ∑︁ 𝑗 ∈ ˜V
+
+ℎ𝑗 ª®¬
+
+(10) The training objective is a collaborative knowledge distillation over the node embedding, regional knowledge and global knowledge within the input graph ˜𝐺 . The distillation is measured by Mutual Information (MI) and the objective function is defined as follows: 
+
+L = −∑︁   
+
+> 𝑖 ∈˜V
+
+(MI (ℎ𝑖 , 𝑙 𝑖 ) + MI (ℎ𝑖 , 𝑝 )) (11) Following CKD, we also apply the Jensen-Shannon divergence (JSD) to estimate the mutual information, which can be expressed as: 
+
+𝑀𝐼 (𝑈 , 𝑉 ) = EP [− sp (− 𝑔 (𝑢, 𝑣 ))] + EP× ˆP [sp (𝑔 (𝑢, ˆ𝑣 ))] (12) where sp is the soft plus function sp (𝑥 ) = log (1 + 𝑒 𝑥 ), 𝑔 () is the representation learning model, P and ˆP denote the distributions of positive and negative samples, respectively. For regional knowledge, the neighbors of each centered node are regarded as positive sam-ples and the randomly sampled other nodes are negative samples. For global knowledge, the graph embedding 𝑝 is the positive sam-ple and the graph embedding learned from a graph with corrupted node features is the negative sample. 
+
+## 4.3 Prompt Decoder 
+
+To evaluate the performance of node embeddings on the down-stream tasks, traditionally a simple linear decoder such as SVM is applied to fit on the test data and give the final score. However, most graph tasks are semi-supervised tasks and the training sam-ples for the decoder are usually inadequate and the downstream task decoder cannot be well trained. In the HRGL task, we observe that similar to the ‘pre-training, fine-tuning’ framework in NLP, there also exists a gap between learning node embeddings and training on downstream tasks. How-ever, different from natural language, graph tasks are abstract, thus we cannot manually design a hard prompt. By contrast, soft prompt [ 18 , 42 ] can automatically adjust the prompt with a more flexible advantage than hard prompts and it is more suitable for graph tasks. To this end, we propose to utilize prefix soft prompt tuning [18 , 42 ] in downstream task adaptation of heterogeneous graphs. A task-specific trainable vector is applied as the prefix of the original embeddings. The objective is defined as follows: 
+
+max  
+
+> 𝛽,𝜃
+
+log 𝑃 (𝑦 |ℎ, 𝛽, 𝜃 ) = max 
+
+> 𝛽,𝜃
+
+∑︁ 𝑖 
+
+log 𝑃 (𝑦 𝑖 |[ 𝛽 || ℎ𝑖 ], 𝜃 ) (13) where 𝛽 is the prompt embedding, 𝜃 is the parameter of a down-stream task decoder and | · | is a concatenation operation. Then we let the decoder automatically learn a task-specific prompt to refor-mulate the downstream task similar to the representation learning Graph Topology Information Enhanced Heterogeneous Graph Representation Learning Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Table 1: Summary of datasets statistics used in experi-ments.ACM, IMDB, DBLP and ACM2 are used for node clas-sification tasks. ACM2 and PubMed are used for the link prediction task. 
+
+Datasets Nodes Edges Node Types Relations Labels ACM 8,994 12,961 3 4 3IMDB 12,772 18,644 3 4 3DBLP 18,405 67,946 3 4 4ACM2 29,930 61,770 2 2 7PubMed 63,109 125,167 4 10 8objective together with its own parameters. In this way, we improve the performance of the decoder without changing itself. 
+
+## 5 EXPERIMENTS 
+
+In this section, we conduct extensive experiments on five real-world datasets on node classification and link prediction tasks together with detailed analysis. We aim to study the following questions: 
+
+RQ1 . Does the ToGRL framework outperform baselines? 
+
+RQ2 . Does the learned new graph contain enough information for downstream tasks? 
+
+RQ3 . Does the prompt tuning decoder narrow the gap between representation learning and downstream tasks? 
+
+## 5.1 Datasets 
+
+Extensive experiments are performed on five real-world datasets to evaluate ToGRL’s performance, which are ACM, ACM2, DBLP, IMDB and PubMed. Please note that we use the same version of ACM, DBLP and IMDB as those in GTN [ 39 ] and ACM2 and PubMed are the CKD’s [ 31 ] versions. The statistics of these datasets are summarized in Table 1. 
+
+ACM is a citation network dataset which has three types of nodes, i.e., Author (A), Paper (P) and Subject (S). It also has four relations, which are PA, AP, PS and SP. The labels are the categories of papers. 
+
+IMDB is a movie dataset containing three node types: Movies (M), Actors (A) and Directors (D), and 4 relations: MA, AM, MD and DM. The labels are the genres of movies. 
+
+DBLP is another citation network dataset that involves three node types, which are Author (A), Paper (P), Conference (C) and 4 relations, which are AP, PA, PC, CP. Different from ACM, the labels are the research areas of the authors. 
+
+ACM2 is also a citation network dataset containing two node types, Author (A), Paper (P) and 2 relations, which are AA, AP. The labels are the research areas of the authors. 
+
+PubMed is a medical network that contains four types of nodes, including Gene (G), Disease (D), Chemical (C) and Species (S), and 10 relations. The labels are the categories of disease. 
+
+## 5.2 Baseline Methods 
+
+We compare ToGRL with one typical relation learning method, one random walk based method, two graph structure learning methods, and state-of-the-art HGRL methods. 
+
+Transh [ 35 ]: Transh is a relation learning method that models the relations as hyperplanes and utilizes the translation distance to learn node embeddings together with relation embeddings. 
+
+Node2Vec [ 11 ]: Node2Vec is a random walk-based method that adopts a strategy to control the walking preference between DFS and BFS. 
+
+Metapath2Vec [ 5 ]: Metapath2Vec performs random walk based on a given meta-path and is trained with skip-gram loss. 
+
+SLAPS [ 6]: SLAPS is a homogeneous graph structure learning method that jointly learns a new adjacency matrix and downstream tasks together with a node feature reconstruction task. 
+
+HGSL [41 ]: HGSL is a heterogeneous graph structure learning method. Feature similarity graphs, feature propagation graphs and semantic graphs are constructed and fused with the original raw graph structure by learning attention weights for different graphs. 
+
+GTN [ 39 ]: GTN generates multiple new meta-path adjacency matrices through its graph transformer layer and learns node em-beddings from different matrices. 
+
+HGT [14 ]: HGT follows message-passing and applies Trans-former [29] to learn the attention weights among neighbors. 
+
+SimpleHGN [ 25 ]: SimpleHGN extends GAT by introducing re-lation embeddings into the process of calculating attention weights and achieving promising results recently. 
+
+CKD [31 ]: CKD utilizes knowledge distillation and simultane-ously extracts information from different meta-path adjacency ma-trices. 
+
+SeHGNN [38 ]: SeHGNN is the SOTA model which is designed in a single-layer structure with long metapaths. To reduce complexity, it pre-computes the neighbor aggregation by a mean aggregator and removes overused neighbor attention. 
+
+## 5.3 Experimental Settings 
+
+We use the hyperparameters that achieve the best performance on each dataset for baseline models. We also choose popular meta-paths as used in previous works [ 31 , 39 , 41 ] for meta-path-based models. In terms of ToGRL, we apply GAT as the backbone for ACM, DBLP and IMDB datasets and GCN for ACM2 and PubMed datasets for topology embedding learning. We set the learning rate in {0.001, 0.0001, 0.00001} for both the graph structure learning module and the representation learning module. The value 𝑘 is searched from {15, 20, 25, 30, 35, 40}. A linear classifier is selected as the downstream task decoder. The whole model is implemented with PyTorch. 
+
+## 5.4 Node Classification 
+
+In this section, we select node classification as the downstream task and evaluate ToGRL performance. We follow the experimental settings as used in CKD [ 31 ]. The test dataset is randomly split into 5 folds for cross-validation for unsupervised models. For supervised models, i.e. SLAPS, HGSL, GTN, HGT, SImpleHGN and SeHGNN, we train them using the train sets and validation sets in the normal way. Then we test them in the same way as unsupervised models using the learned node embeddings. The downstream task decoder is trained on one fold and tested on the other folds. We select Macro F1 and Micro F1 as evaluation metrics and report the average scores. Conference acronym ’XX, June 03–05, 2018, Woodstock, NY He Zhao, Zhiwei Zeng, Yongwei Wang, and Chunyan Miao 
+
+Table 2: Node classification results on the four real-world datasets. Bold fonts denote the best performance among all methods. ‘-’ denotes that the model cannot be run on the dataset on a 16GB GPU. 
+
+Dataset ACM IMDB DBLP ACM2 Metrics Marco F1 Micro F1 Marco F1 Micro F1 Marco F1 Micro F1 Marco F1 Micro F1 Transh 67 .21 ± 0.20 67 .11 ± 0.19 30 .78 ± 0.23 53 .61 ± 0.20 27 .42 ± 0.41 34 .05 ± 0.68 17 .73 ± 0.61 50 .78 ± 0.10 
+
+Node2Vec 81 .57 ± 0.39 81 .22 ± 0.41 48 .59 ± 1.16 64 .59 ± 0.41 93 .26 ± 0.28 94 .05 ± 0.06 60 .01 ± 0.61 74 .61 ± 0.46 
+
+Metapath2Vec 78 .59 ± 0.30 78 .11 ± 0.30 54 .89 ± 0.72 67 .16 ± 0.92 92 .67 ± 1.01 93 .52 ± 0.91 57 .37 ± 1.11 72 .64 ± 1.32 
+
+SLAPS 88 .51 ± 0.51 88 .52 ± 0.66 57 .89 ± 0.24 61 .35 ± 0.18 55 .32 ± 1.20 56 .70 ± 1.11 61 .22 ± 0.73 72 .85 ± 0.14 
+
+HGSL 93 .21 ± 0.59 93 .17 ± 0.59 43 .34 ± 0.21 58 .83 ± 0.25 - - - -GTN 91 .51 ± 0.27 91 .49 ± 0.27 53 .57 ± 2.08 55 .51 ± 1.94 90 .56 ± 0.13 91 .55 ± 0.12 61 .34 ± 1.14 77 .92 ± 0.12 
+
+HGT 89 .56 ± 0.51 89 .47 ± 0.55 39 .91 ± 0.29 53 .52 ± 0.31 85 .01 ± 0.41 86 .31 ± 0.42 64 .62 ± 1.38 78 .39 ± 0.23 
+
+SimpleHGN 91 .52 ± 0.25 91 .45 ± 0.27 41 .97 ± 0.66 56 .12 ± 0.89 91 .72 ± 0.18 92 .76 ± 0.19 68 .62 ± 0.61 79 .25 ± 0.04 
+
+CKD 90 .25 ± 0.22 90 .11 ± 0.22 6.73 ± 0.20 64 .64 ± 0.22 86 .54 ± 0.05 87 .89 ± 0.10 65 .87 ± 0.60 78 .03 ± 1.20 
+
+SeHGNN 91 .48 ± 0.28 91 .54 ± 0.28 55 .29 ± 0.70 54 .29 ± 0.67 93 .32 ± 0.61 92 .81 ± 0.67 78.00 ± 0.18 69 .98 ± 0.17 
+
+ToGRL 93.38 ± 0.11 93.31 ± 0.10 66.88 ± 0.25 70.15 ± 0.20 94.90 ± 0.12 95.45 ± 0.13 72 .44 ± 0.71 80.67 ± 0.89 
+
+The details of the results are summarized in Table 2. Based on the experimental results, we have three major findings as follows: (1) Compared with baseline models, our ToGRL can generally achieve the best performance on all four datasets. Specifically, ToGRL outperforms the existing best baselines by 6.88% on Marco F1 and 5.51% on Micro F1 on the IMDB dataset. The consistent improvements on all datasets convincingly demonstrate the effec-tiveness of this proposed learning framework with a novel graph structure learning module and prompt tuning decoder. (2) Compared with CKD, our model only takes input as one graph while CKD uses multiple meta-paths induced homogeneous graphs. The improvement shows that our new input graph is superior to the original meta-paths graphs which can better facilitate downstream tasks and contains necessary information related to each meta-path. (3) Among four datasets, the improvements made by ToGRL on IMDB and ACM2 are the most obvious compared with none graph structure learning methods. The observation that the average scores on these datasets (i.e., IMDB, ACM2) are lower than those of the other two datasets (i.e., ACM, DBLP) indicates that these two datasets have more noise. Thus, the significant improvements made on these two datasets show the necessity of learning a new graph. Furthermore, compared with graph structure learning baselines (i.e., HGSL, SLAPS), the improvement shows that our ToGRL can better extract latent relationship between nodes and it is trained in a simpler and more stable way. Specifically, the failure of HGSL on DBLP and ACM2 datasets shows that HGSL suffers from memory consumption problem. It also performs poorly on IMDB dataset. This may be attributed to the fact that HGSL relies on fixed feature similarity graph and feature propagation graphs, while the node features of IMDB are noisy discrete vectors leading to possible corruption of those feature graphs. Besides, the usage of a semantic graph based on pre-trained Metapath2Vec embeddings also limits its performance. (4) We observe that random walk based methods (i.e., Node2Vec, Metapath2Vec) perform well on DBLP dataset. This indicates that the classification task on DBLP dataset relies more on long-term dependencies and these two methods can better capture this rela-tion. Besides, we observe that the SOAT baseline method SeHGNN obtains a high score on Macro F1 while achieving a relatively low 
+
+Table 3: The ablation study results. Bold fonts represent the best performance among ToGRL variants and baselines.                         
+
+> IMDB DBLP Macro F1 Micro F1 Macro F1 Micro F1 Baseline 60.92 62.59 93.26 94.05 ToGRL-p&w/o prompt 61.85 67.93 93.89 94.60 ToGRL-product 65.02 67.85 94.89 95.48
+> ToGRL-w/o prompt 64.25 69.64 94.24 94.96 ToGRL 66.88 70.15 94.90 95.45
+
+score on Micro F1 on the ACM2 dataset, which indicates it suffers imbalanced learning on different categories. 
+
+## 5.5 Ablation Study 
+
+In order to verify that the design of each part of ToGRL is effective, we design several variants of ToGRL. We compare these variants with the best score selected from baselines. The results are summa-rized in Table 3. 
+
+• ToGRL-p&w/o prompt drops prompt tuning and utilizes inner product when constructing the new graph. 
+
+• ToGRL-p applies inner-product distance when constructing the new graph. 
+
+• ToGRL-w/o prompt applies only linear downstream task decoder without the prompt tuning technique. By comparing between ToGRL-w/o prompt with the original ToGRL, and ToGRL-p with ToGRL-p&w/o prompt, we find that our pro-posed prompt tuning is effective and narrows the gap between embedding learning and downstream tasks. The decline of ToGRL-p with ToGRL-p&w/o prompt compared with ToGRL-w/o prompt shows that the choice of using Euclidean distance is slightly better than the inner-product distance. We point out that in some cases, although the value of the inner product distance between two em-beddings is large, the Euclidean distance of these two can be large. Besides, the Euclidean distance is much more similar to the original smoothness definition than the inner-product distance, thus it is a better choice. Graph Topology Information Enhanced Heterogeneous Graph Representation Learning Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+Table 4: The AUC scores on the Link Prediction task. Bold fonts denote the best performance among all methods.‘-’ de-notes that the model cannot be run on the dataset on a single 16GB GPU card. 
+
+ACM2 PubMed Metapath2Vec 0.712 0.628 SLAPS 0.662 -HAN 0.868 0.717 HGT 0.920 0.736 CKD 0.948 0.735 
+
+ToGRL 0.951 0.796 
+
+Figure 4: The performance of ToGRL on ACM and IMDB datasets with different 𝑘 values. Table 5: Memory consumption results (GB) for different mod-els on IMDB and ACM datasets on node classification. The ToGRL_st represents the structure learning part in our frame-work and the ToGRL_re represents the representation learn-ing part. The model settings are the same as those reported in Table 2. 
+
+SLAPS HGSL GTN SimpleHGN ToGRL_st ToGRL_re IMDB 9.4 11.7 2.7 2.1 2.7 1.7 ACM 5.2 8.6 1.6 2.0 2.1 1.6 
+
+## 5.6 Link Prediction 
+
+We further evaluate our model on the link prediction task, which is another basic downstream task usually used to evaluate node embeddings. In our experiments, we follow the experiment settings used in the CKD [ 31 ]. Given a raw heterogeneous graph, the train-ing graph is generated by first selecting a certain type of relation and removing 20% of edges belonging to this type as missing edges. Then the model is trained on the training graph to obtain node representations. To evaluate the models’ performance on link pre-diction, we predict node pairs that tend to have missing edges and report AUC scores. In this work, we select typical baseline models of each category mentioned in the section 5.2 to perform the link prediction task on two real-world datasets. The results are shown in Table 4. From the table, we have the following observations: 
+
+Figure 5: Visualization of node embeddings on ACM dataset. Compared with baseline models, our ToGRL can successfully learn more separated node embeddings which further proves that our structure learning module can extract downstream tasks related topology information effectively and facilitate the downstream task eventually. 
+
+• Among the baseline models, our ToGRL still performs the best on the two real-world link prediction datasets. This further proves the effectiveness of our framework. 
+
+• Similar to the performance on node classification, the pre-vious graph structure learning baseline method, i.e. SLAPS performs poorly on the ACM2 dataset, which further reveals that our ToGRL can better extract useful topology informa-tion. 
+
+## 5.7 Parameter Analysis 
+
+In this section, we study the impacts of the hyperparameter 𝑘 used to construct graphs in the proposed framework. We report Macro F1 score of ToGRL on ACM and IMDB with different 𝑘 values varying from 10 to 50. The results are shown in Fig. 4. In Fig. 4, we observe that the performance of ToGRL reaches the top when 𝑘 is around 30. This indicates that ACM has less noise. For IMDB, the performance first increases and reaches the peak at 𝑘 = 20 , then it drops sharply. A possible explanation is that there exists more noise in the IMDB, and with 𝑘 increasing, redundant information is introduced into each node. 
+
+## 5.8 Memory Consumption 
+
+Based on the models’ performance on the node classification and link prediction task, we find that our ToGRL can also achieve good performance in terms of memory consumption while both the graph structure learning baseline models suffer severe memory issues. To further verify this conclusion, we compare our ToGRL with base-line models on memory consumption issues and details are given in Table 5. Specifically, compared with graph structure learning baselines, i.e.SLAPS and HGSL, our framework consumes much less memory in both the two learning stages. Besides, our frame-work also achieves comparable performance compared with normal HGSL methods, i.e. GTN and Simple HGN, which directly learn node embeddings on the raw graphs. In summary, our framework can achieve better results on downstream task and preserve low memory consumption in the meantime, which further proves the efficiency of our framework. Conference acronym ’XX, June 03–05, 2018, Woodstock, NY He Zhao, Zhiwei Zeng, Yongwei Wang, and Chunyan Miao 
+
+## 5.9 Embeddings Visualization 
+
+This section provides a visualization of the learned embeddings on the ACM dataset. We use t-SNE [ 28 ] to project the embeddings into a 2-D space and plot the results in Fig. 5. The results show that our ToGRL performs well in classifying the nodes with different classes. Specifically, compared with CKD, our ToGRL uses a simi-lar representation learning method but incorporates a new graph structure learning module. The improvement further proves that ToGRL successfully learns a new graph containing the downstream task information. 
+
+## 6 CONCLUSION 
+
+In this paper, we have designed a novel heterogeneous graph repre-sentation learning method, named ToGRL, which proposes a novel graph structure learning module to automatically mine latent graph topology information together with downstream tasks. The newly learned graph contains rich information and can better facilitate downstream tasks. This novel graph structure learning module is also memory efficient. Moreover, we propose to leverage a prompt tuning method to close the gap between representation learning and downstream task learning. We perform extensive experiments on five real-world datasets on node classification and link predic-tion tasks to demonstrate the effectiveness of the proposed ToGRL method. 
+
+## REFERENCES 
+
+[1] Yu Chen, Lingfei Wu, and Mohammed Zaki. 2020. Iterative deep graph learning for graph neural networks: Better and robust node embeddings. Advances in neural information processing systems 33 (2020), 19314–19326. [2] Joe Davison, Joshua Feldman, and Alexander M Rush. 2019. Commonsense knowledge mining from pretrained models. In Proceedings of the 2019 conference on empirical methods in natural language processing and the 9th international joint conference on natural language processing (EMNLP-IJCNLP) . 1173–1178. [3] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. 2018. Bert: Pre-training of deep bidirectional transformers for language understanding. arXiv preprint arXiv:1810.04805 (2018). [4] Xiaowen Dong, Dorina Thanou, Michael Rabbat, and Pascal Frossard. 2019. Learn-ing graphs from data: A signal representation perspective. IEEE Signal Processing Magazine 36, 3 (2019), 44–63. [5] Yuxiao Dong, Nitesh V Chawla, and Ananthram Swami. 2017. metapath2vec: Scalable representation learning for heterogeneous networks. In Proceedings of the 23rd ACM SIGKDD international conference on knowledge discovery and data mining . 135–144. [6] Bahare Fatemi, Layla El Asri, and Seyed Mehran Kazemi. 2021. SLAPS: Self-supervision improves structure learning for graph neural networks. Advances in Neural Information Processing Systems 34 (2021), 22667–22681. [7] Luca Franceschi, Mathias Niepert, Massimiliano Pontil, and Xiao He. 2019. Learn-ing discrete structures for graph neural networks. In International conference on machine learning . PMLR, 1972–1982. [8] Xinyu Fu, Jiani Zhang, Ziqiao Meng, and Irwin King. 2020. Magnn: Metap-ath aggregated graph neural network for heterogeneous graph embedding. In 
+
+Proceedings of The Web Conference 2020 . 2331–2341. [9] Tianyu Gao, Adam Fisch, and Danqi Chen. 2020. Making pre-trained language models better few-shot learners. arXiv preprint arXiv:2012.15723 (2020). [10] Spyros Gidaris and Nikos Komodakis. 2019. Generating classification weights with gnn denoising autoencoders for few-shot learning. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition . 21–30. [11] Aditya Grover and Jure Leskovec. 2016. node2vec: Scalable feature learning for networks. In Proceedings of the 22nd ACM SIGKDD international conference on Knowledge discovery and data mining . 855–864. [12] Yuxian Gu, Xu Han, Zhiyuan Liu, and Minlie Huang. 2021. Ppt: Pre-trained prompt tuning for few-shot learning. arXiv preprint arXiv:2109.04332 (2021). [13] Xu Han, Weilin Zhao, Ning Ding, Zhiyuan Liu, and Maosong Sun. 2021. Ptr: Prompt tuning with rules for text classification. arXiv preprint arXiv:2105.11259 
+
+(2021). [14] Ziniu Hu, Yuxiao Dong, Kuansan Wang, and Yizhou Sun. 2020. Heterogeneous graph transformer. In Proceedings of The Web Conference 2020 . 2704–2710. [15] Pierre Humbert, Batiste Le Bars, Laurent Oudre, Argyris Kalogeratos, and Nicolas Vayatis. 2021. Learning laplacian matrix from graph signals with sparse spectral representation. Journal of Machine Learning Research (2021). [16] Zhengbao Jiang, Frank F Xu, Jun Araki, and Graham Neubig. 2020. How can we know what language models know? Transactions of the Association for Computa-tional Linguistics 8 (2020), 423–438. [17] Thomas N Kipf and Max Welling. 2016. Semi-supervised classification with graph convolutional networks. arXiv preprint arXiv:1609.02907 (2016). [18] Xiang Lisa Li and Percy Liang. 2021. Prefix-tuning: Optimizing continuous prompts for generation. arXiv preprint arXiv:2101.00190 (2021). [19] Nian Liu, Xiao Wang, Lingfei Wu, Yu Chen, Xiaojie Guo, and Chuan Shi. 2022. Compact Graph Structure Learning via Mutual Information Compression. In 
+
+Proceedings of the ACM Web Conference 2022 . 1601–1610. [20] Pengfei Liu, Weizhe Yuan, Jinlan Fu, Zhengbao Jiang, Hiroaki Hayashi, and Gra-ham Neubig. 2021. Pre-train, prompt, and predict: A systematic survey of prompt-ing methods in natural language processing. arXiv preprint arXiv:2107.13586 
+
+(2021). [21] Pengfei Liu, Weizhe Yuan, Jinlan Fu, Zhengbao Jiang, Hiroaki Hayashi, and Graham Neubig. 2023. Pre-train, prompt, and predict: A systematic survey of prompting methods in natural language processing. Comput. Surveys 55, 9 (2023), 1–35. [22] Xiao Liu, Yanan Zheng, Zhengxiao Du, Ming Ding, Yujie Qian, Zhilin Yang, and Jie Tang. 2021. GPT understands, too. arXiv preprint arXiv:2103.10385 (2021). [23] Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov. 2019. Roberta: A robustly optimized bert pretraining approach. arXiv preprint arXiv:1907.11692 
+
+(2019). [24] Yixin Liu, Yu Zheng, Daokun Zhang, Hongxu Chen, Hao Peng, and Shirui Pan. 2022. Towards unsupervised deep graph structure learning. In Proceedings of the ACM Web Conference 2022 . 1392–1403. [25] Qingsong Lv, Ming Ding, Qiang Liu, Yuxiang Chen, Wenzheng Feng, Siming He, Chang Zhou, Jianguo Jiang, Yuxiao Dong, and Jie Tang. 2021. Are we really making much progress? Revisiting, benchmarking and refining heterogeneous graph neural networks. In Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery & Data Mining . 1150–1160. [26] Fabio Petroni, Tim Rocktäschel, Patrick Lewis, Anton Bakhtin, Yuxiang Wu, Alexander H Miller, and Sebastian Riedel. 2019. Language models as knowledge bases? arXiv preprint arXiv:1909.01066 (2019). [27] Timo Schick and Hinrich Schütze. 2020. It’s not just size that matters: Small language models are also few-shot learners. arXiv preprint arXiv:2009.07118 
+
+(2020). [28] Laurens Van der Maaten and Geoffrey Hinton. 2008. Visualizing data using t-SNE. 
+
+Journal of machine learning research 9, 11 (2008). [29] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. 2017. Attention is all you need. Advances in neural information processing systems 30 (2017). [30] Petar Veličković, Guillem Cucurull, Arantxa Casanova, Adriana Romero, Pietro Lio, and Yoshua Bengio. 2017. Graph attention networks. arXiv preprint arXiv:1710.10903 (2017). [31] Can Wang, Sheng Zhou, Kang Yu, Defang Chen, Bolang Li, Yan Feng, and Chun Chen. 2022. Collaborative Knowledge Distillation for Heterogeneous Information Network Embedding. In Proceedings of the ACM Web Conference 2022 . 1631–1639. [32] Xiao Wang, Houye Ji, Chuan Shi, Bai Wang, Yanfang Ye, Peng Cui, and Philip S Yu. 2019. Heterogeneous graph attention network. In The world wide web conference .2022–2032. [33] Xiao Wang, Nian Liu, Hui Han, and Chuan Shi. 2021. Self-supervised heteroge-neous graph neural network with co-contrastive learning. In Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery & Data Mining . 1726–1736. [34] Yongwei Wang, Yong Liu, and Zhiqi Shen. 2023. Revisiting item promotion in GNN-based collaborative filtering: a masked targeted topological attack per-spective. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 37. 15206–15214. [35] Zhen Wang, Jianwen Zhang, Jianlin Feng, and Zheng Chen. 2014. Knowledge graph embedding by translating on hyperplanes. In Proceedings of the AAAI conference on artificial intelligence , Vol. 28. [36] Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. 2018. How powerful are graph neural networks? arXiv preprint arXiv:1810.00826 (2018). [37] Liang Yang, Fan Wu, Zichen Zheng, Bingxin Niu, Junhua Gu, Chuan Wang, Xiaochun Cao, and Yuanfang Guo. 2021. Heterogeneous Graph Information Bottleneck.. In IJCAI . 1638–1645. [38] Xiaocheng Yang, Mingyu Yan, Shirui Pan, Xiaochun Ye, and Dongrui Fan. 2023. Simple and efficient heterogeneous graph neural network. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 37. 10816–10824. [39] Seongjun Yun, Minbyul Jeong, Raehyun Kim, Jaewoo Kang, and Hyunwoo J Kim. 2019. Graph transformer networks. Advances in neural information processing systems 32 (2019). [40] Mengmei Zhang, Xiao Wang, Meiqi Zhu, Chuan Shi, Zhiqiang Zhang, and Jun Zhou. 2022. Robust heterogeneous graph neural networks against adversarial Graph Topology Information Enhanced Heterogeneous Graph Representation Learning Conference acronym ’XX, June 03–05, 2018, Woodstock, NY 
+
+attacks. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 36. 4363–4370. [41] Jianan Zhao, Xiao Wang, Chuan Shi, Binbin Hu, Guojie Song, and Yanfang Ye. 2021. Heterogeneous graph structure learning for graph neural networks. In 
+
+Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 35. 4697–4705. [42] Zexuan Zhong, Dan Friedman, and Danqi Chen. 2021. Factual probing is [MASK]: Learning vs. learning to recall. arXiv preprint arXiv:2104.05240 (2021).
