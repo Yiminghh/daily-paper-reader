@@ -1,0 +1,386 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-09T20:33:25.327885+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 4,
+    "deep_cap": 6,
+    "deep_selected": 4,
+    "quick_candidates": 6,
+    "quick_skim_target": 11,
+    "quick_selected": 6
+  },
+  "deep_dive": [
+    {
+      "id": "2604.06336v1",
+      "title": "BiScale-GTR: Fragment-Aware Graph Transformers for Multi-Scale Molecular Representation Learning",
+      "abstract": "Graph Transformers have recently attracted attention for molecular property prediction by combining the inductive biases of graph neural networks (GNNs) with the global receptive field of Transformers. However, many existing hybrid architectures remain GNN-dominated, causing the resulting representations to remain heavily shaped by local message passing. Moreover, most existing methods operate at only a single structural granularity, limiting their ability to capture molecular patterns that span multiple molecular scales. We introduce BiScale-GTR, a unified framework for self-supervised molecular representation learning that combines chemically grounded fragment tokenization with adaptive multi-scale reasoning. Our method improves graph Byte Pair Encoding (BPE) tokenization to produce consistent, chemically valid, and high-coverage fragment tokens, which are used as fragment-level inputs to a parallel GNN-Transformer architecture. Architecturally, atom-level representations learned by a GNN are pooled into fragment-level embeddings and fused with fragment token embeddings before Transformer reasoning, enabling the model to jointly capture local chemical environments, substructure-level motifs, and long-range molecular dependencies. Experiments on MoleculeNet, PharmaBench, and the Long Range Graph Benchmark (LRGB) demonstrate state-of-the-art performance across both classification and regression tasks. Attribution analysis further shows that BiScale-GTR highlights chemically meaningful functional motifs, providing interpretable links between molecular structure and predicted properties. Code will be released upon acceptance.",
+      "authors": [
+        "Yi Yang",
+        "Ovidiu Daescu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-07T18:16:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.06336v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Multi-scale molecular representation learning with Graph Transformers",
+      "llm_evidence_cn": "基于图Transformer的多尺度分子表示学习",
+      "llm_evidence": "基于图Transformer的多尺度分子表示学习",
+      "canonical_evidence": "基于图Transformer的多尺度分子表示学习",
+      "llm_tldr_en": "A fragment-aware Graph Transformer for self-supervised multi-scale molecular property prediction.",
+      "llm_tldr_cn": "一种片段感知的图Transformer，用于自监督多尺度分子属性预测。",
+      "llm_tldr": "一种片段感知的图Transformer，用于自监督多尺度分子属性预测。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06391v1",
+      "title": "Toward a universal foundation model for graph-structured data",
+      "abstract": "Graphs are a central representation in biomedical research, capturing molecular interaction networks, gene regulatory circuits, cell--cell communication maps, and knowledge graphs. Despite their importance, currently there is not a broadly reusable foundation model available for graph analysis comparable to those that have transformed language and vision. Existing graph neural networks are typically trained on a single dataset and learn representations specific only to that graph's node features, topology, and label space, limiting their ability to transfer across domains. This lack of generalization is particularly problematic in biology and medicine, where networks vary substantially across cohorts, assays, and institutions. Here we introduce a graph foundation model designed to learn transferable structural representations that are not specific to specific node identities or feature schemes. Our approach leverages feature-agnostic graph properties, including degree statistics, centrality measures, community structure indicators, and diffusion-based signatures, and encodes them as structural prompts. These prompts are integrated with a message-passing backbone to embed diverse graphs into a shared representation space. The model is pretrained once on heterogeneous graphs and subsequently reused on unseen datasets with minimal adaptation. Across multiple benchmarks, our pretrained model matches or exceeds strong supervised baselines while demonstrating superior zero-shot and few-shot generalization on held-out graphs. On the SagePPI benchmark, supervised fine-tuning of the pretrained backbone achieves a mean ROC-AUC of 95.5%, a gain of 21.8% over the best supervised message-passing baseline. The proposed technique thus provides a unique approach toward reusable, foundation-scale models for graph-structured data in biomedical and network science applications.",
+      "authors": [
+        "Sakib Mostafa",
+        "Lei Xing",
+        "Md. Tauhidul Islam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-07T19:21:21+00:00",
+      "link": "https://arxiv.org/pdf/2604.06391v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Universal foundation model for biomedical graph-structured data",
+      "llm_evidence_cn": "生物医学图结构数据的通用基础模型",
+      "llm_evidence": "生物医学图结构数据的通用基础模型",
+      "canonical_evidence": "生物医学图结构数据的通用基础模型",
+      "llm_tldr_en": "Introduces a graph foundation model for biomedical networks like molecular interactions and gene circuits.",
+      "llm_tldr_cn": "引入了一种针对分子相互作用和基因通路等生物医学图的基础模型。",
+      "llm_tldr": "引入了一种针对分子相互作用和基因通路等生物医学图的基础模型。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06558v1",
+      "title": "When Does Context Help? A Systematic Study of Target-Conditional Molecular Property Prediction",
+      "abstract": "We present the first systematic study of when target context helps molecular property prediction, evaluating context conditioning across 10 diverse protein families, 4 fusion architectures, data regimes spanning 67-9,409 training compounds, and both temporal and random evaluation splits. Using NestDrug, a FiLM-based architecture that conditions molecular representations on target identity, we characterize both success and failure modes with three principal findings. First, fusion architecture dominates: FiLM outperforms concatenation by 24.2 percentage points and additive conditioning by 8.6 pp; how you incorporate context matters more than whether you include it. Second, context enables otherwise impossible predictions: on data-scarce CYP3A4 (67 training compounds), multi-task transfer achieves 0.686 AUC where per-target Random Forest collapses to 0.238. Third, context can systematically hurt: distribution mismatch causes 10.2 pp degradation on BACE1; few-shot adaptation consistently underperforms zero-shot. Beyond methodology, we expose fundamental flaws in standard benchmarking: 1-nearest-neighbor Tanimoto achieves 0.991 AUC on DUD-E without any learning, and 50% of actives leak from training data, rendering absolute performance metrics meaningless. Our temporal split evaluation (train up to 2020, test 2021-2024) achieves stable 0.843 AUC with no degradation, providing the first rigorous evidence that context-conditional molecular representations generalize to future chemical space.",
+      "authors": [
+        "Bryan Cheng",
+        "Jasper Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.BM",
+        "q-bio.MN"
+      ],
+      "published": "2026-04-08T01:19:16+00:00",
+      "link": "https://arxiv.org/pdf/2604.06558v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "target-conditional molecular property prediction",
+      "llm_evidence_cn": "目标条件分子属性预测",
+      "llm_evidence": "目标条件分子属性预测",
+      "canonical_evidence": "目标条件分子属性预测",
+      "llm_tldr_en": "A systematic study on how target context and fusion architectures affect molecular property prediction.",
+      "llm_tldr_cn": "关于目标上下文和融合架构如何影响分子属性预测的系统研究。",
+      "llm_tldr": "关于目标上下文和融合架构如何影响分子属性预测的系统研究。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06685v1",
+      "title": "ChemVLR: Prioritizing Reasoning in Perception for Chemical Vision-Language Understanding",
+      "abstract": "While Vision-Language Models (VLMs) have demonstrated significant potential in chemical visual understanding, current models are predominantly optimized for direct visual question-answering tasks. This paradigm often results in \"black-box\" systems that fail to utilize the inherent capability of Large Language Models (LLMs) to infer underlying reaction mechanisms. In this work, we introduce ChemVLR, a chemical VLM designed to prioritize reasoning within the perception process. Unlike conventional chemical VLMs, ChemVLR analyzes visual inputs in a fine-grained manner by explicitly identifying granular chemical descriptors, such as functional groups, prior to generating answers. This approach ensures the production of explicit and interpretable reasoning paths for complex visual chemical problems. To facilitate this methodology, we implement a cross-modality reverse-engineering strategy, combined with a rigorous filtering pipeline, to curate a large-scale reasoning-and-captioning dataset comprising 760k high-quality samples across molecular and reaction tasks. Furthermore, we adopt a three-stage training framework that systemically builds model perception and reasoning capacity. Experiments demonstrate that ChemVLR achieves state-of-the-art (SOTA) performance, surpassing both leading proprietary models and domain-specific open-source baselines. We also provide comprehensive ablation studies to validate our training strategy and data generation designs. Code and model weights will be available at https://github.com/xxlllz/ChemVLR.",
+      "authors": [
+        "Xuanle Zhao",
+        "Xinyuan Cai",
+        "Xiang Cheng",
+        "Xiuyi Chen",
+        "Bo Xu"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-04-08T05:01:59+00:00",
+      "link": "https://arxiv.org/pdf/2604.06685v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "chemical vision-language model for molecular reasoning",
+      "llm_evidence_cn": "用于分子推理的化学视觉语言模型",
+      "llm_evidence": "用于分子推理的化学视觉语言模型",
+      "canonical_evidence": "用于分子推理的化学视觉语言模型",
+      "llm_tldr_en": "Introduces ChemVLR to improve chemical reasoning in vision-language models through granular descriptor identification.",
+      "llm_tldr_cn": "引入ChemVLR，通过细粒度描述符识别来提高视觉语言模型中的化学推理能力。",
+      "llm_tldr": "引入ChemVLR，通过细粒度描述符识别来提高视觉语言模型中的化学推理能力。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.06895v1",
+      "title": "Markov Chains and Random Walks with Memory on Hypergraphs: A Tensor-Based Approach",
+      "abstract": "Many complex systems exhibit interactions that depend not only on pairwise connections, but also group structures and memory effects. To capture such effects, we develop a unified tensor framework for modeling higher-order Markov chains with memory. Our formulation introduces an even-order paired tensor that links folded and unfolded dynamics and characterizes their steady states and convergence. We further show that a Markov chain with memory can be approximated by a low-dimensional nonlinear tensor-based system and then provide a full system analysis. As an application, we define random walks on hypergraphs where memory naturally arises from the hyperedge structure, providing new tools for analyzing higher-order networks with time-dependent effects.",
+      "authors": [
+        "Shaoxuan Cui",
+        "Lingfei Wang",
+        "Hildeberto Jardon-Kojakhmetov",
+        "Karl Henrik Johansson",
+        "Ming Cao"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-08T09:52:35+00:00",
+      "link": "https://arxiv.org/pdf/2604.06895v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "higher-order networks and hypergraph random walks",
+      "llm_evidence_cn": "高阶网络与超图随机游走",
+      "llm_evidence": "高阶网络与超图随机游走",
+      "canonical_evidence": "高阶网络与超图随机游走",
+      "llm_tldr_en": "Develops a tensor framework for higher-order Markov chains and random walks on hypergraphs.",
+      "llm_tldr_cn": "开发了一个用于超图上高阶马尔可夫链和随机游走的统一张量框架。",
+      "llm_tldr": "开发了一个用于超图上高阶马尔可夫链和随机游走的统一张量框架。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.03537v1",
+      "title": "Rethinking Token Prediction: Tree-Structured Diffusion Language Model",
+      "abstract": "Discrete diffusion language models have emerged as a competitive alternative to auto-regressive language models, but training them efficiently under limited parameter and memory budgets remains challenging. Modern architectures are predominantly based on a full-vocabulary token prediction layer, which accounts for a substantial fraction of model parameters (e.g., more than 20% in small scale DiT-style designs) and often dominates peak GPU memory usage. This leads to inefficient use of both parameters and memory under constrained training resources. To address this issue, we revisit the necessity of explicit full-vocabulary prediction, and instead exploit the inherent structure among tokens to build a tree-structured diffusion language model. Specifically, we model the diffusion process with intermediate latent states corresponding to a token's ancestor nodes in a pre-constructed vocabulary tree. This tree-structured factorization exponentially reduces the classification dimensionality, makes the prediction head negligible in size, and enables reallocation of parameters to deepen the attention blocks. Empirically, under the same parameter budget, our method reduces peak GPU memory usage by half while matching the perplexity performance of state-of-the-art discrete diffusion language models.",
+      "authors": [
+        "Zihao Wu",
+        "Haoming Yang",
+        "Juncheng Dong",
+        "Vahid Tarokh"
+      ],
+      "primary_category": "cs.CL",
+      "categories": [
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-04-04T01:19:12+00:00",
+      "link": "https://arxiv.org/pdf/2604.03537v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "discrete diffusion language model for structured sequences",
+      "llm_evidence_cn": "用于结构化序列的离散扩散语言模型",
+      "llm_evidence": "用于结构化序列的离散扩散语言模型",
+      "canonical_evidence": "用于结构化序列的离散扩散语言模型",
+      "llm_tldr_en": "Proposes a tree-structured diffusion language model to improve parameter efficiency in token prediction.",
+      "llm_tldr_cn": "提出一种树状结构扩散语言模型，旨在提高标记预测中的参数效率。",
+      "llm_tldr": "提出一种树状结构扩散语言模型，旨在提高标记预测中的参数效率。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.07276v1",
+      "title": "Making Room for AI: Multi-GPU Molecular Dynamics with Deep Potentials in GROMACS",
+      "abstract": "GROMACS is a de-facto standard for classical Molecular Dynamics (MD). The rise of AI-driven interatomic potentials that pursue near-quantum accuracy at MD throughput now poses a significant challenge: embedding neural-network inference into multi-GPU simulations retaining high-performance. In this work, we integrate the MLIP framework DeePMD-kit into GROMACS, enabling domain-decomposed, GPU-accelerated inference across multi-node systems. We extend the GROMACS NNPot interface with a DeePMD backend, and we introduce a domain decomposition layer decoupled from the main simulation. The inference is executed concurrently on all processes, with two MPI collectives used each step to broadcast coordinates and to aggregate and redistribute forces. We train an in-house DPA-1 model (1.6 M parameters) on a dataset of solvated protein fragments. We validate the implementation on a small protein system, then we benchmark the GROMACS-DeePMD integration with a 15,668 atom protein on NVIDIA A100 and AMD MI250x GPUs up to 32 devices. Strong-scaling efficiency reaches 66% at 16 devices and 40% at 32; weak-scaling efficiency is 80% to 16 devices and reaches 48% (MI250x) and 40% (A100) at 32 devices. Profiling with the ROCm System profiler shows that >90% of the wall time is spent in DeePMD inference, while MPI collectives contribute <10%, primarily since they act as a global synchronization point. The principal bottlenecks are the irreducible ghost-atom cost set by the cutoff radius, confirmed by a simple throughput model, and load imbalance across ranks. These results demonstrate that production MD with near ab initio fidelity is feasible at scale in GROMACS.",
+      "authors": [
+        "Luca Pennati",
+        "Andong Hu",
+        "Ivy Peng",
+        "Lukas Müllender",
+        "Stefano Markidis"
+      ],
+      "primary_category": "cs.DC",
+      "categories": [
+        "cs.DC",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-08T16:40:08+00:00",
+      "link": "https://arxiv.org/pdf/2604.07276v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "AI-driven interatomic potentials for molecular dynamics",
+      "llm_evidence_cn": "用于分子动力学的AI驱动原子间势能",
+      "llm_evidence": "用于分子动力学的AI驱动原子间势能",
+      "canonical_evidence": "用于分子动力学的AI驱动原子间势能",
+      "llm_tldr_en": "Integrates deep learning potentials into GROMACS for high-performance multi-GPU molecular simulations.",
+      "llm_tldr_cn": "将深度学习势能集成到GROMACS中，实现高性能多GPU分子模拟。",
+      "llm_tldr": "将深度学习势能集成到GROMACS中，实现高性能多GPU分子模拟。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.06413v1",
+      "title": "ODE-free Neural Flow Matching for One-Step Generative Modeling",
+      "abstract": "Diffusion and flow matching models generate samples by learning time-dependent vector fields whose integration transports noise to data, requiring tens to hundreds of network evaluations at inference. We instead learn the transport map directly. We propose Optimal Transport Neural Flow Matching (OT-NFM), an ODE-free generative framework that parameterizes the flow map with neural flows, enabling true one-step generation with a single forward pass. We show that naive flow-map training suffers from mean collapse, where inconsistent noise-data pairings drive all outputs toward the data mean. We prove that consistent coupling is necessary for non-degenerate learning and address this using optimal transport pairings with scalable minibatch and online coupling strategies. Experiments on synthetic benchmarks and image generation tasks (MNIST and CIFAR-10) demonstrate competitive sample quality while reducing inference to a single network evaluation.",
+      "authors": [
+        "Xiao Shou"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-07T19:49:57+00:00",
+      "link": "https://arxiv.org/pdf/2604.06413v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "ODE-free generative framework for flow matching",
+      "llm_evidence_cn": "无ODE的流匹配生成框架",
+      "llm_evidence": "无ODE的流匹配生成框架",
+      "canonical_evidence": "无ODE的流匹配生成框架",
+      "llm_tldr_en": "Proposes OT-NFM for one-step generative modeling, applicable to diffusion-based molecular generation tasks.",
+      "llm_tldr_cn": "提出OT-NFM单步生成框架，可应用于基于扩散的分子生成任务。",
+      "llm_tldr": "提出OT-NFM单步生成框架，可应用于基于扩散的分子生成任务。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.06761v1",
+      "title": "A Massively Scalable Ligand-Protein Dissociation Dynamic Database Derived from Atomistic Molecular Modelling",
+      "abstract": "Understanding the kinetics of drug-protein interactions is paramount for drug design, yet the field lacks large-scale, dynamic data to move beyond static structural analysis. Here, we present DD-03B, a massively scalable database providing dynamic, all-atom dissociation trajectories for a broad set of ligand-protein complexes. Utilising and extending a validated computational pipeline, we generated dissociation trajectories for 19,037 ligand-protein complexes sourced from PDBbind+v2020R1, resulting in a repository of approximately 0.3 billion simulation frames totalling 40 TB in size. For these systems-which possess experimental binding affinities (kd) but typically lack measured koff rates-we computed and assigned dissociation rate constants through trajectory reweighting. Our analysis reveals that protein-ligand complexes can be categorised into three mechanistic types (pathway-dominant, open-pocket, and entropy-pocket systems), each requiring distinct strategies for accurate kinetic characterisation. Together with our previously released DD-13M, DD-03B forms the core of the expandable Dissociation Dynamic Database (DDD) project, which will be continuously augmented with new trajectories. This large-scale, publicly available resource establishes a critical foundation for training and benchmarking next-generation generative AI models to predict and optimise drug-protein dissociation kinetics.",
+      "authors": [
+        "Maodong Li",
+        "Dechin Chen",
+        "Zhijun Pan",
+        "Zhe Wang",
+        "Yi Isaac Yang"
+      ],
+      "primary_category": "physics.comp-ph",
+      "categories": [
+        "physics.comp-ph",
+        "physics.chem-ph"
+      ],
+      "published": "2026-04-08T07:27:26+00:00",
+      "link": "https://arxiv.org/pdf/2604.06761v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Large-scale database for ligand-protein molecular discovery",
+      "llm_evidence_cn": "用于配体-蛋白质分子发现的大规模数据库",
+      "llm_evidence": "用于配体-蛋白质分子发现的大规模数据库",
+      "canonical_evidence": "用于配体-蛋白质分子发现的大规模数据库",
+      "llm_tldr_en": "Provides a massive database of ligand-protein dissociation trajectories for drug design kinetics.",
+      "llm_tldr_cn": "提供大规模配体-蛋白质解离轨迹数据库，助力药物设计的动力学研究。",
+      "llm_tldr": "提供大规模配体-蛋白质解离轨迹数据库，助力药物设计的动力学研究。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.07196v1",
+      "title": "Probing 3D Chromatin Structure Awareness in Evo2 DNA Language Model",
+      "abstract": "DNA language models like Evo2 now fit million-token contexts large enough to cover entire TADs, yet whether they learn 3D chromatin structure, a key regulatory layer acting atop primary sequence, remains untested and questionable, given that Evo2's training data includes prokaryotes lacking this structure. We probed Evo2-7B on TAD boundaries and convergent CTCF loops in 1 Mb windows using two complementary tests: likelihood-based perturbation and sequence generation. Evo2 did not distinguish functional perturbations from matched random controls and failed to reliably generate convergent CTCF loops, recovering TAD boundaries only partially. Together, these results indicate that Evo2 has learned local CTCF grammar but misses higher-order 3D organization, pointing to bidirectional model architectures integrating cell types and 3D contacts, rather than longer contexts, as the path to developing 3D-aware DNA language models.",
+      "authors": [
+        "UkJin Lee"
+      ],
+      "primary_category": "q-bio.GN",
+      "categories": [
+        "q-bio.GN"
+      ],
+      "published": "2026-04-08T15:20:10+00:00",
+      "link": "https://arxiv.org/pdf/2604.07196v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "probing 3D structure awareness in DNA language models",
+      "llm_evidence_cn": "探测 DNA 语言模型中的 3D 结构感知",
+      "llm_evidence": "探测 DNA 语言模型中的 3D 结构感知",
+      "canonical_evidence": "探测 DNA 语言模型中的 3D 结构感知",
+      "llm_tldr_en": "Evaluates whether the Evo2 DNA language model captures 3D chromatin structure and higher-order organization.",
+      "llm_tldr_cn": "评估 Evo2 DNA 语言模型是否捕捉到了 3D 染色质结构和高阶组织。",
+      "llm_tldr": "评估 Evo2 DNA 语言模型是否捕捉到了 3D 染色质结构和高阶组织。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

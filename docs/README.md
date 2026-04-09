@@ -6,60 +6,52 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-08
-- 运行时间：2026-04-08 20:39:53 UTC
+- 最新运行日期：2026-04-09
+- 运行时间：2026-04-09 20:34:39 UTC
 - 运行状态：成功
-- 本次总论文数：13
-- 精读区：2
-- 速读区：11
+- 本次总论文数：10
+- 精读区：4
+- 速读区：6
 
 ### 今日简报（AI）
-今日聚焦分子生成与理解的范式革新，重点解析结合大语言模型与扩散模型的 MolDA 满分力作。
-核心研究展示了 LLM 扩散
-- 详情：[/202604/08/README](/202604/08/README)
+今日深度解析 10 篇前沿论文，聚焦图神经网络基础模型与多尺度分子表征学习。
+满分力作 BiScale-GTR 揭示了片段感知在分子建模中的威力，通用图基础模型的研究则展现了跨领域泛化的巨大潜力。
+建议优先研读分子表征与多 GPU 动力学仿真相关成果，探索 AI 如何重塑生物医药研发与复杂网络分析。
+- 详情：[/202604/09/README](/202604/09/README)
 
 ### 精读区论文标签
-1. [MolDA: Molecular Understanding and Generation via Large Language Diffusion Model](/202604/08/2604.04403v2-molda-molecular-understanding-and-generation-via-large-language-diffusion-model)  
+1. [BiScale-GTR: Fragment-Aware Graph Transformers for Multi-Scale Molecular Representation Learning](/202604/09/2604.06336v1-biscale-gtr-fragment-aware-graph-transformers-for-multi-scale-molecular-representation-learning)  
    标签：评分：10.0/10、query:molrna
-   evidence：结合掩码扩散模型与混合图编码器的分子语言模型
-2. [CVT Archives and Chemical Embedding Measures for Multi-Objective Quality Diversity in Molecular Design](/202604/08/2604.05622v1-cvt-archives-and-chemical-embedding-measures-for-multi-objective-quality-diversity-in-molecular-design)  
+   evidence：基于图Transformer的多尺度分子表示学习
+2. [Toward a universal foundation model for graph-structured data](/202604/09/2604.06391v1-toward-a-universal-foundation-model-for-graph-structured-data)  
+   标签：评分：9.0/10、query:molrna
+   evidence：生物医学图结构数据的通用基础模型
+3. [When Does Context Help? A Systematic Study of Target-Conditional Molecular Property Prediction](/202604/09/2604.06558v1-when-does-context-help-a-systematic-study-of-target-conditional-molecular-property-prediction)  
    标签：评分：8.0/10、query:molrna
-   evidence：利用学习到的嵌入和质量多样性进行分子设计
+   evidence：目标条件分子属性预测
+4. [ChemVLR: Prioritizing Reasoning in Perception for Chemical Vision-Language Understanding](/202604/09/2604.06685v1-chemvlr-prioritizing-reasoning-in-perception-for-chemical-vision-language-understanding)  
+   标签：评分：8.0/10、query:molrna
+   evidence：用于分子推理的化学视觉语言模型
 
 ### 速读区论文标签
-1. [Loop-Extrusion Linkage: Spectral Ordering and Interval-Based Structure Discovery for Continuous Optimization](/202604/08/2604.04273v1-loop-extrusion-linkage-spectral-ordering-and-interval-based-structure-discovery-for-continuous-optimization)  
+1. [Markov Chains and Random Walks with Memory on Hypergraphs: A Tensor-Based Approach](/202604/09/2604.06895v1-markov-chains-and-random-walks-with-memory-on-hypergraphs-a-tensor-based-approach)  
    标签：评分：7.0/10、query:molrna
-   evidence：受生物物理启发的结构发现与谱图排序
-2. [Interpretation of Crystal Energy Landscapes with Kolmogorov-Arnold Networks](/202604/08/2604.04636v1-interpretation-of-crystal-energy-landscapes-with-kolmogorov-arnold-networks)  
+   evidence：高阶网络与超图随机游走
+2. [Making Room for AI: Multi-GPU Molecular Dynamics with Deep Potentials in GROMACS](/202604/09/2604.07276v1-making-room-for-ai-multi-gpu-molecular-dynamics-with-deep-potentials-in-gromacs)  
    标签：评分：7.0/10、query:molrna
-   evidence：分子能量景观的可解释表示学习
-3. [ORION: Unifying Top-Down and Bottom-Up Chemical Space Sampling for a Universal Organic Force Field](/202604/08/2604.05769v1-orion-unifying-top-down-and-bottom-up-chemical-space-sampling-for-a-universal-organic-force-field)  
-   标签：评分：7.0/10、query:molrna
-   evidence：有机系统的通用机器学习力场
-4. [GenomeQA: Benchmarking General Large Language Models for Genome Sequence Understanding](/202604/08/2604.05774v1-genomeqa-benchmarking-general-large-language-models-for-genome-sequence-understanding)  
-   标签：评分：7.0/10、query:molrna
-   evidence：基因组序列理解的 LLM 基准测试
-5. [PhageBench: Can LLMs Understand Raw Bacteriophage Genomes?](/202604/08/2604.05775v1-phagebench-can-llms-understand-raw-bacteriophage-genomes)  
-   标签：评分：7.0/10、query:molrna
-   evidence：用于原始核苷酸序列和生物推理的大语言模型
-6. [Effective Dynamics and Transition Pathways from Koopman-Inspired Neural Learning of Collective Variables](/202604/08/2604.05778v1-effective-dynamics-and-transition-pathways-from-koopman-inspired-neural-learning-of-collective-variables)  
-   标签：评分：7.0/10、query:molrna
-   evidence：复杂分子系统的表示学习
-7. [ReLU Networks for Exact Generation of Similar Graphs](/202604/08/2604.05929v1-relu-networks-for-exact-generation-of-similar-graphs)  
-   标签：评分：7.0/10、query:molrna
-   evidence：具有编辑距离约束的分子设计图生成
-8. [Learning Stable Predictors from Weak Supervision under Distribution Shift](/202604/08/2604.05002v1-learning-stable-predictors-from-weak-supervision-under-distribution-shift)  
+   evidence：用于分子动力学的AI驱动原子间势能
+3. [Rethinking Token Prediction: Tree-Structured Diffusion Language Model](/202604/09/2604.03537v1-rethinking-token-prediction-tree-structured-diffusion-language-model)  
    标签：评分：6.0/10、query:molrna
-   evidence：CRISPR-Cas13d实验和RNA-seq响应
-9. [DualDiffusion: A Speculative Decoding Strategy for Masked Diffusion Models](/202604/08/2604.05250v1-dualdiffusion-a-speculative-decoding-strategy-for-masked-diffusion-models)  
+   evidence：用于结构化序列的离散扩散语言模型
+4. [ODE-free Neural Flow Matching for One-Step Generative Modeling](/202604/09/2604.06413v1-ode-free-neural-flow-matching-for-one-step-generative-modeling)  
    标签：评分：6.0/10、query:molrna
-   evidence：掩码扩散模型的投机解码策略
-10. [FastDiSS: Few-step Match Many-step Diffusion Language Model on Sequence-to-Sequence Generation--Full Version](/202604/08/2604.05551v1-fastdiss-few-step-match-many-step-diffusion-language-model-on-sequence-to-sequence-generation--full-version)  
+   evidence：无ODE的流匹配生成框架
+5. [A Massively Scalable Ligand-Protein Dissociation Dynamic Database Derived from Atomistic Molecular Modelling](/202604/09/2604.06761v1-a-massively-scalable-ligand-protein-dissociation-dynamic-database-derived-from-atomistic-molecular-modelling)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于序列生成的扩散模型
-11. [Graph Topology Information Enhanced Heterogeneous Graph Representation Learning](/202604/08/2604.05732v1-graph-topology-information-enhanced-heterogeneous-graph-representation-learning)  
+   evidence：用于配体-蛋白质分子发现的大规模数据库
+6. [Probing 3D Chromatin Structure Awareness in Evo2 DNA Language Model](/202604/09/2604.07196v1-probing-3d-chromatin-structure-awareness-in-evo2-dna-language-model)  
    标签：评分：6.0/10、query:molrna
-   evidence：图表示学习与拓扑增强
+   evidence：探测 DNA 语言模型中的 3D 结构感知
 
 
 <div class="dpr-home-promo-card">
