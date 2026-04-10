@@ -1,0 +1,502 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-10T19:50:52.521555+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 5,
+    "deep_cap": 6,
+    "deep_selected": 5,
+    "quick_candidates": 8,
+    "quick_skim_target": 11,
+    "quick_selected": 8
+  },
+  "deep_dive": [
+    {
+      "id": "2604.08189v1",
+      "title": "Equivariant Efficient Joint Discrete and Continuous MeanFlow for Molecular Graph Generation",
+      "abstract": "Graph-structured data jointly contain discrete topology and continuous geometry, which poses fundamental challenges for generative modeling due to heterogeneous distributions, incompatible noise dynamics, and the need for equivariant inductive biases. Existing flow-matching approaches for graph generation typically decouple structure from geometry, lack synchronized cross-domain dynamics, and rely on iterative sampling, often resulting in physically inconsistent molecular conformations and slow sampling. To address these limitations, we propose Equivariant MeanFlow (EQUIMF), a unified SE(3)-equivariant generative framework that jointly models discrete and continuous components through synchronized MeanFlow dynamics. EQUIMF introduces a unified time bridge and average-velocity updates with mutual conditioning between structure and geometry, enabling efficient few-step generation while preserving physical consistency. Moreover, we develop a novel discrete MeanFlow formulation with a simple yet effective parameterization to support efficient generation over discrete graph structures. Extensive experiments demonstrate that EQUIMF consistently outperforms prior diffusion and flow-matching methods in generation quality, physical validity, and sampling efficiency.",
+      "authors": [
+        "Rongjian Xu",
+        "Teng Pang",
+        "Zhiqiang Dong",
+        "Guoqiang Wu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-09T12:42:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.08189v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "equivariant generative framework for molecular graph generation",
+      "llm_evidence_cn": "分子图生成的等变生成框架",
+      "llm_evidence": "分子图生成的等变生成框架",
+      "canonical_evidence": "分子图生成的等变生成框架",
+      "llm_tldr_en": "Proposes EQUIMF, a unified SE(3)-equivariant framework for joint discrete and continuous molecular generation.",
+      "llm_tldr_cn": "提出了EQUIMF，一个用于离散和连续分子联合生成的统一SE(3)等变框架。",
+      "llm_tldr": "提出了EQUIMF，一个用于离散和连续分子联合生成的统一SE(3)等变框架。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07512v1",
+      "title": "Rhizome OS-1: Rhizome's Semi-Autonomous Operating System for Small Molecule Drug Discovery",
+      "abstract": "We introduce a semi-autonomous discovery system in which multi-modal AI agents function as a multi-disciplinary discovery team, acting as computational chemists, medicinal chemists, and patent agents, writing and executing analysis code, visually evaluating molecular candidates, assessing patentability, and adapting generation strategy from empirical screening feedback, while r1, a 246M-parameter Graph Neural Network (GNN) trained on 800M molecules, generates novel chemical matter directly on molecular graphs. Agents executed two campaigns in oncology (BCL6, EZH2), formulating medicinal chemistry hypotheses across three strategy tiers and generating libraries of 2,355-2,876 novel molecules per target. Across both targets, 91.9% of generated Murcko scaffolds are absent from ChEMBL for their respective targets, with Tanimoto distances of 0.56-0.69 to the nearest known active, confirming that the engine produces structurally distinct chemical matter rather than recapitulating known compounds. Binding affinity predictions using Boltz-2 were calibrated against ChEMBL experimental data, achieving Spearman correlations of -0.53 to -0.64 and ROC AUC values of 0.88 to 0.93. These results demonstrate that semi-autonomous agent systems, equipped with graph-native generative tools and physics-informed scoring, provide a foundation for a modern operating system for small molecule discovery. We show that Rhizome OS-1 enables a new paradigm for early-stage drug discovery by supporting scaled, rapid, and adaptive inverse design.",
+      "authors": [
+        "Yiwen Wang",
+        "Gregory Sinenka",
+        "Xhuliano Brace"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-08T18:49:08+00:00",
+      "link": "https://arxiv.org/pdf/2604.07512v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "large-scale GNN trained on 800M molecules for drug discovery",
+      "llm_evidence_cn": "在8亿分子上训练的大规模图神经网络用于药物发现",
+      "llm_evidence": "在8亿分子上训练的大规模图神经网络用于药物发现",
+      "canonical_evidence": "在8亿分子上训练的大规模图神经网络用于药物发现",
+      "llm_tldr_en": "Rhizome OS-1 uses a 246M-parameter GNN for autonomous small molecule drug discovery and generation.",
+      "llm_tldr_cn": "Rhizome OS-1利用2.46亿参数的图神经网络实现自主小分子药物发现与生成。",
+      "llm_tldr": "Rhizome OS-1利用2.46亿参数的图神经网络实现自主小分子药物发现与生成。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07632v1",
+      "title": "Sheaf-Laplacian Obstruction and Projection Hardness for Cross-Modal Compatibility on a Modality-Independent Site",
+      "abstract": "We develop a unified framework for analyzing cross-modal compatibility in learned representations. The core object is a modality-independent neighborhood site on sample indices, equipped with a cellular sheaf of finite-dimensional real inner-product spaces. For a directed modality pair $(a\\to b)$, we formalize two complementary incompatibility mechanisms: projection hardness, the minimal complexity within a nested Lipschitz-controlled projection family needed for a single global map to align whitened embeddings; and sheaf-Laplacian obstruction, the minimal spatial variation required by a locally fit field of projection parameters to achieve a target alignment error. The obstruction invariant is implemented via a projection-parameter sheaf whose 0-Laplacian energy exactly matches the smoothness penalty used in sheaf-regularized regression, making the theory directly operational. This separates two distinct failure modes: hardness failure, where no low-complexity global projection exists, and obstruction failure, where local projections exist but cannot be made globally consistent over the semantic neighborhood graph without large parameter variation. We link the sheaf spectral gap to stability of global alignment, derive bounds relating obstruction energy to excess global-map error under mild Lipschitz assumptions, and give explicit constructions showing that compatibility is generally non-transitive. We further define bridging via composed projection families and show, in a concrete ReLU setting, that an intermediate modality can strictly reduce effective hardness even when direct alignment remains infeasible.",
+      "authors": [
+        "Tibor Sloboda"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-08T22:20:25+00:00",
+      "link": "https://arxiv.org/pdf/2604.07632v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "cellular sheaf and sheaf-Laplacian for representation analysis",
+      "llm_evidence_cn": "用于表示分析的细胞层与层拉普拉斯算子",
+      "llm_evidence": "用于表示分析的细胞层与层拉普拉斯算子",
+      "canonical_evidence": "用于表示分析的细胞层与层拉普拉斯算子",
+      "llm_tldr_en": "Uses topological tools like cellular sheaves to analyze cross-modal compatibility in learned representations.",
+      "llm_tldr_cn": "利用细胞层等拓扑工具分析学习表示中的跨模态兼容性。",
+      "llm_tldr": "利用细胞层等拓扑工具分析学习表示中的跨模态兼容性。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.07669v1",
+      "title": "Reinforcement Learning with LLM-Guided Action Spaces for Synthesizable Lead Optimization",
+      "abstract": "Lead optimization in drug discovery requires improving therapeutic properties while ensuring that proposed molecular modifications correspond to feasible synthetic routes. Existing approaches either prioritize property scores without enforcing synthesizability, or rely on expensive enumeration over large reaction networks, while direct application of Large Language Models (LLMs) frequently produces chemically invalid structures. We introduce MolReAct, a framework that formulates lead optimization as a Markov Decision Process over a synthesis-constrained action space defined by validated reaction templates. A tool-augmented LLM agent serves as a dynamic reaction environment that invokes specialized chemical analysis tools to identify reactive sites and propose chemically grounded transformations from matched templates. A policy model trained via Group Relative Policy Optimization (GRPO) selects among these constrained actions to maximize long-term oracle reward across multi-step reaction trajectories. A SMILES-based caching mechanism further reduces end-to-end optimization time by approximately 43%. Across 13 property optimization tasks from the Therapeutic Data Commons and one structure-based docking task, MolReAct achieves an average Top-10 score of 0.563, outperforming the strongest synthesizable baseline by 10.4% in relative improvement, and attains the best sample efficiency on 10 of 14 tasks. Ablations confirm that both tool-augmented reaction proposals and trajectory-level policy optimization contribute complementary gains. By grounding every step in validated reaction templates, MolReAct produces molecules that are property-improved and each accompanied by an explicit synthetic pathway.",
+      "authors": [
+        "Tao Li",
+        "Kaiyuan Hou",
+        "Tuan Vinh",
+        "Monika Raj",
+        "Zhichun Guo",
+        "Carl Yang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CE"
+      ],
+      "published": "2026-04-09T00:22:10+00:00",
+      "link": "https://arxiv.org/pdf/2604.07669v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "LLM-guided lead optimization for molecular discovery",
+      "llm_evidence_cn": "LLM引导的分子发现先导化合物优化",
+      "llm_evidence": "LLM引导的分子发现先导化合物优化",
+      "canonical_evidence": "LLM引导的分子发现先导化合物优化",
+      "llm_tldr_en": "Introduces MolReAct, using LLMs and reinforcement learning for synthesizable molecular lead optimization.",
+      "llm_tldr_cn": "引入MolReAct框架，利用LLM和强化学习进行可合成的分子先导化合物优化。",
+      "llm_tldr": "引入MolReAct框架，利用LLM和强化学习进行可合成的分子先导化合物优化。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08105v1",
+      "title": "Direction-aware topological descriptors for Young's modulus prediction in porous materials",
+      "abstract": "Classical topological descriptors used in topological data analysis (TDA) are invariant under permutations of spatial axes and therefore cannot represent the loading direction, which is essential for modeling anisotropic mechanical response. Here, this limitation is addressed by introducing a \\emph{direction-aware TDA framework} in which the compression axis is explicitly embedded into filtration functions used to compute both persistent homology and Euler characteristic profile descriptors. Across multiple porous-material datasets spanning a broad range of structural anisotropy, direction-aware descriptors yield higher predictive accuracy than their direction-agnostic counterparts, with performance gains that increase systematically with anisotropy. Notably, direction-aware descriptors remain competitive and often improve $R^2$ even for nominally isotropic ensembles, indicating sensitivity to mechanically relevant directional organization beyond bulk anisotropy measures. When used as inputs to gradient-boosted tree models, the proposed descriptors approach the accuracy of convolutional neural networks trained directly on voxelized structures while retaining a compact, transferable representation. The study considers multiple datasets spanning weak to strong anisotropy, enabling systematic validation of direction-aware topology across regimes. Overall, the results establish direction-aware TDA as a general route for linking porous structure to direction-dependent elastic properties and motivate its use in anisotropic materials modeling problems where a preferred direction naturally arises.",
+      "authors": [
+        "Rafał Topolnicki",
+        "Michał Bogdan",
+        "Jakub Malinowski",
+        "Bartosz Naskręcki",
+        "Maciej Harańczyk",
+        "Paweł Dłotko"
+      ],
+      "primary_category": "physics.comp-ph",
+      "categories": [
+        "physics.comp-ph",
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-04-09T11:23:05+00:00",
+      "link": "https://arxiv.org/pdf/2604.08105v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "topological descriptors for property prediction in materials",
+      "llm_evidence_cn": "用于材料属性预测的拓扑描述符",
+      "llm_evidence": "用于材料属性预测的拓扑描述符",
+      "canonical_evidence": "用于材料属性预测的拓扑描述符",
+      "llm_tldr_en": "Introduces direction-aware topological data analysis for predicting mechanical properties in porous materials.",
+      "llm_tldr_cn": "引入了方向感知的拓扑数据分析，用于预测多孔材料的机械性能。",
+      "llm_tldr": "引入了方向感知的拓扑数据分析，用于预测多孔材料的机械性能。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "advancements in topological deep learning for molecular property prediction",
+      "matched_requirement_id": "req-9",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.06549v1",
+      "title": "The Mechanistic Invariance Test: Genomic Language Models Fail to Learn Positional Regulatory Logic",
+      "abstract": "Genomic language models (gLMs) have transformed computational biology, achieving state-of-the-art performance across genomic tasks. Yet a fundamental question threatens the foundation of this success: do these models learn the mechanistic principles governing gene regulation, or do they merely exploit statistical shortcuts? We introduce the Mechanistic Invariance Test (MIT), a rigorous 650-sequence benchmark across 8 classes with scrambled controls that enables clean discrimination between compositional sensitivity and genuine positional understanding. We evaluate five gLMs spanning all major architectural paradigms (autoregressive, masked, and bidirectional state-space models) and uncover a universal failure mode. Through systematic mechanistic probing via AT titration, positional ablation, spacing perturbation, and strand orientation tests, we demonstrate that apparent compensation sensitivity is driven entirely by AT content correlation (r=0.78-0.96 across architectures), not positional regulatory logic. The failures are striking: Evo2-1B and Caduceus score regulatory elements at incorrect positions higher than correct positions, inverting biological reality. All models are strand-blind. Compositional effects dominate positional effects by 46-fold. Perhaps most revealing, a simple 100-parameter position-aware PWM achieves perfect performance (CSS=1.00, SCR=0.98), exposing that billion-parameter gLMs fail not from insufficient capacity but from fundamentally misaligned inductive biases. Larger models show stronger compositional bias, demonstrating that scale amplifies rather than corrects this limitation. These findings reveal that current gLMs capture surface statistics while missing the positional grammar essential for gene regulation, demanding architectural innovation before deployment in synthetic biology, gene therapy, and clinical variant interpretation.",
+      "authors": [
+        "Bryan Cheng",
+        "Jasper Zhang"
+      ],
+      "primary_category": "q-bio.GN",
+      "categories": [
+        "q-bio.GN"
+      ],
+      "published": "2026-04-08T00:56:26+00:00",
+      "link": "https://arxiv.org/pdf/2604.06549v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "genomic language models and sequence regulatory logic",
+      "llm_evidence_cn": "基因组语言模型与序列调控逻辑",
+      "llm_evidence": "基因组语言模型与序列调控逻辑",
+      "canonical_evidence": "基因组语言模型与序列调控逻辑",
+      "llm_tldr_en": "Evaluates if genomic language models learn mechanistic regulatory principles or exploit statistical shortcuts.",
+      "llm_tldr_cn": "评估基因组语言模型是否学习了机械性调控原理，还是仅利用了统计捷径。",
+      "llm_tldr": "评估基因组语言模型是否学习了机械性调控原理，还是仅利用了统计捷径。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.03508v1",
+      "title": "Data-Driven Tensor Decomposition Identification of Homogeneous Polynomial Dynamical Systems",
+      "abstract": "Homogeneous polynomial dynamical systems (HPDSs), which can be equivalently represented by tensors, are essential for modeling higher-order networked systems, including ecological networks, chemical reactions, and multi-agent robotic systems. However, identifying such systems from data is challenging due to the rapid growth in the number of parameters with increasing system dimension and polynomial degree. In this article, we adopt compact and scalable representations of HPDSs leveraging low-rank tensor decompositions, including tensor train, hierarchical Tucker, and canonical polyadic decompositions. These representations exploit the intrinsic multilinear structure of HPDSs and substantially reduce the dimensionality of the parameter space. Rather than identifying the full dynamic tensor, we develop a data-driven framework that directly learns the underlying factor tensors or matrices in the associated decompositions from time-series data. The resulting identification problem is solved using alternating least-squares algorithms tailored to each tensor decomposition, achieving both accuracy and computational efficiency. We further analyze the robustness of the proposed framework in the presence of measurement noise and characterize data informativity. Finally, we demonstrate the effectiveness of our framework with numerical examples.",
+      "authors": [
+        "Xin Mao",
+        "Joshua Pickard",
+        "Can Chen"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-03T23:09:12+00:00",
+      "link": "https://arxiv.org/pdf/2604.03508v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "tensor decomposition for modeling chemical reaction networks",
+      "llm_evidence_cn": "用于化学反应网络建模的张量分解",
+      "llm_evidence": "用于化学反应网络建模的张量分解",
+      "canonical_evidence": "用于化学反应网络建模的张量分解",
+      "llm_tldr_en": "Uses low-rank tensor decompositions to identify higher-order networked systems like chemical reactions.",
+      "llm_tldr_cn": "利用低秩张量分解来识别化学反应等高阶网络系统。",
+      "llm_tldr": "利用低秩张量分解来识别化学反应等高阶网络系统。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.08143v1",
+      "title": "Equivariant Many-body Message Passing Interatomic Potentials for Magnetic Materials",
+      "abstract": "Magnetism governs key properties of materials used in energy, data storage, and spintronic technologies, yet its complex coupling to lattice and electronic degrees of freedom challenges conventional first-principles approaches. We introduce an equivariant message-passing graph neural network that embeds atomic magnetic moments as explicit degrees of freedom, enabling the learning of magnetic interactions beyond collinear approximations. The model learns physically consistent and transferable representations of magnetic behaviour and can incorporate spin-orbit coupling, achieving near density-functional-theory accuracy with strong data efficiency across diverse magnetic systems by fine-tuning from a pre-trained model. Applications to structural transformations, finite-temperature magnetic phenomena, and materials screening for strongly spin-orbit coupled materials demonstrate transferable magnetic behaviour, establishing a practical foundation for data-driven, high-throughput discovery of complex magnetic materials.",
+      "authors": [
+        "Cheuk Hin Ho",
+        "Cas van der Oord",
+        "James P. Darby",
+        "Theo Keane",
+        "Raz L. Benson",
+        "Cristian Rebolledo Espinoza",
+        "Rutvij Kulkarni",
+        "Elina Spinu",
+        "Michail Papanikolaou",
+        "Richard Tomsett",
+        "Robert M. Forrest",
+        "Jonathan J. Bean",
+        "Gábor Csányi",
+        "Christoph Ortner"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-04-09T12:05:30+00:00",
+      "link": "https://arxiv.org/pdf/2604.08143v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "equivariant message-passing graph neural network for materials",
+      "llm_evidence_cn": "用于材料的等变消息传递图神经网络",
+      "llm_evidence": "用于材料的等变消息传递图神经网络",
+      "canonical_evidence": "用于材料的等变消息传递图神经网络",
+      "llm_tldr_en": "An equivariant graph neural network for learning magnetic interactions in materials with high efficiency.",
+      "llm_tldr_cn": "一种等变图神经网络，用于高效学习材料中的磁相互作用。",
+      "llm_tldr": "一种等变图神经网络，用于高效学习材料中的磁相互作用。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.03554v2",
+      "title": "Eigencone Constellations on Ranked Spheres",
+      "abstract": "We introduce eigencone constellations, a hierarchical framework for embedding bounded-degree spatial graphs into concentric spherical shells and partitioning each shell into spectrally weighted, spherical star-shaped territories. Given a connected sparse spatial graph $G$ with a distinguished root vertex (the queen), we assign each vertex to a sphere whose radial position is determined by its graph distance from the queen, then tessellate each sphere into constellation territories whose solid angles are proportional to the spectral mass of the corresponding subgraph. Within each territory, nodes are packed by constrained repulsion, yielding local simplex structures. The resulting geometric representation provides a structural framework for measuring spectral distance between dynamic subgraph states. By combining this eigencone-derived metric with constraints on the domain-specific edit alphabet, we define a forward-only deterministic trajectory -- the isomorphic walk -- which converges graph edits efficiently. We define the notion of spherical star-shaped domains with geodesic visibility, establish their properties under spectral projection, and demonstrate the trajectory convergence on molecular contact graphs.",
+      "authors": [
+        "Norayr Matevosyan"
+      ],
+      "primary_category": "math.AP",
+      "categories": [
+        "math.AP",
+        "cs.CG",
+        "q-bio.BM"
+      ],
+      "published": "2026-04-04T02:40:22+00:00",
+      "link": "https://arxiv.org/pdf/2604.03554v2",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "hierarchical framework for embedding spatial graphs",
+      "llm_evidence_cn": "空间图嵌入的分层框架",
+      "llm_evidence": "空间图嵌入的分层框架",
+      "canonical_evidence": "空间图嵌入的分层框架",
+      "llm_tldr_en": "Introduces a hierarchical framework for embedding spatial graphs into spherical shells using spectral properties.",
+      "llm_tldr_cn": "引入了一种利用光谱特性将空间图嵌入球面壳的分层框架。",
+      "llm_tldr": "引入了一种利用光谱特性将空间图嵌入球面壳的分层框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.08469v1",
+      "title": "Persistence-Augmented Neural Networks",
+      "abstract": "Topological Data Analysis (TDA) provides tools to describe the shape of data, but integrating topological features into deep learning pipelines remains challenging, especially when preserving local geometric structure rather than summarizing it globally. We propose a persistence-based data augmentation framework that encodes local gradient flow regions and their hierarchical evolution using the Morse-Smale complex. This representation, compatible with both convolutional and graph neural networks, retains spatially localized topological information across multiple scales. Importantly, the augmentation procedure itself is efficient, with computational complexity $O(n \\log n)$, making it practical for large datasets. We evaluate our method on histopathology image classification and 3D porous material regression, where it consistently outperforms baselines and global TDA descriptors such as persistence images and landscapes. We also show that pruning the base level of the hierarchy reduces memory usage while maintaining competitive performance. These results highlight the potential of local, structured topological augmentation for scalable and interpretable learning across data modalities.",
+      "authors": [
+        "Elena Xinyi Wang",
+        "Arnur Nigmetov",
+        "Dmitriy Morozov"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-09T17:06:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.08469v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "topological data analysis and Morse-Smale complex for graph networks",
+      "llm_evidence_cn": "用于图网络的拓扑数据分析和Morse-Smale复形",
+      "llm_evidence": "用于图网络的拓扑数据分析和Morse-Smale复形",
+      "canonical_evidence": "用于图网络的拓扑数据分析和Morse-Smale复形",
+      "llm_tldr_en": "Proposes a persistence-based data augmentation framework for integrating topological features into GNNs.",
+      "llm_tldr_cn": "提出一种基于持久性的数据增强框架，将拓扑特征集成到GNN中。",
+      "llm_tldr": "提出一种基于持久性的数据增强框架，将拓扑特征集成到GNN中。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "topological deep learning for RNA and molecules",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05254v1",
+      "title": "EAGLE: Edge-Aware Graph Learning for Proactive Delivery Delay Prediction in Smart Logistics Networks",
+      "abstract": "Modern logistics networks generate rich operational data streams at every warehouse node and transportation lane -- from order timestamps and routing records to shipping manifests -- yet predicting delivery delays remains predominantly reactive. Existing predictive approaches typically treat this problem either as a tabular classification task, ignoring network topology, or as a time-series anomaly detection task, overlooking the spatial dependencies of the supply chain graph. To bridge this gap, we propose a hybrid deep learning framework for proactive supply chain risk management. The proposed method jointly models temporal order-flow dynamics via a lightweight Transformer patch encoder and inter-hub relational dependencies through an Edge-Aware Graph Attention Network (E-GAT), optimized via a multi-task learning objective. Evaluated on the real-world DataCo Smart Supply Chain dataset, our framework achieves consistent improvements over baseline methods, yielding an F1-score of 0.8762 and an AUC-ROC of 0.9773. Across four independent random seeds, the framework exhibits a cross-seed F1 standard deviation of only 0.0089 -- a 3.8 times improvement over the best ablated variant -- achieving the strongest balance of predictive accuracy and training stability among all evaluated models.",
+      "authors": [
+        "Zhiming Xue",
+        "Menghao Huo",
+        "Yujue Wang"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-06T23:35:15+00:00",
+      "link": "https://arxiv.org/pdf/2604.05254v1",
+      "tags": [
+        "keyword:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "edge-aware graph learning considering network topology and spatial dependencies",
+      "llm_evidence_cn": "考虑网络拓扑和空间依赖性的边感知图学习",
+      "llm_evidence": "考虑网络拓扑和空间依赖性的边感知图学习",
+      "canonical_evidence": "考虑网络拓扑和空间依赖性的边感知图学习",
+      "llm_tldr_en": "A hybrid deep learning framework using graph topology for proactive logistics delay prediction.",
+      "llm_tldr_cn": "一种利用图拓扑进行主动物流延迟预测的混合深度学习框架。",
+      "llm_tldr": "一种利用图拓扑进行主动物流延迟预测的混合深度学习框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.05695v1",
+      "title": "Let Geometry GUIDE: Layer-wise Unrolling of Geometric Priors in Multimodal LLMs",
+      "abstract": "Multimodal Large Language Models (MLLMs) have achieved remarkable progress in 2D visual tasks but still exhibit limited physical spatial awareness when processing real-world visual streams. Recently, feed-forward geometric foundation models, which implicitly extract geometric priors, have provided a new pathway to address this issue. However, existing geometry-aware MLLMs are predominantly constrained by the paradigm of single deep-layer extraction and input-level fusion. This flattened fusion leads to the loss of local geometric details and causes semantic mismatches in the early layers. To break this bottleneck, we propose GUIDE (Geometric Unrolling Inside MLLM Early-layers), a progressive geometric priors injection framework. GUIDE performs multi-level sampling within the geometric encoder, comprehensively capturing multi-granularity features ranging from local edges to global topologies. Subsequently, we rigorously align and fuse these multi-level geometric priors step-by-step with the early layers of the MLLM. Building upon the injection of multi-granularity geometric information, this design guides the model to progressively learn the 2D-to-3D transitional process. Furthermore, we introduce a context-aware gating that enables the model to fetch requisite spatial cues based on current semantics, thereby maximizing the utilization efficiency of spatial priors and effectively suppressing redundant geometric noise. Extensive experiments demonstrate that GUIDE significantly outperforms existing baselines on multiple complex spatial reasoning and perception tasks, establishing a novel paradigm for integrating 3D geometric priors into large models.",
+      "authors": [
+        "Chongyu Wang",
+        "Ting Huang",
+        "Chunyu Sun",
+        "Xinyu Ning",
+        "Di Wang",
+        "Hao Tang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV"
+      ],
+      "published": "2026-04-07T10:45:28+00:00",
+      "link": "https://arxiv.org/pdf/2604.05695v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "geometric foundation models and geometric priors in MLLMs",
+      "llm_evidence_cn": "多模态大模型中的几何基础模型与几何先验",
+      "llm_evidence": "多模态大模型中的几何基础模型与几何先验",
+      "canonical_evidence": "多模态大模型中的几何基础模型与几何先验",
+      "llm_tldr_en": "Integrates geometric priors into multimodal LLMs to improve spatial awareness and structural understanding.",
+      "llm_tldr_cn": "将几何先验集成到多模态大模型中，以提高空间感知和结构理解能力。",
+      "llm_tldr": "将几何先验集成到多模态大模型中，以提高空间感知和结构理解能力。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.08150v1",
+      "title": "FlowEqProp: Training Flow Matching Generative Models with Gradient Equilibrium Propagation",
+      "abstract": "We introduce Gradient Equilibrium Propagation (GradEP), a mechanism that extends Equilibrium Propagation (EP) to train energy gradients rather than energy minima, enabling EP to be applied to tasks where the learning objective depends on the velocity field of a convergent dynamical system. Instead of fixing the input during dynamics as in standard EP, GradEP introduces a spring potential that allows all units, including the visible units, to evolve, encoding the learned velocity in the equilibrium displacement. The spring and resulting nudge terms are both purely quadratic, preserving EP's hardware plausibility for neuromorphic implementation. As a first demonstration, we apply GradEP to flow matching for generative modelling - an approach we call FlowEqProp - training a two-hidden-layer MLP (24,896 parameters) on the Optical Recognition of Handwritten Digits dataset using only local equilibrium measurements and no backpropagation. The model generates recognisable digit samples across all ten classes with stable training dynamics. We further show that the time-independent energy landscape enables extended generation beyond the training horizon, producing sharper samples through additional inference-time computation - a property that maps naturally onto neuromorphic hardware, where longer relaxation yields higher-quality outputs. To our knowledge, this is the first demonstration of EP training a flow-based generative model.",
+      "authors": [
+        "Alex Gower"
+      ],
+      "primary_category": "cond-mat.dis-nn",
+      "categories": [
+        "cond-mat.dis-nn"
+      ],
+      "published": "2026-04-09T12:10:16+00:00",
+      "link": "https://arxiv.org/pdf/2604.08150v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "flow matching generative models with gradient equilibrium propagation",
+      "llm_evidence_cn": "基于梯度平衡传播的流匹配生成模型",
+      "llm_evidence": "基于梯度平衡传播的流匹配生成模型",
+      "canonical_evidence": "基于梯度平衡传播的流匹配生成模型",
+      "llm_tldr_en": "Extends equilibrium propagation to train flow matching models for generative tasks.",
+      "llm_tldr_cn": "扩展了平衡传播算法，用于训练生成任务中的流匹配模型。",
+      "llm_tldr": "扩展了平衡传播算法，用于训练生成任务中的流匹配模型。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

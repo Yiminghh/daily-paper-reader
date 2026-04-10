@@ -6,52 +6,60 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-09
-- 运行时间：2026-04-09 20:34:39 UTC
+- 最新运行日期：2026-04-10
+- 运行时间：2026-04-10 19:52:45 UTC
 - 运行状态：成功
-- 本次总论文数：10
-- 精读区：4
-- 速读区：6
+- 本次总论文数：13
+- 精读区：5
+- 速读区：8
 
 ### 今日简报（AI）
-今日深度解析 10 篇前沿论文，聚焦图神经网络基础模型与多尺度分子表征学习。
-满分力作 BiScale-GTR 揭示了片段感知在分子建模中的威力，通用图基础模型的研究则展现了跨领域泛化的巨大潜力。
-建议优先研读分子表征与多 GPU 动力学仿真相关成果，探索 AI 如何重塑生物医药研发与复杂网络分析。
-- 详情：[/202604/09/README](/202604/09/README)
+今日精选 13 篇前沿论文，深度聚焦等变 MeanFlow 分子生成与半自主药物研发系统。
+重点
+- 详情：[/202604/10/README](/202604/10/README)
 
 ### 精读区论文标签
-1. [BiScale-GTR: Fragment-Aware Graph Transformers for Multi-Scale Molecular Representation Learning](/202604/09/2604.06336v1-biscale-gtr-fragment-aware-graph-transformers-for-multi-scale-molecular-representation-learning)  
+1. [Equivariant Efficient Joint Discrete and Continuous MeanFlow for Molecular Graph Generation](/202604/10/2604.08189v1-equivariant-efficient-joint-discrete-and-continuous-meanflow-for-molecular-graph-generation)  
    标签：评分：10.0/10、query:molrna
-   evidence：基于图Transformer的多尺度分子表示学习
-2. [Toward a universal foundation model for graph-structured data](/202604/09/2604.06391v1-toward-a-universal-foundation-model-for-graph-structured-data)  
+   evidence：分子图生成的等变生成框架
+2. [Rhizome OS-1: Rhizome's Semi-Autonomous Operating System for Small Molecule Drug Discovery](/202604/10/2604.07512v1-rhizome-os-1-rhizomes-semi-autonomous-operating-system-for-small-molecule-drug-discovery)  
    标签：评分：9.0/10、query:molrna
-   evidence：生物医学图结构数据的通用基础模型
-3. [When Does Context Help? A Systematic Study of Target-Conditional Molecular Property Prediction](/202604/09/2604.06558v1-when-does-context-help-a-systematic-study-of-target-conditional-molecular-property-prediction)  
+   evidence：在8亿分子上训练的大规模图神经网络用于药物发现
+3. [Sheaf-Laplacian Obstruction and Projection Hardness for Cross-Modal Compatibility on a Modality-Independent Site](/202604/10/2604.07632v1-sheaf-laplacian-obstruction-and-projection-hardness-for-cross-modal-compatibility-on-a-modality-independent-site)  
    标签：评分：8.0/10、query:molrna
-   evidence：目标条件分子属性预测
-4. [ChemVLR: Prioritizing Reasoning in Perception for Chemical Vision-Language Understanding](/202604/09/2604.06685v1-chemvlr-prioritizing-reasoning-in-perception-for-chemical-vision-language-understanding)  
+   evidence：用于表示分析的细胞层与层拉普拉斯算子
+4. [Reinforcement Learning with LLM-Guided Action Spaces for Synthesizable Lead Optimization](/202604/10/2604.07669v1-reinforcement-learning-with-llm-guided-action-spaces-for-synthesizable-lead-optimization)  
    标签：评分：8.0/10、query:molrna
-   evidence：用于分子推理的化学视觉语言模型
+   evidence：LLM引导的分子发现先导化合物优化
+5. [Direction-aware topological descriptors for Young's modulus prediction in porous materials](/202604/10/2604.08105v1-direction-aware-topological-descriptors-for-youngs-modulus-prediction-in-porous-materials)  
+   标签：评分：8.0/10、query:molrna
+   evidence：用于材料属性预测的拓扑描述符
 
 ### 速读区论文标签
-1. [Markov Chains and Random Walks with Memory on Hypergraphs: A Tensor-Based Approach](/202604/09/2604.06895v1-markov-chains-and-random-walks-with-memory-on-hypergraphs-a-tensor-based-approach)  
+1. [The Mechanistic Invariance Test: Genomic Language Models Fail to Learn Positional Regulatory Logic](/202604/10/2604.06549v1-the-mechanistic-invariance-test-genomic-language-models-fail-to-learn-positional-regulatory-logic)  
    标签：评分：7.0/10、query:molrna
-   evidence：高阶网络与超图随机游走
-2. [Making Room for AI: Multi-GPU Molecular Dynamics with Deep Potentials in GROMACS](/202604/09/2604.07276v1-making-room-for-ai-multi-gpu-molecular-dynamics-with-deep-potentials-in-gromacs)  
+   evidence：基因组语言模型与序列调控逻辑
+2. [Equivariant Many-body Message Passing Interatomic Potentials for Magnetic Materials](/202604/10/2604.08143v1-equivariant-many-body-message-passing-interatomic-potentials-for-magnetic-materials)  
    标签：评分：7.0/10、query:molrna
-   evidence：用于分子动力学的AI驱动原子间势能
-3. [Rethinking Token Prediction: Tree-Structured Diffusion Language Model](/202604/09/2604.03537v1-rethinking-token-prediction-tree-structured-diffusion-language-model)  
+   evidence：用于材料的等变消息传递图神经网络
+3. [Persistence-Augmented Neural Networks](/202604/10/2604.08469v1-persistence-augmented-neural-networks)  
+   标签：评分：7.0/10、query:molrna
+   evidence：用于图网络的拓扑数据分析和Morse-Smale复形
+4. [Data-Driven Tensor Decomposition Identification of Homogeneous Polynomial Dynamical Systems](/202604/10/2604.03508v1-data-driven-tensor-decomposition-identification-of-homogeneous-polynomial-dynamical-systems)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于结构化序列的离散扩散语言模型
-4. [ODE-free Neural Flow Matching for One-Step Generative Modeling](/202604/09/2604.06413v1-ode-free-neural-flow-matching-for-one-step-generative-modeling)  
+   evidence：用于化学反应网络建模的张量分解
+5. [Eigencone Constellations on Ranked Spheres](/202604/10/2604.03554v2-eigencone-constellations-on-ranked-spheres)  
    标签：评分：6.0/10、query:molrna
-   evidence：无ODE的流匹配生成框架
-5. [A Massively Scalable Ligand-Protein Dissociation Dynamic Database Derived from Atomistic Molecular Modelling](/202604/09/2604.06761v1-a-massively-scalable-ligand-protein-dissociation-dynamic-database-derived-from-atomistic-molecular-modelling)  
+   evidence：空间图嵌入的分层框架
+6. [EAGLE: Edge-Aware Graph Learning for Proactive Delivery Delay Prediction in Smart Logistics Networks](/202604/10/2604.05254v1-eagle-edge-aware-graph-learning-for-proactive-delivery-delay-prediction-in-smart-logistics-networks)  
    标签：评分：6.0/10、query:molrna
-   evidence：用于配体-蛋白质分子发现的大规模数据库
-6. [Probing 3D Chromatin Structure Awareness in Evo2 DNA Language Model](/202604/09/2604.07196v1-probing-3d-chromatin-structure-awareness-in-evo2-dna-language-model)  
+   evidence：考虑网络拓扑和空间依赖性的边感知图学习
+7. [Let Geometry GUIDE: Layer-wise Unrolling of Geometric Priors in Multimodal LLMs](/202604/10/2604.05695v1-let-geometry-guide-layer-wise-unrolling-of-geometric-priors-in-multimodal-llms)  
    标签：评分：6.0/10、query:molrna
-   evidence：探测 DNA 语言模型中的 3D 结构感知
+   evidence：多模态大模型中的几何基础模型与几何先验
+8. [FlowEqProp: Training Flow Matching Generative Models with Gradient Equilibrium Propagation](/202604/10/2604.08150v1-floweqprop-training-flow-matching-generative-models-with-gradient-equilibrium-propagation)  
+   标签：评分：6.0/10、query:molrna
+   evidence：基于梯度平衡传播的流匹配生成模型
 
 
 <div class="dpr-home-promo-card">

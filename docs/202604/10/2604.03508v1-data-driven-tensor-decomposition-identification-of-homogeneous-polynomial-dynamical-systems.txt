@@ -1,0 +1,1747 @@
+Title: Data-Driven Tensor Decomposition Identification of Homogeneous Polynomial Dynamical Systems
+
+URL Source: https://arxiv.org/pdf/2604.03508v1
+
+Published Time: Tue, 07 Apr 2026 00:19:53 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# Data-Driven Tensor Decomposition Identification of Homogeneous Polynomial Dynamical Systems ⋆
+
+# Xin Mao a, Joshua Pickard b, Can Chen a,c,d
+
+> a
+
+School of Data Science and Society, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA 
+
+> b
+
+Eric and Wendy Schmidt Center, Broad Institute of MIT and Harvard, Cambridge, MA 02142, USA 
+
+> c
+
+Department of Mathematics, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA 
+
+> d
+
+Department of Biostatistics, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA 
+
+Abstract 
+
+Homogeneous polynomial dynamical systems (HPDSs), which can be equivalently represented by tensors, are essential for modeling higher-order networked systems, including ecological networks, chemical reactions, and multi-agent robotic systems. However, identifying such systems from data is challenging due to the rapid growth in the number of parameters with increasing system dimension and polynomial degree. In this article, we adopt compact and scalable representations of HPDSs leveraging low-rank tensor decompositions, including tensor train, hierarchical Tucker, and canonical polyadic decompositions. These representations exploit the intrinsic multilinear structure of HPDSs and substantially reduce the dimensionality of the parameter space. Rather than identifying the full dynamic tensor, we develop a data-driven framework that directly learns the underlying factor tensors or matrices in the associated decompositions from time-series data. The resulting identification problem is solved using alternating least-squares algorithms tailored to each tensor decomposition, achieving both accuracy and computational efficiency. We further analyze the robustness of the proposed framework in the presence of measurement noise and characterize data informativity. Finally, we demonstrate the effectiveness of our framework with numerical examples. 
+
+Key words: homogeneous polynomial dynamical systems, system identification, data-driven methods, tensors, low-rank tensor decompositions, alternating least-squares algorithms, large-scale systems. 
+
+1 Introduction 
+
+Homogeneous polynomial dynamical systems (HPDSs) play a central role in modeling networked systems with fixed-order higher-order interactions, such as ecological networks with cubic couplings and chemical reaction systems governed by homogeneous rate laws, where all terms share the same total degree with respect to con-centrations [1–8]. Beyond these classical examples, any polynomial dynamical system can be homogenized, al-lowing HPDSs to represent higher-order interactions of varying orders and extending their applicability to di-verse complex systems, including fluid dynamics, epi-demiology, and robotics [9–16]. Accurate modeling of 
+
+⋆ This paper was not presented at any IFAC meeting. Cor-responding author Can Chen. 
+
+Email addresses: xinm@unc.edu (Xin Mao), 
+
+jpickard@broadinstitute.org (Joshua Pickard), 
+
+canc@unc.edu (Can Chen). 
+
+such systems requires identifying the underlying HPDSs from time-series data. This task is essential for predict-ing system behavior, analyzing system-theoretic prop-erties, uncovering hidden nonlinear interactions, and in-forming the design of effective control strategies. Conse-quently, the system identification of HPDSs constitutes a fundamental step toward leveraging these models in both theoretical studies and practical applications. A variety of system identification techniques have been proposed for linear and nonlinear dynamical systems. Classical linear methods, such as subspace identifica-tion [17, 18], ARX models [19, 20], and least-squares re-gression [21,22], have proven effective for moderate-scale systems, offering computational efficiency and reliable parameter estimates. To capture richer nonlinear be-haviors, nonlinear ARX models [23, 24], Volterra series expansions [25,26], sparse regression techniques [27,28], polynomial approximations [29, 30], and SINDy [31, 32] have been applied to identify governing equations from data by exploiting structural or sparsity assumptions. 
+
+> arXiv:2604.03508v1 [eess.SY] 3 Apr 2026
+
+More recently, data-driven and machine learning-based methods, such as dynamic mode decomposition and physics-informed network models, have demonstrated the ability to approximate high-dimensional nonlinear dynamics directly from observations [33–35]. However, applying these methods to HPDSs faces significant challenges due to the combinatorial growth of param-eters with increasing state dimension and polynomial degree, which leads to computational intractability and overfitting in high-dimensional settings. In recent years, numerous studies have explored ten-sor representations for polynomial dynamical systems, recognizing that the coefficient structure of an HPDS can be naturally expressed as a high-order tensor, often called the dynamic tensor in analogy to the dynamic ma-trix of linear dynamical systems [25,36–45]. Such tensor-based representations provide an intuitive and expres-sive framework for encoding the multilinear interactions inherent in HPDSs and enable the use of tools from ten-sor algebra for system identification and analysis. More-over, these formulations make it possible to exploit struc-tural properties such as symmetry and sparsity that are difficult to capture using conventional approaches. How-ever, directly estimating the full dynamic tensor of an HPDS from data is computationally prohibitive, as the number of tensor entries grows combinatorially with the system dimension and polynomial degree. Consequently, existing tensor-based identification methods that rely on full tensor representations are limited by the curse of di-mensionality and often fail to scale to high-dimensional systems or higher-order nonlinearities. To overcome this limitation, a natural approach is to leverage low-rank tensor decompositions, which can drastically reduce both computational and storage complexity while preserving modeling expressiveness. Several structured tensor decompositions have been proposed in the literature, including tensor train de-composition (TTD) [46, 47], hierarchical Tucker decom-position (HTD) [48, 49], and canonical polyadic decom-position (CPD) [50,51]. TTD and HTD provide efficient and scalable representations of high-order tensors by decomposing them into a sequence or tree of lower-dimensional factors and are valued for their numerical stability. In contrast, CPD represents a tensor as a sum of rank-one components offering high compactness and is widely used for its conceptual simplicity and strong uniqueness properties under mild conditions. Although low-rank tensor decompositions have been extensively studied for data compression and numerical approxi-mation [37, 52–55], their application to system identi-fication, particularly for nonlinear dynamical systems, remains relatively underexplored. In this article, we develop a novel data-driven framework for identifying HPDSs under structured low-rank ten-sor parameterizations. We consider TTD-, HTD-, and CPD-based representations of HPDSs with unknown dy-namic tensors and formulate the identification problem as a structured nonlinear least-squares optimization us-ing time-series data. By exploiting the multilinear struc-ture inherent to each decomposition, we decompose the nonlinear optimization into a sequence of subproblems that reduce to standard linear least-squares problems, whose dimensions depend only on the system size and the tensor ranks. Instead of recovering the full dynamic tensor, our framework directly identifies the low-rank tensor or matrix factors from time-series data, bypassing the need for full tensor reconstruction. As a result, the proposed methods scale efficiently to high-dimensional systems and higher polynomial degrees. We further es-tablish the convergence of the proposed algorithms, ana-lyze their robustness in the presence of noise, and discuss the data informativity conditions necessary for system identification under each decomposition. The proposed data-driven tensor decomposition iden-tification framework has broad potential applications in real-world higher-order networked systems, includ-ing ecological networks, biological networks, and multi-agent robotic systems. For instance, it enables the recov-ery of structured multi-species interaction mechanisms directly from population time-series data while avoiding the combinatorial explosion associated with full tensor representations. This approach provides a scalable and interpretable means of uncovering latent ecological in-teraction patterns that extend beyond simple pairwise effects, with important implications for system analysis and the design of optimal strategies for ecological con-servation. The remainder of this article is organized as follows. In Section 2, we review key concepts in tensor algebra, including tensor-vector products, tensor matri-cization, and tensor decompositions. Section 3 devel-ops the data-driven identification framework for TTD-, HTD-, and CPD-based HPDSs, leveraging alternating least-squares methods. Section 4 presents numerical ex-amples that illustrate the effectiveness of the proposed algorithms. Finally, Section 5 concludes the article and discusses directions for future research. 
+
+2 Preliminaries 
+
+A tensor is a multidimensional array that generalizes scalars, vectors, and matrices to higher-order structures [56, 57]. The order of a tensor refers to the number of modes it possesses. A kth-order tensor is often denoted by A ∈ Rn1×n2×···× nk , where nj is the size of jth mode. A tensor is called cubical if all of its modes have the same size, i.e., n1 = n2 = · · · = nk. A cubical tensor is said to be almost symmetric if its entries are invariant under any permutation of the first k − 1 indices. 
+
+2.1 Tensor Products 
+
+The outer product of two tensors generalizes the vec-tor outer product. Let A ∈ Rn1×n2×···× nk1 and B ∈
+
+2Rm1×m2×···× mk2 be two tensors. Their outer product, denoted by A ◦ B ∈ Rn1×···× nk1 ×m1×···× mk2 , is defined entrywise as (A ◦ B)i1i2··· ik1 j1j2··· jk2 = Ai1i2··· ik1 Bj1j2··· jk2 .
+
+The tensor-vector product is a natural extension of the matrix-vector product. Let A ∈ Rn1×n2×···× nk
+
+be a kth-order tensor and v ∈ Rnp a vector. The product of A along mode p, denoted by A ×p v ∈
+
+Rn1×···× np−1×np+1 ×···× nk , is defined entrywise as (A ×p v)j1j2··· jp−1jp+1 ··· jk =
+
+> np
+
+X
+
+> jp=1
+
+Aj1j2··· jk vjp .
+
+This operation can be naturally extended to all modes of A, known as the Tucker product 
+
+A ×1 v1 ×2 v2 ×3 · · · × k vk ∈ R,
+
+where vp ∈ Rnp for p = 1 , 2, . . . , k . If vp = v for all p,we write the product as Avk = A ×1 v ×2 v ×3 · · · × k v
+
+for simplicity. The Kronecker product plays a fundamental role in ten-sor algebra. For matrices A ∈ Rm×n and B ∈ Rp×q ,their Kronecker product is defined as 
+
+A ⊗ B =
+
+
+
+A11 B A12 B · · · A1nB
+
+... ... . . . ...
+
+Am1B A m2B · · · Amn B
+
+ ∈ Rmp ×nq .
+
+The Kronecker product satisfies several useful proper-ties that will be used throughout this paper: (i) mixed-product property: ( A ⊗ B)( C ⊗ D) = ( AC ) ⊗ (BD ), whenever the products are well-defined; (ii) vectoriza-tion identity: vec( AXB ) = ( B⊤ ⊗ A)vec( X), where vec( ·) denotes the vectorization operation. The Khatri-Rao product of two matrices A = [ a1 a2 · · · ar ] ∈
+
+Rm×r and B = [ b1 b2 · · · br ] ∈ Rn×r is defined as the column-wise Kronecker product 
+
+A ⊙ B = [ a1 ⊗ b1 · · · ar ⊗ br ] ∈ Rmn ×r .
+
+In particular, for any vectors u, v ∈ Rr , it holds that diag( u) v = u ⊙ v, which follows directly from the column-wise definition of the Khatri-Rao product. 
+
+2.2 Tensor Matricization 
+
+Tensor matricization reshapes a tensor into a ma-trix or a vector [56, 58]. Consider a kth-order tensor 
+
+A ∈ Rn1×n2×···× nk . We partition its modes into two ordered, disjoint index sets, R = {r1, r 2, . . . , r d} and 
+
+C = {c1, c 2, . . . , c k−d}, which specify the modes assigned to the rows and columns of the the matricization, re-spectively. To explicitly describe how tensor indices are mapped to matrix indices, we define the following index mapping function 
+
+ψ({j1, . . . , j k}, {n1, . . . , n k}) = j1 +
+
+> k
+
+X
+
+> i=2
+
+(ji − 1) 
+
+> i−1
+
+Y
+
+> l=1
+
+nl,
+
+which maps a tensor index {j1, j 2, . . . , j k}, with 1 ≤ ji ≤
+
+ni, to a unique index following column-major ordering. The row and column indices of the matricized tensor are given by r = ψ({jr1 , . . . , j rd }, {nr1 , . . . , n rd }) and 
+
+c = ψ({jc1 , . . . , j ck−d }, {nc1 , . . . , n ck−d }), respectively. The mode-R matricization of A is defined as 
+
+A(R) ∈ R
+
+Qdp=1 nrp ×Qk−dp=1 ncp ,
+
+whose entries satisfy ( A(R))rc = Aj1j2··· jk . A com-monly used special case is the mode-p matricization, obtained by taking R = {p} and C = {1, 2, . . . , p −
+
+1, p + 1 , . . . , k }, which yields the matrix A(p) ∈
+
+Rnp×(n1n2··· np−1np+1 ··· nk ), whose rows correspond to all mode-p fibers of the tensor. Moreover, choosing all modes as row indices, i.e., R = {1, 2, . . . , k } and C = ∅,reduces the matricization to the standard vectorization. 
+
+2.3 Tensor Decompositions 2.3.1 Tensor Train Decomposition 
+
+Tensor train decomposition (TTD) provides a nu-merically robust and scalable representation for high-dimensional tensors by decomposing them into a se-quence of interconnected third-order factor tensors, see Fig. 1. The resulting sequential structure enables ef-ficient tensor contractions and stable manipulation of high-order tensors in large-scale settings. For a kth-order tensor A ∈ Rn1×n2×···× nk , the TTD form is mathematically expressed as 
+
+A =
+
+> r0
+
+X
+
+> j0=1
+> r1
+
+X
+
+> j1=1
+
+· · · 
+
+> rk
+
+X 
+
+> jk=1
+
+T(1)  
+
+> j0:j1
+
+◦ T(2)  
+
+> j1:j2
+
+◦ · · · ◦ T(k) 
+
+> jk−1:jk
+
+, (1) where {r0, r 1, . . . , r k} are the TT-ranks with r0 = rk =1, and T(p) ∈ Rrp−1×np×rp are third-order factor ten-sors. The colon “:” indicates that all indices along the corresponding dimension are included, analogous to the colon operator in MATLAB. TTD representations are not unique due to an intrin-sic gauge freedom, meaning that adjacent factor ten-sors may be transformed by arbitrary nonsingular matri-ces without changing the represented tensor. To obtain 3n1
+
+nk
+
+n2
+
+n1 nkn2
+
+r1 r2 rk−1
+
+A
+
+T(1) T(2) T(k) 
+
+> Fig. 1. Illustration of the TT decomposition of a kth-order tensor into a sequence of third-order factor tensors.
+
+a numerically stable and essentially unique representa-tion, canonical forms such as left-orthogonality or mixed orthogonality are typically imposed, which remove this gauge ambiguity. A notable advantage of TTD is its nu-merical stability, which ensures that the TT-ranks of a given tensor A can be determined in a robust and com-putationally reliable manner. 
+
+2.3.2 Hierarchical Tucker Decomposition 
+
+Hierarchical Tucker decomposition (HTD) provides a tree-structured representation of high-order tensors by recursively grouping tensor modes according to a binary dimension tree. The binary tree T satisfies the following properties: (i) each node represents a subset of the ten-sor modes {1, 2, . . . , k }; (ii) the root node corresponds to the full mode set {1, 2, . . . , k }; (iii) each leaf node cor-responds to a single mode; (iv) each parent node is the disjoint union of its two children. An example of a di-mension tree is shown in Fig. 2. The level of a node is defined as its distance from the root, and the depth of the tree is d = ⌈log 2 k⌉.For a kth-order tensor A ∈ Rn1×n2×···× nk , each node 
+
+P ∈ T is associated with a factor matrix VP , which spans the column space of the mode-P matricization 
+
+A(P). A key property of HTD is that factor matrices VP
+
+associated with internal nodes do not need to be stored explicitly. Instead, they are constructed recursively from the factor matrices of the left and right child nodes, VPl
+
+and VPr , according to 
+
+VP = ( VPl ⊗ VPr )CP , (2) where CP ∈ RrPl rPr ×rP is the transfer matrix, and rPl ,
+
+rPr , and rP denote the hierarchical ranks associated with the nodes Pl, Pr , and P, respectively. Consequently, an HT representation is fully characterized by the factor matrices at the leaf nodes Vp ∈ Rnp×rp and the transfer matrices CP at internal nodes. HTD can be viewed as a generalization of TTD that al-lows more flexible groupings of tensor modes. As with TTD, the HTD representation is not unique due to gauge freedom. For convenience and notational uniformity, we associate a transfer matrix with every node in the di-mension tree, and set CP = IrP whenever P is a leaf              
+
+> {1,2,3,4,5}
+> {1,2}{3,4,5}
+> {1}{2}{3}{4,5}
+> {4}{5}
+> Fig. 2. An example of the HTD binary tree of a fifth-order tensor.
+
+node. Applying (2) recursively from the leaves to the root (whose rank is set to 1) yields the vectorized form vec( A) = ( Vk ⊗ · · · ⊗ V1)( ⊗Q∈G d−1 CQ) · · · (⊗Q∈G 0 CQ),
+
+where Gj denote the set of nodes at level j of the di-mension tree for j = 0 , 1, . . . , d − 1. This formulation is valid for any (possibly non-complete) balanced dimen-sion tree, since leaf nodes that appear above the bot-tom level simply contribute identity matrices in the Kro-necker products. 
+
+2.3.3 Canonical Polyadic Decomposition 
+
+Canonical polyadic decomposition (CPD) is a funda-mental tensor decomposition. It represents a tensor as a sum of rank-one tensors, which can be viewed as higher-order generalization of matrix eigenvalue decomposition, see Fig. 3. CPD preserves the intrinsic multi-way struc-ture of the data and represents interactions across all modes simultaneously. The CPD of a kth-order tensor 
+
+A ∈ Rn1×n2×···× nk takes the form 
+
+A =
+
+> r
+
+X
+
+> j=1
+
+λj u(1)  
+
+> j
+
+◦ u(2)  
+
+> j
+
+◦ · · · ◦ u(k) 
+
+> j
+
+, (3) where r is the CP-rank defined as the minimum integer such that the decomposition (3) holds, λj ∈ R+ are scalar weights, and U(p) = [ u(p)1 u(p)2 · · · u(p) 
+
+> r
+
+] ∈ Rnp×r
+
+are factor matrices whose columns have unit norm. Each rank-one term corresponds to a separable multilinear component that captures a coherent interaction pattern across all tensor modes, with the weight λj quantifying its relative contribution. A key property of CPD is that it admits a compact ma-tricized representation. Specifically, the mode-p unfold-ing A(p) can be written as         
+
+> A(p)=U(p)Λ
+> 
+> U(k)⊙ · · · ⊙ U(p+1) ⊙U(p−1) ⊙ · · · ⊙ U(1) ⊤
+> ,
+
+where Λ = diag( λ1, λ 2, . . . , λ r ) is a diagonal matrix con-taining the weights λj . This formulation underlies many 4=
+
+A
+
++ + ... +
+
+> Fig. 3. An example of the CPD of a third-order tensor.
+
+numerical algorithms for computing CPD, including al-ternating least squares, by reducing the tensor decompo-sition problem to a sequence of structured linear least-squares subproblems. CPD is attractive due to its con-ceptual simplicity, interpretability, and high compact-ness, and it is essentially unique up to permutation and scaling under mild conditions. Although the best low-rank CP approximation problem is ill-posed in general, truncating the CP-rank often yields accurate and prac-tically useful approximations. 
+
+3 Data-Driven Tensor Decomposition Identifi-cation of HPDSs 
+
+Any homogeneous polynomial dynamical system (HPDS) of degree k − 1 can be expressed compactly in terms of tensor-vector multiplications as ˙x(t) = Ax(t)k−1, (4) where A ∈ Rn×n× k 
+
+> ···× n
+
+is a kth-order, n-dimensional al-most symmetric tensor, and x(t) ∈ Rn denotes the sys-tem state. This tensor-based representation provides a concise and structured way to capture higher-order in-teractions among the state variables. To illustrate, con-sider the following quadratic HPDS ˙x1 = x21 − 3x1x2 + 2 x22, ˙x2 = 2 x21 + 6 x1x2 − x22.
+
+This system can be written compactly as ˙ x(t) = Ax(t)2,where A ∈ R2×2×2 is a third-order almost symmetric dynamic tensor with frontal slices 
+
+A::1 =
+
+" 1 − 32
+
+− 32 2
+
+#
+
+, A::2 =
+
+"2 33 −1
+
+#
+
+.
+
+We assume that state measurements are collected over the time interval [ t0, t 0 + ( T − 1) τ ] with a uniform sam-pling period τ . The sampled state trajectory and its time derivative are organized into the data matrices 
+
+X0 =
+
+h
+
+x(t0) x(t0 + τ ) · · · x(t0 + ( T − 1) τ )
+
+i
+
+∈ Rn×T ,
+
+X1 =
+
+h
+
+˙x(t0) ˙ x(t0 + τ ) · · · ˙x(t0 + ( T − 1) τ )
+
+i
+
+∈ Rn×T .
+
+The time-series data X0 and X1 serve as the basis for identifying system parameters directly from observa-tions. For notational convenience, we denote x(j) as the 
+
+jth sampled state, i.e., x(j) = x(t0 + ( j − 1) τ ). While the tensor-based representation (4) provides a compact description of HPDSs, the direct identification of the full dynamic tensor A from data is generally chal-lenging due to the extremely high dimensionality and combinatorial complexity of A. This challenge becomes particularly severe for high-degree and high-dimensional systems, where naive least-squares formulations quickly become ill-posed or computationally prohibitive. To ad-dress this issue, we exploit the observation that many real-world higher-order systems exhibit intrinsic low-rank structure when represented in suitable tensor for-mats. By imposing structured tensor decompositions on 
+
+A, the original identification problem can be reformu-lated in terms of a substantially smaller set of factor matrices or factor tensors. This leads to a parsimonious representation of the underlying dynamics and enables the development of efficient alternating optimization al-gorithms. In the following, we develop data-driven ten-sor decomposition identification methods for HPDSs. All theoretical results are detailed based on the TTD-based representation, while the HTD- and CPD-based repre-sentations follow analogously. 
+
+3.1 Identification of TTD-based HPDSs 
+
+We begin by studying the identification of TTD-based HPDSs. In this representation, the dynamic tensor A
+
+is factorized into a sequence of third-order factor ten-sors whose dimensions are governed by the TT-ranks 
+
+{rp}kp=0 . Assume r = max {rp | p = 0 , 1, . . . , k }. The to-tal number of parameters in the TTD-based representa-tion is O(knr 2), which is linearly scaling in the order k
+
+and quadratic scaling in the maximum TT-rank r. This parameterization yields a substantial reduction in com-plexity compared with the exponential scaling of the full tensor representation, making the identification of large-scale HPDSs computationally tractable. Our objective is to identify factor tensors associated with the TTD of 
+
+A that best describe the system dynamics from the ob-served time-series data X0 and X1.To connect the TTD-based representation with the ob-served data, we first express the homogeneous polyno-mial vector field in terms of the factor tensors. For each sampled state x(j), we define 
+
+f(j) = 
+
+"k−1Y
+
+> p=1
+
+
+
+T(p) ×2 x(j)
+
+
+
+T(k)
+
+#⊤
+
+, (5) and form the matrix F0 = [ f(0) f(1) · · · f(T − 1)] ∈
+
+Rn×T . The identification of factor tensors is formulated as the following least-squares optimization problem min 
+
+> {T(p)}kp=1
+
+∥X1 − F0∥2 
+
+> F
+
+, (6) which is nonlinear and nonconvex due to the recursive contractions across the factor tensors. Nevertheless, by 5fixing all factor tensors except T(p), the problem be-comes linear in T(p), allowing it to be solved as a stan-dard linear least-squares subproblem. This observation naturally motivates an alternating least-squares (ALS) scheme, in which each factor tensor is updated sequen-tially while keeping the others fixed, resulting in a se-quence of tractable linear problems. The detailed procedure is summarized in Algorithm 1. At each iteration, the factor tensors {T(p)}kp=1 are up-dated sequentially by solving a regression problem con-structed from the available data. For the pth factor ten-sor T(p) and time index j, contracting the remaining fixed factor tensors with the sampled state x(j) yields the left and right matrices 
+
+Lp(j) = 
+
+> p−1
+
+Y
+
+> i=1
+
+
+
+T(i) ×2 x(j)
+
+
+
+, (7) 
+
+Rp(j) = 
+
+> k−1
+
+Y
+
+> i=p+1
+
+
+
+T(i) ×2 x(j)
+
+
+
+T(k). (8) Both Lp(j) and Rp(j) are low-dimensional matrices whose sizes depend only on the TT-ranks and the state dimension n, and can be efficiently computed via se-quential tensor contractions. By leveraging these contractions, the update of T(p) re-duces to the linear least-squares problem min 
+
+> vec( T(p))
+
+∥Hp vec( T(p)) − vec( X1)∥22, (9) where Hp is constructed by stacking the matrices Hp =[Hp(0) ⊤ Hp(1) ⊤ · · · Hp(T − 1) ⊤]⊤ with each block 
+
+Hp(j) = Rp(j)⊤ ⊗ x(j)⊤ ⊗ Lp(j). (10) The matrix Hp has dimension ( nT ) × (nr p−1rp). There-fore, the subproblem avoids the exponential complex-ity associated with identifying the full high-dimensional dynamic tensor in the ambient tensor space. The solu-tion is reshaped into a third-order tensor of dimension 
+
+rp−1 × n × rp, followed by an orthogonalization step to maintain numerical stability and control scaling between adjacent factor tensors. The TT-ranks may either be specified a priori or adjusted adaptively via SVD-based truncation during the orthogonalization stage. The al-gorithm terminates when the relative decrease in predic-tion error falls below a prescribed tolerance, or when the maximum number of iterations is attained. This struc-tured ALS scheme therefore provides a computationally tractable and scalable approach for identifying TTD-based HPDSs from time-series data. 
+
+Remark 1 Let r denote the maximum TT-rank of the 
+
+kth-order, n-dimensional dynamic tensor A associated 
+
+Algorithm 1 ALS Identification for TTD-based HPDS  
+
+> 1:
+
+Input: Data X0, X1, tolerance ϵ > 0, truncation threshold δ > 0, maximum iterations Nmax  
+
+> 2:
+
+Output: TT factor tensors {T(p)}kp=1  
+
+> 3:
+
+Randomly initialize {T(p)}kp=1 ; set eprev = + ∞ 
+
+> 4:
+
+for iter = 1 to Nmax do  
+
+> 5:
+
+for p = 1 to k do  
+
+> 6:
+
+for j = 1 to T do  
+
+> 7:
+
+Compute left contraction (7)  
+
+> 8:
+
+Compute right contraction (8)  
+
+> 9:
+
+Construct Hp(j) based on (10)  
+
+> 10:
+
+end for  
+
+> 11:
+
+Stack Hp = [ Hp(0) ⊤ · · · Hp(T − 1) ⊤]⊤ 
+
+> 12:
+
+Solve the linear least-squares problem (9)  
+
+> 13:
+
+Reshape solution into T(p) ∈ Rrp−1×n×rp 
+
+> 14:
+
+Orthonormalize T(p) and truncate singular values below δ if necessary  
+
+> 15:
+
+end for  
+
+> 16:
+
+Compute F0 = [ f(0) f(1) · · · f(T − 1)] using (5)  
+
+> 17:
+
+Compute error e = ∥X1 − F0∥2 
+
+> F
+> 18:
+
+if |eprev − e|/e prev < ϵ then  
+
+> 19:
+
+break  
+
+> 20:
+
+end if  
+
+> 21:
+
+eprev ← e 
+
+> 22:
+
+end for  
+
+> 23:
+
+return {T(p)}kp=1 
+
+with a TTD-based HPDS. The computational complexity of a single ALS iteration in Algorithm 1 can then be estimated as O(k2nr 2T + kn 3r4T ).
+
+Next, we analyze the convergence properties of Algo-rithm 1, including the monotonic decrease of the ob-jective function, as well as the local convergence under a mild regularity condition. Let {{ T(p) 
+
+> ℓ
+
+}kp=1 }ℓ≥0 denote the sequence of factor tensors generated by Algorithm 1, where ℓ denotes the iteration index. 
+
+Proposition 1 The sequence of objective values of (6) 
+
+is monotonically non-increasing and convergent. More-over, every accumulation point of the iterate sequence 
+
+{{ T(p) 
+
+> ℓ
+
+}kp=1 }ℓ≥0 is a first-order stationary point of (6) .
+
+Proof. At each update of a single factor tensor while keeping the other factor tensors fixed, Algorithm 1 exactly minimizes a convex quadratic least-squares subproblem. Hence the objective value of (6) cannot increase after each block update, implying that the sequence of objective values is monotonically non-increasing over successive sweeps. Since the objective function is nonnegative, the sequence of objective values is bounded below and therefore convergent. Moreover, the objective function is a polynomial function of the factor tensors and is therefore semi-algebraic. Semi-algebraic functions satisfy the Kurdyka–Lojasiewicz (KL) property. Standard convergence results for block coordinate descent methods applied to KL functions 6imply that every accumulation point of the iterate se-quence is a first-order stationary point of (6). ■
+
+Proposition 2 Let {T(p) 
+
+> ⋆
+
+}kp=1 be an isolated stationary point of (6) . Assume that there exists a neighborhood 
+
+N of {T(p) 
+
+> ⋆
+
+}kp=1 such that for all iterates in N and p =1, 2, . . . , k , the corresponding regression matrix Hp satis-fies H⊤ 
+
+> p
+
+Hp ⪰ αpI for some constant αp > 0. Then Algo-rithm 1 converges locally linearly to {T(p) 
+
+> ⋆
+
+}kp=1 , i.e., there exists a neighborhood N ′ ⊆ N of {T(p) 
+
+> ⋆
+
+}kp=1 such that for all iterates in N ′, it holds that 
+
+> k
+
+X
+
+> p=1
+
+∥T(p) 
+
+> ℓ+1
+
+− T(p) 
+
+> ⋆
+
+∥2 
+
+> F
+
+≤ ρ
+
+> k
+
+X
+
+> p=1
+
+∥T(p) 
+
+> ℓ
+
+− T(p) 
+
+> ⋆
+
+∥2 
+
+> F
+
+(11) 
+
+for some ρ ∈ (0 , 1) .
+
+Proof. By fixing an index p and all factor tensors ex-cept T(p), the mapping from T(p) to F0 is linear and the objective reduces to the least-squares problem (9). By assumption, there exists a neighborhood N of {T(p) 
+
+> ⋆
+
+}kp=1 
+
+such that, for all iterates in N and all p = 1 , 2, . . . , k ,
+
+H⊤ 
+
+> p
+
+Hp ⪰ αpI for some αp > 0. Therefore, each sub-problem has a unique minimizer vec( T(p)+ ) = ( H⊤ 
+
+> p
+
+Hp)−1H⊤ 
+
+> p
+
+vec( X1),
+
+with ∥(H⊤ 
+
+> p
+
+Hp)−1∥ ≤ 1/α p. Thus, updating the pth fac-tor tensor defines a single-valued mapping from the other factor tensors to T(p)+ .Moreover, Hp depends on the other factor tensors through a finite sequence of TTD contractions and is therefore a polynomial mapping. Hence, Hp is locally Lipschitz on N . Together with the uniform bound on (H⊤ 
+
+> p
+
+Hp)−1, this implies that the update for each factor tensor is locally Lipschitz. Consequently, the full ALS sweep defines a locally Lipschitz mapping Φ that admits 
+
+{T(p) 
+
+> ⋆
+
+}kp=1 as a fixed point. Under the strong regularity condition and after fixing the gauge freedom via or-thonormalization, the stationary point is isolated and satisfies a local second-order regularity condition. Un-der these conditions, results on nonlinear Gauss–Seidel methods implies that the Jacobian ∇Φ at {T(p) 
+
+> ⋆
+
+}kp=1 
+
+corresponds to a locally stable fixed point, i.e., its spec-tral radius is strictly less than one. By continuity of ∇Φ, there exists a sufficiently small neighborhood N ′ ⊆ N 
+
+such that Φ is contractive on N ′. Hence, there exists 
+
+ρ ∈ (0 , 1) such that (11) holds, which proves the claimed local linear convergence. ■
+
+Propositions 1 and 2 characterize the convergence be-havior of Algorithm 1. They show that the algorithm is both globally well-behaved and locally efficient, provid-ing theoretical support for its use in identifying TTD-based HPDSs. We then analyze the robustness of the al-gorithm in the presence of measurement noise. Consider the TTD-based HPDS corrupted by additive noise ˙x(t) = 
+
+"k−1Y
+
+> p=1
+
+(T(p) ×2 x(t)) T(k)
+
+#⊤
+
++ w(t), (12) where w(t) is an independent, identically distributed (i.i.d.) noise process. After sampling, instead of the exact data pair ( X0, X1), we observe noisy data ˜X1 = X1 +W,
+
+where W ∈ Rn×T is a measurement noise matrix. At each iteration, the update of the pth factor tensor is to solve the linear least-squares problem min 
+
+> vec( T(p))
+
+∥Hp vec( T(p)) − vec( ˜X1)∥22. (13) We denote the obtained factor tensor at ℓth iteration by 
+
+{ˆT(p) 
+
+> ℓ
+
+}kp=1 . The estimation error of a single block update can be bounded as follows. 
+
+Proposition 3 Assume that the regression matrix Hp
+
+satisfies H⊤ 
+
+> p
+
+Hp ⪰ αpI for some constant αp > 0. Then the least-squares solution satisfies 
+
+∥ˆT(p) 
+
+> ℓ
+
+− T(p) 
+
+> ℓ
+
+∥F ≤ 1
+
+√αp
+
+∥W∥F . (14) 
+
+Moreover, if the entries of W are i.i.d. sub-Gaussian with variance proxy σ2, then for any δ ∈ (0 , 1) , with probability at least 1 − δ, it holds that 
+
+∥ˆT(p) 
+
+> ℓ
+
+− T(p) 
+
+> ℓ
+
+∥F ≤ cσ 
+
+√αp
+
+r
+
+nT + log 1
+
+δ , (15) 
+
+where c > 0 is an absolute constant. 
+
+Proof. The least-squares solutions of the noisy and noise-free cases satisfy the corresponding normal equa-tions. Subtracting them yields 
+
+H⊤ 
+
+> p
+
+Hp vec( ˆT(p) 
+
+> ℓ
+
+− T(p) 
+
+> ℓ
+
+) = H⊤ 
+
+> p
+
+vec( W).
+
+Hence, vec( ˆT(p) 
+
+> ℓ
+
+−T(p) 
+
+> ℓ
+
+) = ( H⊤ 
+
+> p
+
+Hp)−1H⊤ 
+
+> p
+
+vec( W). Taking norms gives 
+
+∥vec( ˆT(p) 
+
+> ℓ
+
+− T(p) 
+
+> ℓ
+
+)∥2 ≤ ∥ (H⊤ 
+
+> p
+
+Hp)−1H⊤ 
+
+> p
+
+∥2∥W∥F .
+
+Since H⊤ 
+
+> p
+
+Hp ⪰ αpI, it follows that ∥(H⊤ 
+
+> p
+
+Hp)−1H⊤ 
+
+> p
+
+∥2 ≤
+
+1/√αp, which yields (14). For the high-probability bound, since the entries of W
+
+are i.i.d. sub-Gaussian with variance proxy σ2, standard 7concentration results imply that for any δ ∈ (0 , 1), 
+
+∥W∥F ≤ cσ 
+
+r
+
+nT + log 1
+
+δ
+
+with probability at least 1 − δ. Substituting into the previous bound yields (15). ■
+
+This result shows that each ALS update is stable under measurement noise. We next combine this property with the local contraction of the noiseless iteration to charac-terize the overall convergence behavior of the algorithm in the noisy setting. 
+
+Proposition 4 Assume the conditions of Proposition 2 hold and the entries of W are i.i.d. sub-Gaussian with variance proxy σ2. Then for any δ ∈ (0 , 1) , with proba-bility at least 1 − δ, there exist ¯ρ ∈ (0 , 1) and a constant 
+
+C > 0 such that             
+
+> kX
+> p=1
+> ∥ˆT(p)
+> ℓ+1 −T(p)
+> ⋆∥2
+> F≤¯ρ
+> kX
+> p=1
+> ∥ˆT(p)
+> ℓ−T(p)
+> ⋆∥2
+> F+Cσ 2
+> nT + log 1
+> δ
+> 
+> ,
+
+for iterates sufficiently close to {T(p) 
+
+> ⋆
+
+}kp=1 . Consequently, 
+
+lim sup 
+
+> ℓ→∞
+> k
+
+X
+
+> p=1
+
+∥ˆT(p) 
+
+> ℓ
+
+− T(p) 
+
+> ⋆
+
+∥2 
+
+> F
+
+≤ C
+
+1 − ¯ρ σ2
+
+nT + log 1
+
+> δ
+
+
+
+,
+
+showing that the estimation error remains within a neigh-borhood whose size scales with the noise level. 
+
+Proof. Denote the noiseless error by Sℓ = Pkp=1 ∥T(p) 
+
+> ℓ
+
+−
+
+T(p) 
+
+> ⋆
+
+∥2 
+
+> F
+
+. By Proposition 2, there exist ρ ∈ (0 , 1) and a neighborhood N ′ such that for all iterates in N ′, Sℓ+1 ≤
+
+ρS ℓ. Define the noise-induced error Dℓ = Pkp=1 ∥ˆT(p) 
+
+> ℓ
+
+−
+
+T(p) 
+
+> ℓ
+
+∥2 
+
+> F
+
+. Applying (15) to each block update with fail-ure probability δ/k and using a union bound over p =1, 2, . . . , k , we obtain that with probability at least 1 − δ,it holds that 
+
+Dℓ ≤ C0 σ2
+
+nT + log 1
+
+δ
+
+
+
+, (16) for all ℓ such that the iterates remain in N ′.Using the inequality 
+
+∥A + B∥2 
+
+> F
+
+≤ (1 + η)∥A∥2 
+
+> F
+
++ (1 + η−1)∥B∥2
+
+> F
+
+for any η > 0, we decompose ˆT(p) 
+
+> ℓ
+
+−T(p) 
+
+> ⋆
+
+= ( ˆT(p) 
+
+> ℓ
+
+−T(p) 
+
+> ℓ
+
+)+ 
+
+ T(p) 
+
+> ℓ
+
+− T(p)
+
+> ⋆
+
+ and obtain 
+
+Eℓ =
+
+> k
+
+X
+
+> p=1
+
+∥ˆT(p) 
+
+> ℓ
+
+−T(p) 
+
+> ⋆
+
+∥2 
+
+> F
+
+≤ (1+ η)Dℓ +(1+ η−1)Sℓ. (17) Similarly, we have 
+
+Sℓ ≤ (1 + η)Dℓ + (1 + η−1)Eℓ. (18) Since Sℓ+1 ≤ ρS ℓ, combining (17), and (18) yields 
+
+Eℓ+1 ≤ (1+ η)Dℓ+1 +(1+ η−1)ρ (1+ η)Dℓ+(1+ η−1)Eℓ
+
+.
+
+Using (16) to bound Dℓ and Dℓ+1 , we obtain 
+
+Eℓ+1 ≤ ¯ρE ℓ + Cσ 2
+
+nT + log 1
+
+> δ
+
+
+
+,
+
+where ¯ ρ = ρ(1 + η−1)2. By choosing η sufficiently large, we ensure that ¯ ρ ∈ (0 , 1). Taking lim sup ℓ→∞ yields the desired bound. ■
+
+The above result shows that, in the presence of noise, the ALS algorithm converges linearly up to a neighbor-hood of the true solution, and the asymptotic error is bounded by a noise-dependent term. If the state mea-surements X0 are also corrupted by noise, then the re-gression matrices Hp become noisy, leading to an errors-in-variables problem. In this case the least-squares es-timator is generally biased. A consistent alternative is to adopt an integral formulation of the dynamics, which avoids numerical differentiation and reduces noise am-plification. A detailed analysis of this scenario is left for future work. Beyond convergence and noise robustness, it is essential to characterize the data informativity con-ditions that guarantee identifiability under the TTD pa-rameterization of HPDSs. 
+
+Proposition 5 A sufficient condition for identification of TTD-based HPDSs from data is             
+
+> rank( ˆX0) =
+> min {n,k −1}
+> X
+> j=1
+> n!
+> j!( n−j)! (k−2)! (j−1)!( k−j−1)! ,
+
+(19) 
+
+where ˆX0 = X0 ⊙ X0⊙ k−1
+
+· · · ⊙ X0. A necessary condi-tion is that the stacked regression matrices Hp have full column rank for p = 1 , 2, . . . , k .
+
+Proof. We analyze the data informativity from two com-plementary perspectives. From [59], the data uniquely determine the full polynomial tensor A if and only if (19) holds. Since the TTD representation defines a parame-terization of A, uniqueness of A implies identifiability of the corresponding factor tensors (up to gauge transfor-mations). Therefore, (19) provides a sufficient condition for identifying TTD-based HPDSs. Under the TTD pa-rameterization, identification reduces to the sequence of linear least-squares problems (9) for p = 1 , 2, . . . , k . For each subproblem to admit a unique solution, the stacked regression matrices Hp must have full column rank. Oth-erwise, multiple factor tensors produce identical trajec-tories, and identification is not unique. ■
+
+8Condition (19) guarantees identifiability of the factor tensors through uniqueness of the underlying dynamic tensor A. However, the TTD parameterization con-strains A to a low-dimensional nonlinear manifold with only O(knr 2) degrees of freedom. Consequently, (19), which characterizes identifiability in the ambient poly-nomial space, is generally sufficient but not minimal for identification under the TTD model. In particular, identifiability of low-rank TTD-based HPDSs can be achieved under weaker excitation conditions that ensure injectivity of the data mapping restricted to the TTD manifold. On the other hand, the necessary condition that each regression matrix Hp has full column rank guarantees uniqueness of the individual least-squares subproblems, but does not ensure global identifiability of the full TTD representation. The reason is that the TTD parameterization is nonlinearly coupled across different factor tensors, and the regression matrices themselves depend on the remaining factor tensors. 
+
+3.2 Identification of HTD-based HPDSs 
+
+We next investigate the problem under the HTD-based representation. In contrast to the sequential structure of TTD , the HTD-based representation organizes the ten-sor modes according to a hierarchical binary tree. Let 
+
+r = max {rQ | Q ∈ T } denote the maximum hierarchi-cal rank over all nodes in the dimension tree T . The total number of parameters in the HTD-based representation can be estimated as O(knr +kr 3), which is substantially smaller than that of the full tensor representation when 
+
+r is moderate. The objective is to identify all factor ma-trices {Vp}kp=1 for the leaf nodes and transfer matrices 
+
+{CP }P∈T for the internal nodes. Under HTD, the system mapping associated with the sampled state x(j) can be written as 
+
+f(j) =  Vk ⊗ x(j)⊤Vk−1 ⊗ · · · ⊗ x(j)⊤V1
+
+
+
+(⊗Q∈G d−1 CQ) · · · (⊗Q∈G 0 CQ), (20) which forms the predicted output matrix F0. The iden-tification problem can therefore be written as min  
+
+> {Vp}kp=1 ,{CP}P∈T
+
+∥X1 − F0∥2 
+
+> F
+
+. (21) As in the TTD formulation, the problem is nonconvex due to the recursive tensor contractions along the dimen-sion tree but retains a block multilinear structure. The detailed ALS procedure is summarized in Algorithm 2, where the functions LeafLS () and InternalLS () can be found in the appendix. A key distinction from TTD is that the HTD-based rep-resentation admits level-wise updates along the dimen-sion tree. At each iteration, all leaf-node factor matrices are first updated, followed by the updates of the internal-node transfer matrices from the bottom of the tree to-ward the root. Moreover, nodes located at the same level are independent, and can be updated simultaneously. This yields a parallel sweep implementation of the ALS algorithm. When updating a leaf-node factor matrix Vp,the HTD contraction can be decomposed into a leaf-side contraction Lp(j) and a tree-side contraction Rp(j). The leaf-side contraction collects the contributions from all leaf-node factor matrices except Vp and is given by 
+
+Lp(j) = 
+
+> 1
+
+O
+
+> q=k
+
+Zq (j), q̸ = p, 
+
+x(j)⊤, q = p, (22) where Zq (j) = x(j)⊤Vq for q = 1 , 2, . . . , k − 1 and 
+
+Zk(j) = Vk. The tree-side contraction Rp(j) efficiently aggregates the contributions of the internal-node trans-fer matrices along the dimension tree and can be ob-tained recursively by performing tensor contractions from the lowest internal level toward the root. Using these contractions, the update of the pth leaf-node factor matrices reduces to the following linear least-squares problem min  
+
+> vec( Vp)
+
+∥Hp vec( Vp) − vec( X1)∥22. (23) Here, the regression matrix Hp ∈ R(nT )×(nr p) is ob-tained by stacking the sample-wise blocks 
+
+Hp(j) =  Rp(j)⊤ ⊗ Lp(j)Sp, (24) where Sp is a permutation operator satisfying vec( I ⊗
+
+Vp ⊗ I) = Sp vec( Vp). The least-squares solution is re-shaped into the matrix Vp ∈ Rn×rp . The update of each internal-node transfer matrix CP is derived analogously by isolating vec( CP ) while keeping all remaining param-eters fixed during the optimization step. 
+
+Remark 2 Let r denote the maximum hierarchical rank of the kth-order, n-dimensional dynamic tensor A asso-ciated with an HTD-based HPDS. The time complexity of a single ALS iteration in Algorithm 2 can be estimated as O kn 3r2T + knr 6T .
+
+We next analyze the convergence properties of Algo-rithm 2. Let {{ Vℓp}kp=1 , {Cℓ 
+
+> P
+
+}P∈T }ℓ≥0 denote the se-quence of factor matrices and transfer matrices gener-ated by Algorithm 2. 
+
+Proposition 6 The sequence of objective function of 
+
+(21) is monotonically non-increasing and convergent. Moreover, every accumulation point of the iterate se-quence {{ Vℓp}kp=1 , {Cℓ 
+
+> P
+
+}P∈T }ℓ≥0 is a first-order station-ary point of (21) .
+
+9Algorithm 2 ALS Identification for HTD-based HPDS  
+
+> 1:
+
+Input: Data X0, X1, dimension tree T with depth 
+
+d, tolerance ϵ > 0, maximum iterations Nmax  
+
+> 2:
+
+Output: Leaf-node factor matrices {Vp}kp=1 and internal-node transfer matrices {CP }P∈T  
+
+> 3:
+
+Randomly initialize Vp for all leaf nodes and CP for all internal nodes; set eprev = + ∞ 
+
+> 4:
+
+for iter = 1 to Nmax do  
+
+> 5:
+
+{Vold  
+
+> p
+
+}kp=1 ← { Vp}kp=1  
+
+> 6:
+
+for all p = 1 , 2, . . . , k in parallel do             
+
+> 7: Hp←LeafLS (p, X0,{Vold
+> p}kp=1 ,{CP}P∈T ,T)
+> 8:
+
+Solve the linear least-squares problem (23)  
+
+> 9:
+
+Reshape the solution as Vnew  
+
+> p
+
+∈ Rnp×rp 
+
+> 10:
+
+end for  
+
+> 11:
+
+{Vp}kp=1 ← { Vnew  
+
+> p
+
+}kp=1  
+
+> 12:
+
+for l = d to 1 do  
+
+> 13:
+
+{Cold  
+
+> P
+
+}P∈T ← { CP }P∈T  
+
+> 14:
+
+for all internal node P ∈ G l in parallel do  
+
+> 15:
+
+HP ← InternalLS (P, l, X0, {Vp}kp=1 , 
+
+> 16:
+
+{Cold  
+
+> P
+
+}P∈T , T ) 
+
+> 17:
+
+Solve min vec( CP )∥HP vec( CP)−vec( X1)∥22 
+
+> 18:
+
+Store the solution as Cnew  
+
+> P
+
+∈ RrPl rPr ×rP 
+
+> 19:
+
+end for  
+
+> 20:
+
+{CP }P∈G l ← { Cnew  
+
+> P
+
+}P∈G l 
+
+> 21:
+
+end for  
+
+> 22:
+
+Compute F0 = [ f(0) f(1) · · · f(T − 1)] using (20)  
+
+> 23:
+
+e = ∥X1 − F0∥2 
+
+> F
+> 24:
+
+if |e − eprev | < ϵ then break  
+
+> 25:
+
+end if  
+
+> 26:
+
+eprev = e 
+
+> 27:
+
+end for  
+
+> 28:
+
+return {Vp}kp=1 , {CP }P∈T 
+
+Proof. Algorithm 2 updates blocks in parallel across the dimension tree. Each step exactly solves a convex quadratic least-squares subproblem for its respective fac-tor or transfer matrix, ensuring the objective of (21) is non-increasing. Because updates at the same level in-volve disjoint parameters, they function as independent block coordinate descent steps that preserve monotonic-ity over each sweep. Moreover, the objective function is a polynomial in the factor and transfer matrices and is thus semi-algebraic, satisfying the KL property. Hence, every accumulation point of the iterate sequence is a first-order stationary point of (21). ■
+
+Proposition 7 Let {{ V⋆p}kp=1 , {C⋆ 
+
+> P
+
+}P∈T } be an iso-lated stationary point of (21) . Assume that there exists a neighborhood N of {{ V⋆p}kp=1 , {C⋆ 
+
+> P
+
+}P∈T } such that, for all iterates in N , the corresponding regression ma-trices Hp for p = 1 , 2, . . . , k and HP for P ∈ T satisfy 
+
+H⊤ 
+
+> p
+
+Hp ⪰ αpI and H⊤P HP ⪰ αP I for some constants 
+
+αp > 0 and αP > 0. Then Algorithm 2 converges locally linearly to {{ V⋆p}kp=1 , {C⋆ 
+
+> P
+
+}P∈T }. Specifically, there ex-ists a neighborhood N ′ ⊆ N such that for all iterates in 
+
+N ′, it holds that 
+
+> k
+
+X
+
+> p=1
+
+∥V(ℓ+1)  
+
+> p
+
+− V⋆p∥2 
+
+> F
+
++ X
+
+> P∈T
+
+∥C(ℓ+1)  
+
+> P
+
+− C⋆ 
+
+> P
+
+∥2
+
+> F
+
+≤ ρ
+
+> k
+
+X
+
+> p=1
+
+∥V(ℓ) 
+
+> p
+
+− V⋆p∥2 
+
+> F
+
++ X
+
+> P∈T
+
+∥C(ℓ) 
+
+> P
+
+− C⋆ 
+
+> P
+
+∥2
+
+> F
+
+!
+
+.
+
+for some ρ ∈ (0 , 1) .
+
+Proof. Fixing all variables except one block (either 
+
+Vp or CP ), each update solves a strongly convex least-squares problem, hence admits a unique minimizer and defines a well-posed update. The regression matrices depend polynomially on the variables and are therefore locally Lipschitz, so the full ALS sweep defines a locally Lipschitz mapping Φ. Updates within each tree level act on disjoint parameter blocks and can be viewed as inde-pendent block-coordinate steps. Under the similar local regularity conditions as in Proposition 2, the mapping Φ is contractive in a neighborhood of the stationary point. Hence, the same local contraction argument applies, yielding local linear convergence. ■
+
+Beyond convergence analysis, it is also important to characterize the data informativity conditions that guar-antee identifiability of the HTD-based HPDSs. 
+
+Proposition 8 A sufficient condition for identification up to the standard gauge freedom of HTD-based HPDSs from data is (19). A necessary condition is that the re-gression matrices Hp and HP have full column rank for 
+
+p = 1 , 2, . . . , k and P ∈ T , respectively. 
+
+Proof. Similar to Proposition 5, the sufficiency follows from the fact that (19) guarantees uniqueness of the full dynamic tensor A. Since the HTD-based representation parameterizes A, this implies identifiability of {Vp} and 
+
+{CP } up to the standard gauge freedom. For necessity, under the HTD parameterization, identification reduces to a collection of linear least-squares problems associ-ated with both Vp and CP , characterized by regression matrices Hp and HP , respectively. For each subproblem to admit a unique solution, the corresponding regression matrix must have full column rank. ■
+
+The above results establish the basic theoretical proper-ties of the proposed HTD-based identification method, including computational complexity, convergence guar-antees of the ALS iterations, and identifiability condi-tions under the HTD parameterization. The extension to the noisy case follows the similar arguments as in the TTD analysis and is therefore omitted for brevity. 
+
+3.3 Identification of CPD-based HPDSs 
+
+We finally consider the identification of CPD-based HPDSs. In this representation, the dynamic tensor A
+
+10 is expressed as a sum of r rank-one tensors, where r
+
+denotes the CP-rank. The total number of parameters is O(knr ), growing linearly with respect to the polyno-mial order k, system dimension n, and the CP-rank r.Thus, it provides the most compact parameterization. Under the CPD parameterization, the induced polyno-mial vector field admits a separable structure. For each sampled state x(j), the system mapping is 
+
+f(j) = U(k)Λ
+
+
+
+x⊤U(k−1) ⊙ · · · ⊙ x⊤U(1) ⊤
+
+, (25) which forms F0. The identification problem becomes min 
+
+> {U(p)}kp=1 ,Λ
+
+∥X1 − F0∥2 
+
+> F
+
+. (26) Owing to the column-wise scaling invariance of CPD, the diagonal weight matrix Λ can be absorbed into the last factor matrix U(k) without loss of generality. Defin-ing eU(k)
+
+= U(k)Λ, the problem can be equivalently formulated in terms of {U(p)}k−1 
+
+> p=1
+
+and eU(k)
+
+. Compared with the TTD and HTD formulations, the CPD-based representation leads to a simpler ALS scheme based on Khatri–Rao products of the remaining factor matrices. The detailed procedure is summarized in Algorithm 3. For a pth factor matrix U(p), the contributions of all other factor matrices are collectively gathered into the Khatri–Rao product vector 
+
+bp(j) = 
+
+> k−1
+
+K 
+
+> q=1 ,q ̸=p
+
+
+
+x(j)⊤U(q)
+
+, (27) which yields min 
+
+> vec( U(p))
+
+∥Hp vec( U(p)) − vec( X1)∥22. (28) The regression matrix Hp is formed by stacking 
+
+Hp(j) = 
+
+
+
+x(j)⊤ ⊗ U(k) diag  (bp(j)⊤)
+
+Sp, (29) where Sp satisfies vec(( U(p)⊤) = Spvec( U(p)). The least-squares solution is reshaped into U(p) ∈ Rn×r .Column normalization is performed after each update to remove the inherent scaling ambiguity of the CPD. After updating the first k − 1 factor matrices, the weighted factor matrix eU(k)
+
+is updated by solving an analogous linear least-squares problem. The diagonal weight matrix Λ can be recovered a posteriori from the column scaling of eU(k)
+
+if desired. 
+
+Remark 3 Let r be the CP-rank of the kth-order, n-dimensional dynamic tensor A associated with a CPD-based HPDS. The computational complexity of a single 
+
+Algorithm 3 ALS Identification for CPD-based HPDS 
+
+1: Input: Data X0, X1, tolerance ϵ > 0, truncation threshold δ > 0, maximum iterations Nmax 
+
+2: Output: CP factor matrices U(1) , . . . , U(k−1) ∈
+
+Rn×r and eU(k)
+
+∈ Rn×r (where eU(k)
+
+= U(k)Λ). 
+
+3: Randomly initialize U(1) , . . . , U(k−1) and eU(k)
+
+; set 
+
+eprev = + ∞.
+
+4: for iter = 1 to Nmax do 
+
+5: for p = 1 to k − 1 do 
+
+6: for j = 1 to T do 
+
+7: Construct regressor (29) based on (27) 
+
+8: end for 
+
+9: Stack Hp = [ Hp(0) ⊤ · · · Hp(T − 1) ⊤]⊤
+
+10: Solve linear least-squares problem (28) 
+
+11: Reshape solution into U(p) ∈ Rnp×rp
+
+12: Normalize columns of U(p)
+
+13: end for 
+
+14: for j = 1 to T do 
+
+15: Compute b(j) = Jk−1
+
+> q=1
+
+ x(j)) ⊤U(q)
+
+16: end for 
+
+17: Form B = [ b(1) ⊤ b(2) ⊤ · · · b(T )⊤]. 
+
+18: Update eU(k)
+
+by solving min eU(k) ∥ eU(k)
+
+B−X1∥2 
+
+> F
+
+.
+
+19: Compute F0 using (25) and form the prediction error e = ∥X1 − F0∥2
+
+> F
+
+20: if |eprev − e|/e prev < ϵ then 
+
+21: break 
+
+22: end if 
+
+23: eprev ← e
+
+24: end for 
+
+25: return U (1) , . . . , U(k−1) , eU(k)
+
+ALS iteration in Algorithm 3 can then be estimated as 
+
+O(k2nrT + kn 3r2T ).
+
+We next analyze the convergence properties of Algo-rithm 3. Let {{ U(p) 
+
+> ℓ
+
+}kp=1 , eU(k) 
+
+> ℓ
+
+}ℓ≥0 denote the sequence of factor matrices generated by Algorithm 3. 
+
+Proposition 9 The sequence of objective values of (26) 
+
+is monotonically non-increasing and convergent. Fur-thermore, every accumulation point of the iterate se-quence {{ U(p) 
+
+> ℓ
+
+}k−1 
+
+> p=1
+
+, eU(k) 
+
+> ℓ
+
+}ℓ≥0 is a first-order stationary point of (26) .
+
+Proof. Fixing all factor matrices except one block, each update in Algorithm 3 reduces to a convex quadratic least-squares subproblem, where the regression matrix is formed by the Khatri-Rao product of the remaining factor matrices, leading to a simpler algebraic structure compared to the contraction-based formulations in TTD and HTD. Hence, the objective value of (26) is non-increasing after each update, and the sequence of objec-tive values is monotonically non-increasing and bounded below. The remaining argument follows that of Proposi-tion 1: since the objective is a polynomial and thus sat-11 isfies the KL property, every accumulation point of the iterate sequence is a first-order stationary point. ■
+
+Proposition 10 Let {{ U(p) 
+
+> ⋆
+
+}k−1 
+
+> p=1
+
+, eU(k) 
+
+> ⋆
+
+} be an isolated stationary point of (26) . Assume that there exists a neighborhood N of this point such that, for all iterates in N , the corresponding regression matrix Hp satisfies 
+
+H⊤ 
+
+> p
+
+Hp ⪰ αpI for p = 1 , 2, . . . , k − 1 and BB ⊤ ⪰ βI for some constants αp > 0 and β > 0.. Then Algorithm 3 converges locally linearly to the stationary point. Specif-ically, there exists a neighborhood N ′ ⊆ N such that 
+
+> k−1
+
+X
+
+> p=1
+
+∥U(p) 
+
+> ℓ+1
+
+− U(p) 
+
+> ⋆
+
+∥2 
+
+> F
+
++ ∥ eU(k) 
+
+> ℓ+1
+
+− eU(k) 
+
+> ⋆
+
+∥2 
+
+> F
+
+,
+
+≤ ρ
+
+> k−1
+
+X
+
+> p=1
+
+∥U(p) 
+
+> ℓ
+
+− U(p) 
+
+> ⋆
+
+∥2 
+
+> F
+
++ ∥ eU(k) 
+
+> ℓ
+
+− eU(k) 
+
+> ⋆
+
+∥2
+
+> F
+
+!
+
+.
+
+for some ρ ∈ (0 , 1) .
+
+Proof. Each block update solves a strongly convex least-squares problem and therefore admits a unique min-imizer. The regression matrices are constructed from Khatri–Rao products of the remaining factor matrices, hence depend polynomially on the variables and are lo-cally Lipschitz. It follows that the full ALS sweep defines a locally Lipschitz mapping. Under the similar local reg-ularity conditions as in Proposition 2, the mapping is contractive in a neighborhood of the stationary point, which yields the claimed local linear convergence. ■
+
+Finally, we examine the data informativity of the iden-tification problem under the CPD parameterization. 
+
+Proposition 11 A sufficient condition for identifica-tion up to scaling and permutation ambiguities of CPD-based HPDSs from data is given by (19) . A necessary condition is that the stacked regression matrices Hp for 
+
+p = 1 , 2, . . . , k − 1 and B have full column rank. 
+
+Proof. For the sufficiency, the CPD-based representa-tion parameterizes A, and (19) guarantees uniqueness of the full dynamic tensor A. Hence, the identifiability of the factor matrices up to scaling and permutation am-biguities is implied. For necessity, identification reduces to least-squares subproblems associated with Hp and B.For each subproblem to admit a unique solution, these matrices must have full column rank. ■
+
+These results provide theoretical guarantees for the proposed CPD-based identification framework, high-lighting its compact parameterization and the resulting Khatri–Rao regression structure that enables efficient ALS-based system identification. The noisy case follows analogously from the TTD analysis and is therefore omitted for brevity. 
+
+4 Numerical examples 
+
+In this section, we evaluate the performance of the proposed TTD-, HTD- and CPD-based identification algorithms following Algorithm 1, Algorithm 2, and Algorithm 3 through numerical experiments. The ex-periments are conducted on synthetically generated HPDSs, for which the ground-truth tensor representa-tions are available. This allows a quantitative assess-ment of identification accuracy, convergence behavior, and robustness to noise. We consider two experimen-tal settings. In the first setting, we generate HPDSs whose dynamic tensors admit low-rank structure in a specific format (i.e., TTD, HTD, or CPD), and apply the corresponding ALS identification algorithm to as-sess structure-matched recovery performance. In the second setting, we consider HPDSs with general dy-namic tensors, and apply identification algorithms to the same data to compare the reconstruction accuracy, robustness and computation cost. All simulations were carried out in MATLAB R2023b on a machine equipped with an Apple M3 chip and 16 GB of RAM. Tensor operations and tensor factorizations were implemented using Tensor Toolbox 3.6 [60]. The associated code can be found in https://github.com/XinMao0/tensor-decomposition-based-HPDSs-identification. 
+
+4.1 Convergence Analysis 
+
+In this experiment, we investigate the convergence behavior and identification accuracy of the proposed algorithms. The dynamic tensor A is generated us-ing three different low-rank generation schemes: low TT-rank generation, low HT-rank generation, and low CP-rank generation. We set the system dimen-sion n = 9 and polynomial order k = 4. The TT-ranks are set to {r0, r 1, r 2, r 3, r 4, r 5} = {1, 9, 10 , 3, 1}.
+
+We use a balanced binary dimension tree with node sets {{ 1, 2, 3, 4}, {1, 2}, {3, 4}, {1}, {2}, {3}, {4}} . The hierarchical ranks associated with these nodes are 
+
+{1, 10 , 10 , 9, 9, 9, 3}, respectively. The CP-rank is set to 
+
+r = 3. State trajectories are generated by numerically integrating (4) from random initial conditions. The state and its time derivative are sampled at T time instants with step size τ to form the data matrices X0 and X1.For each generated system, we apply the corresponding identification algorithm to the collected data set. The prediction and identification errors are defined as 
+
+Epred = ∥X1 − bX1∥F
+
+∥X1∥F
+
+, E A = ∥A − bA∥F
+
+∥A∥F
+
+,
+
+respectively. Fig. 4 illustrates the convergence behavior of the ALS iterations and the accuracy of the recovered tensor factors for the three low-rank generation schemes. The results demonstrate that all three methods converge reliably and accurately recover the underlying tensor fac-12 Fig. 4. Convergence of the TTD-, HTD-, and CPD-based ALS HPDS identification algorithms (Algorithms 1,2, and 3). Rows correspond to TTD, HTD, and CPD (top to bot-tom), and columns show the relative prediction and iden-tification errors, respectively. The errors decrease steadily across sweeps, reflecting the block coordinate-descent nature of the algorithms. 
+
+tors when the assumed low-rank structure matches the true generative model. 
+
+4.2 Accuracy and Noise Robustness 
+
+In this experiment, we evaluate the performance of the proposed identification methods on general HPDSs whose coefficient tensors do not admit any particular low-rank tensor structure. We consider HPDSs of poly-nomial order k = 4 and dimension n = 9. The coefficient tensor A is generated as a random sparse tensor without imposing any TTD-, HTD-, or CPD-based structure. Specifically, the nonzero entries of A are independently drawn from a standard Gaussian distribution. The sparsity level is chosen to be 0 .001. State trajectories are generated by numerically integrating (4) from ran-domly sampled initial conditions. The state and its time derivative are sampled at T time instants such that the lifted data matrix ˆX0 satisfies the rank condition re-quired for identifiability. All identification methods are applied to the same data sets for a fair comparison. We compare the lifting-based identification method in [59], which reconstructs the full tensor in the ambient                         
+
+> Table 1 Relative identification errors of the lifting-based method in [59] and the proposed low-rank identification schemes for general sparse HPDS.
+> Tensor Format Lifting Proposed
+> TTD 4.275 ×10 −35.06 ×10 −4
+> HTD 7.405 ×10 −36.05 ×10 −4
+> CPD 6.736 ×10 −37.405 ×10 −41% 2% 3% 4% 5%
+
+Noise level 
+
+> 10 -4
+> 10 -3
+> 10 -2
+> EA
+> Lifting-TTD Lifting-HTD Lifting-CPD Proposed-TTD Proposed-HTD Proposed-CPD
+> Fig. 5. Relative identification errors of the lifting-based meth-ods and proposed methods for TTD-, HTD-, and CPD-based HPDSs under increasing measurement noise levels.
+
+space, with the proposed TTD-, HTD-, and CPD-based ALS algorithms that exploit low-rank tensor structures. The relative tensor identification errors are reported in Table 1. with the proposed TTD-, HTD-, and CPD-based ALS algorithms in terms of relative tensor identi-fication error, as reported in Table 1. Although the true tensor does not conform to a specific low-rank format, the ALS-based methods consistently achieve smaller reconstruction errors than the lifting-based approach. This indicates that structured low-rank parameteri-zations can provide improved numerical stability and regularization effects even when the ground truth is not exactly low-rank. To further assess robustness, we per-turb the sampled data with additive Gaussian noise of varying levels. Fig. 5 illustrates the relative identifica-tion errors under increasing noise intensities. The pro-posed ALS-based methods exhibit improved robustness compared with the lifting-based scheme, maintaining lower identification errors across all noise levels. 
+
+4.3 Computational Scalability 
+
+In this experiment, we investigate the computational scalability of the proposed identification methods with respect to the system dimension. Specifically, we exam-ine how the computational time grows as the state di-mension n increases. We consider HPDSs of order k = 7 and vary the system dimension n over a range from 8 to 400. The data generation procedure follows the same setup as in the previous experiment, and all simulations are performed under identical stopping criteria. Fig. 6 13 8 9 10 11 12    
+
+> Dimension n
+> 10 0
+> 10 5
+> Time (s)
+> (a)
+> OOM
+> 100 200 300 400
+> Dimension n
+> 10 0
+> 10 5
+> Time (s)
+> (b)
+
+Fig. 6. Computation time comparison between the lift-ing-based approaches and the proposed ALS-based meth-ods for TTD, HTD, and CPD models with k = 7. Line styles and markers are consistent with Fig. 5. (a) Small-scale regime with varying state dimension n from 8 to 12, where both approaches are applicable. The lifting-based methods encounter OOM issues at n = 12. (b) Scalability of the pro-posed methods for larger n, where only the ALS-based ap-proaches remain computationally feasible. 
+
+reports the computational time with respect to the sys-tem dimension n. In the small-scale regime as shown in Fig. 6(a), both the lifting-based approaches and the pro-posed ALS-based methods are executable, allowing for a direct comparison. However, as n increases, the lifting-based methods exhibit rapid growth in computational cost and encounter out-of-memory (OOM) issues. In contrast, the proposed ALS-based methods remain com-putationally tractable and exhibit moderate growth with respect to n, as shown in Fig. 6(b). This behavior is con-sistent with the theoretical complexity analysis, which predicts polynomial scaling in n for tensor-structured ALS updates. These results highlight the computational advantage of the proposed tensor-structured identifica-tion framework, enabling efficient learning for medium-and large-scale polynomial dynamical systems. 
+
+5 Conclusion 
+
+In this article, we present a scalable framework for the identification of HPDSs based on structured low-rank tensor decompositions. By leveraging TTD-, HTD-, and CPD-based representations, the proposed approach learns compact tensor or matrix factors directly from data, thereby avoiding the construction of the full higher-order dynamic tensor. The proposed ALS-based identification algorithms exploit the underlying multi-linear structure of the tensor models, leading to efficient parameter estimation with significantly reduced com-putational and memory complexity. Both theoretical analysis and numerical experiments demonstrate that the proposed methods achieve accurate and robust identification, while maintaining favorable scalability with respect to the system dimension. In particular, the results highlight that tensor-structured represen-tations provide a principled way to mitigate the curse of dimensionality inherent in higher-order polynomial systems. Beyond computational efficiency, the pro-posed framework offers a flexible modeling paradigm for high-dimensional nonlinear systems with structured and higher-order interactions. The proposed framework is also applicable to discrete-time systems, where sim-ilar tensor-structured representations and ALS-based identification procedures can be employed. Future work will pursue several directions. One impor-tant direction is to establish sharper identifiability con-ditions under low-rank tensor parameterizations, in par-ticular by characterizing necessary and sufficient condi-tions that explicitly depend on the tensor ranks and data richness. Another key aspect is to develop a deeper the-oretical understanding of the effects of model mismatch, approximation error, and stochastic noise on the re-covery performance, including finite-sample guarantees and robustness bounds. From an algorithmic perspec-tive, further improvements will be explored to enhance scalability and reliability, such as adaptive rank selec-tion, initialization strategies, and acceleration schemes for ALS-type methods. Moreover, extending the frame-work to partially observed and noisy measurement set-tings, including missing data, discrete dynamics, and ir-regular sampling, is of practical importance. The pro-posed framework has potential applications in real-world large-scale systems, including networked dynamical sys-tems, hypergraph-based interaction models, and nonlin-ear systems arising in control, robotics, and biological and ecological applications. In particular, the ability to capture higher-order interactions makes the approach promising for modeling complex multi-agent and multi-body dynamics in data-driven settings. 
+
+References                                                       
+
+> [1] E. Bairey, E. D. Kelsic, and R. Kishony, “High-order species interactions shape ecosystem diversity,” Nature communications , vol. 7, no. 1, p. 12285, 2016. [2] V. Chellaboina, S. P. Bhat, W. M. Haddad, and D. S. Bernstein, “Modeling and analysis of mass-action kinetics,”
+> IEEE Control Systems Magazine , vol. 29, no. 4, pp. 60–78, 2009. [3] J. Grilli, G. Barab´ as, M. J. Michalska-Smith, and S. Allesina, “Higher-order interactions stabilize dynamics in competitive network models,” Nature , vol. 548, no. 7666, pp. 210–213, 2017. [4] G. Cencetti, F. Battiston, B. Lepri, and M. Karsai, “Temporal properties of higher-order interactions in social networks,” Scientific reports , vol. 11, no. 1, p. 7028, 2021. [5] G. Craciun, “Polynomial dynamical systems, reaction networks, and toric differential inclusions,” SIAM Journal on Applied Algebra and Geometry , vol. 3, no. 1, pp. 87–106, 2019. [6] X. Mao and C. Chen, “Model reduction of homogeneous polynomial dynamical systems via tensor decomposition,”
+> IEEE Transactions on Automatic Control , 2026. [7] G. Chesi, A. Garulli, A. Tesi, and A. Vicino, Homogeneous polynomial forms for robustness analysis of uncertain systems .Springer Science & Business Media, 2009, vol. 390.
+
+14 [8] N. Samardzija, “Stability properties of autonomous homogeneous polynomial differential systems,” Journal of Differential Equations , vol. 48, no. 1, pp. 60–70, 1983. [9] T. Lassila, A. Manzoni, A. Quarteroni, and G. Rozza, “Model order reduction in fluid dynamics: challenges and perspectives,” Reduced Order Methods for modeling and computational reduction , pp. 235–273, 2014. [10] K. Carlberg, C. Farhat, J. Cortial, and D. Amsallem, “The gnat method for nonlinear model reduction: effective implementation and application to computational fluid dynamics and turbulent flows,” Journal of Computational Physics , vol. 242, pp. 623–647, 2013. [11] F. Brauer, C. Castillo-Chavez, Z. Feng et al. , Mathematical models in epidemiology . Springer, 2019, vol. 32. [12] J. Guckenheimer and P. Holmes, Nonlinear Oscillations, Dynamical Systems, and Bifurcations of Vector Fields .Springer Science & Business Media, 2013, vol. 42. [13] F. Malizia, A. Corso, L. V. Gambuzza, G. Russo, V. Latora, and M. Frasca, “Reconstructing higher-order interactions in coupled dynamical systems,” Nature Communications ,vol. 15, no. 1, p. 5184, 2024. [14] D. A. Cox, Applications of polynomial systems . American Mathematical Soc., 2020, vol. 134. [15] A. G. Ivakhnenko, “Polynomial theory of complex systems,” 
+
+IEEE transactions on Systems, Man, and Cybernetics , no. 4, pp. 364–378, 2007. [16] H. N. Najm, “Uncertainty quantification and polynomial chaos techniques in computational fluid dynamics,” Annual review of fluid mechanics , vol. 41, no. 1, pp. 35–52, 2009. [17] P. Van Overschee and B. De Moor, Subspace Identification for Linear Systems: Theory—Implementation—Applications .Springer Science & Business Media, 2012. [18] M. Jansson and B. Wahlberg, “On consistency of subspace methods for system identification,” Automatica , vol. 34, no. 12, pp. 1507–1519, 1998. [19] A. J. Isaksson, “Identification of arx-models subject to missing data,” IEEE Transactions on Automatic Control ,vol. 38, no. 5, pp. 813–819, 2002. [20] M. Jansson, “Subspace identification and arx modeling,” 
+
+IFAC Proceedings Volumes , vol. 36, no. 16, pp. 1585–1590, 2003. [21] L. Ljung, System identification . Springer, 1998. [22] G. S. Watson, “Linear least squares regression,” The Annals of Mathematical Statistics , pp. 1679–1699, 1967. [23] W.-X. Zhao, H.-F. Chen, and W. X. Zheng, “Recursive identification for nonlinear arx systems based on stochastic approximation algorithm,” IEEE Transactions on Automatic Control , vol. 55, no. 6, pp. 1287–1299, 2010. [24] G. De Nicolao, L. Magni, and R. Scattolini, “Stabilizing predictive control of nonlinear arx models,” Automatica ,vol. 33, no. 9, pp. 1691–1697, 1997. [25] K. Batselier, Z. Chen, and N. Wong, “A tensor network kalman filter with an application in recursive mimo volterra system identification,” Automatica , vol. 84, pp. 17–25, 2017. [26] R. W. Brockett, “Volterra series and geometric control theory,” Automatica , vol. 12, no. 2, pp. 167–176, 1976. [27] D. Bertsimas and B. Van Parys, “Sparse high-dimensional regression,” The Annals of Statistics , vol. 48, no. 1, pp. 300– 323, 2020. [28] ——, “Sparse high-dimensional regression,” The Annals of Statistics , vol. 48, no. 1, pp. 300–323, 2020. [29] E. Ostertagov´ a, “Modelling using polynomial regression,” 
+
+Procedia engineering , vol. 48, pp. 500–506, 2012. [30] L. Guo, A. Narayan, and T. Zhou, “Constructing least-squares polynomial approximations,” SIAM Review , vol. 62, no. 2, pp. 483–508, 2020. [31] S. L. Brunton, J. L. Proctor, and J. N. Kutz, “Discovering governing equations from data by sparse identification of nonlinear dynamical systems,” Proceedings of the national academy of sciences , vol. 113, no. 15, pp. 3932–3937, 2016. [32] R. Delabays, G. De Pasquale, F. D¨ orfler, and Y. Zhang, “Hypergraph reconstruction from dynamics,” Nature Communications , vol. 16, no. 1, p. 2691, 2025. [33] X. Mao, A. Dong, and C. Chen, “Identification of hypergraph dynamics via physics-informed neural networks,” IEEE Control Systems Letters , vol. 9, pp. 2525–2530, 2025. [34] J. L. Proctor, S. L. Brunton, and J. N. Kutz, “Dynamic mode decomposition with control,” SIAM Journal on Applied Dynamical Systems , vol. 15, no. 1, pp. 142–161, 2016. [35] D. Pfl¨ uger, B. Peherstorfer, and H.-J. Bungartz, “Spatially adaptive sparse grids for high-dimensional data-driven problems,” Journal of Complexity , vol. 26, no. 5, pp. 508– 522, 2010. [36] A. Dong, X. Mao, R. Vasudevan, and C. Chen, “Controllability and observability of temporal hypergraphs,” 
+
+IEEE Control Systems Letters , 2024. [37] K. Batselier, “Low-rank tensor decompositions for nonlinear system identification: A tutorial with examples,” IEEE Control Systems Magazine , vol. 42, no. 1, pp. 54–74, 2022. [38] C. Chen, “Explicit solutions and stability properties of homogeneous polynomial dynamical systems,” IEEE Transactions on Automatic Control , vol. 68, no. 8, pp. 4962– 4969, 2022. [39] C. Chen, A. Surana, A. M. Bloch, and I. Rajapakse, “Controllability of hypergraphs,” IEEE Transactions on Network Science and Engineering , vol. 8, no. 2, pp. 1646– 1657, 2021. [40] A. Gorodetsky, S. Karaman, and Y. Marzouk, “High-dimensional stochastic optimal control using continuous tensor decompositions,” The International Journal of Robotics Research , vol. 37, no. 2-3, pp. 340–377, 2018. [41] J. Pickard, A. Surana, A. Bloch, and I. Rajapakse, “Observability of hypergraphs,” 2023 62nd IEEE Conference on Decision and Control (CDC) , pp. 2445–2451, 2023. [42] J. Pickard, C. Stansbury, A. Surana, I. Rajapakse, and A. Bloch, “Geometric aspects of observability of hypergraphs,” Ifac-papersonline , vol. 58, no. 6, pp. 321–326, 2024. [43] J. Pickard, C. Chen, C. Stansbury, A. Surana, A. M. Bloch, and I. Rajapakse, “Kronecker product of tensors and hypergraphs: structure and dynamics,” SIAM Journal on Matrix Analysis and Applications , vol. 45, no. 3, pp. 1621– 1642, 2024. [44] S. Cui, G. Zhang, H. Jard´ on-Kojakhmetov, and M. Cao, “On discrete-time polynomial dynamical systems on hypergraphs,” IEEE Control Systems Letters , vol. 8, pp. 1078–1083, 2024. [45] S. Cui, Q. Zhao, G. Zhang, H. Jardon-Kojakhmetov, and M. Cao, “Analysis of higher-order lotka-volterra models: Application of s-tensors and the polynomial complementarity problem,” IEEE Transactions on Automatic Control , 2025. [46] I. V. Oseledets, “Tensor-train decomposition,” SIAM Journal on Scientific Computing , vol. 33, no. 5, pp. 2295–2317, 2011. 
+
+15 [47] I. V. Oseledets and E. E. Tyrtyshnikov, “Breaking the curse of dimensionality, or how to use svd in many dimensions,” 
+
+SIAM Journal on Scientific Computing , vol. 31, no. 5, pp. 3744–3759, 2009. [48] C. Lubich, T. Rohwedder, R. Schneider, and B. Vandereycken, “Dynamical approximation by hierarchical tucker and tensor-train tensors,” SIAM Journal on Matrix Analysis and Applications , vol. 34, no. 2, pp. 470–494, 2013. [49] L. Grasedyck, “Hierarchical singular value decomposition of tensors,” SIAM journal on matrix analysis and applications ,vol. 31, no. 4, pp. 2029–2054, 2010. [50] A.-H. Phan, P. Tichavsk` y, and A. Cichocki, “Candecomp/parafac decomposition of high-order tensors through tensor reshaping,” IEEE Transactions on Signal Processing , vol. 61, no. 19, pp. 4847–4860, 2013. [51] D. Hong, T. G. Kolda, and J. A. Duersch, “Generalized canonical polyadic tensor decomposition,” SIAM review ,vol. 62, no. 1, pp. 133–163, 2020. [52] M. Bouss´ e, O. Debals, and L. De Lathauwer, “Tensor-based large-scale blind system identification using segmentation,” 
+
+IEEE Transactions on Signal Processing , vol. 65, no. 21, pp. 5770–5784, 2017. [53] N. Kargas and N. D. Sidiropoulos, “Nonlinear system identification via tensor completion,” Proceedings of the AAAI Conference on Artificial Intelligence , vol. 34, no. 04, pp. 4420–4427, 2020. [54] A.-H. Phan, K. Sobolev, K. Sozykin, D. Ermilov, J. Gusak, P. Tichavsk` y, V. Glukhov, I. Oseledets, and A. Cichocki, “Stable low-rank tensor decomposition for compression of convolutional neural network,” European Conference on Computer Vision , pp. 522–539, 2020. [55] H. Yan, K. Paynabar, and J. Shi, “Image-based process monitoring using low-rank tensor decomposition,” IEEE Transactions on Automation Science and Engineering ,vol. 12, no. 1, pp. 216–227, 2014. [56] T. G. Kolda and B. W. Bader, “Tensor decompositions and applications,” SIAM review , vol. 51, no. 3, pp. 455–500, 2009. [57] C. Chen, Tensor-based dynamical systems: Theory and Applications . Springer Nature, 2024. [58] S. Ragnarsson and C. F. Van Loan, “Block tensor unfoldings,” SIAM Journal on Matrix Analysis and Applications , vol. 33, no. 1, pp. 149–169, 2012. [59] X. Mao, A. Dong, Z. He, Y. Mei, S. Mei, and C. Chen, “Tensor-based homogeneous polynomial dynamical system analysis from data,” arXiv preprint arXiv:2503.17774 , 2025. [60] B. W. Bader and T. G. Kolda, “Tensor toolbox for matlab, version 3.6,” www.tensortoolbox.org , 2023. 
+
+A Algorithms Function LeafLS (p, X0, {Vq }, {CQ}, T )
+
+1: Input: leaf index p, data X0 = [ x(1) · · · x(T )], factors {Vq }kq=1 , transfers {CQ}Q∈T , tree T
+
+2: Output: stacked regressor matrix Hp
+
+3: for j = 1 to T do 
+
+4: Construct left contraction (22) 
+
+5: Construct right contraction 
+
+Rp(j) = ( ⊗Q∈G d−1 CQ) · · · (⊗Q∈G 0 CQ)
+
+6: Construct Hp(j) based on (24) 
+
+7: end for 
+
+8: Stack Hp = [ Hp(1) ⊤ Hp(2) ⊤ · · · Hp(T )⊤]⊤
+
+9: return H p
+
+Function InternalLS (P, l, X0, {Vq }, {CQ}, T )
+
+1: Input: internal node P ∈ G l, level l, data X0, factors 
+
+{Vq }kq=1 , transfers {CQ}Q∈T , tree T
+
+2: Output: stacked regressor matrix HP
+
+3: for j = 1 to T do 
+
+4: Compute right contraction with CP replaced by 
+
+IrP
+
+RP (j) = ( ⊗Q∈G l CQ) · · · (⊗Q∈G 0 CQ)
+
+5: Compute left contraction 
+
+LP (j) =  Vk ⊗ x(j)⊤Vk−1 ⊗ · · · ⊗ x(j)⊤V1
+
+
+
+(⊗Q∈G d−1 CQ) · · · (⊗Q∈G l+1 CQ)
+
+6: Form local regressor 
+
+HP (j) = ( RP (j)⊤ ⊗ LP (j)) SP
+
+7: end for 
+
+8: Stack HP = [ HP (1) ⊤ HP (2) ⊤ · · · HP (T )⊤]⊤
+
+9: return H P
+
+16

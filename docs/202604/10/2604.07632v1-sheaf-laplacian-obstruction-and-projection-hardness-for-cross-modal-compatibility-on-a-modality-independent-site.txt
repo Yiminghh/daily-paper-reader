@@ -1,0 +1,859 @@
+Title: Sheaf-Laplacian Obstruction and Projection Hardness for Cross-Modal Compatibility on a Modality-Independent Site
+
+URL Source: https://arxiv.org/pdf/2604.07632v1
+
+Published Time: Fri, 10 Apr 2026 00:17:03 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# Sheaf-Laplacian Obstruction and Projection Hardness for Cross-Modal Compatibility on a Modality-Independent Site 
+
+## Tibor Sloboda  1,2 
+
+1UPAI, Faculty of Informatics and Information Technology, Slovak Technical University, Bratislava, Slovakia .
+
+2aleph0 s. r. o., Bratislava, Slovakia .Contributing authors: tibor.sloboda@stuba.sk; 
+
+Abstract 
+
+We develop a unified framework for analyzing cross-modal compatibility in learned representations. The core object is a modality-independent neighborhood site on sample indices, equipped with a cellular sheaf of finite-dimensional real inner-product spaces. For a directed modality pair (a → b), we formalize two complementary incompatibility mechanisms: projection hardness, the minimal complexity within a nested Lipschitz-controlled projection family needed for a single global map to align whitened embeddings; and sheaf-Laplacian obstruc-tion, the minimal spatial variation required by a locally fit field of projection parameters to achieve a target alignment error. The obstruction invariant is implemented via a projection-parameter sheaf whose 0-Laplacian energy exactly matches the smoothness penalty used in sheaf-regularized regression, making the theory directly operational. This separates two distinct failure modes: hardness failure, where no low-complexity global projection exists, and obstruction fail-ure, where local projections exist but cannot be made globally consistent over the semantic neighborhood graph without large parameter variation. We link the sheaf spectral gap to stability of global alignment, derive bounds relating obstruc-tion energy to excess global-map error under mild Lipschitz assumptions, and give explicit constructions showing that compatibility is generally non-transitive. We further define bridging via composed projection families and show, in a con-crete ReLU setting, that an intermediate modality can strictly reduce effective hardness even when direct alignment remains infeasible. 
+
+Keywords: cross-modal alignment, projection hardness, sheaf-Laplacian obstruction, multimodal embeddings, non-transitive compatibility 
+
+1
+
+> arXiv:2604.07632v1 [cs.LG] 8 Apr 2026
+
+# 1 Introduction 
+
+Modern multi-modal systems routinely produce embeddings for heterogeneous data types (text, audio, images, video, proprioception, graphs) and then attempt to align them into a joint representational space. Empirically, some modality pairs admit sur-prisingly simple alignments (often approximately linear), while others require highly nonlinear models, extensive supervision, or fail entirely despite substantial model capacity. More subtly, alignability is not reliably transitive: modality a may align well to c,and c may align well to b, while a aligns poorly to b directly; or a two-stage align-ment a → c → b may be dramatically easier than a direct alignment a → b. Those occurrences motivate a theory that is all of: comparable across modality pairs, local-to-global instead of purely global, and capable of formally expressing non-transitivity and bridging. This paper proposes a single reference formalism that fixes the degrees of freedom that would otherwise make results incomparable. The essential constraint is that all modalities are analyzed on the same base domain (a single neighborhood site on sample indices), so that sheaf operators, Laplacians, energies, and spectra are defined on a common combinatorial substrate. Within that shared site we define two complementary invariants for each directed pair ( a → b): 
+
+Projection hardness Ha→b(ε): the lowest complexity within a nested, Lipschitz-controlled projection family necessary for a single global map to achieve alignment error at most ε.
+
+Sheaf-Laplacian obstruction Ca→b(ε): the minimal spatial variation in a locally fit field of projection parameters needed to achieve alignment error at most ε over the fixed neighborhood site. Hardness captures the global expressivity required. Obstruction captures the local-to-global inconsistency: even if good local alignments exist, they may not glue coherently across neighborhoods without large parameter drift. A key design goal is operationality: the obstruction invariant is not an abstract cohomological object requiring nontrivial estimation of local frames or transports. Instead, we use a projection-parameter sheaf on the base graph with identity restric-tions. In this sheaf, the 0-Laplacian energy is exactly the quadratic smoothness penalty used in sheaf-regularized regression. As such, the formal quantities are directly com-puted by established optimization procedures, and their dependence on the site is explicit and controlled. 2Contributions 
+
+This paper contributes: 1. A fixed, modality-independent site on which all modalities are evaluated, together with a canonical stalk category (finite-dimensional real inner-product spaces with linear maps) enabling well-defined sheaf Laplacians. 2. A nested, normalized projection formalism (whitened embeddings; linear ⊂ low-rank linear ⊂ bounded-width Lipschitz MLP) yielding a comparable notion of global hardness across modality pairs. 3. A projection-parameter sheaf whose sheaf-Laplacian energy yields a principled obstruction invariant measuring the minimal parameter variation required for locally fit maps to achieve a target alignment error. 4. Structural theorems linking the sheaf spectral gap to stability of global alignment and bounds translating obstruction energy to excess global-map error under limited Lipschitz assumptions. 5. Clear constructions showing non-transitivity and bridging: in particular, a concrete one-dimensional ReLU construction where a two-stage map a → c → b is realizable with small width in each stage, while any direct a → b map of the same depth provably requires much larger width. 
+
+## Scope and sequencing 
+
+This manuscript focuses on definitions and structural results on a fixed site. Synthetic dataset generation and empirical validation is deferred to future work; however, the present definitions are chosen to be implementable without modification. Figure 1 summarizes the logical dependencies among the definitions and results in the framework, making explicit which components are conditional on additional modeling assumptions. 
+
+# 2 Related Work 
+
+## Cross-modal representation learning 
+
+Aligning representations from different modalities lies at the heart of multi-modal machine learning [1]. Usual approaches range from canonical correlation analysis (CCA) [2] and its kernelized variants [3] to modern contrastive methods such as CLIP [4] that align image-text pairs through large-scale pre-training. Although these methods achieve impressive empirical results, they typically provide global alignment objectives without expressly modeling local geometrical structure or quantifying the hardness of alignment separately from its global error. 
+
+## Sheaf theory in deep learning 
+
+Cellular sheaves provide a principled framework for modeling relational data with het-erogeneous stalks and consistency constraints [5, 6]. Recent work has applied sheaf Laplacians to graph neural networks, yielding Sheaf Neural Networks (SNNs) and sheaf diffusion models that generalize standard message passing by respecting local 3topological structure [7–9]. Our work differs by using sheaves not as a feature prop-agation mechanism, but as an analytical tool to measure the obstruction to gluing local alignment maps. The projection-parameter sheaf explicitly encodes spatial varia-tion in model parameters, connecting sheaf-theoretic energies to regularized regression objectives. 
+
+## Hardness and complexity of representation alignment 
+
+The difficulty of learning alignments between representation spaces has been studied from various angles, including sample complexity bounds for domain adaptation [10, 11], minimax rates for transfer learning [12], and the inherent dimensionality of opti-mal transport mappings [13]. Our notion of projection hardness is distinct in that it fixes a nested family of projection classes with explicit Lipschitz control, enabling comparability across modality pairs. This relates to complexity indicators in learning theory such as VC dimension and Rademacher complexity, but is designed for the specific geometry of cross-modal correspondence. 
+
+## Non-transitivity and composition in multi-modal systems 
+
+Experimental evaluation should reveal and often does reveal that modality alignment is not always transitive: modality A may align to B, and B to C, yet A does not align directly to C [14, 15]. This phenomenon is notably relevant for bridge modalities or pivot languages in translation [16, 17]. Our framework formalizes this through bridging via composed projection families, giving explicit hardness bounds that demonstrate when and why mediation reduces complexity. The ReLU construction in section 3.8 provides the first explicit lower bound separating staged from direct alignment within a controlled neural network family. 
+
+# 3 Framework and Setup 
+
+## Data, modalities, and embeddings 
+
+Let V = {1, . . . , n } index samples. Let M denote a finite set of modalities. For each modality m ∈ M , an encoder (trained independently of other modalities) produces an embedding 
+
+z(m) 
+
+> i
+
+∈ Rdm , i ∈ V (1) We compare modalities via maps between their embedding spaces. To enforce com-parability across modality pairs, we normalize and, when needed, adopt a shared output dimension d (either by design or through a fixed projection convention). We present the formalism in the common-dimension case to keep definitions uncluttered; all statements extend to da̸ = db by replacing Rd with Rda and Rdb in the obvious way. 4Fixed modality-independent site G Canonical whitening Projection-parameter sheaf Nested Lipschitz projection family Projection hardness H(a →b) Two-stage bridging a →c→bSheaf Laplacian and energy Sheaf-regularized local fitting Obstruction invariant C(a →b) Spectral gap stability bound Fig. 1 Conditional dependency graph of the framework. Nodes represent definitions, constructions, or results. A directed edge indicates logical prerequisite. 
+
+## A shared base site as a comparability constraint 
+
+A recurring source of ambiguity in cross-modal analysis is that different modalities induce different neighborhood graphs when neighborhoods are built in embedding space. This makes sheaf Laplacians incommensurate across modalities: energies and spectra live on different sites. We enforce the following requirement throughout. 
+
+Definition 1 (Modality-independent site requirement) . All modalities are analyzed on the same base domain: a fixed simplicial complex (or, in practice, a fixed graph) on sample indices V .
+
+This shared site is the substrate over which all sheaf Laplacians, energies, and obstruction measures are computed. 53.1 Sheaves and the sheaf Laplacian Stalk category 
+
+Definition 2 (Stalk category) . Let Hilb fd denote the category whose objects are finite-dimensional real inner-product spaces and whose morphisms are linear maps. 
+
+Inner products permit adjoints, quadratic energies, Laplacians, and spectral gaps. Linearity keeps restriction maps tractable and compatible with regression-style estimators. 
+
+## Base domain as a simplicial complex 
+
+Let K be a simplicial complex on vertex set V , intended to approximate locality in an underlying semantic domain. In most computations we work on the 1-skeleton graph 
+
+G = ( V, E ) of K (possibly with edge weights). 
+
+Remark 1. For comparability, G is fixed once and used across all modalities and all modality pairs. How G is constructed is part of the methodology, not an outcome of the alignment procedure. 
+
+## Cellular sheaf on a graph. 
+
+We use a standard applied sheaf-theoretic working object: a cellular sheaf on a graph. 
+
+Definition 3 (Cellular sheaf on a graph) . Let G = ( V, E ) be an undirected graph. A cellular sheaf F of Hilb fd -objects on G consists of: 
+
+• a stalk F(v) for each vertex v ∈ V ,
+
+• a stalk F(e) for each edge e ∈ E,
+
+• for each incidence v ≤ e (i.e., v is an endpoint of e), a restriction map 
+
+ρe←v : F(v) → F (e) (2) A 0-cochain is an assignment c(v) ∈ F (v) for each vertex. A 1-cochain is an assignment 
+
+x(e) ∈ F (e) for each edge. Fix an orientation for each edge e = ( u → v). Define the coboundary operator 
+
+δ0 : C0(G; F) → C1(G; F) (3) by (δ0c)( e) = ρe←u
+
+ c(u) − ρe←v
+
+ c(v) (4) Using the inner products on stalks, δ0 has an adjoint ( δ0)⊤. Define the degree-0 sheaf Laplacian ∆0 := ( δ0)⊤δ0 (5) 6Definition 4 (Sheaf inconsistency energy) . For a 0-cochain c ∈ C0(G; F), define the sheaf inconsistency energy 
+
+EF (c) := ∥δ0c∥2 = ⟨c, ∆0c⟩ (6) 
+
+Remark 2 (Relation to Dirichlet energy on graphs) . The quadratic form EF (c) = 
+
+∥δ0c∥2 = ⟨c, ∆0c⟩ is a Dirichlet-type energy (Dirichlet form) associated with the sheaf Laplacian. In the special case where F is the constant sheaf with stalk R and identity restrictions, ∆0 reduces to the usual graph Laplacian and EF (c) becomes the classi-cal graph Dirichlet energy P 
+
+> (u,v )∈E
+
+(c(u) − c(v)) 2. For constant stalk Rp this is the Dirichlet energy of a vector-valued graph signal, i.e. the sum of the scalar Dirichlet energies of its coordinates [18]. 
+
+Remark 3 (Interpretation) . EF (c) = 0 if and only if c is a global section (it glues perfectly across all edges). The spectrum of ∆0 quantifies stability: a large spectral gap implies local consistency strongly constrains global consistency. 
+
+## 3.2 Canonical Neighborhood Construction 
+
+To satisfy the modality-independent site requirement, we must build G without privileging any modality embedding as ground truth. 
+
+## 3.3 Synthetic setting: ground-truth latent site 
+
+In synthetic settings where ground-truth latent states si are available with a metric 
+
+dX , we define a k-nearest-neighbor graph GX = ( V, E X ) by (i, j ) ∈ EX ⇐⇒ j ∈ kNN knn (i; dX ) (7) optionally with RBF weights 
+
+wij = exp 
+
+
+
+− dX (si, s j )2
+
+σ2
+
+
+
+(8) This yields a canonical cover Ui = {i} ∪ NGX (i). 
+
+## 3.4 Modality-independent constructions as a general setting 
+
+Without latent states, one may build G from semantic labels (when available), tem-poral or causal adjacency for sequences, or consensus constructions across modalities (e.g., intersection graphs of k-nearest-neighbor graphs from each modality). For the present paper, the key requirement is simply that a single graph G is fixed in advance and shared across all modalities. 73.5 Projection Families and a Comparable Notion of Hardness 
+
+We now fix the map classes used to quantify global alignment complexity. The objec-tive is comparability across modality pairs, which requires consistent normalization, consistent complexity indices, and consistent Lipschitz control. 
+
+Canonical whitening 
+
+For each modality m ∈ M , compute the empirical mean μm and covariance Σ m of 
+
+{z(m) 
+
+> i
+
+}ni=1 on the training set. Define whitened embeddings ˜z(m) 
+
+> i
+
+:= Σ −1/2 
+
+> m
+
+(z(m) 
+
+> i
+
+− μm) (9) Alternative normalizations, such as unit-norm embeddings for cosine geometry, are possible; however, they must be used consistently across all modality pairs and experiments. 
+
+Nested projection classes 
+
+Fix a shared dimension d after whitening. Let Gα denote a nested family indexed by a complexity parameter α.
+
+Class 0: orthogonal linear maps (Procrustes) 
+
+G0 := {g(x) = Qx : Q ∈ O(d)} (10) 
+
+Class 1: low-rank linear maps with operator norm bound 
+
+For rank parameter r and Lipschitz bound L,
+
+Glin  
+
+> r
+
+:= {g(x) = W x : rank( W ) ≤ r, ∥W ∥2 ≤ L} (11) 
+
+Class 2: bounded-width Lipschitz MLPs 
+
+Fix depth D and width parameter w. Let MLP( D, w, L ) denote ReLU networks of depth D and width w with spectral norm constraints chosen so the resulting global Lipschitz constant is at most L. Define 
+
+Gmlp  
+
+> w
+
+:= {g ∈ MLP( D, w, L )} (12) which is nested by width. 
+
+Projection hardness 
+
+Fix an error metric on whitened embeddings; throughout we use mean-squared error: err( g; a → b) := 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+∥g(˜ z(a) 
+
+> i
+
+) − ˜z(b) 
+
+> i
+
+∥2 (13) 8Definition 5 (Projection hardness) . Given a tolerance ε > 0 and a nested family 
+
+{G α}, define the hardness from a to b by 
+
+Ha→b(ε) := inf 
+
+n
+
+α : ∃g ∈ G α s.t. err( g; a → b) ≤ ε
+
+o
+
+(14) 
+
+Remark 4 (Directed hardness graph) . For fixed ε, hardness defines a directed weighted graph on modalities. Because whitening and the map family are fixed, 
+
+Ha→b(ε) is directly comparable across different pairs (a, b ).Projection hardness H(a b) 
+
+> Obstruction  C(a  b)
+> Compatible
+> (low H, low C)
+> Hardness failure
+> (high H, low C)
+> Obstruction failure
+> (low H, high C)
+> Incompatible
+> (high H, high C)
+
+Fig. 2 Hardness / obstruction regime diagram. Projection hardness Ha→b(ε) and sheaf-Laplacian obstruction Ca→b(ε) capture two orthogonal failure modes of cross-modal alignment. Low hardness and low obstruction indicate compatibility; high hardness indicates insufficient global expressivity; high obstruction indicates locally valid alignments that cannot be glued into a coherent global map. 
+
+Projection-Parameter Sheaf and Sheaf-Laplacian Obstruction 
+
+Hardness concerns a single global map. To capture local-to-global inconsistency, we allow the projection map to vary across the site but penalize spatial variation using a sheaf Laplacian. This leads to a computable obstruction invariant. 
+
+Projection-parameter sheaf 
+
+Fix a projection family G parameterized by w ∈ Rp, writing gw ∈ G .
+
+Definition 6 (Projection-parameter sheaf) . Let G = ( V, E ) be the fixed base graph. Define the projection-parameter sheaf P on G by: 
+
+• Vertex stalks: P(v) = Rp for all v ∈ V
+
+• Edge stalks: P(e) = Rp for all e ∈ E
+
+9• Restrictions: identity maps ρe←v = Id Rp for all incidences 
+
+For a 0-cochain w = {wv }v∈V , the coboundary is (δ0w)( e = ( u, v )) = wu − wv , (15) and the sheaf energy is 
+
+EP (w) = X
+
+> (u,v )∈E
+
+∥wu − wv ∥2 (16) 
+
+Proposition 1 (Global sections are constant parameter fields) . If G is connected, then 
+
+ker(∆ 0) = {w : wv ≡ ¯w for all v ∈ V }. More generally, on a graph with k connected components, ker(∆ 0) is the space of parameter fields constant on each component. 
+
+Sheaf-regularized local fitting 
+
+Fix a loss ℓ(·, ·) (typically squared error on whitened embeddings). For a directed pair (a → b), define the objective 
+
+L(w; λ) = X
+
+> v∈V
+
+ℓ
+
+
+
+gwv (˜ z(a) 
+
+> v
+
+), ˜z(b)
+
+> v
+
+
+
++ λ X
+
+> (u,v )∈E
+
+∥wu − wv ∥2 (17) and let 
+
+w∗(λ) ∈ argmin w∈(Rp)V L(w; λ) (18) This yields three quantities of interest: 
+
+• Global-map error (constant field). Constrain wv ≡ w:Err global  
+
+> a→b
+
+:= min 
+
+> w∈Rp
+
+X
+
+> v∈V
+
+ℓ
+
+
+
+gw(˜ z(a) 
+
+> v
+
+), ˜z(b)
+
+> v
+
+
+
+(19) 
+
+• Locally varying-map error. 
+
+Err local  
+
+> a→b
+
+(λ) := X
+
+> v∈V
+
+ℓ
+
+
+
+gw∗ 
+
+> v(λ)
+
+(˜ z(a) 
+
+> v
+
+), ˜z(b)
+
+> v
+
+
+
+(20) 
+
+• Required variation (obstruction proxy). 
+
+Var a→b(λ) := X
+
+> (u,v )∈E
+
+∥w∗
+
+> u
+
+(λ) − w∗ 
+
+> v
+
+(λ)∥2 = EP
+
+ w∗(λ) (21) 10 Obstruction invariant at fixed error tolerance 
+
+Definition 7 (Sheaf-Laplacian obstruction) . Fix a target error tolerance ε > 0. Define 
+
+Ca→b(ε) := inf 
+
+n
+
+Var a→b(λ) : Err local  
+
+> a→b
+
+(λ) ≤ ε
+
+o
+
+(22) 
+
+Remark 5 (Two distinct failure modes) . Hardness failure: even the best global map in a low-complexity class cannot reach error ε.Obstruction failure: error ε is reachable by locally varying maps, but only with large variation energy over G.Global map (constant) Low obstruction (smooth) High obstruction (cut)     
+
+> Fig. 3 Each node corresponds to a sample in the modality-independent site G, with a parameter vector wvattached at each vertex. Left: a constant parameter field corresponding to a single global map. Middle: a smoothly varying field with low sheaf-Laplacian energy (low obstruction). Right: a sharply varying field with large energy concentrated across a cut, illustrating obstruction despite perfect local fits.
+
+## 3.6 Spectral Gap, Stability, and a Link Between Obstruction and Global Error 
+
+The projection-parameter sheaf is intentionally simple: restrictions are identities, so ∆0 reduces to a vector-valued graph Laplacian. This simplicity gives strong, explicit stability results. 
+
+Poincar´ e-type control by the spectral gap 
+
+Let L denote the (combinatorial) graph Laplacian of G. For vector-valued fields w ∈
+
+(Rp)V , the quadratic form P 
+
+> (u,v )∈E
+
+∥wu − wv ∥2 is the Dirichlet form associated with the graph Laplacian, and can be written as ⟨w, (L ⊗ Ip)w⟩ [18]. Let λ2(G) denote the second-smallest eigenvalue of L (the algebraic connectivity), assuming G is connected. 11 Lemma 2 (Vector-valued Poincar´ e inequality on graphs) . If G is connected, then for any w ∈ (Rp)V and its vertexwise mean ¯w := 1
+
+> n
+
+P 
+
+> v∈V
+
+wv ,
+
+X
+
+> v∈V
+
+∥wv − ¯w∥2 ≤ 1
+
+λ2(G)
+
+X
+
+> (u,v )∈E
+
+∥wu − wv ∥2 (23) 
+
+Proof This is the standard Poincar´ e inequality for the graph Laplacian applied coordi-natewise. Writing w as p scalar fields and using orthogonal decomposition into Laplacian eigenvectors yields the bound with constant 1 /λ 2(G). □
+
+From small obstruction to near-global parameter consistency 
+
+The Poincar´ e inequality states that small variation energy forces w to be close to a con-stant parameter field, provided λ2(G) is not too small. To translate this into alignment consequences, we assume slight regularity of the loss with respect to parameters. 
+
+Definition 8 (Parameter-Lipschitz loss) . We say the per-sample loss ℓ(gw(x), y ) is 
+
+Lw-Lipschitz in w (uniformly over relevant x, y ) if 
+
+ℓ(gw(x), y ) − ℓ(gw′ (x), y ) ≤ Lw∥w − w′∥ (24) 
+
+for all w, w ′, x, y in scope. 
+
+This is a modeling assumption; in practice it can be enforced or approximated by parameter norm control and Lipschitz constraints on gw.
+
+Theorem 3 (Obstruction controls excess global-map error) . Assume G is connected and the per-sample loss is Lw-Lipschitz in w. Let w = {wv } be any parameter field and let ¯w be its mean. Then 
+
+1
+
+n
+
+X
+
+> v∈V
+
+ℓ
+
+
+
+g ¯w(˜ z(a) 
+
+> v
+
+), ˜z(b)
+
+> v
+
+
+
+≤ 1
+
+n
+
+X
+
+> v∈V
+
+ℓ
+
+
+
+gwv (˜ z(a) 
+
+> v
+
+), ˜z(b)
+
+> v
+
+
+
++ Lw
+
+vuut 1
+
+n λ 2(G)
+
+X
+
+> (u,v )∈E
+
+∥wu − wv ∥2
+
+Proof By Lipschitzness, 
+
+ℓ(g ¯w(xv ), y v ) ≤ ℓ(gwv (xv ), y v ) + Lw∥ ¯w − wv ∥. (25) Averaging over v and applying Cauchy–Schwarz: 1
+
+n
+
+X
+
+> v
+
+∥ ¯w − wv ∥ ≤ 
+
+s 1
+
+n
+
+X
+
+> v
+
+∥ ¯w − wv ∥2 (26) 
+
+12 Now apply Theorem 2 to bound P 
+
+> v
+
+∥ ¯w − wv ∥2 by Var( w)/λ 2(G). □
+
+Remark 6 (Interpretation) . If a locally varying fit achieves small local error and small variation energy, then a single global parameter vector (the mean) achieves nearly the same error, with an explicit degradation controlled by the spectral gap λ2(G). Thus, large obstruction energy indicates genuinely non-gluable local solutions, not purely optimization artifacts. 
+
+## 3.7 Compatibility Profiles and Directed Non-Transitivity 
+
+The framework intrinsically yields a compatibility profile for each directed pair ( a → b)at tolerance ε:
+
+ Ha→b(ε), C a→b(ε) (27) Thresholding these quantities induces binary relations (”compatible” vs. ”incompati-ble”), but the primary object is the directed weighted structure. 
+
+A minimal compatibility relation 
+
+Fix thresholds α0 and τ0. Define 
+
+a (α0,τ 0)
+
+=====⇒ 
+
+> ε
+
+b ⇐⇒ Ha→b(ε) ≤ α0 and Ca→b(ε) ≤ τ0 (28) Even with this restrictive definition, compatibility can fail to be transitive. Modality a Bridge modality c easy Modality b direct (high hardness) easy            
+
+> Fig. 4 Bridging via an intermediate modality. Direct alignment a→bmay require high complex-ity, while a two-stage alignment a→c→bcan be realized with low complexity in each stage. The framework formalizes this effect through composed projection families and stagewise notions of hard-ness and obstruction.
+
+## 3.8 Bridging via composed projection families 
+
+Let a, b, c be three modalities. Consider a two-stage alignment through c. For a family 
+
+G, define the composed family 
+
+Ga→c→b := {gc→b ◦ ga→c : ga→c ∈ G , g c→b ∈ G} (29) 13 Because the family can depend on a complexity index, we make this explicit. 
+
+Definition 9 (Composed hardness) . Fix a tolerance ε. Define the two-stage hardness 
+
+Ha→c→b(ε) := inf 
+
+n
+
+α : ∃ga→c ∈ G α, ∃gc→b ∈ G α
+
+s.t. err( gc→b ◦ ga→c; a → b) ≤ ε
+
+o
+
+Definition 10 (Bridge modality) . We say that c is a bridge for (a, b ) at tolerance ε
+
+if both 
+
+Ha→c→b(ε) ≪ Ha→b(ε), Ca→c→b(ε) ≪ Ca→b(ε) (30) 
+
+where Ca→c→b is defined analogously by fitting sheaf-regularized parameter fields for each stage and composing. 
+
+Remark 7. The obstruction component is stagewise: one measures the variation needed to fit a → c and c → b locally (each over the same site), then compares to the direct a → b obstruction. This is consistent with the operational interpretation that bridging reduces both expressivity requirements and gluing difficulty. 
+
+A Concrete Non-Transitivity Construction in a ReLU Setting 
+
+To show that non-transitivity and bridging are not artifacts of vague definitions, we give an explicit construction where a two-stage map is easy in a bounded-width family, while the direct map provably requires much larger width at the same depth. The key is that composition increases effective depth and therefore representational complexity but without increasing width at each stage. 
+
+A width lower bound via breakpoints in one dimension 
+
+Consider one-hidden-layer ReLU networks on R:
+
+f (x) = 
+
+> w
+
+X
+
+> j=1
+
+aj σ(bj x + cj ) + d, σ(t) = max {t, 0} (31) Such functions are continuous piecewise-linear with at most w breakpoints (points where the slope changes). 
+
+Lemma 4 (Breakpoint bound) . Any one-hidden-layer ReLU network of width w on 
+
+R has at most w breakpoints, hence at most w + 1 linear pieces.                
+
+> Proof Each unit σ(bjx+cj) changes from linear to linear at the single point x=−cj/b j
+> (when bj̸= 0). A linear combination of such units can only change slope at points where at least one unit changes regime. Thus the set of possible slope-change points is contained in the set of at most wthresholds. □
+
+14 Now define Gmlp  
+
+> w
+
+to be one-hidden-layer ReLU networks of width w with a fixed Lipschitz bound (the Lipschitz constraint does not affect the breakpoint counting argument). 
+
+Composition multiplies the number of linear regions 
+
+Lemma 5 (Composing width-w one-hidden-layer networks increases pieces) . Let 
+
+g, h ∈ G mlp  
+
+> w
+
+be one-hidden-layer ReLU networks on R. Then the composition h ◦ g is continuous piecewise-linear and can have Ω( w2) linear pieces in the worst case.                            
+
+> Proof sketch gpartitions Rinto at most w+ 1 intervals on which gis affine. On each such interval, h◦greduces to happlied to an affine function. Since hhas up to wbreakpoints in its input coordinate, the preimages of those breakpoints under an affine map contribute up to wbreakpoints per interval of g(in the worst case, all distinct and interleaving across intervals). Thus the total number of breakpoints can scale as ( w+ 1) ·w= Ω( w2). □
+
+A bridging construction 
+
+Let modality a have embedding ˜ z(a) 
+
+> i
+
+= xi ∈ [0 , 1]. Let modality c have embedding ˜z(c) 
+
+> i
+
+= g(xi) where g ∈ G mlp  
+
+> w
+
+is chosen so that g has Θ( w) breakpoints on [0 , 1]. Let modality b have embedding ˜ z(b) 
+
+> i
+
+= ( h ◦ g)( xi) where h ∈ G mlp  
+
+> w
+
+is chosen so that h ◦ g
+
+has Θ( w2) breakpoints on [0 , 1] (guaranteed by Theorem 5 for appropriate choices). Then: 
+
+• a → c is realizable with width w (by g), so Ha→c(ε) = O(w) for small ε (in noiseless settings, ε = 0). 
+
+• c → b is realizable with width w (by h), so Hc→b(ε) = O(w). 
+
+• a → b requires representing a function with Θ( w2) breakpoints using a width-w one-hidden-layer network, which is impossible by Theorem 4. Therefore, any direct map in Gmlp  
+
+> w
+
+incurs nonzero approximation error bounded away from 0 on sufficiently rich samples. Achieving ε ≈ 0 requires width Ω( w2) at the same depth. This yields a strict, explicit bridging effect: for fixed depth, the two-stage hardness can be O(w) while the direct hardness is Ω( w2). 
+
+Theorem 6 (Explicit non-transitivity via bridging) . In the setting above (one-dimensional embeddings, one-hidden-layer ReLU family, noiseless samples dense in 
+
+[0 , 1] ), for sufficiently small tolerance ε, there exist modalities a, b, c where 
+
+Ha→c(ε) = O(w), Hc→b(ε) = O(w) (32) 
+
+but 
+
+Ha→b(ε) = Ω( w2) (33) 
+
+Consequently, any thresholded ”compatibility” relation based on hardness at scale O(w)
+
+is non-transitive. 
+
+15 Remark 8. This example is intentionally minimal: it shows that non-transitivity can arise purely from representational complexity under a fixed projection family, without producing noise, estimation error, or ambiguous sites. 
+
+Obstruction-Driven Non-Transitivity 
+
+Hardness is only one source of failure. Even when good local maps exist everywhere, gluing them into a global alignment can fail due to large spatial variation requirements over the semantic neighborhood graph. 
+
+A two-cluster sign-flip toy model 
+
+Let G be a graph whose vertices split into two well-connected subgraphs V+ and V−
+
+with a sparse cut between them. Suppose the best alignment between modalities differs by a sign flip between the clusters: ˜z(b) 
+
+> v
+
+≈
+
+(
+
+˜z(a) 
+
+> v
+
+, v ∈ V+,
+
+−˜z(a) 
+
+> v
+
+, v ∈ V−. (34) If the projection family includes scalar multiplication by ±1, then locally there is a perfect map on each cluster. But any globally constant map must incur error on one cluster. A locally varying parameter field can fit with near-zero local error by setting 
+
+wv = +1 on V+ and wv = −1 on V−. The obstruction energy then concentrates on edges crossing the cut. 
+
+Proposition 7 (Cut-induced obstruction) . In the sign-flip model with scalar param-eters wv ∈ R, the minimum variation energy among perfect-fitting fields satisfies 
+
+min 
+
+n X
+
+> (u,v )∈E
+
+(wu − wv )2 : wv = +1 ∀v ∈ V+, w v = −1 ∀v ∈ V−
+
+o
+
+= 4 |E(V+, V −)|
+
+(35) 
+
+where E(V+, V −) is the set of cut edges. 
+
+Remark 9. This shows obstruction can be large even when local fits are perfect. The magnitude depends on the site geometry (cut size), underlining why a fixed, modality-independent site is essential for comparability. 
+
+## 3.9 A Hypothesis Ladder Linking Site Geometry to Latent Semantics 
+
+The framework is intentionally conditional: conclusions depend on whether the fixed site G approximates meaningful semantic locality. This section states a minimal ladder of assumptions under which the formal invariants admit latent-level interpretations. 16 Definition 11 (Latent locality approximation (informal)) . We say G approximates latent locality if vertices connected by an edge correspond to samples that are near in latent semantic distance and latent-near samples are likely connected by short paths. 
+
+A typical synthetic regime constructs G directly from ground-truth latent dis-tances, making the approximation exact by design. In general settings, consensus or label-based graphs aim to approximate this condition. 
+
+Proposition 8 (Latent interpretability schema (informal)) . Assume: G approximates latent locality, each modality embedding ˜z(m) is locally regular on G (e.g., Lips-chitz along edges) and the projection family is Lipschitz-controlled and sufficiently expressive. Then: 
+
+• low hardness suggests the existence of a simple global alignment between the modalities on the dataset, 
+
+• low obstruction suggests that locally optimal alignments glue coherently across neighborhoods, 
+
+• large obstruction indicates a latent-level inconsistency (e.g., different local corre-spondences across regions) rather than merely a global expressivity deficit. 
+
+These statements are intentionally schematic: the purpose of the present work is to fix the substrate and the invariants; subsequent work can specialize assumptions and validate them in controlled regimes. 
+
+# 4 Operational Protocol 
+
+Although this paper is theoretical, the definitions are designed to be executable. A canonical evaluation pipeline for a modality pair ( a → b) is: 1. Fix the base graph G on sample indices (synthetic: latent k-NN; general: modality-independent rule). 2. Train independent encoders and compute embeddings z(m) 
+
+> i
+
+.3. Whiten each modality to obtain ˜ z(m) 
+
+> i
+
+.4. Compute global hardness Ha→b(ε) under the nested families: 
+
+G0, Glin  
+
+> r
+
+, Gmlp  
+
+> w
+
+(36) 5. Fit the sheaf-regularized projection parameter field w∗(λ) through minimizing (17) over a grid of λ.6. Extract Err local  
+
+> a→b
+
+(λ) and Var a→b(λ), and compute Ca→b(ε) by selecting the minimal variation achieving the target error. Because the site, normalization, map classes, and error metric are fixed, the result-ing quantities are comparable across modality pairs and across datasets that share the same formal conventions. 17 5 Limitations 
+
+This reference formalism is deliberately restrictive in order to be comparable: 
+
+• The projection-parameter sheaf uses identity restrictions; it measures smoothness of parameters rather than transporting features among neighborhoods. This is a strength for computability but it is not a complete geometric model of representation bundles. 
+
+• The obstruction invariant depends on the site G. This is unavoidable: locality must be specified. The contribution here is to make the dependence explicit and controlled by fixing G across modalities. 
+
+• Hardness depends on the projection family. Different nested families capture differ-ent notions of simplicity; the present choice (orthogonal/low-rank/Lipschitz-MLP) is a pragmatic standardization rather than a claim of universality. 
+
+• In this manuscript the obstruction uses the constant sheaf (identity restrictions), so the obstruction energy reduces to a Dirichlet form on a vector-valued parameter field. This choice is deliberate for operationality and for a clean interpretation in terms of (non)existence of global sections. More general sheaves with non-identity restrictions could encode parameter transports or gauge-like identifications across neighborhoods, producing energies that are not equivalent to the standard Dirichlet form; we leave this extension for future work. 
+
+# 6 Conclusion 
+
+We presented a rigorous, comparable formalism for cross-modal compatibility based on two complementary invariants defined on a fixed, modality-independent site: projection hardness (global complexity needed for alignment) and sheaf-Laplacian obstruction (minimal spatial variation required by locally fit maps). The obstruction is instantiated by a projection-parameter sheaf whose Laplacian energy corresponds to the smoothness penalty in sheaf-regularized regression, enabling direct computa-tion. We proved stability relations controlled by the graph spectral gap and defined constructions demonstrating non-transitivity and bridging. The net effect is a single backbone of definitions and structural facts: once the site, normalization, and projection family are fixed, modality pairs can be compared without ambiguity, and phenomena such as mediation and non-transitivity become formally testable statements rather than narrative observations. 18 A Appendix: Proof Details for the Spectral Gap Bound 
+
+This appendix records the standard argument underlying Theorem 2 for completeness. Let L be the unnormalized graph Laplacian and let 0 = λ1 < λ 2 ≤ · · · ≤ λn be its eigenvalues with orthonormal eigenvectors {uk}nk=1 , where u1 = 1√n 1. For a scalar field f ∈ RV with mean ¯f , define f⊥ = f − ¯f 1 so that ⟨f⊥, 1⟩ = 0. Then 
+
+f⊥ =
+
+> n
+
+X
+
+> k=2
+
+αkuk,
+
+∥f⊥∥2 =
+
+> n
+
+X
+
+> k=2
+
+α2
+
+> k
+
+,f ⊤⊥ Lf ⊥ =
+
+> n
+
+X
+
+> k=2
+
+λkα2 
+
+> k
+
+≥ λ2
+
+> n
+
+X
+
+> k=2
+
+α2
+
+> k
+
+.
+
+Thus ∥f − ¯f 1∥2 ≤ 1 
+
+> λ2
+
+f ⊤Lf . Apply this coordinate-wise to vector fields w ∈ (Rp)V to obtain Theorem 2. 
+
+# B Appendix: Notes on Stagewise Obstruction for Bridging 
+
+To define Ca→c→b(ε) operationally, one may: 1. Fit a parameter field wa→c(λ1) minimizing (17) for ( a → c). 2. Fit a parameter field wc→b(λ2) minimizing (17) for ( c → b). 3. Evaluate the composed prediction gwc→bv (λ2)◦gwa→cv (λ1) at each vertex v and compute the achieved error for ( a → b). 4. Among all ( λ1, λ 2) achieving error at most ε, take the infimum of the sum of variation energies: Var a→c(λ1) + Var c→b(λ2). (37) This yields a stagewise obstruction notion consistent with the narrative: bridging should reduce both the complexity and the spatial non-uniformity required to achieve the target alignment error. 19 References 
+
+[1] Baltrusaitis, T., Ahuja, C., Morency, L.-P.: Multimodal machine learning: A survey and taxonomy. IEEE Transactions on Pattern Analysis and Machine Intelligence 41 (2), 423–443 (2018) [2] Hotelling, H.: Relations between two sets of variates. Biometrika 28 (3/4), 321–377 (1936) https://doi.org/10.1093/biomet/28.3-4.321 [3] Lai, P.L., Fyfe, C.: Kernel and nonlinear canonical correlation analysis. Inter-national Journal of Neural Systems 10 (05), 365–377 (2000) https://doi.org/10. 1142/S012906570000034X [4] Radford, A., Kim, J.W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P., Clark, J., Krueger, G., Sutskever, I.: Learning transferable visual models from natural language supervision. In: Proceedings of the 38th International Conference on Machine Learning. Proceedings of Machine Learning Research, vol. 139, pp. 8748–8763 (2021) [5] Curry, J.M.: Sheaves, cosheaves and applications. PhD thesis, University of Pennsylvania (2014) [6] Ghrist, R.: Elementary Applied Topology, 1st edn. CreateSpace Independent Publishing Platform, Charleston, SC (2014) [7] Hansen, J., Gebhart, T.: Sheaf neural networks. In: NeurIPS Workshop on Topo-logical Data Analysis and Beyond (2020). Key corresponds to the generalization of GCNs via Sheaf Laplacians [8] Bodnar, C., Di Giovanni, F., Chamberlain, B., Li´ o, P., Bronstein, M.: Neural sheaf diffusion: A topological perspective on heterophily and oversmoothing in gnns. In: Advances in Neural Information Processing Systems, vol. 35, pp. 18527–18541 (2022) [9] Calmon, L., Schaub, M.T., Bianconi, G.: Dirac signal processing of higher-order topological signals. New Journal of Physics 25 (9), 093013 (2023) https://doi.org/ 10.1088/1367-2630/acf33c [10] Ben-David, S., Blitzer, J., Crammer, K., Kulesza, A., Pereira, F., Vaughan, J.W.: A theory of learning from different domains. Machine Learning 79 (1), 151–175 (2010) https://doi.org/10.1007/s10994-009-5152-4 [11] Mansour, Y., Mohri, M., Rostamizadeh, A.: Domain adaptation: Learning bounds and algorithms. In: Proceedings of the 22nd Annual Conference on Learning Theory (COLT). Omnipress, Montreal, Canada (2009) [12] Cai, T.T., Wei, H.: Transfer learning for nonparametric classification: Minimax 20 rate and adaptive classifier. The Annals of Statistics 49 (1), 100–128 (2021) [13] Perrot, M., Courty, N., Flamary, R., Habrard, A.: Mapping estimation for dis-crete optimal transport. In: Advances in Neural Information Processing Systems (NIPS), vol. 29, pp. 4197–4205 (2016) [14] Liang, P.P., Zadeh, A., Morency, L.-P.: Foundations and trends in multimodal machine learning: Principles, challenges, and open questions. arXiv preprint arXiv:2209.03430 (2022) [15] Wu, S., Fei, H., Qu, L., Ji, W., Chua, T.-S.: NExT-GPT: Any-to-any multimodal LLM. In: Proceedings of the 41st International Conference on Machine Learning (ICML) (2024) [16] Firat, O., Sankaran, B., Al-Onaizan, Y., Yarman-Vural, F.T., Cho, K.: Zero-resource translation with multi-lingual neural machine translation. In: Pro-ceedings of the 2016 Conference on Empirical Methods in Natural Language Processing, pp. 268–277 (2016) [17] Gu, J., Hassan, H., Devlin, J., Li, V.O.: Universal neural machine translation for extremely low resource languages. In: Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, pp. 344–354 (2018) [18] Evans, L.C.: Partial Differential Equations. Graduate Studies in Mathematics, vol. 19. American Mathematical Society, Providence, RI (1998) 21
