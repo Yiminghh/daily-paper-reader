@@ -1,0 +1,132 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-11T19:59:37.548821+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 0,
+    "deep_cap": 6,
+    "deep_selected": 0,
+    "quick_candidates": 3,
+    "quick_skim_target": 11,
+    "quick_selected": 3
+  },
+  "deep_dive": [],
+  "quick_skim": [
+    {
+      "id": "2604.02633v1",
+      "title": "Analytic Drift Resister for Non-Exemplar Continual Graph Learning",
+      "abstract": "Non-Exemplar Continual Graph Learning (NECGL) seeks to eliminate the privacy risks intrinsic to rehearsal-based paradigms by retaining solely class-level prototype representations rather than raw graph examples for mitigating catastrophic forgetting. However, this design choice inevitably precipitates feature drift. As a nascent alternative, Analytic Continual Learning (ACL) capitalizes on the intrinsic generalization properties of frozen pre-trained models to bolster continual learning performance. Nonetheless, a key drawback resides in the pronounced attenuation of model plasticity. To surmount these challenges, we propose Analytic Drift Resister (ADR), a novel and theoretically grounded NECGL framework. ADR exploits iterative backpropagation to break free from the frozen pre-trained constraint, adapting to evolving task graph distributions and fortifying model plasticity. Since parameter updates trigger feature drift, we further propose Hierarchical Analytic Merging (HAM), performing layer-wise merging of linear transformations in Graph Neural Networks (GNNs) via ridge regression, thereby ensuring absolute resistance to feature drift. On this basis, Analytic Classifier Reconstruction (ACR) enables theoretically zero-forgetting class-incremental learning. Empirical evaluation on four node classification benchmarks demonstrates that ADR maintains strong competitiveness against existing state-of-the-art methods.",
+      "authors": [
+        "Lei Song",
+        "Shihan Guan",
+        "Youyong Kong"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-03T01:58:11+00:00",
+      "link": "https://arxiv.org/pdf/2604.02633v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "continual graph learning and representation drift",
+      "llm_evidence_cn": "持续图学习与表示漂移",
+      "llm_evidence": "持续图学习与表示漂移",
+      "canonical_evidence": "持续图学习与表示漂移",
+      "llm_tldr_en": "Proposes a framework to mitigate feature drift in non-exemplar continual graph learning.",
+      "llm_tldr_cn": "提出了一个缓解非样本持续图学习中特征漂移的框架。",
+      "llm_tldr": "提出了一个缓解非样本持续图学习中特征漂移的框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.07197v1",
+      "title": "Machine learning Hamiltonian enables scalable and accurate defect calculations: The case of oxygen vacancies in amorphous SiO$_2$",
+      "abstract": "Point defects critically influence the properties of materials and devices, yet density functional theory (DFT) remains computationally demanding for defect supercell calculations. Machine learning interatomic potentials (MLIPs) offer high efficiency but require extensive datasets. MLIPs trained only on defect configurations in small supercells exhibit systematic energy errors in larger supercells, demonstrating limited transferability. Here, we present a machine learning Hamiltonian (MLH) model-based method for calculating total energies and atomic forces in defect supercells with linear-scaling computational cost, enabling efficient structural relaxation and accurate formation energy predictions. We take oxygen vacancies in amorphous SiO$_2$ as an example and train the MLH model on defect configurations in 95-atom supercells, with the training data derived from 120 self-consistent field calculations and 12 structural relaxations. The MLH model enables efficient structural relaxations for host (defect-free) and defect systems in larger supercells, avoiding the systematic energy errors observed in MLIPs. The cancellation of energy errors between host and defect systems yields accurate formation energy predictions, with deviations from DFT below 50 meV. The proposed method holds significant potential for defect simulations in complex materials.",
+      "authors": [
+        "Zhenxing Dai",
+        "Zhong Yang",
+        "Mingjue Ni",
+        "Menglin Huang",
+        "Hongjun Xiang",
+        "Xin-Gao Gong",
+        "Shiyou Chen"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-04-08T15:23:09+00:00",
+      "link": "https://arxiv.org/pdf/2604.07197v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Machine learning Hamiltonian for molecular property and defect calculations",
+      "llm_evidence_cn": "用于分子性质和缺陷计算的机器学习哈密顿量",
+      "llm_evidence": "用于分子性质和缺陷计算的机器学习哈密顿量",
+      "canonical_evidence": "用于分子性质和缺陷计算的机器学习哈密顿量",
+      "llm_tldr_en": "Presents a machine learning Hamiltonian model for scalable and accurate defect calculations in materials.",
+      "llm_tldr_cn": "提出一种机器学习哈密顿量模型，用于材料中可扩展且准确的缺陷计算。",
+      "llm_tldr": "提出一种机器学习哈密顿量模型，用于材料中可扩展且准确的缺陷计算。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.07322v1",
+      "title": "Explicit Electric Potential-Embedded Machine Learning Framework: A Unified Description from Atomic to Electronic Scales",
+      "abstract": "To further develop accurate and large-scale simulations of electrochemical interfaces, we propose a unified explicit electric potential framework to simultaneously predict atomic forces and electron density distributions. The framework consists of three components: data generation, model training, and application. The data generation component, implemented in Hy-DFT, efficiently regulates the potential during constant-potential ab initio molecular dynamics (CP-AIMD), reducing the number of single-point calculations required for convergence. The model training component includes two modules: Potential-Embedded MACE (PE-MACE) and Potential-Embedded Electron Density Prediction (PE-EDP). PE-MACE implements an explicit electric potential machine learning force field (EEP-MLFF) based on the MACE architecture. We develop PE-EDP to overcome the limitation of EEP-MLFF in describing atom forces. PE-EDP, also based on equivariant graph neural networks, predicts electron density distributions under arbitrary potentials. Using the Pt(111)/water interface as a model system, both PE-MACE and PE-EDP show high accuracy on training and test sets. Radial distribution functions from CP-MLMD agree well with CP-AIMD, and long-timescale simulations reveal potential-induced reorganization of interfacial water. Planar-integrated charge profiles and Bader analysis from PE-EDP are consistent with DFT results. These results demonstrate that the framework can simultaneously describe atomic dynamics and electron density distributions under arbitrary potentials, providing a useful tool for studying electrochemical interfaces.",
+      "authors": [
+        "Jingwen Zhou",
+        "Yawen Yu",
+        "Xuwei Liu",
+        "Chungen Liu"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-04-08T17:37:11+00:00",
+      "link": "https://arxiv.org/pdf/2604.07322v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "machine learning for atomic and electronic scales in molecular systems",
+      "llm_evidence_cn": "分子系统中原子和电子尺度的机器学习",
+      "llm_evidence": "分子系统中原子和电子尺度的机器学习",
+      "canonical_evidence": "分子系统中原子和电子尺度的机器学习",
+      "llm_tldr_en": "A unified framework for predicting atomic forces and electron density in electrochemical simulations.",
+      "llm_tldr_cn": "一个用于在电化学模拟中预测原子力和电子密度的统一框架。",
+      "llm_tldr": "一个用于在电化学模拟中预测原子力和电子密度的统一框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "label": "2026-04-11",
+  "date": "2026-04-11",
+  "generated_at": "2026-04-11T20:00:10",
+  "count": 3,
+  "papers": [
+    {
+      "paper_id": "202604/11/2604.02633v1-analytic-drift-resister-for-non-exemplar-continual-graph-learning",
+      "section": "quick",
+      "title_en": "Analytic Drift Resister for Non-Exemplar Continual Graph Learning",
+      "authors": "Lei Song, Shihan Guan, Youyong Kong",
+      "date": "2026-04-03",
+      "pdf": "https://arxiv.org/pdf/2604.02633v1",
+      "score": "6.0",
+      "evidence": "持续图学习与表示漂移",
+      "tldr": "针对非样本连续图学习（NECGL）中特征偏移和模型塑性不足的问题，本文提出了一种名为ADR的框架。该框架通过迭代反向传播打破预训练模型的冻结限制，增强模型对新任务的适应性。核心技术包括分层解析合并（HAM）以消除特征偏移，以及解析分类器重构（ACR）实现理论上的零遗忘。实验证明，ADR在多个节点分类基准上达到了领先水平。",
+      "tags": "query:molrna",
+      "abstract_en": "Non-Exemplar Continual Graph Learning (NECGL) seeks to eliminate the privacy risks intrinsic to rehearsal-based paradigms by retaining solely class-level prototype representations rather than raw graph examples for mitigating catastrophic forgetting. However, this design choice inevitably precipitates feature drift. As a nascent alternative, Analytic Continual Learning (ACL) capitalizes on the intrinsic generalization properties of frozen pre-trained models to bolster continual learning performance. Nonetheless, a key drawback resides in the pronounced attenuation of model plasticity. To surmount these challenges, we propose Analytic Drift Resister (ADR), a novel and theoretically grounded NECGL framework. ADR exploits iterative backpropagation to break free from the frozen pre-trained constraint, adapting to evolving task graph distributions and fortifying model plasticity. Since parameter updates trigger feature drift, we further propose Hierarchical Analytic Merging (HAM), performing layer-wise merging of linear transformations in Graph Neural Networks (GNNs) via ridge regression, thereby ensuring absolute resistance to feature drift. On this basis, Analytic Classifier Reconstruction (ACR) enables theoretically zero-forgetting class-incremental learning. Empirical evaluation on four node classification benchmarks demonstrates that ADR maintains strong competitiveness against existing state-of-the-art methods.",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202604/11/2604.07197v1-machine-learning-hamiltonian-enables-scalable-and-accurate-defect-calculations-the-case-of-oxygen-vacancies-in-amorphous-sio2",
+      "section": "quick",
+      "title_en": "Machine learning Hamiltonian enables scalable and accurate defect calculations: The case of oxygen vacancies in amorphous SiO$_2$",
+      "authors": "Zhenxing Dai, Zhong Yang, Mingjue Ni, Menglin Huang, Hongjun Xiang, Xin-Gao Gong, Shiyou Chen",
+      "date": "2026-04-08",
+      "pdf": "https://arxiv.org/pdf/2604.07197v1",
+      "score": "6.0",
+      "evidence": "用于分子性质和缺陷计算的机器学习哈密顿量",
+      "tldr": "针对密度泛函理论在大尺寸缺陷超胞计算中成本高昂，以及机器学习原子间势在跨尺度预测时存在系统性误差的问题，本文提出了一种基于机器学习哈密顿量（MLH）的方法。该方法具备线性扩展的计算效率，能实现高效的结构弛豫。以非晶二氧化硅中的氧空位为例，MLH模型仅需少量小超胞数据训练，即可在大超胞中实现与DFT高度一致的形成能预测（误差小于50 meV），显著提升了缺陷模拟的精度与可扩展性。",
+      "tags": "query:molrna",
+      "abstract_en": "Point defects critically influence the properties of materials and devices, yet density functional theory (DFT) remains computationally demanding for defect supercell calculations. Machine learning interatomic potentials (MLIPs) offer high efficiency but require extensive datasets. MLIPs trained only on defect configurations in small supercells exhibit systematic energy errors in larger supercells, demonstrating limited transferability. Here, we present a machine learning Hamiltonian (MLH) model-based method for calculating total energies and atomic forces in defect supercells with linear-scaling computational cost, enabling efficient structural relaxation and accurate formation energy predictions. We take oxygen vacancies in amorphous SiO$_2$ as an example and train the MLH model on defect configurations in 95-atom supercells, with the training data derived from 120 self-consistent field calculations and 12 structural relaxations. The MLH model enables efficient structural relaxations for host (defect-free) and defect systems in larger supercells, avoiding the systematic energy errors observed in MLIPs. The cancellation of energy errors between host and defect systems yields accurate formation energy predictions, with deviations from DFT below 50 meV. The proposed method holds significant potential for defect simulations in complex materials.",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "202604/11/2604.07322v1-explicit-electric-potential-embedded-machine-learning-framework-a-unified-description-from-atomic-to-electronic-scales",
+      "section": "quick",
+      "title_en": "Explicit Electric Potential-Embedded Machine Learning Framework: A Unified Description from Atomic to Electronic Scales",
+      "authors": "Jingwen Zhou, Yawen Yu, Xuwei Liu, Chungen Liu",
+      "date": "2026-04-08",
+      "pdf": "https://arxiv.org/pdf/2604.07322v1",
+      "score": "6.0",
+      "evidence": "分子系统中原子和电子尺度的机器学习",
+      "tldr": "该研究提出了一种显式嵌入电势的统一机器学习框架，旨在实现电化学界面从原子到电子尺度的精确模拟。框架包含Hy-DFT数据生成、PE-MACE机器学习力场和PE-EDP电子密度预测三大组件。在Pt(111)/水界面测试中，该方法准确预测了任意电势下的原子动力学和电荷分布，成功捕捉到电势诱导的界面水重组现象，为大规模电化学模拟提供了高效工具。",
+      "tags": "query:molrna",
+      "abstract_en": "To further develop accurate and large-scale simulations of electrochemical interfaces, we propose a unified explicit electric potential framework to simultaneously predict atomic forces and electron density distributions. The framework consists of three components: data generation, model training, and application. The data generation component, implemented in Hy-DFT, efficiently regulates the potential during constant-potential ab initio molecular dynamics (CP-AIMD), reducing the number of single-point calculations required for convergence. The model training component includes two modules: Potential-Embedded MACE (PE-MACE) and Potential-Embedded Electron Density Prediction (PE-EDP). PE-MACE implements an explicit electric potential machine learning force field (EEP-MLFF) based on the MACE architecture. We develop PE-EDP to overcome the limitation of EEP-MLFF in describing atom forces. PE-EDP, also based on equivariant graph neural networks, predicts electron density distributions under arbitrary potentials. Using the Pt(111)/water interface as a model system, both PE-MACE and PE-EDP show high accuracy on training and test sets. Radial distribution functions from CP-MLMD agree well with CP-AIMD, and long-timescale simulations reveal potential-induced reorganization of interfacial water. Planar-integrated charge profiles and Bader analysis from PE-EDP are consistent with DFT results. These results demonstrate that the framework can simultaneously describe atomic dynamics and electron density distributions under arbitrary potentials, providing a useful tool for studying electrochemical interfaces.",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}
