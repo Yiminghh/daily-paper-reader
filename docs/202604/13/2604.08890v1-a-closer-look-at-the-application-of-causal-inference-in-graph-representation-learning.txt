@@ -1,0 +1,1922 @@
+Title: A Closer Look at the Application of Causal Inference in Graph Representation Learning
+
+URL Source: https://arxiv.org/pdf/2604.08890v1
+
+Published Time: Mon, 13 Apr 2026 00:22:38 GMT
+
+Number of Pages: 35
+
+Markdown Content:
+Arxiv Paper 
+
+# A C LOSER LOOK AT THE APPLICATION OF CAUSAL INFER -
+
+# ENCE IN GRAPH REPRESENTATION LEARNING 
+
+Hang Gao ∗
+
+, Kunyu Li ,* Huang Hong, Baoquan Cui, Fengge Wu †
+
+Institute of Software Chinese Academy of Science 
+
+{fengge }@iscas.ac.cn 
+
+ABSTRACT 
+
+Modeling causal relationships in graph representation learning remains a fundamental challenge. Existing approaches often draw on theories and methods from causal infer-ence to identify causal subgraphs or mitigate confounders. However, due to the inher-ent complexity of graph-structured data, these approaches frequently aggregate diverse graph elements into single causal variables—an operation that risks violating the core as-sumptions of causal inference. In this work, we prove that such aggregation compromises causal validity. Building on this conclusion, we propose a theoretical model grounded in the smallest indivisible units of graph data to ensure that the causal validity is guaranteed. With this model, we further analyze the costs of achieving precise causal modeling in graph representation learning and identify the conditions under which the problem can be simplified. To empirically support our theory, we construct a controllable synthetic dataset that reflects real-world causal structures and conduct extensive experiments for validation. Finally, we develop a causal modeling enhancement module that can be seamlessly inte-grated into existing graph learning pipelines, and we demonstrate its effectiveness through comprehensive comparative experiments. Code and data can be found in the supplemen-tary materials. 
+
+1 INTRODUCTION 
+
+In deep learning, accurately modeling causal relationships is a key step toward building trustworthy AI (Li et al., 2023). Causal relationships represent the real cause-and-effect links between variables, possessing deterministic certainty, unlike probabilistic correlations that may involve false connections. This is espe-cially important for graph representation learning using neural networks (Gao et al., 2023), as the complex connections between nodes and the built-in structure of graph data are likely to create confusing biases and false correlations (Jukna, 2006). In common applications, like recommendation systems (Wu et al., 2022a), drug discovery (Takigawa & Mamitsuka, 2013), and social network analysis (Tan et al., 2019), these biases often appear as the challenge of separating key causal factors—like telling popularity from true preference, bias from biological function, and similarity from influence. Additionally, since graph models are often used to study systems with spreading effects, predictions based on such false correlations are not only likely to fail, but their negative outcomes can also be made much worse when spread by the network structure. In recent years, researchers have sought to address this issue (Wu et al., 2022b; Fan et al., 2022; Gao et al., 2023; 2024; Sun et al., 2025; Zhao et al., 2025). Mirroring trends in other domains of neural networks 
+
+> ∗
+
+Equal contribution. 
+
+> †
+
+Corresponding Author. 
+
+1
+
+> arXiv:2604.08890v1 [cs.LG] 10 Apr 2026
+
+Arxiv Paper (Kaddour et al., 2022), they have begun to integrate principles of causal inference into graph representa-tion learning, achieving notable success. These approaches typically function by either identifying causal subgraphs within the graph data or eliminating confounders—extraneous variables that interfere with the ac-curate modeling of causal relationships. The efficacy of these methods has been validated on both synthetic datasets designed for causal benchmarks and real-world datasets. 𝑋 5𝑋 3      
+
+> Ideal Case Actual Case
+> 𝑋 2
+> 𝑋 1
+> 𝑋 7
+> 𝐴 B
+> 𝐶
+> 𝑋 4
+> 𝑋 3𝑋 5
+> 𝑋 6
+> 𝑋 7𝑋 8
+> 𝐴 B
+> 𝐶
+> ?
+> ??
+> Variables
+> and their
+> causal
+> relationships
+> in the data
+> Constructed
+> Causal
+> Model
+> 𝑋 4𝑋 2
+> 𝑋 8
+> 𝑋 1𝑋 6
+
+Figure 1: An example of the ideal case and the actual case in causal model building. In the actual case, the causal model cannot be constructed as in the ideal case due to the complex reciprocal causal relationships be-tween the merged variables. However, the aforementioned methods often merge multiple graph components—such as nodes and edges—into a single causal variable in their analysis. For example, they typically consider the entire causal subgraph or confounder as one uni-fied variable. In an ideal scenario, if the causal relationships between the variables in the studied graph data align with the variables created by these methods, then, based on the theory of Spirtes (2009), such an analysis poses no issues and satis-fies the prerequisites for causal inference applications. How-ever, in real-world situations, the complex interrelationships within graph data lead to highly intricate interactions between the variables, which do not meet this ideal condition. We pro-vide an intuitive example in Figure 1. This practice raises an important question: what impact does such merging of vari-ables have on the granularity and accuracy of causal analy-sis in graph representation learning? Our findings show that such a simplification inevitably violates the two fundamental premises of causal inference, making it inapplicable. Please refer to Proposition 1 for details. Consequently, a new ques-tion emerges: from a causal theory perspective, is it possi-ble to achieve perfectly accurate causal relationship modeling in graph representation learning, and at what cost? 
+
+In this paper, we address the aforementioned issues from a rigorous theoretical perspective, supported by sufficient experimental evidence. Specifically, we develop a new theoretical model for studying causal mod-eling in graph representation learning. Such a model is built upon the smallest divisible variables in graph data, ensuring strict adherence to the fundamental theoretical premises of causal inference. Based on this model, we conduct a series of analyses and proofs. Subsequently, we carry out experimental analyses, con-structing an artificial synthetic dataset that closely resembles real-world scenarios and performing multiple experiments and analyses. Building upon the aforementioned research outcomes, we also develop a new plug-and-play causal modeling enhancement module. Our contributions can be summarized as follows: • We proposed a new theoretical model that strictly adheres to the fundamental premises of causal inference for studying causal modeling in graph representation learning. • Based on the proposed model, we derive and prove a series of theories concerning causal relation-ship modeling in graph representation learning, including its costs and simplifications. • We constructed a synthetic graph dataset with controllable causal relationships, more closely resem-bling real-world scenarios, for causal relationship modeling research. Additionally, we conducted a series of experiments for cross-validation with the proposed theory. • Based on the aforementioned research and conclusions, we introduced a novel plug-and-play mod-ule for optimizing causal relationship modeling in graph representation learning. 2Arxiv Paper 
+
+2 RELATED WORKS 
+
+2.1 CAUSAL LEARNING 
+
+Causal learning focuses on identifying and modeling causal relationships rather than mere correlations, utilizing methods like causal graph models (Kocaoglu et al., 2019), causal inference (Pearl & Mackenzie, 2018), and causal discovery (Zheng et al., 2018). Recent advances integrate causal learning with neural networks to enhance interpretability and generalization by incorporating causal structures (Chattopadhyay et al., 2019; Zhang et al., 2020), removing spurious correlations (Zhang et al., 2021), and analyzing latent variable relationships (Yao et al., 2024). Causal deep generative models disentangle factors like object shape and texture for counterfactual generation (Sauer & Geiger, 2021), while causal reinforcement learning improves robustness through stable representations (Zhang et al., 2024). These approaches advance causal understanding in neural networks across prediction, generation, and decision-making tasks (He et al., 2023; Bagi et al., 2023; Cheng et al., 2024; Zhu et al., 2023; Yu et al., 2024; Zeng et al., 2025). 2.2 CAUSAL RELATIONSHIP MODELING WITH GRAPH NEURAL NETWORKS 
+
+Causality plays a crucial role in addressing the complexity of graph data (Lippe et al., 2023; Sui et al., 2022), especially in fields such as finance (Wang et al., 2022), medicine (Shang et al., 2019), and biology (Zitnik et al., 2018). Most current research focuses on how to enable Graph Neural Networks (GNNs) to model causal relationships in graph representation learning. These studies typically employ two main approaches: (1) modeling causal subgraphs, where Fan et al. (2024) proposed a causal representation framework for stable GNNs, Wu et al. (2022b) developed a discovering invariant rationale (DIR) strategy, and Chen et al. (2022) introduced Causal-Inspired Invariant Graph Learning (CIGA) for OOD generalization; and (2) elim-inating confounding factors, where Fan et al. (2022) proposed a decoupled GNN framework, Gao et al. (2024) designed a lightweight optimization module, and Wu et al. (2024) employed causal inference-inspired learning to overcome confounding biases. Both of these approaches adopt variable merging in their causal analysis, and our work aims to investigate the impact of this merging from both theoretical and experimental perspectives. 
+
+3 THEORETICAL ANALYSIS 
+
+3.1 BASIC MODEL 
+
+As discussed above, research on graph representation learning from a causal perspective often merges nu-merous node and edge-level variables, making it difficult to ensure causal validity. Additionally, categorizing complex, interdependent variables within a graph dataset G = {Gi}|G|  
+
+> i=1
+
+as “confounders” or “causal sub-graphs” can impact the effectiveness of causal analysis methods, violating two key assumptions in causal inference: the Causal Markov Assumption and the Causal Faithfulness Assumption (Pearl, 2009). Formally, we propose the following proposition: 
+
+Proposition 1 When the variables within graph dataset G are merged to form a new and smaller variable set S, in certain cases, it becomes impossible to construct a causal model based on S while still satisfying the two key prerequisites for applying causal inference methods—namely, the Causal Markov Assumption and the Causal Faithfulness Assumption. 
+
+The proof can be found in Appendix C.1. This influence warrants more rigorous and systematic theoretical investigation. To study the problem, we formalize it using a Structural Causal Model (SCM) (Pearl, 2009), which serves as a framework for representing causal relationships among variables. An SCM consists of a 3Arxiv Paper 𝑌 1
+
+𝑈 𝑗 
+
+... 𝑈 1
+
+𝑋 𝑗 
+
+...  𝑋 𝑖 +1𝑋 2
+
+𝑌 |𝑌 |
+
+𝑋 1 𝑋 𝑖 
+
+... 
+
+...  𝑋 𝑗 +1 ...  𝑋 |𝑋 |
+
+... 
+
+𝑈 𝑗 +1 𝑈 |𝑈 |
+
+... 
+
+...  ...  ... 
+
+... 
+
+... 
+
+...  ... 
+
+...  ... 
+
+𝑋 𝑖 +2 𝑋 𝑗 +2
+
+𝑈 𝑗 +2
+
+𝑌 2     
+
+> ①②③
+> ①Set
+> ②Set
+> ③Set
+> Directed Causal Relation
+> Directed Causal Relation of
+> Uncertain Existence
+> Causal Relation with
+> Unsure Direction
+> Causal Relation with Unsure
+> Direction and Uncertain Existence
+
+... 
+
+𝑈 2 𝑈 𝑖  𝑈 𝑖 +1 𝑈 𝑖 +2
+
+Figure 2: Graphical illustration of the proposed SCM of the graph representation learning scenario. set of variables and a corresponding set of relations that describe how each variable is causally influenced by others. In Figure 2, we illustrate the SCM as a Directed Acyclic Graph (DAG), in line with standard practices in causal inference. In this representation, vertices correspond to random variables, while edges denote the causal relationships between them. The SCM we construct treats individual elements in the graph—such as nodes and edges—as separate variables, enabling an analysis that strictly adheres to the principles of causal theory. 
+
+In Figure 2, let U = {Ui}|U | 
+
+> i=1
+
+denote the set of exogenous variables, X = {Xi}|X| 
+
+> i=1
+
+represent all the smallest divisible variables included in the graph, and Y = {Yi}|Y | 
+
+> i=1
+
+indicate the set of label variables. The edges in the graph illustrate the causal relationships between the variables. For each variable Xi, there is a direct causal relationship with its corresponding exogenous variable Ui, and Ui may also exert causal influences on other variables within X. These uncertain causal relationships are represented by dashed arrows. Furthermore, since we do not observe the values of the exogenous variables, our focus is solely on their causal influence on X. Consequently, all edges between U and X are directed from U to X. Due to the large number of variables and edges in the graph, it is impractical to display each element individually. To address this, ellipses are employed to represent omitted variables and edges. For the set X, we divide it into three subsets. As illustrated in Figure 2, subset one consists of variables that do not have causal paths to the label set Y and may act as confounders. We denote this subset as 
+
+Xcfd . Subset two includes variables that do have paths to the labels Y = {Yi}|Y | 
+
+> i=1
+
+but are not part of S 
+
+> i∈{ 1,2,...,k }
+
+P a (Yi), where P a (·) represents the parent node set. Specifically, these variables are not parent nodes of any label Yi, but they are causally associated with Y . We refer to this subset as Xasoc . Subset three is S 
+
+> i∈{ 1,2,...,k }
+
+P a (Yi), and we denote this subset as Xcaus . As illustrated in the figure, the causal relationships among variables are highly complex and uncertain. Within Xcfd , Xasoc , and Xcaus , variables may exhibit mutual causal associations. Moreover, variables in Xasoc may have causal connections with those in Xcfd , while variables in Xasoc and Xcaus may hold causal relationships in arbitrary directions. We demonstrate the validity of the SCM: 
+
+Theorem 2 The proposed SCM in Figure 2 can characterize the general causal relationships between vari-ous variables in the graph representation learning scenario. Furthermore, such an SCM satisfies the Causal Markov Assumption and the Causal Faithfulness Assumption. 
+
+The proof can be found in Appendix C.1. 4Arxiv Paper 3.2 FURTHER DISCUSSION 
+
+Based on the proposed SCM that strictly satisfies the premises of causal inference, we wonder what it would cost to achieve perfectly accurate causal modeling using a GNN model? Intuitively, this would require analyzing every individual data element within the graph and conducting interventions. To this end, we conducted a theoretical analysis and, for both atomic interventions (intervening on a single variable at a time) and non-atomic interventions (intervening on multiple variables simultaneously), we derived the corresponding lower bounds on the number of interventions required: 
+
+Theorem 3 Based on the SCM in Theorem 2, when utilizing GNN to model causal relation-ships, for atomic interventions, the lower bound of the number of interventions required is 
+
+min Mmicro 
+
+ 
+
+> 1
+> λ|
+
+ S|G|  
+
+> i=1 Gi
+
+ 
+
+> |+|Y|− r(Mmicro )2
+
+, where Mmicro denotes any DAG that is equivalent to the graphical representation of the ground truth causal model, and the vertex set of Mmicro =
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+∪ Y ,
+
+λ denotes the average times that each variable occurs among each of the samples within dataset G, r(·)
+
+calculates the total number of maximal cliques. For non-atomic interventions, the number of interventions required exceeds O
+
+min k
+
+ 
+
+> 1
+> λ|
+
+ S|G|  
+
+> i=1 Gi
+
+  
+
+> |+|Y|
+> k
+
+log (log (k)) 
+
+.
+
+The proof can be found in Appendix C.3. Theorem 3 provides a lower bound on the number of interventions required. Based on this theorem, for graph datasets, achieving accurate causal modeling would necessitate an extremely large number of interventions—at least on the order of O
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+. Take the Citeseer dataset (Caragea et al., 2014) as an example; the required number of interventions would amount to several thousand. Given that interventions themselves are highly costly—and sometimes even infeasible—this raises a critical question: is it possible to achieve accurate causal modeling without performing such an excessive number of interventions? 
+
+Theorem 4 Assume there exists a GNN model that satisfies the infinite approximation theorem (Cybenko, 1989), and that interventions are applied to ensure the GNN models the causal relationships between the graph variables and the labels. In this case, when applying causal inference in graph representation learn-ing, it is possible to merge some variables from the original set X to form a new set S, where |S| < |X|,while ensuring that the causal relationships between the graph data and the labels are accurately modeled. However, the following conditions must be met: (1) Variable s in S that satisfies s ∈ P a (Y ) cannot simultaneously contain both the parent and child nodes of another variable v ∈ X.(2) Variables within Xcaus cannot be merged with those from other sets. 
+
+The proof can be found in Appendix C.4. Theorem 4, in fact, provides a simplified solution from the perspective of variable merging. However, this solution is subject to conditions and still requires partial knowledge of the underlying causal relationships. Nevertheless, the theorem offers a principled approach to precise causal modeling and serves as a theoretical foundation for it. 5Arxiv Paper Table 1: Comparison between our proposed RWG dataset and existing benchmark datasets.                                                        
+
+> Dataset Adjustable Known Adjustable Adjustable Adjustable Adjustable Real-world Elements ( ↑)Causality Motif Node Feature Edge Connection Assemble Mode Grounded Data Citeseer (Giles et al., 1998) Fixed ×××××✓
+> PROTEINS (Morris et al., 2020) Fixed ×××××✓
+> Synthetic Graph (Ying et al., 2019) 5✓✓××××
+> Spurious-Motif (Wu et al., 2022b) 6✓✓××××
+> CRCG (Gao et al., 2024) 54 ✓✓✓✓××
+> RWG 90 ✓✓✓✓✓✓
+
+3.3 EXPERIMENTAL ANALYSIS 
+
+3.3.1 RWG D ATASET 
+
+To further investigate the research problem while maintaining close ties to real-world scenarios, we introduce the Real-World knowledge-based synthesized Graph (RWG) dataset for empirical analysis. This dataset is grounded in real-world knowledge and rules, leveraging chemical and citation networks to construct syn-thetic graph samples for testing graph classification and node classification tasks. Specifically, the RWG dataset generates graph samples that closely resemble real-world chemical molecules by integrating various chemical motifs, connecting modules, and controllable parameters, ensuring clear and modelable internal causal relationships. It also simulates node features from real-world citation networks, constructing graph samples that approximate real-world citation structures, with known internal causal relationships. Table 1 compares the RWG dataset with other related datasets. For additional details, please refer to Appendix D. Next, we conduct experiments using the RWG dataset we have constructed to cross-validate with the previ-ous theoretical analysis. 3.3.2 CAUSAL MODELING CAPABILITY CaNet CRCG DIR GCN ChebNet GIN 
+
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(a) Without Confounder CaNet CRCG DIR GCN ChebNet GIN  
+
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(b) With Confounder CaNet CRCG DIR GCN ChebNet GIN  
+
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(c) With Confounder and Intervention 
+
+Figure 3: Test accuracy comparison across three different scenarios. We first analyze the causal modeling ability of multiple GNN baselines when dealing with different datasets and the impact of intervention operations on this ability. Three datasets are used: SPMotif (Wu et al., 2022b), RWG-Molecular, and RWG-Citation. Among them, RWG-Molecular and RWG-Citation are graph classification and node classification datasets based on RWG, while SPMotif is a widely used artificially synthesized graph dataset. The causal relationships in these datasets can be formally modeled and precisely controlled. Six GNN baselines are used for experimental analysis, including three causal relationship modeling-enhanced GNN baselines: CaNet (Wu et al., 2024), CRCG (Gao et al., 2024), DIR (Wu et al., 2022b), and three general GNN baselines: GCN (Kipf & Welling, 2017), ChebNet (Defferrard et al., 2016), and GIN (Xu et al., 2019). We first make the causal relationships in the dataset explicit, ensuring that there is no interference from confounders, so that the probabilistic associations in the dataset are equivalent to the causal associations. In other words, all the elements we use to construct the dataset are associated with the 6Arxiv Paper labels. At the same time, by reducing the problem’s difficulty and conducting multiple rounds of training, we make the GNN modeling performance approach 100% test accuracy. Then, we introduce confounders into the dataset and apply interventions to observe the effects. When applying interventions, we follow the approach used by other causal graph representation learning methods (Wu et al., 2022b; Gao et al., 2024), treating the confounder as a whole for the intervention. However, since we have complete knowledge of the internal causal relationships within the data, we can ensure that the division of causal variables complies with Theorem 4. Specifically, we fix the confounder as specific, invariant graph data to eliminate interference and perform the intervention. Please refer to Appendix F for baselines and dataset details. Figure 3 shows that introducing confounders degrades model performance, while interventions significantly improve accuracy, almost fully restore the no-confounder level. This result supports Theorem 4, demon-strating that intervention-based causal inference remains effective under reasonable variable merging. At the same time, it can be observed that there is still some inevitable performance degradation in real-world sce-narios. This is related to the inherent limitations of GNN models and the inability of intervention methods applied to graph data to completely eliminate interference. 3.3.3 INTERVENTION ANALYSIS 
+
+In this section, we analyze intervention effects under varying conditions using the same datasets and base-lines as in Section 3.3.2. We simulate errors in variable merging by reassigning parts of Xcfd to Xcaus ,thereby violating Theorem 4. Given that our dataset is artificially synthesized with controllable causal relationships, this operation merely entails treating the confounders as non-intervened components when applying causal interventions. Results are shown in Figure 4. As the violation increases, model per-formance degrades, indirectly validating Theorem 4. Moreover, SPMotif shows smaller fluctuations than RWG-Molecular and RWG-Citation, due to its simpler structure. This highlights the importance of RWG datasets, which better approximate real-world complexity and yield more reliable experimental outcomes. 10 20 30 40 50 60 70 80 90 
+
+> Extent of Violation (%)
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(a) SPMotif 10 20 30 40 50 60 70 80 90  
+
+> Extent of Violation (%)
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(b) RWG-Molecular 10 20 30 40 50 60 70 80 90  
+
+> Extent of Violation (%)
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(c) RWG-Citation 
+
+Figure 4: Performance of the methods when Theorem 4 is violated to varying degrees. The horizontal axis represents the percentage of data in Xcfd that is erroneously merged into Xcaus .0 30 60 90 
+
+> Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(a) RWG-Molecular with single confounder. 0 30 60 90 
+
+> Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(b) RWG-Molecular with multiple confounders. 0 30 60 90 
+
+> Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(c) RWG-Citation with con-founders consisting of nodes. 0 30 60 90 
+
+> Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(d) RWG-Citation with con-founders consisting of nodes and edges. 
+
+Figure 5: Performance comparison across different scenarios. We also investigated how different graph elements affect the causal modeling capability of GNNs. Using RWG-Molecular, we compared a single large confounder subgraph with multiple smaller ones; using RWG-7Arxiv Paper CaNet CRCG DIR GCN ChebNet GIN 
+
+> Methods
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> RWG-Molecular Large
+> RWG-Molecular Small
+> RWG-Citation Node
+> RWG-Citation Complex
+
+(a) Test upon causal data only. CaNet CRCG DIR GCN ChebNet GIN  
+
+> Methods
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> RWG-Molecular Large
+> RWG-Molecular Small
+> RWG-Citation Node
+> RWG-Citation Complex
+
+(b) Test upon extra causally irrele-vant data. 
+
+Figure 6: Performance of models trained solely with causal data. Citation, we added confounders consisting only of nodes versus those involving both nodes and edges. Results in Figure 5 show notable performance gaps between RWG-Molecular and RWG-Citation, but only minor differences within the same dataset type. This suggests that merged elements cannot be completely treated as general causal variables, as their effects remain dataset- and scenario-dependent. Furthermore, we evaluate the generalization of GNNs trained solely on causal relationships using four datasets: RWG-Molecular Large (fewer samples, larger motif), RWG-Molecular Small (more samples, smaller motif), RWG-Citation Node (node-only relations), and RWG-Citation Complex (nodes, edges, and interactions). Results in Figure 6(a) show good performance on purely causal test data, but adding 70% confounding data (Figure 6(b)) causes a sharp decline. This experiment strongly demonstrates that, even when trained solely on causally associated data, models in complex graph representation learning scenar-ios remain effective only within the original data distribution. Their performance deteriorates substantially when exposed to extraneous data. Further experimental results can be found in Appendix E.2 and E.3, the setting and dataset details can be found in Appendix F. 
+
+4 METHOD ℎ1
+
+> (0)
+> ℎ2
+> (0)
+> ℎ|𝐺 |
+> (0)
+> Layer 1
+> ℎ1
+> (1)
+> ℎ2
+> (1)
+> ℎ|𝐺 |
+> (1)
+
+ℒ𝑓 (𝐺 )
+
+> ෠ℎ1
+> (0)
+> ෠ℎ2
+> (0)
+> ෠ℎ|𝐺 |
+> (0)
+> ...
+> ...
+> REC
+> REC
+> REC
+> REC
+> REC
+> REC
+> ...
+> ℎ𝑛
+> (𝑛 )
+> ℎ2
+> (𝑛 )
+> ℎ|𝐺 |
+> (𝑛 )
+> ...
+
+... 
+
+... 
+
+...  𝑌 
+
+> Back Propagation
+> Under Same
+> Paradigm
+
+Figure 7: The illustration of how REC works. Based on the above discussion, within the current graph representation learning framework, achieving strictly accurate causal relationship modeling is nearly impossible. Reviewing our entire analysis, we iden-tify the inherent complexity of graph data as the fundamental obstacle to causal modeling in graph repre-sentation learning. Therefore, we consider whether reducing this complexity could enable GNNs to better approximate the true underlying causal model. To begin, we propose the following proposition: 
+
+Proposition 5 When the GNN f (·) precisely models the causal mechanism, the cross-entropy loss L between predictions f (G) and labels Y is minimized. Moreover, L equals the conditional KL divergence between the predictive distribution of f (·) and the background causal model, given each input graph G.
+
+The proof can be found in Appendix C.5. Given that L represents the conditional KL divergence between the trained GNN and the causal model, we argue that reducing data complexity, while keeping L close to optimal, will make it easier to approximate the background causal model and reduce the likelihood of 8Arxiv Paper interference. Moreover, this complexity-reduction approach can be implemented as a plug-and-play module, improving both GNN backbones and causal enhanced graph learning methods. In light of this, we propose a Redundancy Elimination method for Causal graph representation Learning (REC) to eliminate as many redundant variables as possible in Xcfd and Xasoc , thereby simplifying the causal modeling process. The REC extracts the feature h(0)  
+
+> v
+
+of each node v in the graph data G, along with the feature h(l) 
+
+> v
+
+after processing through the l-th layer, and performs variable removing as follows: 
+
+˜h(0)  
+
+> v
+
+= REC (h(0)  
+
+> v
+
+) = sigmoid 
+
+
+
+γ + δ(0)  h(0) 
+
+> v
+
+
+
+· h(0)  
+
+> v
+
+, (1) similarly: 
+
+˜h(l) 
+
+> v
+
+= REC (h(l) 
+
+> v
+
+) = sigmoid 
+
+
+
+γ + δ(l) h(l)
+
+> v
+
+
+
+· h(l) 
+
+> v
+
+. (2) Here, δ(l)(·) is a multilayer perceptron (MLP) with an output dimension of 1, and all δ(l) within the same layer share the same parameters. sigmoid (·) denotes the sigmoid function, which serves as a masking oper-ator for node features. Depending on the value of 
+
+
+
+(γ + δ(l) h(l)
+
+> v
+
+
+
+, the sigmoid function suppresses certain feature values toward zero, thereby excluding them from the forward propagation process and effectively removing the corresponding variables. γ is a value that gradually decreases during the training process. It is designed to eliminate fewer variables at the beginning, allowing the GNN to first model relationships and then eliminate more variables in later stages. This enables the GNN to remove more redundant variables based on accumulated knowledge. Formally, we have: 
+
+γ = max  γinit · (1 − ϵ)t, γ min 
+
+ , (3) where t denotes the number of current round. γinit and γmin are hyperparameters that set the initial and minimum values, respectively. ϵ, also a hyperparameter, is a small value greater than zero that controls the rate of decrease. Then, the GNN layer that applies REC can be formulated as: 
+
+h(l+1)  
+
+> v
+
+= Aggregate 
+
+
+
+W(l)REC (h(l) 
+
+> v
+
+),
+
+n
+
+W(l)REC (h(l) 
+
+> u
+
+), ∀u ∈ N (v)
+
+o 
+
+, (4) where W(l) denotes the weight matrix for the l-th layer, N (v) denotes the neighboring nodes of node v,Aggregate (·) denotes the aggregation process of GNN. REC can be applied to any GNN encoder in causal graph representation learning methods or GNN backbones to enhance the algorithm’s causal modeling ca-pabilities. Parameters within REC are updated along with those of the GNN. Figure 7 offers an illustration of applying REC. To validate its effectiveness, we conducted extensive experiments on multiple datasets. Besides our own proposed datasets, we utilized the artificially generated dataset SPMotif, and real-world datasets CiteSeer (Caragea et al., 2014) and ENZYMES (Rossi & Ahmed, 2015). Furthermore, we merged RWG’s link construction paradigm with the SPMotif dataset to construct SPMotif-M, a graph dataset con-taining more diverse types of graph structural linkages. Simultaneously, we integrated RWG motifs approx-imating real-world molecular structures with SPMotif to create SPMotif-C. Experimental results, as shown in Table 2, demonstrate that our method achieves improvements across all baselines, with significant enhancements in certain scenarios. This not only validates the effectiveness of REC but also provides supporting evidence for Proposition 5. Detailed settings can be found in Appendix F. 
+
+5 CONCLUSION 
+
+This paper approaches causal modeling in graph representation learning from a theoretical perspective, developing a theoretical model that strictly adheres to the fundamental assumptions of causal inference. Building on this foundation, we conduct in-depth analyses combined with experimental cross-validation and further propose an improved enhancement module. 9Arxiv Paper                                                                                                                                      
+
+> Method RWG-Molecular Spmotif-M Spmotif-C RWG–Citation CRCG CiteSeer ENZYMES
+> CaNet 52.17 ± 2.02 32.40 ± 1.30 45.00 ± 1.32 59.33 ± 1.04 32.77 ± 1.27 83.87 ± 0.67 17.00 ± 6.78 CaNet+REC 56.50 ± 2.65 34.17 ± 1.35 46.83 ± 3.06 61.83 ± 0.76 36.43 ± 1.17 84.90 ± 0.12 18.33 ± 6.94 Improvement +4.33 +1.77 +1.83 +2.50 +3.66 +1.03 +1.33 CRCG 45.50 ± 3.53 36.80 ± 1.89 44.50 ± 2.91 45.50 ± 6.29 29.70 ± 4.62 42.78 ± 3.76 34.67 ± 7.10 CRCG+REC 45.50 ± 4.39 38.17 ± 3.83 50.50 ± 3.05 47.50 ± 6.26 33.10 ± 5.29 44.07 ± 3.30 40.33 ± 3.24 Improvement +0.00 +1.37 +6.00 +2.00 +3.40 +1.29 +5.66 DIR 49.00 ± 5.26 38.67 ± 4.57 63.00 ± 6.55 52.50 ± 5.67 31.80 ± 4.76 66.53 ± 1.42 42.67 ± 6.01 DIR+REC 52.00 ± 5.68 39.97 ± 3.12 67.00 ± 4.79 57.50 ± 6.24 36.10 ± 4.14 67.70 ± 1.74 48.00 ± 2.21 Improvement +3.00 +1.30 +4.00 +5.00 +4.30 +1.17 +5.33 GCN 40.00 ± 5.56 38.60 ± 1.71 19.50 ± 2.36 43.50 ± 6.96 17.22 ± 1.26 71.08 ± 0.48 24.67 ± 1.94 GCN+REC 42.35 ± 4.10 40.21 ± 0.96 26.36 ± 2.76 52.29 ± 4.41 26.30 ± 1.67 71.93 ± 0.33 28.33 ± 2.83 Improvement +2.35 +1.61 +6.86 +8.79 +9.08 +0.85 +3.66 ChebNet 41.00 ± 4.45 38.63 ± 1.61 33.50 ± 4.90 55.50 ± 7.23 33.75 ± 1.89 55.39 ± 2.44 26.33 ± 3.09 ChebNet+REC 50.18 ± 6.77 40.40 ± 0.98 37.95 ± 5.21 57.40 ± 6.19 36.02 ± 1.91 57.27 ± 1.72 30.33 ± 1.63 Improvement +9.18 +1.77 +4.45 +1.90 +2.27 +1.88 +4.00 GIN 50.50 ± 8.44 14.27 ± 4.43 36.50 ± 3.43 46.50 ± 4.56 28.02 ± 0.82 52.80 ± 3.53 27.00 ± 4.14 GIN+REC 55.90 ± 1.74 38.60 ± 4.60 45.00 ± 3.98 53.10 ± 1.38 33.64 ± 2.39 54.57 ± 2.74 33.67 ± 1.87 Improvement +5.40 +24.33 +8.50 +6.60 +5.62 +1.77 +6.67
+
+Table 2: Performance comparison of different methods with and without REC enhancement on various datasets. The improvement row shows the absolute performance gain achieved by REC. 
+
+REPRODUCIBILITY STATEMENT 
+
+All of our theoretical results have been rigorously proven, and the corresponding proofs are provided in Appendix C. Additionally, our experiments and methods include data and code for reproducibility. The code for generating datasets is available in the /gen datasets directory of the supplementary materials. The generated datasets are provided in the /data directory. The code for loading the datasets and training the models is available in the /models directory. For more details and environment setup, please refer to the README.md in the supplementary materials. 
+
+REFERENCES 
+
+Shayan Shirahmad Gale Bagi, Zahra Gharaee, Oliver Schulte, and Mark Crowley. Generative causal representation learning for out-of-distribution motion forecasting. In Andreas Krause, Emma Brun-skill, Kyunghyun Cho, Barbara Engelhardt, Sivan Sabato, and Jonathan Scarlett (eds.), International Conference on Machine Learning, ICML 2023, 23-29 July 2023, Honolulu, Hawaii, USA , volume 202 of Proceedings of Machine Learning Research , pp. 31596–31612. PMLR, 2023. URL https: //proceedings.mlr.press/v202/shirahmad-gale-bagi23a.html .Cornelia Caragea, Jian Wu, Alina Ciobanu, Kyle Williams, Juan Fern´ andez-Ram´ ırez, Hung-Hsuan Chen, Zhaohui Wu, and Lee Giles. Citeseer x: A scholarly big dataset. In European Conference on Information Retrieval , pp. 311–322. Springer, 2014. Aditya Chattopadhyay, Piyushi Manupriya, Anirban Sarkar, and Vineeth N. Balasubramanian. Neural net-work attributions: A causal perspective. In Kamalika Chaudhuri and Ruslan Salakhutdinov (eds.), Pro-ceedings of the 36th International Conference on Machine Learning, ICML 2019, 9-15 June 2019, Long Beach, California, USA , volume 97 of Proceedings of Machine Learning Research , pp. 981–990. PMLR, 2019. URL http://proceedings.mlr.press/v97/chattopadhyay19a.html .Yongqiang Chen, Yonggang Zhang, Yatao Bian, Han Yang, Kaili Ma, Binghui Xie, Tongliang Liu, Bo Han, and James Cheng. Learning causally invariant representations for out-of-distribution gener-alization on graphs. In Sanmi Koyejo, S. Mohamed, A. Agarwal, Danielle Belgrave, K. Cho, and 10 Arxiv Paper A. Oh (eds.), Advances in Neural Information Processing Systems 35: Annual Conference on Neu-ral Information Processing Systems 2022, NeurIPS 2022, New Orleans, LA, USA, November 28 - De-cember 9, 2022 , 2022. URL http://papers.nips.cc/paper_files/paper/2022/hash/ 8b21a7ea42cbcd1c29a7a88c444cce45-Abstract-Conference.html .Dapeng Cheng, Jiale Gai, Bo Yang, Yanyan Mao, Xiaolian Gao, Baosheng Zhang, Wanting Jing, Jia Deng, Feng Zhao, and Ning Mao. Gu-net: Causal relationship-based generative medical image segmentation model. Heliyon , 10(18), 2024. Davin Choo, Kirankumar Shiragur, and Arnab Bhattacharyya. Verification and search algorithms for causal dags. Advances in Neural Information Processing Systems , 35:12787–12799, 2022. George Cybenko. Approximation by superpositions of a sigmoidal function. Mathematics of control, signals and systems , 2(4):303–314, 1989. Micha¨ el Defferrard, Xavier Bresson, and Pierre Vandergheynst. Convolutional neural networks on graphs with fast localized spectral filtering. In Daniel D. Lee, Masashi Sugiyama, Ulrike von Luxburg, Is-abelle Guyon, and Roman Garnett (eds.), Advances in Neural Information Processing Systems 29: An-nual Conference on Neural Information Processing Systems 2016, December 5-10, 2016, Barcelona, Spain , pp. 3837–3845, 2016. URL https://proceedings.neurips.cc/paper/2016/hash/ 04df4d434d481c5bb723be1b6df1ee65-Abstract.html .Shaohua Fan, Xiao Wang, Yanhu Mo, Chuan Shi, and Jian Tang. Debiasing graph neural networks via learn-ing disentangled causal substructure. In Sanmi Koyejo, S. Mohamed, A. Agarwal, Danielle Belgrave, K. Cho, and A. Oh (eds.), Advances in Neural Information Processing Systems 35: Annual Conference on Neural Information Processing Systems 2022, NeurIPS 2022, New Orleans, LA, USA, November 28 - De-cember 9, 2022 , 2022. URL http://papers.nips.cc/paper_files/paper/2022/hash/ 9e47a0bc530cc88b09b7670d2c130a29-Abstract-Conference.html .Shaohua Fan, Xiao Wang, Chuan Shi, Peng Cui, and Bai Wang. Generalizing graph neural networks on out-of-distribution graphs. IEEE Transactions on Pattern Analysis and Machine Intelligence , 46(1):322–337, 2024. doi: 10.1109/TPAMI.2023.3321097. Hang Gao, Jiangmeng Li, Wenwen Qiang, Lingyu Si, Bing Xu, Changwen Zheng, and Fuchun Sun. Robust causal graph representation learning against confounding effects. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 37, pp. 7624–7632, 2023. Hang Gao, Chengyu Yao, Jiangmeng Li, Lingyu Si, Yifan Jin, Fengge Wu, Changwen Zheng, and Huap-ing Liu. Rethinking causal relationships learning in graph neural networks. In Michael J. Wooldridge, Jennifer G. Dy, and Sriraam Natarajan (eds.), Thirty-Eighth AAAI Conference on Artificial Intelligence, AAAI 2024, Thirty-Sixth Conference on Innovative Applications of Artificial Intelligence, IAAI 2024, Four-teenth Symposium on Educational Advances in Artificial Intelligence, EAAI 2014, February 20-27, 2024, Vancouver, Canada , pp. 12145–12154. AAAI Press, 2024. doi: 10.1609/AAAI.V38I11.29103. URL 
+
+https://doi.org/10.1609/aaai.v38i11.29103 .C Lee Giles, Kurt D Bollacker, and Steve Lawrence. Citeseer: An automatic citation indexing system. In 
+
+Proceedings of the third ACM conference on Digital libraries , pp. 89–98, 1998. Yimeng He, Le Yao, Zhiqiang Ge, and Zhihuan Song. Causal generative model for root-cause diagnosis and fault propagation analysis in industrial processes. IEEE Transactions on Instrumentation and Measure-ment , 72:1–11, 2023. doi: 10.1109/TIM.2023.3273686. 11 Arxiv Paper Ziming Hong, Zhenyi Wang, Li Shen, Yu Yao, Zhuo Huang, Shiming Chen, Chuanwu Yang, Mingming Gong, and Tongliang Liu. Improving non-transferable representation learning by harnessing content and style. In The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net, 2024. URL https://openreview.net/forum?id= FYKVPOHCpE .Kurt Hornik, Maxwell B. Stinchcombe, and Halbert White. Multilayer feedforward networks are univer-sal approximators. Neural Networks , 2(5):359–366, 1989. doi: 10.1016/0893-6080(89)90020-8. URL 
+
+https://doi.org/10.1016/0893-6080(89)90020-8 .Stasys Jukna. On graph complexity. Combinatorics, Probability and Computing , 15(6):855–876, 2006. Jean Kaddour, Aengus Lynch, Qi Liu, Matt J Kusner, and Ricardo Silva. Causal machine learning: A survey and open problems. arXiv preprint arXiv:2206.15475 , 2022. Thomas N. Kipf and Max Welling. Semi-supervised classification with graph convolutional networks. In 5th International Conference on Learning Representations, ICLR 2017, Toulon, France, April 24-26, 2017, Conference Track Proceedings . OpenReview.net, 2017. URL https://openreview.net/forum? id=SJU4ayYgl .Murat Kocaoglu, Amin Jaber, Karthikeyan Shanmugam, and Elias Bareinboim. Characterization and learning of causal graphs with latent variables from soft interventions. In Hanna M. Wallach, Hugo Larochelle, Alina Beygelzimer, Florence d’Alch´ e-Buc, Emily B. Fox, and Roman Garnett (eds.), Advances in Neural Information Processing Systems 32: Annual Conference on Neural In-formation Processing Systems 2019, NeurIPS 2019, December 8-14, 2019, Vancouver, BC, Canada ,pp. 14346–14356, 2019. URL https://proceedings.neurips.cc/paper/2019/hash/ c3d96fbd5b1b45096ff04c04038fff5d-Abstract.html .Bo Li, Peng Qi, Bo Liu, Shuai Di, Jingen Liu, Jiquan Pei, Jinfeng Yi, and Bowen Zhou. Trustworthy ai: From principles to practices. ACM Computing Surveys , 55(9):1–46, 2023. Phillip Lippe, Sara Magliacane, Sindy L¨ owe, Yuki M. Asano, Taco Cohen, and Efstratios Gavves. Causal representation learning for instantaneous and temporal effects in interactive systems. In The Eleventh International Conference on Learning Representations, ICLR 2023, Kigali, Rwanda, May 1-5, 2023 .OpenReview.net, 2023. URL https://openreview.net/forum?id=itZ6ggvMnzS .Christopher Morris, Nils M. Kriege, Franka Bause, Kristian Kersting, Petra Mutzel, and Marion Neumann. Tudataset: A collection of benchmark datasets for learning with graphs. CoRR , abs/2007.08663, 2020. URL https://arxiv.org/abs/2007.08663 .Judea Pearl. Causality: Models, Reasoning, and Inference . Cambridge University Press, 2000. Judea Pearl. Causality . Cambridge university press, 2009. Judea Pearl and Dana Mackenzie. The book of why: The new science of cause and effect. Basic Books ,2018. Ryan A. Rossi and Nesreen K. Ahmed. The network data repository with interactive graph analytics and visualization. In Blai Bonet and Sven Koenig (eds.), Proceedings of the Twenty-Ninth AAAI Conference on Artificial Intelligence, January 25-30, 2015, Austin, Texas, USA , pp. 4292–4293. AAAI Press, 2015. doi: 10.1609/AAAI.V29I1.9277. URL https://doi.org/10.1609/aaai.v29i1.9277 .Axel Sauer and Andreas Geiger. Counterfactual generative networks. In 9th International Conference on Learning Representations, ICLR 2021, Virtual Event, Austria, May 3-7, 2021 . OpenReview.net, 2021. URL https://openreview.net/forum?id=BXewfAYMmJw .12 Arxiv Paper Junyuan Shang, Tengfei Ma, Cao Xiao, and Jimeng Sun. Pre-training of graph augmented transformers for medication recommendation. In Sarit Kraus (ed.), Proceedings of the Twenty-Eighth International Joint Conference on Artificial Intelligence, IJCAI 2019, Macao, China, August 10-16, 2019 , pp. 5953–5959. ijcai.org, 2019. doi: 10.24963/IJCAI.2019/825. URL https://doi.org/10.24963/ijcai. 2019/825 .Karthikeyan Shanmugam, Murat Kocaoglu, Alexandros G. Dimakis, and Sriram Vishwanath. Learning causal graphs with small interventions. In Corinna Cortes, Neil D. Lawrence, Daniel D. Lee, Masashi Sugiyama, and Roman Garnett (eds.), Advances in Neural Information Processing Systems 28: Annual Conference on Neural Information Processing Systems 2015, December 7-12, 2015, Montreal, Que-bec, Canada , pp. 3195–3203, 2015. URL https://proceedings.neurips.cc/paper/2015/ hash/b865367fc4c0845c0682bd466e6ebf4c-Abstract.html .Peter Spirtes. Variable definition and causal inference. 2009. Peter Spirtes and Clark Glymour. An algorithm for fast recovery of sparse causal graphs. Social Science Computer Review , 9(1):62–72, 1991. doi: 10.1177/089443939100900106. URL https://doi.org/ 10.1177/089443939100900106 .Yongduo Sui, Xiang Wang, Jiancan Wu, Min Lin, Xiangnan He, and Tat-Seng Chua. Causal attention for interpretable and generalizable graph classification. In Aidong Zhang and Huzefa Rangwala (eds.), 
+
+KDD ’22: The 28th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, Washington, DC, USA, August 14 - 18, 2022 , pp. 1696–1705. ACM, 2022. doi: 10.1145/3534678.3539366. URL 
+
+https://doi.org/10.1145/3534678.3539366 .Jinze Sun, Yongpan Sheng, Lirong He, Yongbin Qin, Ming Liu, and Tao Jia. CEGRL-TKGR: A causal enhanced graph representation learning framework for temporal knowledge graph reasoning. In Proceed-ings of the 31st International Conference on Computational Linguistics, COLING 2025 - Workshops, Abu Dhabi, UAE, January 19-24, 2025 , pp. 6–17. Association for Computational Linguistics, 2025. URL 
+
+https://aclanthology.org/2025.neusymbridge-1.2/ .Ichigaku Takigawa and Hiroshi Mamitsuka. Graph mining: procedure, application to drug discovery and recent advances. Drug discovery today , 18(1-2):50–57, 2013. Qiaoyu Tan, Ninghao Liu, and Xia Hu. Deep representation learning for social network analysis. Frontiers in big Data , 2:2, 2019. Lijing Wang, Aniruddha Adiga, Jiangzhuo Chen, Adam Sadilek, Srinivasan Venkatramanan, and Madhav Marathe. Causalgnn: Causal-based graph neural networks for spatio-temporal epidemic forecasting. In 
+
+Proceedings of the AAAI conference on artificial intelligence , volume 36, pp. 12191–12199, 2022. Qitian Wu, Fan Nie, Chenxiao Yang, Tianyi Bao, and Junchi Yan. Graph out-of-distribution generalization via causal intervention. In Tat-Seng Chua, Chong-Wah Ngo, Ravi Kumar, Hady W. Lauw, and Roy Ka-Wei Lee (eds.), Proceedings of the ACM on Web Conference 2024, WWW 2024, Singapore, May 13-17, 2024 , pp. 850–860. ACM, 2024. doi: 10.1145/3589334.3645604. URL https://doi.org/10. 1145/3589334.3645604 .Shiwen Wu, Fei Sun, Wentao Zhang, Xu Xie, and Bin Cui. Graph neural networks in recommender systems: a survey. ACM Computing Surveys , 55(5):1–37, 2022a. Yingxin Wu, Xiang Wang, An Zhang, Xiangnan He, and Tat-Seng Chua. Discovering invariant rationales for graph neural networks. In The Tenth International Conference on Learning Representations, ICLR 2022, Virtual Event, April 25-29, 2022 . OpenReview.net, 2022b. URL https://openreview.net/ forum?id=hGXij5rfiHw .13 Arxiv Paper Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. How powerful are graph neural networks? In 
+
+7th International Conference on Learning Representations, ICLR 2019, New Orleans, LA, USA, May 6-9, 2019 . OpenReview.net, 2019. URL https://openreview.net/forum?id=ryGs6iA5Km .Dingling Yao, Danru Xu, S´ ebastien Lachapelle, Sara Magliacane, Perouz Taslakian, Georg Martius, Julius von K¨ ugelgen, and Francesco Locatello. Multi-view causal representation learning with partial ob-servability. In The Twelfth International Conference on Learning Representations, ICLR 2024, Vienna, Austria, May 7-11, 2024 . OpenReview.net, 2024. URL https://openreview.net/forum?id= OGtnhKQJms .Zhitao Ying, Dylan Bourgeois, Jiaxuan You, Marinka Zitnik, and Jure Leskovec. Gnnex-plainer: Generating explanations for graph neural networks. In Hanna M. Wallach, Hugo Larochelle, Alina Beygelzimer, Florence d’Alch´ e-Buc, Emily B. Fox, and Roman Garnett (eds.), 
+
+Advances in Neural Information Processing Systems 32: Annual Conference on Neural Informa-tion Processing Systems 2019, NeurIPS 2019, December 8-14, 2019, Vancouver, BC, Canada ,pp. 9240–9251, 2019. URL https://proceedings.neurips.cc/paper/2019/hash/ d80b7040b773199015de6d3b4293c8ff-Abstract.html .Shuguang Yu, Shuxing Fang, Ruixin Peng, Zhengling Qi, Fan Zhou, and Chengchun Shi. Two-way deconfounder for off-policy evaluation in causal reinforcement learning. In Amir Glober-sons, Lester Mackey, Danielle Belgrave, Angela Fan, Ulrich Paquet, Jakub M. Tomczak, and Cheng Zhang (eds.), Advances in Neural Information Processing Systems 38: Annual Conference on Neu-ral Information Processing Systems 2024, NeurIPS 2024, Vancouver, BC, Canada, December 10 - 15, 2024 , 2024. URL http://papers.nips.cc/paper_files/paper/2024/hash/ 8ecf25e3a462e9bb1e29662dfe7258fe-Abstract-Conference.html .Yan Zeng, Ruichu Cai, Fuchun Sun, Libo Huang, and Zhifeng Hao. A survey on causal reinforcement learning. IEEE Trans. Neural Networks Learn. Syst. , 36(4):5942–5962, 2025. doi: 10.1109/TNNLS. 2024.3403001. URL https://doi.org/10.1109/TNNLS.2024.3403001 .Cheng Zhang, Kun Zhang, and Yingzhen Li. A causal view on robustness of neural net-works. In Hugo Larochelle, Marc’Aurelio Ranzato, Raia Hadsell, Maria-Florina Balcan, and Hsuan-Tien Lin (eds.), Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual , 2020. URL https://proceedings.neurips.cc/paper/2020/hash/ 02ed812220b0705fabb868ddbf17ea20-Abstract.html .Wanpeng Zhang, Yilin Li, Boyu Yang, and Zongqing Lu. Tackling non-stationarity in reinforcement learning via causal-origin representation. In Forty-first International Conference on Machine Learning, ICML 2024, Vienna, Austria, July 21-27, 2024 . OpenReview.net, 2024. URL https://openreview.net/ forum?id=WLGWMDtj8L .Xingxuan Zhang, Peng Cui, Renzhe Xu, Linjun Zhou, Yue He, and Zheyan Shen. Deep sta-ble learning for out-of-distribution generalization. In IEEE Conference on Computer Vi-sion and Pattern Recognition, CVPR 2021, virtual, June 19-25, 2021 , pp. 5372–5382. Computer Vision Foundation / IEEE, 2021. doi: 10.1109/CVPR46437.2021.00533. URL 
+
+https://openaccess.thecvf.com/content/CVPR2021/html/Zhang_Deep_Stable_ Learning_for_Out-of-Distribution_Generalization_CVPR_2021_paper.html .Chu Zhao, Enneng Yang, Yuliang Liang, Pengxiang Lan, Yuting Liu, Jianzhe Zhao, Guibing Guo, and Xingwei Wang. Graph representation learning via causal diffusion for out-of-distribution recommenda-tion. In Guodong Long, Michale Blumestein, Yi Chang, Liane Lewin-Eytan, Zi Helen Huang, and Elad 14 Arxiv Paper Yom-Tov (eds.), Proceedings of the ACM on Web Conference 2025, WWW 2025, Sydney, NSW, Aus-tralia, 28 April 2025- 2 May 2025 , pp. 334–346. ACM, 2025. doi: 10.1145/3696410.3714849. URL 
+
+https://doi.org/10.1145/3696410.3714849 .Xun Zheng, Bryon Aragam, Pradeep Ravikumar, and Eric P. Xing. Dags with NO TEARS: continuous opti-mization for structure learning. In Samy Bengio, Hanna M. Wallach, Hugo Larochelle, Kristen Grauman, Nicol` o Cesa-Bianchi, and Roman Garnett (eds.), Advances in Neural Information Processing Systems 31: Annual Conference on Neural Information Processing Systems 2018, NeurIPS 2018, December 3-8, 2018, Montr´ eal, Canada , pp. 9492–9503, 2018. URL https://proceedings.neurips.cc/paper/ 2018/hash/e347c51419ffb23ca3fd5050202f9c3d-Abstract.html .Wenxuan Zhu, Chao Yu, and Qiang Zhang. Causal deep reinforcement learning using observational data. In 
+
+Proceedings of the Thirty-Second International Joint Conference on Artificial Intelligence, IJCAI 2023, 19th-25th August 2023, Macao, SAR, China , pp. 4711–4719. ijcai.org, 2023. doi: 10.24963/IJCAI.2023/ 524. URL https://doi.org/10.24963/ijcai.2023/524 .Marinka Zitnik, Monica Agrawal, and Jure Leskovec. Modeling polypharmacy side effects with graph convolutional networks. Bioinformatics , 34(13):i457–i466, 2018. 15 Arxiv Paper 
+
+A USAGE OF LARGE LANGUAGE MODEL 
+
+In our paper, we used LLMs to assist with polishing the writing, including correcting grammatical errors and making the sentences more consistent with academic English writing conventions. 
+
+B EXTENDED RELATED WORKS 
+
+B.1 CAUSAL LEARNING 
+
+Causal learning is a learning method based on identifying and modeling causal relationships (Pearl, 2000). Unlike traditional correlation learning, causal learning focuses on the causal effects between variables, i.e., how a change in one variable causes a change in another, rather than merely observing the statistical corre-lation between them. Causal learning aims to extract causal relationships between variables from data and use these relationships for prediction, reasoning, or decision-making. It typically involves methods such as causal graph models (Kocaoglu et al., 2019), causal inference (Pearl & Mackenzie, 2018), and causal discov-ery (Zheng et al., 2018), to infer causal structures from observational data. In recent years, with the rise of deep learning, research on causal learning has gradually shifted to the field of neural networks, particularly how to incorporate causal inference into the training and inference processes of neural networks. Causal learning in neural networks is primarily reflected in the integration of causal inference with deep learning models to improve the performance of neural networks. On the one hand, neural networks mainly model data by learning the relationships between variables, but since they cannot directly understand the causal relationships between variables, this limits their performance on more complex problems. Therefore, recent research has attempted to incorporate causal inference into the training process of neural networks in order to enhance model interpretability and generalization ability (Chattopadhyay et al., 2019; Zhang et al., 2020). Zhang et al. (2021) removes dependencies between features by learning weights for training samples, thus allowing deep learning models to avoid spurious correlations and focus more on the true relationships between features and labels. Yao et al. (2024) analyzes and understands the causal relationships between latent variables in the data, identifying more fine-grained representations under the generally milder assumption of partial observability. Hong et al. (2024) introduces causal models to understand and advance Non-transferable learning by modeling content and style as two latent factors, decoupling them and using them as guides to learn non-transferable representations with inherent causal relationships. These methods enhance the model’s reasoning ability by introducing causal graph structures or causal analysis mechanisms into neural networks. Moreover, causal deep generative models are also an important research direction in causal learning within neural networks in recent years (He et al., 2023; Bagi et al., 2023; Cheng et al., 2024). For example, Sauer & Geiger (2021) proposes decomposing the image generation process into independent causal mechanisms and training them without direct supervision. By utilizing appropriate inductive biases, these mechanisms disentangle object shape, object texture, and background, thus enabling the generation of counterfactual images. In the field of reinforcement learning, causal inference has also started to integrate with deep rein-forcement learning methods (Zhu et al., 2023; Yu et al., 2024; Zeng et al., 2025). For example, Zhang et al. (2024) adopts a guided updating mechanism to learn a stable causal origin representation. By leveraging this representation, the learned policy demonstrates significant robustness to nonstationarity. B.2 CAUSAL RELATIONSHIPS MODELING WITH GNN S
+
+This paper primarily explores how to enhance the causal relationship modeling in Graph Neural Networks (GNNs). Causality is crucial in graph representation learning (Lippe et al., 2023; Sui et al., 2022), as the complexity and variability of graph data, unlike images and text, require stronger causal relationship 16 Arxiv Paper modeling capabilities to ensure generalization and robustness. Moreover, several application areas of graph representation learning, including finance (Wang et al., 2022), medicine (Shang et al., 2019), and biology (Zitnik et al., 2018), have significant demands for the causal relationships being modeled. There are currently many related studies addressing this issue, which can be categorized into two technical approaches: one focusing on modeling causal relationship subgraphs and the other on eliminating the impact of confounding factors. Regarding the first approach, Fan et al. (2024) proposed that spurious correlations exist within subgraph-level units and analyzed the degeneration of GNNs from a causal perspective. Based on this causal analysis, a general causal representation framework was proposed to build stable GNNs. Wu et al. (2022b) introduced a new discovering invariant rationale (DIR) strategy to construct inherently interpretable GNNs and enhance their causal relationship modeling ability. Chen et al. (2022) proposed a new framework called Causal-Inspired Invariant Graph Learning (CIGA) to capture the invariances in graphs, ensuring out-of-distribution (OOD) generalization under various distribution changes. Regarding the second approach, Fan et al. (2022) proposed a general decoupled GNN framework, learning causal substructures and bias substructures separately. Gao et al. (2024) developed a lightweight optimiza-tion module based on the relationship between causal key modeling and confounding factors. Fan et al. (2022) also introduced a general decoupled GNN framework to separately learn causal and bias substruc-tures, ensuring that the final model can debias. Wu et al. (2024) employed a new learning objective inspired by causal inference, which coordinates an environment estimator with an expert mixed GNN predictor. This new method overcomes the confounding biases in training data and promotes the learning of widely adapt-able predictive relationships. 
+
+C THEORETICAL PROOFS 
+
+C.1 PROOF OF PROPOSITION 1
+
+proposition 1. When the variables within graph dataset G are merged to form a new and smaller variable set S, in certain cases, it becomes impossible to construct a causal model based on S while still satisfying the two key prerequisites for applying causal inference methods—namely, the Causal Markov Assumption and the Causal Faithfulness Assumption. Proof. To illustrate the proposition, we provide a corresponding counterexample. To ensure the clar-ity of the proof, we first present the detailed formulations of the Causal Markov Assumption and Causal Faithfulness Assumption. 
+
+Causal Markov Assumption (Spirtes, 2009) : For a set of variables in which there are no hidden common causes, variables are independent of their non-effects conditional on their immediate causes. 
+
+Causal Faithfulness Assumption (Spirtes, 2009) : There are no independencies other than those entailed by the Causal Markov Assumption. 𝑆 𝑖 
+
+a
+
+b
+
+c
+
+d𝑆 𝑗 
+
+Figure 8: The graphical illustration of the causal relationships between variables a, b, c, and d.17 Arxiv Paper For the Causal Markov Assumption, given variables Si and Sj within S, we assume that {a, b } ⊂ Si and 
+
+{c, d } ⊂ Sj , and that the ground-truth causal relationships among a, b, c, and d are as illustrated in Figure 8. In this case, Si contains causes of Sj , and Sj also contains causes of Si. Suppose we designate Si as the cause and construct a causal pathway Si → Sj . Then, for another variable Sk ∈ S, if Sk also contains causes of Sj , and Sj contains causes of Sk, while Sk is similarly designated as the cause, it is possible that 
+
+Si and Sk are dependent even when conditioned on all their common causes. Moreover, this phenomenon persists regardless of how the causal direction is assigned within the constructed causal model. Thus, the Causal Markov Assumption no longer holds. For the Causal Faithfulness Assumption, we just need to assume that a ⊥⊥ b; in that case, such an indepen-dence would be regarded as arising from factors other than those implied by the Causal Markov Assumption. The proposition is proved. 
+
+□
+
+C.2 PROOF OF THEOREM 2
+
+Theorem 2 The SCM in Figure 2 can characterize the general causal relationships between various vari-ables in the graph representation learning scenario. Furthermore, such an SCM satisfies the Causal Markov Assumption and the Causal Faithfulness Assumption. Proof. To demonstrate the theorem, we follow the PC algorithm (Spirtes & Glymour, 1991), a method used to infer causal relationships from observational data and reconstruct the SCM depicted in Figure 2 from scratch. The entire process can be divided into three steps, which are detailed below. 
+
+Step 1. As in the current scenario, for any i ∈ { 1, 2, ..., m }, there does not exist a set B such that the conditional independence Ui ⊥⊥ Xi|B holds. According to Spirtes & Glymour (1991), we connect each element in U with its corresponding element in X. Since it cannot be determined whether there exists a B
+
+such that Ui ⊥⊥ Xj |B holds for i̸ = j, i ∈ { 1, 2, ..., m }, j ∈ { 1, 2, ..., m }, we use dashed lines to connect these elements. For the same reasons, we connect all elements in X. Additionally, since the following holds: 
+
+Xcaus = [
+
+> i∈1,2,...,k
+
+P a (Yi), (5) we have: 
+
+Xi ⊥⊥ Y |
+
+ [
+
+> i∈1,2,...,k
+
+P a (Yi)
+
+ , ∀Xi ∈ Xcfd ∪ Xasoc . (6) i.e.: 
+
+Xi ⊥⊥ Y |Xcaus , ∀Xi ∈ Xcfd ∪ Xasoc . (7) Therefore, we only link the elements within Xcaus with Y using dashed lines. The result of step 1 is demon-strated in Figure 9(a). 
+
+Step 2. Since we do not study the values of exogenous variables, we only consider their influence on X,hence all edges from U to X as directed downwards. Based on Equation 5, we direct the edges between 
+
+Xcaus and Y towards Y . As elements within Xcfd holds none causal path towards Y , we direct edges between 
+
+Xasoc ∪ Xcaus and Xcfd towards Xcfd . The result of step 2 is demonstrated in Figure 9(b). 
+
+Step 3. The remaining edges cannot be oriented, thus they are represented using bidirectional arrows. The result of step 3 is demonstrated in Figure 9(c). We can see that the final result obtained, as shown in Figure 9(c), is consistent with Figure 2. 18 Arxiv Paper 𝑌 1
+
+𝑈 𝑗 
+
+## ...  𝑈 𝑖 +1𝑈 1
+
+𝑋 𝑗 
+
+## ...  𝑋 𝑖 +1𝑋 2
+
+𝑌 𝑘 
+
+𝑋 1 𝑋 𝑖 
+
+𝑈 2 𝑈 𝑖  ... 
+
+## ...  𝑋 𝑗 +1 ... 
+
+## ... 
+
+𝑈 𝑗 +1 ... 
+
+## ...  ...  ... 
+
+## ... 
+
+## ... 
+
+## ...  ... 
+
+## ...  ... 
+
+𝑋 𝑖 +2
+
+𝑈 𝑖 +2
+
+𝑋 𝑗 +2
+
+𝑈 𝑗 +2
+
+𝑌 2  
+
+> ①②③
+
+Undirected Edge ... 
+
+Undirected Edge with 
+
+Uncertain Existence 
+
+𝑋 |𝑋 |
+
+𝑈 |𝑈 |
+
+① Set 
+
+② Set 
+
+③ Set 
+
+(a) Result of step one. Directed Edge 
+
+Undirected Edge with 
+
+Uncertain Existence 
+
+𝑌 1
+
+𝑈 𝑗 
+
+## ...  𝑈 𝑖 +1𝑈 1
+
+𝑋 𝑗 
+
+## ...  𝑋 𝑖 +1𝑋 2
+
+𝑌 𝑘 
+
+𝑋 1 𝑋 𝑖 
+
+𝑈 2 𝑈 𝑖  ... 
+
+## ...  𝑋 𝑗 +1 ... 
+
+## ... 
+
+𝑈 𝑗 +1 ... 
+
+## ...  ...  ... 
+
+## ... 
+
+## ... 
+
+## ...  ... 
+
+## ...  ... 
+
+𝑋 𝑖 +2
+
+𝑈 𝑖 +2
+
+𝑋 𝑗 +2
+
+𝑈 𝑗 +2
+
+𝑌 2  
+
+> ①②③
+
+## ...  Directed Edge with 
+
+Uncertain Existence 
+
+𝑋 |𝑋 |
+
+𝑈 |𝑈 | ① Set 
+
+② Set 
+
+③ Set 
+
+(b) Result of step two. Directed Edge   
+
+> Edge with Unsure
+> Direction and Uncertain
+> Existence
+
+𝑌 1
+
+𝑈 𝑗 
+
+...  𝑈 𝑖 +1𝑈 1
+
+𝑋 𝑗 
+
+...  𝑋 𝑖 +1𝑋 2
+
+𝑌 𝑘 
+
+𝑋 1 𝑋 𝑖 
+
+𝑈 2 𝑈 𝑖  ... 
+
+...  𝑋 𝑗 +1 ... 
+
+... 
+
+𝑈 𝑗 +1 ... 
+
+...  ...  ... 
+
+... 
+
+... 
+
+...  ... 
+
+...  ... 
+
+𝑋 𝑖 +2
+
+𝑈 𝑖 +2
+
+𝑋 𝑗 +2
+
+𝑈 𝑗 +2
+
+𝑌 2  
+
+> ①②③
+
+...  Directed Edge with 
+
+> Uncertain Existence
+
+𝑋 |𝑋 |
+
+𝑈 |𝑈 | ① Set 
+
+② Set 
+
+③ Set 
+
+(c) Result of step three. 
+
+Figure 9: Results of the PC algorithm for SCM reconstruction. 19 Arxiv Paper Furthermore, since the variables used in the SCM are the smallest divisible variables in G, when there are no common causes between any two variables a and b in the SCM, P a (a) can block all causal effects from 
+
+a to b. Therefore, the Causal Markov Assumption holds. At the same time, for any a ⊥⊥ b in this SCM, P a (a) can block all causal effects from a to b. Thus, the Causal Faithfulness Assumption also holds. The theorem is thereby proven. □
+
+C.3 PROOF OF THEOREM 3. 
+
+Theorem 3 Based on the SCM in Theorem 2, When utilizing GNN to model causal rela-tionship, for atomic interventions, the lower bound of the number of interventions required is 
+
+min Mmicro 
+
+ 
+
+> 1
+> λ|
+
+ S|G|  
+
+> i=1 Gi
+
+ 
+
+> |+|Y|− r(Mmicro )2
+
+, where Mmicro denotes any DAG that is equivalent to the graphical representation of the ground truth causal model, and the vertex set of Mmicro =
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+∪ Y ,
+
+λ denotes the average times that each variable occurs among each of the samples within dataset G, r(·)
+
+calculates the total number of maximal cliques. For non-atomic interventions, the number of interventions required exceeds O
+
+min k
+
+ 
+
+> 1
+> λ|
+
+ S|G|  
+
+> i=1 Gi
+
+  
+
+> |+|Y|
+> k
+
+log (log (k)) 
+
+.Proof. To conduct the proof, we perform the analysis within the SCM framework shown in Figure 2. Our focus is on the causal relationship between X and Y , and thus, we concentrate on the variable relationships between these two sets. As we do not yet have a clear partition of the variables within X, the elements within 
+
+X remain unknown to us. Following the analysis of causal inference and variable definitions presented in Spirtes (2009), it is crucial to ensure that the defined variables satisfy both the Markov assumption and the faithfulness assumption to facilitate accurate causal reasoning. As noted in Pearl (2009), starting from the deterministic case, all variables can be explained by microscopic details, ensuring the Markov assumption holds . Without a clear partition of variables in advance, we need to follow the approach in Pearl (2009) by decomposing all variables to the finest granularity to ensure the Markov assumption holds. Assuming each node in the graph data corresponds to a single-dimensional attribute, every node is treated as an individual variable, ensuring minimal data partitioning. As λ denotes the average times that each variable occur among each of the samples within dataset G, the dataset contains  
+
+> 1
+> λ
+
+|
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+| + |Y | variables. We denote such variable set as Xmicro , we have: 
+
+|Xmicro | = 1
+
+λ |
+
+ |G| 
+
+[
+
+> i=1
+
+Gi
+
+
+
+| + |Y | (8) The proposed theorem by Choo et al. (2022) provides the lower bound of the number of atomic interventions required for modeling causal relationships among Mmicro , where Mmicro denotes any Markov equivalence class corresponding to Mmicro ∗. Mmicro ∗ is the unknown causal model’s graphical representation of all 20 Arxiv Paper variables within Xmicro . Therefore, we have that: 
+
+|I| ≥ min 
+
+> Mmicro
+
+ |Xmicro | − r(Mmicro )2
+
+ 
+
+≥ min 
+
+> Mmicro
+
+ 
+
+> 1
+> λ
+
+|
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+| + |Y | − r(Mmicro )2
+
+ , (9) where I denotes the set of utilized interventions. r(Mmicro ) denotes the total number of maximal cliques in the chordal chain components of Mmicro . Choo et al. (2022) propose that Mmicro is equivalent to Mmicro ∗ if they cannot be distinguished with statistical independency. If the model we use satisfies the universal approximation theorem (Hornik et al., 1989) and the data in the dataset is sufficient, then we can model Mmicro based on the statistical information from the dataset. Otherwise, more computational effort is needed to solve the structure of Mmicro first. In either case, the lower bound of Equation 9 holds. For non-atomic interventions, research is still ongoing, and providing an exact calculation of the precise lower bound remains challenging. However, Shanmugam et al. (2015) has provided an approximate estimate of its lower bound, as follows: 
+
+|I| ≥ O 
+
+ nk log (log (k)) 
+
+
+
+, (10) where n denotes the number of the studied variables, k denotes the number of variables under interventions. Therefore, we acquire the lower of non-atomic interventions as follows: 
+
+|I| ≥ O 
+
+ 
+
+> 1
+> λ
+
+|
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+| + |Y |
+
+k log (log (k)) 
+
+ , (11) We refine the lower bound for any k as follows: 
+
+|I| ≥ O 
+
+min 
+
+> k
+
+ 
+
+> 1
+> λ
+
+|
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+| + |Y |
+
+k log (log (k)) 
+
+ . (12) Based on the above results, we have proved that for atomic interventions, the number of interven-tions required to fully discern all the causal relationships between the variables in X and Y exceeds 
+
+min Mmicro 
+
+ 
+
+> 1
+> λ|
+
+ S|G|  
+
+> i=1 Gi
+
+ 
+
+> |+|Y|− r(Mmicro )2
+
+. For non-atomic interventions, the number of interventions required exceeds O
+
+min k
+
+ 
+
+> 1
+> λ|
+
+ S|G|  
+
+> i=1 Gi
+
+  
+
+> |+|Y|
+> k
+
+log (log (k)) 
+
+. Since our goal is to model the causal re-lationships between G and Y , variables that are independent of Y in the graphical data do not need to be analyzed. Therefore, we have: 
+
+|I| ≥ min 
+
+> Mmicro
+
+& 1 
+
+> λ
+
+|
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+| + |Y | − 1 
+
+> σ
+
+|
+
+ S|G|  
+
+> i=1
+
+Di
+
+
+
+| − r(Mmicro )2
+
+'! 
+
+, (13) 21 Arxiv Paper where D ∈ G denotes the data that independence with Y , σ denotes the average times that each variable within S|G|  
+
+> i=1
+
+Di occurs. We have: 
+
+|I| ≥ min 
+
+> Mmicro
+
+& 1 
+
+> λ
+
+|
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+| + |Y | − r(Mmicro )2
+
+'! 
+
+. (14) For non-atomic interventions, we have: 
+
+|I| ≥ O 
+
+min 
+
+> k
+
+ 
+
+> 1
+> λ
+
+|
+
+ S|G|  
+
+> i=1
+
+Gi
+
+
+
+| + |Y |
+
+k log (log (k)) 
+
+ . (15) The theorem is proved. □
+
+C.4 PROOF OF THEOREM 4
+
+Theorem 4 Assume there exists a GNN model that satisfies the infinite approximation theorem (Cybenko, 1989), and that interventions are applied to ensure the GNN models the causal relationships between the graph variables and the labels. In this case, when applying causal inference in graph representation learn-ing, it is possible to merge some variables from the original set X to form a new set S, where |S| < |X|,while ensuring that the causal relationships between the graph data and the labels are accurately modeled. However, the following conditions must be met: (1) Variable s in S that satisfy s ∈ P a (Y ) cannot simultaneously contain both the parent and child nodes of another variable v ∈ X.(2) Variables within Xcaus cannot be merged with those of other sets. Proof. To prove the theorem, it suffices to demonstrate that the two conditions (1) and (2) proposed in the theorem are both necessary and sufficient for transforming X into S, while ensuring the accurate modeling of causal relationships. We first prove sufficiency. Based on Theorem 2, since conditions (1) and (2) hold, we have the following: 
+
+P  Y | do (X \ Xcaus = x) = P  Y | do (S \ Scaus = x), (16) where x is a specific value of X \Xcaus , and Scaus denotes the set of variables within S generated by merging 
+
+Xcaus . Here, do (·) represents the intervention operation. Equation 16 demonstrates that conducting the same intervention on X \ Xcaus and S \ Scaus yields identical outcomes. This implies that, with an appropriate set of interventions, even if the variables are merged into set S, it remains possible to apply interventions that isolate and sever the influence of variables not involved in the causal component. We can also conclude the following: 
+
+P  Y | do (Xcaus = x) = P  Y | do (Scaus = x). (17) Furthermore, for each Scaus  
+
+> i
+
+∈ Scaus , we have: 
+
+P  Y | do (Ocaus  
+
+> i
+
+= si) = P  Y | do (Scaus  
+
+> i
+
+= si), (18) and 
+
+P  Y | do (Xcaus \ Ocaus  
+
+> i
+
+= si) = P  Y | do (Scaus \ Scaus  
+
+> i
+
+= si), (19) where Ocaus  
+
+> i
+
+is the subset of elements within X that, when merged, create Si.22 Arxiv Paper Based on condition 2 of the proposed theorem, we can model the causal relationship between each Scaus  
+
+> i
+
+and 
+
+Y via the intervention operation. Therefore, we can apply a suitable GNN as described in the theorem to model the causal relationship between Scaus and Y , i.e., the causal relationship between G and Y . Thus, sufficiency is proven. Next, we prove the necessity. First, consider the case where condition (1) does not hold. In this situation, it is possible for two variables, s and v, to exist such that s is both a parent and a child of v within the background SCM. This creates a confounding arc (Pearl, 2009) and cannot be removed via intervention. As a result, the causal relationship becomes unpresentable. Thus, condition (1) must hold. Now, consider the case where condition (2) is violated. In this case, a variable Scaus  
+
+> j
+
+may include components unrelated to the outcome Y . When examining Scaus  
+
+> j
+
+, the confounding effects cannot be eliminated through intervention, rendering the causal relationship unfeasible. Therefore, condition 2 must also be satisfied. The necessity is proved. Therefore, the theorem is proved. □
+
+C.5 PROOF OF PROPOSITION 5
+
+Proposition 5 When the GNN f (·) precisely models the causal mechanism, the cross-entropy loss L between predictions f (G) and labels Y is minimized. Moreover, L equals the conditional KL divergence between the predictive distribution of f (·) and the background causal model, given each input graph G.Proof. The proof of Proposition 5 is straightforward. The key observation is that the ground-truth labels Y
+
+are, under all circumstances, the same as output of the background causal model; the remaining steps follow from standard properties of the cross-entropy loss. For completeness and rigor, we still provide a detailed proof below. We begin by proving the first conclusion of the proposition. According to the definition of L, we have: 
+
+L = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+log 1
+
+τ (f (Gi)) . (20) As τ (·) extracts the output probability of the ground truth labels, we have τ (f (Gi)) = 1 when the back-ground causal structure is precisely modeled. We denote L∗ as the value of L under the former condition. Based on Equation 20, the L∗ can be represented as: 
+
+L∗ = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+log 11 = 0 . (21) As τ (f (Gi)) ≤ 1, thus log 1   
+
+> τ(f(Gi))
+
+≥ 0, and L = 1
+
+> n
+
+Pni=1 log 1   
+
+> τ(f(Gi))
+
+≥ 0. Therefore, L∗ reaches the minimal value. The first conclusion of the proposition is proved. Next, we proof the second conclusion. The Conditional KL divergence between the output of f (·) and the ground truth label given different inputs can be formulated as: 
+
+DKL (p(Y |G)|| q(Y |G)) = 
+
+> n
+
+X
+
+> i=1
+
+p(Gi) X
+
+> Y
+
+p(Y |Gi)log p(Y |Gi)
+
+q(Y |Gi)=
+
+> n
+
+X
+
+> i=1
+
+1
+
+n
+
+X
+
+> Y
+
+p(Y |Gi)log p(Y |Gi)
+
+q(Y |Gi) . (22) As p(Y |Gi) = 0 if Y is not the ground truth label, therefore: 
+
+DKL (p(Y |G)|| q(Y |G)) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+1 · log 1
+
+q(Y ∗|Gi) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+log 1
+
+τ (f (Gi)) , (23) where Y ∗ denotes the ground truth label. The proposition is proved. □
+
+23 Arxiv Paper 
+
+D RWG D ATASET 
+
+D.1 DATA CONSTRUCTED BASED ON REAL -WORLD CHEMICAL INFORMATION 
+
+We constructed the RWG graph classification data based on extensive real-world chemical knowledge, specifically focusing on molecular structures commonly encountered in the field of chemistry. The con-struction process began by collecting a total of 26 well-known molecular graph motifs, which serve as the fundamental building blocks for the graphs we aim to analyze. These motifs represent common substruc-tures found in a wide variety of molecules, and they play a critical role in capturing the structural diversity that exists within molecular graphs. Table 3 provides a detailed list and description of these motifs. Each motif is defined by its own unique arrangement of atoms and bonds, and these motifs can also undergo slight variations. The variations are achieved by adding or removing edges between atoms, which allows us to generate a range of related but distinct molecular structures. This flexibility in modifying the motifs ensures that the graph models are not only diverse but also closely aligned with the variability found in real chemical data. In addition to these molecular motifs, we also constructed 15 connector modules that are based on common chemical molecular architectures. These modules include well-established structural elements, such as ring structures, chain structures, and various hybrid forms that combine these basic components. These connector modules facilitate the composition of the aforementioned molecular graph motifs into larger, more complex molecular graphs, enabling the representation of a broad spectrum of chemical compounds. Each connector module is implemented through a corresponding function that allows for customization in terms of size and branching. The size parameter enables the adjustment of the module’s scale, making it possible to control the overall size of the connected structure. The branch parameter, on the other hand, allows for modification of the number of branches that extend from the core structure, providing further flexibility in defining how the motifs are interconnected. By adjusting these parameters, we can create a wide variety of complex molecular graphs that reflect the structural diversity of real-world chemical networks. D.2 DATA CONSTRUCTED BASED ON REAL -WORLD CITATION NETWORK INFORMATION 
+
+We constructed a citation network based on real-world citation network data, consisting of a total of 25 citation relationships. These relationships were carefully selected to represent a diverse range of connec-tions within the network, capturing the complexity of academic citation patterns across various fields. The citation relationships reflect the way in which research papers influence one another through references, and the resulting network serves as a model for understanding the dynamics of knowledge dissemination and academic collaboration. Table 5 presents a detailed overview of these citation relationships, showcasing the various connections between the papers and their corresponding citation patterns. In parallel with the citation relationships, we developed a total of 24 node feature generation methods, each based on different statistical distributions and mathematical sequences. These methods were designed to generate meaningful node features that reflect both the structural and contextual aspects of the citation net-work. The details of these feature generation methods, including the specific distributions and sequences used, are presented in Table 6. The distributions encompass a wide range of statistical models, such as normal, uniform, exponential, and lognormal distributions, among others, while the sequences include arith-metic, geometric, Fibonacci, and prime number sequences, providing a rich variety of feature generation options. To generate the node features for the dataset, we set parameters for each of the distributions and sequences based on the specific characteristics of the citation network. For instance, the parameters were chosen to align with the real-world distribution of citation frequencies, as well as the structural properties of the ci-24 Arxiv Paper tation relationships, such as the number of citations a paper typically receives and how those citations are distributed across the network. Once the node features were generated, we incorporated the citation relation-ships to guide the construction of the entire graph, ensuring that the generated features were appropriately aligned with the network’s structure and that the graph accurately represented the interplay between the dif-ferent academic papers. Once completed, we constructed a dataset with clear internal causal relationships, closely aligned with real-world scenarios, and it can serve as a foundation for adding confounders and other elements required for experiments. D.3 CAUSAL AND CONFOUNDING DATA GENERATION 
+
+For our data generation, we establish causality through precise programmatic control over the dataset’s construction, enabling us to explicitly define causal factors and introduce confounders. Specifically, we create a causal relationship by making a graph’s label directly dependent on designated graph elements, while a confounder is created by introducing a spurious correlation that exists exclusively within the training set and is broken in the validation and test sets. The primary graph elements we manipulate for these purposes are our constructed motifs, node features, and relational edges. For instance, in our chemical graph dataset built from 26 molecular motifs, a graph’s label can be causally determined by the presence of a ”benzene ring” motif. To introduce a confounder, a different motif, like a ”chain structure,” could be made highly correlated with the label in the training data, a correlation that is removed in the test set to make it a misleading shortcut. Similarly, using our 24-node feature generation methods for the citation network, we can establish a causal link where the label is determined by a statistical property, such as the average value of a feature generated from a Fibonacci sequence. As a confounder, a separate feature from a uniform statistical distribution could be artificially correlated with the label only during training, a pattern that would not hold during evaluation. Finally, relational edges, representing 25 types of citation relationships, are also precisely controlled. Acausal factor could be the existence of a double bond within the presence of a ”self-citation” relationship in the citation network. A confounding relationship could be introduced where a specific type of citation link is frequently associated with a positive label in the training data, but this pattern is randomized in the test set to ensure it’s a non-causal artifact. 
+
+E EXTRA EXPERIMENTS 
+
+In this section, we present additional experimental results to facilitate a more thorough and in-depth analysis. These results provide further insights into the behavior and performance studied methods, enabling a better understanding of the underlying properties. E.1 EXPERIMENTAL RESULTS ACROSS DIFFERENT LEVELS OF CONFOUNDER INFLUENCE .Based on the provided results in Figure 10, the experimental results of different models under varying con-founder bias proportions can be analyzed. Causal enhancement methods such as CaNet, CRCG, and DIR generally outperform standard GNN frameworks (GCN, ChebNet, GIN) as the bias increases, indicating that these methods exhibit stronger robustness when faced with biases or noise in the data. As the confounder bias increases from 10% to 80%, the performance of models like GCN, ChebNet, and GIN declines significantly, suggesting that these models struggle more to recognize underlying patterns when strong biases are present, making them more susceptible to the influence of confounders. Among the causal enhancement methods, DIR shows a slight advantage at higher bias levels (e.g., 50%, 60% and above), indicating that DIR may be more effective in handling and mitigating the impact of confounders 25 Arxiv Paper CaNet CRCG DIR GCN ChebNet GIN 
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(a) Confounder with 10% bias. CaNet CRCG DIR GCN ChebNet GIN  
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(b) Confounder with 20% bias. CaNet CRCG DIR GCN ChebNet GIN 
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(c) Confounder with 30% bias. CaNet CRCG DIR GCN ChebNet GIN  
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(d) Confounder with 40% bias. CaNet CRCG DIR GCN ChebNet GIN 
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(e) Confounder with 50% bias. CaNet CRCG DIR GCN ChebNet GIN  
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(f) Confounder with 60% bias. CaNet CRCG DIR GCN ChebNet GIN 
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(g) Confounder with 70% bias. CaNet CRCG DIR GCN ChebNet GIN  
+
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Accuracy (%)
+> SPMotif
+> RWG-Molecular
+> RWG-Citation
+
+(h) Confounder with 80% bias. 
+
+Figure 10: Test Accuracy comparison with different bias. 26 Arxiv Paper                                                                                  
+
+> Molecule Molecular Formula Node Count Edge Count
+> Acetic Acid C2H4O232Adrenaline C9H13 NO 356Ammonia NH 323Anthracene C14 H10 24 12 Benzene Ring C6H666Benzoic Acid C7H6O298Ethane C2H621Ethanol C2H6O32Fullerenes C60 60 90 Glucose C6H12 O624 12 Hexamethylbenzene C9H12 21 15 Hydrated Sulfuric Acid H2SO 4·H 2O45Imidazole C3H4N296Indole C8H7N15 9Methane CH 411Methyl Anthranilate C8H9NO 218 12 Nitrobenzene C6H5NO 299Nitrophenol C6H5NO 310 10 Porphyrin C20 H12 N424 23 Pyridine C5H5N65Pyrimidine C4H4N285Pyrrole C4H5N65Simplified Dopamine C8H11 NO 211 11 Thiazole C3H3NS 75Thioether C4H8S12 7Vitamin C C6H8O620 10
+
+Table 3: Fundamental molecular motifs. compared to other causal methods. Overall, as the confounder bias increases, the performance of all models declines, but the rate of decline varies across different models. Causal enhancement models exhibit relatively stable performance, especially CaNet and CRCG, which maintain higher accuracy across various bias levels. However, when the confounder bias reaches 90%, even these models experience a significant drop in performance. The accuracy in the “Paper” column (represent-ing some baseline or paper-defined method) consistently remains low, suggesting that traditional methods without causal modeling perform worse when bias is introduced. In conclusion, causal enhancement methods like CaNet, CRCG, and DIR are more robust to the influence of confounders compared to standard GNN models such as GCN, ChebNet, and GIN, with their advantage being more pronounced at higher bias levels. However, even these causal enhancement methods experi-ence performance degradation under strong biases, indicating that while causal modeling helps mitigate the impact of confounders, it is not immune to them. E.2 TRAINING PROCESS ANALYSIS 
+
+We also analyzed the training performance of different methods under various scenarios. The results are shown in Figure 11. We can observe significant differences in the training performance of different methods across different datasets. In the molecular dataset with a single confounder (Figure a), the performance of the CaNet model is clearly superior to other methods. As the number of training epochs increases, its validation accuracy continuously rises, ultimately approaching 100%. Other methods, such as GCN, ChebNet, and GIN, show relatively flat performance, with validation accuracy fluctuating around 50%, and they fail to improve significantly. In the molecular dataset with multiple confounders (Figure b), CaNet still performs excellently, with its validation accuracy surpassing 80% and steadily increasing. Similar to Figure a, the performance of other 27 Arxiv Paper 
+
+Motif Name Construction Method Functionality Description 
+
+Star Motif Central node connected to all others Generates a star structure with one center node connected to all peripheral nodes. Path Motif Nodes connected in sequence Constructs a linear path where each node connects to the next in sequence. Fan Motif Central node with multiple branch nodes Creates a fan-like shape with a central hub and several out-ward branches, possibly interconnected. Cusped Polygon Motif Polygon with potential branches Builds a polygon structure with pointed (cusped) corners and optional branching substructures. Random Bipartite Motif Bipartite graph with random connections Generates a bipartite graph where two partitions are randomly interconnected. Tree Motif Hierarchical branching structure Constructs a tree graph where each node may connect to mul-tiple child nodes. Trident Motif Central node with two side branches Creates a trident-shaped structure, with a central node con-nected to two others, repeated for multiple tridents. Conical Connection Motif Backbone and branches in conical form Forms a cone-like motif where a backbone and branches are merged into a sandglass-shaped structure. Chain Bypass Motif Chain with branching bypasses Builds a chain structure with additional side branches that by-pass parts of the chain. Partial Polygon Motif Incomplete polygon with extensions Forms a partial polygon with potential branch-based exten-sions. Complete Graph Motif All nodes interconnected Constructs a complete graph where every node is connected to every other node. Grid/Net Motif Nodes arranged in a grid Creates a net or grid shape where nodes are placed in a matrix and connected to adjacent nodes. Cycle Motif Nodes forming a ring Forms a cycle where each node links to the next in a loop. Dual Ring Motif Two connected ring structures Builds two separate ring structures that may be intercon-nected. Triangle Motif Nodes forming triangles Creates triangle-based motifs where nodes are connected in three-node cycles. 
+
+Table 4: Connector modules. 
+
+Link Rule Description 
+
+Random Citation Generation Each paper randomly cites a set of papers; the number of citations follows a Poisson distribution. Citation by High Citation Count Each paper cites papers with higher citation counts to increase connectivity among highly cited papers. Co-Author Based Citation Papers by authors who have collaborated with the current paper’s authors are preferentially cited. Propagation-Based Citation Citation links are simulated using an information diffusion model (e.g., Independent Cascade). Topic Similarity-Based Citation Papers with high topic similarity (e.g., via cosine similarity on keywords/abstracts) are cited. Temporal Citation Older papers are preferentially cited to simulate time-evolving citation behavior. Author Influence-Based Citation Papers by more influential authors are more likely to be cited. Co-Citation Frequency-Based Citation Papers that are frequently co-cited with the current paper are selected as citation targets. Citation Density-Based Citation Papers with higher citation density (degree) are more likely to be cited. Network Topology-Based Citation Papers cite one of their neighbor nodes; if no neighbors exist, no citation is made. Author Expertise-Based Citation Papers from authors in the same or related research domains are preferred as citations. Citation Centrality-Based Citation Papers with higher centrality (e.g., degree, betweenness) in the citation graph are favored. Geographic Proximity-Based Citation Authors are more likely to cite papers from geographically proximate researchers. Research Team Size-Based Citation Papers from authors with similarly sized research teams are favored. Citation Credibility-Based Citation Papers with higher credibility (e.g., journal impact, author reputation) are more likely to be cited. Academic Lineage-Based Citation Papers authored by academic mentors or descendants are favored. Citation Structure-Based Citation Triangular citation patterns (e.g., A →B→C→A) are promoted to reflect structural motifs. Citation Distance-Based Citation Papers with fewer intermediate citation steps (shorter path length) are more likely to be cited. Knowledge Flow-Based Citation Knowledge flows from frontier to traditional areas guide citation directionality. Citation Chain Length-Based Citation Longer citation chains increase the likelihood of being cited. Diversity-Based Citation Papers with more diverse citation sources (across fields or topics) are more likely to be cited. Reference Count-Based Citation Papers with more references may appear more informative and are thus more likely to be cited. Research Object-Based Citation Papers focusing on attractive or high-interest research objects are more likely to be cited. Venue Reputation-Based Citation Papers published in high-impact journals/conferences are preferentially cited. Open Access-Based Citation Open access papers are more accessible and thus more likely to be cited. 
+
+Table 5: Citation Link Rules in Citation Network Construction 28 Arxiv Paper 0 10 20 30 40 50 
+
+Epoch 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Validation Accuracy(%)
+
+CaNet 
+
+CRCG 
+
+DIR 
+
+GCN 
+
+ChebNet 
+
+GIN 
+
+(a) RWG-Molecular with single confounder. 0 10 20 30 40 50 
+
+Epoch 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Validation Accuracy(%)
+
+CaNet 
+
+CRCG 
+
+DIR 
+
+GCN 
+
+ChebNet 
+
+GIN (b) RWG-Molecular with multiple confounders. 0 10 20 30 40 50 
+
+Epoch 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Validation Accuracy(%)
+
+CaNet 
+
+CRCG 
+
+DIR 
+
+GCN 
+
+ChebNet 
+
+GIN 
+
+(c) RWG-Citation with confounders consist of nodes. 0 10 20 30 40 50 
+
+Epoch 
+
+0
+
+20 
+
+40 
+
+60 
+
+80 
+
+100 
+
+> Validation Accuracy(%)
+
+CaNet 
+
+CRCG 
+
+DIR 
+
+GCN 
+
+ChebNet 
+
+GIN (d) RWG-Citation with confounders consist of nodes and edges. 
+
+Figure 11: Validation accuracy upon training procedure. 29 Arxiv Paper Table 6: Node Feature Generation Methods based on Statistical Distributions and Mathematical Sequences 
+
+Type Description 
+
+Normal Distribution Generates node features based on a normal distribution with specified mean and standard deviation. Uniform Distribution Generates node features based on a uniform distribution over a specified range. Exponential Distribution Generates node features based on an exponential distribution. Lognormal Distribution Generates node features based on a lognormal distribution. Gamma Distribution Generates node features based on a gamma distribution. Beta Distribution Generates node features based on a beta distribution. Weibull Distribution Generates node features based on a Weibull distribution. Laplace Distribution Generates node features based on a Laplace distribution. Logistic Distribution Generates node features based on a logistic distribution. Rayleigh Distribution Generates node features based on a Rayleigh distribution. Pareto Distribution Generates node features based on a Pareto distribution. Cauchy Distribution Generates node features based on a Cauchy distribution. Negative Binomial Distribution Generates node features based on a negative binomial distribution. Gumbel Distribution Generates node features based on a Gumbel distribution. Gompertz Distribution Generates node features based on a Gompertz distribution. Arithmetic Sequence Generates node features based on an arithmetic sequence with a speci-fied step size. Geometric Sequence Generates node features based on a geometric sequence. Fibonacci Sequence Generates node features based on the Fibonacci sequence. Square Sequence Generates node features based on a sequence of square numbers. Cube Sequence Generates node features based on a sequence of cube numbers. Prime Sequence Generates node features based on a sequence of prime numbers. Triangular Sequence Generates node features based on a triangular number sequence. Rectangular Sequence Generates node features based on a rectangular number sequence. Binomial Coefficient Sequence Generates node features based on a binomial coefficient sequence. Hamiltonian Sequence Generates node features based on a Hamiltonian sequence. 
+
+methods is closer to each other, with DIR and GIN showing poorer results, failing to significantly improve the model accuracy. For the citation dataset, where confounders consist of nodes (Figure c), CaNet’s performance remains the most outstanding, with validation accuracy maintained at a high level, and the training process is relatively stable. In Figure d (where confounders consist of both nodes and edges), CaNet still achieves good results, with validation accuracy showing a steady upward trend. Other methods, such as GCN and ChebNet, show slightly worse performance, with validation accuracy fluctuating significantly. In summary, causal graph representation learning demonstrates an advantage over general methods through-out the training process. Additionally, we observe that some methods may experience performance degra-dation as training progresses when confounder interference is present. E.3 EXPERIMENTAL RESULTS ACROSS DIFFERENT CONFOUNDER TYPES .We also analyzed the effects of different types of graph elements acting as confounders within Figure 12, 13 and 14. The results are shown in the figures. From the overall trend, it can be observed that the test accuracy fluctuates across different methods as the type of graph element changes. When dealing with different graph structures, such as “Star,” “Path,” and “Fan,” it is evident that the accuracy of the models varies depending on the confounder type. For example, in certain graph element scenarios, the accuracy fluctuates to varying degrees, while in others, it gradually stabilizes as training progresses, indicating that these methods exhibit different adaptability to confounders. For molecular structure datasets, such as “Benzene Ring,” “Methane,” and “Ethane,” the impact of different confounder types on model performance is also noticeable. In some structures, the interference of con-30 Arxiv Paper CaNet CRCG DIR GCN ChebNet GIN 
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(a) Star CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(b) Path CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(c) Fan CaNet CRCG DIR GCN ChebNet GIN 
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(d) Spiked Polygon CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(e) Random Bipartite 
+
+Figure 12: Motif Confounders founders appears to complicate the training process and affects the final test accuracy, while in other cases, the confounder’s interference does not result in a significant accuracy drop. In the citation dataset, such as “Basic Element,” “Citation Element,” and “Topic Element,” the test accuracy shows more complex trends as the confounder type changes. In certain graph element scenarios, the models exhibit higher volatility when processing specific elements, indicating greater sensitivity to confounders in these contexts. In conclusion, as the confounder type changes, the test accuracy of the models is influenced to varying de-grees, and different types of graph elements exhibit different impact patterns. This suggests that the perfor-mance of methods in handling confounders is closely related to the type and complexity of the confounder, as well as the specific structure of the data. 
+
+F DETAILS OF EXPERIMENTS 
+
+F.1 REC S ETTINGS 
+
+This module’s key hyperparameters include: λinit = 1 .0, which controls the initial filtering strength; ϵ =0.01 , which implements progressive decay during the training process; λmin = 0 .2.31 Arxiv Paper CaNet CRCG DIR GCN ChebNet GIN 
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(a) Benzene Ring CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(b) Methane CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(c) Ethane CaNet CRCG DIR GCN ChebNet GIN 
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(d) Benzoic Acid CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(e) Nitrobenzene 
+
+Figure 13: Molecular Structure Confounders F.2 BASELINES AND SETTINGS 
+
+GCN. We adopt a two-layer Graph Convolutional Network (GCN) architecture for representation learning. The hidden dimension is set to 64, and each layer performs neighborhood aggregation based on the graph structure, trained using a learning rate of 0.01, a weight decay of 5 × 10 −4, a batch size of 32, and for 50 training epochs 
+
+GIN. This baseline is a graph neural network architecture designed to achieve strong expressive power in distinguishing graph structures. It is based on a message-passing mechanism, where node representations are iteratively updated through neighborhood aggregation. In our configuration, GIN employs a hidden dimension of 64, with two network layers. The model is also trained using the setting as GCN. 
+
+ChebNet. This baseline performs graph convolution through Chebyshev polynomial approximation of the graph Laplacian. In our baseline, we adopt a two-layer architecture with polynomial order 2 and a hidden dimension of 64. The model is trained for 10,000 epochs with a learning rate of 0.01 and a dropout rate of 0.5. By leveraging higher-order polynomial filters on either the symmetrically normalized or the random-walk normalized Laplacian, ChebNet enables effective aggregation of neighborhood information. Each layer is followed by nonlinear activation and dropout, which enhance the expressiveness of node representations. 32 Arxiv Paper CaNet CRCG DIR GCN ChebNet GIN 
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(a) Basic Element CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(b) Citation Element CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(c) Author Element CaNet CRCG DIR GCN ChebNet GIN 
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(d) Topic Element CaNet CRCG DIR GCN ChebNet GIN  
+
+> Models
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Test Accuracy (%)
+> CaNet
+> CRCG
+> DIR
+> GCN
+> ChebNet
+> GIN
+
+(e) Method Element 
+
+Figure 14: Citation Confounders 
+
+DIR. This baseline is designed to capture causal structures within graphs. The model is configured with a hidden dimension of 128, a causal ratio of 0.7, a learning rate of 0.001, a batch size of 128, and is trained for 50 epochs. It estimates edge importance scores through convolutional encoding and a multilayer percep-tron, and then separates subgraphs based on the causal ratio. The architecture incorporates three predictive branches, focusing on causal, confounding, and combined predictions. Training follows a dual-loss strategy with masking mechanisms, which emphasize causal signals while mitigating the influence of confounders. 
+
+CRCG. This baseline integrates causal representation learning into graph neural networks. With a hidden dimension of 32, a causal ratio of 0.25, a learning rate of 0.001, a batch size of 64, and 50 training epochs, this baseline jointly models causal and confounding structures. Edge importance is estimated by combining an encoder with a scoring mechanism, and graphs are split into causal and confounding subgraphs before being relabeled for consistency. The predictive module contains distinct branches for causal and confounding signals. Training employs a dual-loss scheme, and model performance is evaluated with multiple metrics, including accuracy, precision, and mean reciprocal rank. 
+
+CaNet. This baseline introduces a causal attention mechanism for robust graph learning. It is evaluated on the Citeseer dataset with a two-layer architecture, a hidden dimension of 64, three environments, a learning rate of 0.01, weight decay of 5 × 10 −4, and 40 training epochs. To ensure stability, experiments are repeated 33 Arxiv Paper three times. CaNet leverages Gumbel-Softmax to learn environment distributions and adopts a two-stage forward process, where the model outputs both predictions and regularization losses during training. Afeature filtering module is applied at the input stage to suppress noisy or irrelevant features, and graph-level pooling is used for aggregation. This design strengthens the generalization ability of the model across different environments. F.3 DATASETS 
+
+RWG-Molecular. Each generated dataset contains 1900 graphs, among which 1500 graph samples are used as training samples, 200 samples as validation samples, and 200 samples as test samples. The number of nodes ranges from 50 to 80, the number of edges ranges from 60 to 120, the node feature dimension is 5, and there are 5 classes. In the experiment of Figure 3, the dataset is artificially synthesized molecular data, with a confounding ratio of 90% and an intervention probability of 100%. In the experiment of Figure 4, the dataset is artificially synthesized molecular data, with the confounding ratio ranging from 10% to 90%. In the experiment of Figure 5, the dataset is artificially synthesized molecular data with either a single large molecule block (index = 1, size = 50, branched = 10) or multiple small molecule blocks (indices = 1–10, size = 5, branches = 5), and a confounding ratio of 70% is applied. In the experiment of Figure 6, the training set of the dataset has a confounding ratio of 0%, while the validation and test sets have a confounding ratio of 70%. In the experiment of Table 2, the dataset is artificially synthesized molecular data, with a confounding ratio of 70%. 
+
+RWG-Citation. Each generated dataset contains 1900 graphs, among which 1500 graph samples are used for training, 200 samples for validation, and 200 samples for testing. The number of nodes ranges from 15 to 25, the number of edges ranges from 20 to 60, the node feature dimension is 5, and there are 5 classes. In the experiment of Figure 3, the dataset is artificially synthesized citation network data, with a confounding ratio of 90% and an intervention probability of 100%. In the experiment of Figure 4, the dataset is artificially synthesized citation network data, with the confounding ratio ranging from 10% to 90%. In the experiment of Figure 5, the dataset is artificially synthesized citation network data, incorporating mixed node information and complex structures (e.g., node relations), with a confounding ratio of 70%. In the experiment of Figure 6, the training set of the dataset is applied with a confounding ratio of 0%, while the validation and test sets are applied with a confounding ratio of 70%. In the experiment of Table 2, the dataset is artificially synthesized citation network data, with a confounding ratio of 70%. 
+
+SPMotif. In each generated dataset, there are 1900 graphs in total, with 1500 graphs used as training samples, 200 graphs as validation samples, and 200 graphs as test samples. The number of nodes ranges from 20 to 40, the number of edges ranges from 30 to 50, the node feature dimension is 5, and there are 5 classes. In the experiments of Figure 3, the dataset consists of synthetically generated primitive data, with a confounding ratio of 90% and an intervention probability of 100%. In the experiments of Figure 4, the dataset consists of synthetically generated primitive data, with the confounding ratio ranging from 10% to 90%. In the experiments of Figure 6, the training set of the dataset is generated with a confounding ratio of 0, while the validation and test sets are generated with a confounding ratio of 70%. In the experiments of Table 2, the dataset consists of synthetically generated primitive data, with a confounding ratio of 70%. 
+
+CRCG. This dataset is a synthetic graph classification dataset. Following the official setting, our generated data comprises 4,000 graphs in total, with 1,000 for training, 1,000 for validation, and 2,000 for testing. The dataset contains five classes, and the confounder ratio is set to 70%. 
+
+CiteSeer. This dataset is a citation network dataset consisting of 3,312 nodes, each with a 3,703-dimensional feature vector, and 4,723 edges. The dataset contains six classes. 34 Arxiv Paper 
+
+ENZYMES. This dataset is a graph dataset constructed from protein tertiary structures. It contains 600 graphs with a total of 19,580 nodes and 174,564 edges. Each node has a 3-dimensional feature vector, and the dataset covers six classes. 35

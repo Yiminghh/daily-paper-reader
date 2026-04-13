@@ -1,0 +1,578 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-13T20:22:51.381732+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 3,
+    "deep_cap": 6,
+    "deep_selected": 3,
+    "quick_candidates": 11,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2604.09130v1",
+      "title": "EquiformerV3: Scaling Efficient, Expressive, and General SE(3)-Equivariant Graph Attention Transformers",
+      "abstract": "As $SE(3)$-equivariant graph neural networks mature as a core tool for 3D atomistic modeling, improving their efficiency, expressivity, and physical consistency has become a central challenge for large-scale applications. In this work, we introduce EquiformerV3, the third generation of the $SE(3)$-equivariant graph attention Transformer, designed to advance all three dimensions: efficiency, expressivity, and generality. Building on EquiformerV2, we have the following three key advances. First, we optimize the software implementation, achieving $1.75\\times$ speedup. Second, we introduce simple and effective modifications to EquiformerV2, including equivariant merged layer normalization, improved feedforward network hyper-parameters, and attention with smooth radius cutoff. Third, we propose SwiGLU-$S^2$ activations to incorporate many-body interactions for better theoretical expressivity and to preserve strict equivariance while reducing the complexity of sampling $S^2$ grids. Together, SwiGLU-$S^2$ activations and smooth-cutoff attention enable accurate modeling of smoothly varying potential energy surfaces (PES), generalizing EquiformerV3 to tasks requiring energy-conserving simulations and higher-order derivatives of PES. With these improvements, EquiformerV3 trained with the auxiliary task of denoising non-equilibrium structures (DeNS) achieves state-of-the-art results on OC20, OMat24, and Matbench Discovery.",
+      "authors": [
+        "Yi-Lun Liao",
+        "Alexander J. Hoffman",
+        "Sabrina C. Shen",
+        "Alexandre Duval",
+        "Sam Walton Norwood",
+        "Tess Smidt"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-10T09:12:16+00:00",
+      "link": "https://arxiv.org/pdf/2604.09130v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "SE(3)-equivariant graph attention Transformers for 3D atomistic modeling",
+      "llm_evidence_cn": "用于3D原子建模的SE(3)等变图注意力Transformer",
+      "llm_evidence": "用于3D原子建模的SE(3)等变图注意力Transformer",
+      "canonical_evidence": "用于3D原子建模的SE(3)等变图注意力Transformer",
+      "llm_tldr_en": "Advances SE(3)-equivariant graph neural networks for efficient and expressive 3D molecular modeling.",
+      "llm_tldr_cn": "推进了用于高效且富有表现力的3D分子建模的SE(3)等变图神经网络。",
+      "llm_tldr": "推进了用于高效且富有表现力的3D分子建模的SE(3)等变图神经网络。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.09320v1",
+      "title": "Transferable FB-GNN-MBE Framework for Potential Energy Surfaces: Data-Adaptive Transfer Learning in Deep Learned Many-Body Expansion Theory",
+      "abstract": "Mechanistic understanding and rational design of complex chemical systems depend on fast and accurate predictions of electronic structures beyond individual building blocks. However, if the system exceeds hundreds of atoms, first-principles quantum mechanical (QM) modeling becomes impractical. In this study, we developed FB-GNN-MBE by integrating a fragment-based graph neural network (FB-GNN) into the many-body expansion (MBE) theory and demonstrated its capacity to reproduce first-principles potential energy surfaces (PES) for hierarchically structured systems with manageable accuracy, complexity, and interpretability. Specifically, we divided the entire system into basic building blocks (fragments), evaluated their one-fragment energies using a QM model, and addressed many-fragment interactions using the structure-property relationships trained by FB-GNNs. Our investigation shows that FB-GNN-MBE achieves chemical accuracy in predicting two-body (2B) and three-body (3B) energies across water, phenol, and mixture benchmarks, as well as the one-dimensional dissociation curves of water and phenol dimers. To transfer the success of FB-GNN-MBE across various systems with minimal computational costs and data demands, we developed and validated a teacher-student learning protocol. A heavy-weight FB-GNN trained on a mixed-density water cluster ensemble (teacher) distills its learned knowledge and passes it to a light-weight GNN (student), which is later fine-tuned on a uniform-density (H2O)21 cluster ensemble. This transfer learning strategy resulted in efficient and accurate prediction of 2B and 3B energies for variously sized water clusters without retraining. Our transferable FB-GNN-MBE framework outperformed conventional non-FB-GNN-based models and showed high practicality for large-scale molecular simulations.",
+      "authors": [
+        "Siqi Chen",
+        "Zhiqiang Wang",
+        "Yili Shen",
+        "Xianqi Deng",
+        "Xi Cheng",
+        "Cheng-Wei Ju",
+        "Jun Yi",
+        "Guo Ling",
+        "Dieaa Alhmoud",
+        "Hui Guan",
+        "Zhou Lin"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cs.LG"
+      ],
+      "published": "2026-04-10T13:43:19+00:00",
+      "link": "https://arxiv.org/pdf/2604.09320v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "fragment-based graph neural network for molecular systems",
+      "llm_evidence_cn": "用于分子系统的基于片段的图神经网络",
+      "llm_evidence": "用于分子系统的基于片段的图神经网络",
+      "canonical_evidence": "用于分子系统的基于片段的图神经网络",
+      "llm_tldr_en": "FB-GNN-MBE uses graph neural networks to predict potential energy surfaces for large molecular systems.",
+      "llm_tldr_cn": "FB-GNN-MBE利用图神经网络预测大型分子系统的势能面，实现了高效的电子结构建模。",
+      "llm_tldr": "FB-GNN-MBE利用图神经网络预测大型分子系统的势能面，实现了高效的电子结构建模。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.09308v1",
+      "title": "Constraint-Aware Corrective Memory for Language-Based Drug Discovery Agents",
+      "abstract": "Large language models are making autonomous drug discovery agents increasingly feasible, but reliable success in this setting is not determined by any single action or molecule. It is determined by whether the final returned set jointly satisfies protocol-level requirements such as set size, diversity, binding quality, and developability. This creates a fundamental control problem: the agent plans step by step, while task validity is decided at the level of the whole candidate set. Existing language-based drug discovery systems therefore tend to rely on long raw history and under-specified self-reflection, making failure localization imprecise and planner-facing agent states increasingly noisy. We present CACM (Constraint-Aware Corrective Memory), a language-based drug discovery framework built around precise set-level diagnosis and a concise memory write-back mechanism. CACM introduces protocol auditing and a grounded diagnostician, which jointly analyze multimodal evidence spanning task requirements, pocket context, and candidate-set evidence to localize protocol violations, generate actionable remediation hints, and bias the next action toward the most relevant correction. To keep planning context compact, CACM organizes memory into static, dynamic, and corrective channels and compresses them before write-back, thereby preserving persistent task information while exposing only the most decision-relevant failures. Our experimental results show that CACM improves the target-level success rate by 36.4% over the state-of-the-art baseline. The results show that reliable language-based drug discovery benefits not only from more powerful molecular tools, but also from more precise diagnosis and more economical agent states.",
+      "authors": [
+        "Maochen Sun",
+        "Youzhi Zhang",
+        "Gaofeng Meng"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-10T13:16:44+00:00",
+      "link": "https://arxiv.org/pdf/2604.09308v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Language-based drug discovery agents and molecular set constraints",
+      "llm_evidence_cn": "基于语言模型的药物发现智能体与分子集合约束",
+      "llm_evidence": "基于语言模型的药物发现智能体与分子集合约束",
+      "canonical_evidence": "基于语言模型的药物发现智能体与分子集合约束",
+      "llm_tldr_en": "Introduces a memory mechanism for LLM agents to satisfy multi-objective constraints in drug discovery.",
+      "llm_tldr_cn": "为大语言模型智能体引入记忆机制，以满足药物发现中的多目标约束。",
+      "llm_tldr": "为大语言模型智能体引入记忆机制，以满足药物发现中的多目标约束。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "foundation models for molecular discovery and representation learning",
+      "matched_requirement_id": "req-3",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.08698v1",
+      "title": "EvoLen: Evolution-Guided Tokenization for DNA Language Model",
+      "abstract": "Tokens serve as the basic units of representation in DNA language models (DNALMs), yet their design remains underexplored. Unlike natural language, DNA lacks inherent token boundaries or predefined compositional rules, making tokenization a fundamental modeling decision rather than a naturally specified one. While existing approaches like byte-pair encoding (BPE) excel at capturing token structures that reflect human-generated linguistic regularities, DNA is organized by biological function and evolutionary constraint rather than linguistic convention. We argue that DNA tokenization should prioritize functional sequence patterns like regulatory motifs-short, recurring segments under evolutionary constraint and typically preserved across species. We incorporate evolutionary information directly into the tokenization process through EvoLen, a tokenizer that combines evolutionary stratification with length-aware decoding to better preserve motif-scale functional sequence units. EvoLen uses cross-species evolutionary signals to group DNA sequences, trains separate BPE tokenizers on each group, merges the resulting vocabularies via a rule prioritizing preserved patterns, and applies length-aware decoding with dynamic programming. Through controlled experiments, EvoLen improves the preservation of functional sequence patterns, differentiation across genomic contexts, and alignment with evolutionary constraint, while matching or outperforming standard BPE across diverse DNALM benchmarks. These results demonstrate that tokenization introduces a critical inductive bias and that incorporating evolutionary information yields more biologically meaningful and interpretable sequence representations.",
+      "authors": [
+        "Nan Huang",
+        "Xiaoxiao Zhou",
+        "Junxia Cui",
+        "Mario Tapia-Pacheco",
+        "Tiffany Amariuta",
+        "Yang Li",
+        "Jingbo Shang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "q-bio.GN"
+      ],
+      "published": "2026-04-09T18:41:28+00:00",
+      "link": "https://arxiv.org/pdf/2604.08698v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Evolution-guided tokenization for biological sequence language models",
+      "llm_evidence_cn": "生物序列语言模型的进化引导分词方法",
+      "llm_evidence": "生物序列语言模型的进化引导分词方法",
+      "canonical_evidence": "生物序列语言模型的进化引导分词方法",
+      "llm_tldr_en": "Proposes a functional tokenization strategy for DNA language models based on evolutionary constraints.",
+      "llm_tldr_cn": "提出了一种基于进化约束的DNA语言模型功能化分词策略。",
+      "llm_tldr": "提出了一种基于进化约束的DNA语言模型功能化分词策略。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "large-scale foundation models for RNA sequence and structure",
+      "matched_requirement_id": "req-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.04365v1",
+      "title": "Attributed Network Alignment: Statistical Limits and Efficient Algorithm",
+      "abstract": "This paper studies the problem of recovering a hidden vertex correspondence between two correlated graphs when both edge weights and node features are observed. While most existing work on graph alignment relies primarily on edge information, many real-world applications provide informative node features in addition to graph topology. To capture this setting, we introduce the featured correlated Gaussian Wigner model, where two graphs are coupled through an unknown vertex permutation, and the node features are correlated under the same permutation. We characterize the optimal information-theoretic thresholds for exact recovery and partial recovery of the latent mapping. On the algorithmic side, we propose QPAlign, an algorithm based on a quadratic programming relaxation, and demonstrate its strong empirical performance on both synthetic and real datasets. Moreover, we also derive theoretical guarantees for the proposed procedure, supporting its reliability and providing convergence guarantees.",
+      "authors": [
+        "Dong Huang",
+        "Chenyang Tian",
+        "Pengkun Yang"
+      ],
+      "primary_category": "math.ST",
+      "categories": [
+        "math.ST",
+        "stat.ML"
+      ],
+      "published": "2026-04-06T02:27:50+00:00",
+      "link": "https://arxiv.org/pdf/2604.04365v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "graph alignment using topology and node features",
+      "llm_evidence_cn": "利用拓扑和节点特征进行图对齐",
+      "llm_evidence": "利用拓扑和节点特征进行图对齐",
+      "canonical_evidence": "利用拓扑和节点特征进行图对齐",
+      "llm_tldr_en": "Studies statistical limits and algorithms for aligning attributed networks using both topology and features.",
+      "llm_tldr_cn": "研究了利用拓扑和特征进行属性网络对齐的统计极限和算法。",
+      "llm_tldr": "研究了利用拓扑和特征进行属性网络对齐的统计极限和算法。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.08744v1",
+      "title": "Active Learning for Generalizable Detonation Performance Prediction of Energetic Materials",
+      "abstract": "The discovery of new energetic materials is critical for advancing technologies from defense to private industry. However, experimental approaches remain slow and expensive while computational alternatives require accurate material property inputs that are often costly to obtain, limiting their ability to efficiently predict detonation performance across a vast chemical space. We address this challenge through an active learning strategy that integrates density functional theory calculations, thermochemical modeling, message-passing neural networks, and Bayesian optimization. The resulting high-throughput workflow iteratively expands the training dataset by selecting new molecules in a targeted manner that balances the exploration of broad chemical space with the exploitation of promising high-performing candidates. This approach yields the largest publicly available database of potential CHNO explosives drawn from an initial pool of more than 70 billion candidates and a generalizable surrogate model capable of accurately predicting detonation performance (R$^2$ > 0.98). Feature importance analysis on this largest-to-date dataset reveals that oxygen balance is the dominant driver of detonation performance, complemented by contributions from local electronic structure, density, and the presence of specific functional groups. Cheminformatics analysis highlights how energetic materials with similar performance metrics tend to cluster in distinct chemical spaces offering a clearer direction for future synthesis studies. Together, the surrogate model, database, and resulting chemical insights provide a valuable foundation for high-throughput screening and targeted discovery of new energetic materials spanning diverse and previously unexplored regions of chemical space.",
+      "authors": [
+        "R. Seaton Ullberg",
+        "Megan C. Davis",
+        "Jeremy N. Schroeder",
+        "Andrew H. Salij",
+        "M. J. Cawkwell",
+        "Christopher J. Snyder",
+        "Wilton J. M. Kort-Kamp",
+        "Ivana Matanovic"
+      ],
+      "primary_category": "physics.chem-ph",
+      "categories": [
+        "physics.chem-ph",
+        "cond-mat.mtrl-sci",
+        "cs.LG",
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-09T20:16:17+00:00",
+      "link": "https://arxiv.org/pdf/2604.08744v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "message-passing neural networks for molecular property prediction",
+      "llm_evidence_cn": "用于分子属性预测的消息传递神经网络",
+      "llm_evidence": "用于分子属性预测的消息传递神经网络",
+      "canonical_evidence": "用于分子属性预测的消息传递神经网络",
+      "llm_tldr_en": "Integrates MPNNs and active learning for high-throughput prediction of energetic material performance.",
+      "llm_tldr_cn": "结合消息传递神经网络和主动学习，实现含能材料性能的高通量预测。",
+      "llm_tldr": "结合消息传递神经网络和主动学习，实现含能材料性能的高通量预测。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.06260v1",
+      "title": "$S^3$: Stratified Scaling Search for Test-Time in Diffusion Language Models",
+      "abstract": "Test-time scaling investigates whether a fixed diffusion language model (DLM) can generate better outputs when given more inference compute, without additional training. However, naive best-of-$K$ sampling is fundamentally limited because it repeatedly draws from the same base diffusion distribution, whose high-probability regions are often misaligned with high-quality outputs. We propose $S^3$ (Stratified Scaling Search), a classical verifier-guided search method that improves generation by reallocating compute during the denoising process rather than only at the final output stage. At each denoising step, $S^3$ expands multiple candidate trajectories, evaluates them with a lightweight reference-free verifier, and selectively resamples promising candidates while preserving diversity within the search frontier. This procedure effectively approximates a reward-tilted sampling distribution that favors higher-quality outputs while remaining anchored to the model prior. Experiments with LLaDA-8B-Instruct on MATH-500, GSM8K, ARC-Challenge, and TruthfulQA demonstrate that $S^3$ consistently improves performance across benchmarks, achieving the largest gains on mathematical reasoning tasks while leaving the underlying model and decoding schedule unchanged. These results show that classical search over denoising trajectories provides a practical mechanism for test-time scaling in DLMs.",
+      "authors": [
+        "Ahsan Bilal",
+        "Muhammad Ahmed Mohsin",
+        "Muhammad Umer",
+        "Asad Aali",
+        "Muhammad Usman Khanzada",
+        "Muhammad Usman Rafique",
+        "Zihao He",
+        "Emily Fox",
+        "Dean F. Hougen"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-07T00:51:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.06260v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "diffusion language models and verifier-guided search",
+      "llm_evidence_cn": "扩散语言模型与验证器引导的搜索",
+      "llm_evidence": "扩散语言模型与验证器引导的搜索",
+      "canonical_evidence": "扩散语言模型与验证器引导的搜索",
+      "llm_tldr_en": "Proposes a stratified search method to improve generation quality in diffusion language models.",
+      "llm_tldr_cn": "提出了一种分层搜索方法，以提高扩散语言模型的生成质量。",
+      "llm_tldr": "提出了一种分层搜索方法，以提高扩散语言模型的生成质量。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.08890v1",
+      "title": "A Closer Look at the Application of Causal Inference in Graph Representation Learning",
+      "abstract": "Modeling causal relationships in graph representation learning remains a fundamental challenge. Existing approaches often draw on theories and methods from causal inference to identify causal subgraphs or mitigate confounders. However, due to the inherent complexity of graph-structured data, these approaches frequently aggregate diverse graph elements into single causal variables, an operation that risks violating the core assumptions of causal inference. In this work, we prove that such aggregation compromises causal validity. Building on this conclusion, we propose a theoretical model grounded in the smallest indivisible units of graph data to ensure that the causal validity is guaranteed. With this model, we further analyze the costs of achieving precise causal modeling in graph representation learning and identify the conditions under which the problem can be simplified. To empirically support our theory, we construct a controllable synthetic dataset that reflects realworld causal structures and conduct extensive experiments for validation. Finally, we develop a causal modeling enhancement module that can be seamlessly integrated into existing graph learning pipelines, and we demonstrate its effectiveness through comprehensive comparative experiments.",
+      "authors": [
+        "Hang Gao",
+        "Kunyu Li",
+        "Huang Hong",
+        "Baoquan Cui",
+        "Fengge Wu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-10T02:53:50+00:00",
+      "link": "https://arxiv.org/pdf/2604.08890v1",
+      "tags": [
+        "keyword:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "causal inference in graph representation learning",
+      "llm_evidence_cn": "图表示学习中的因果推理",
+      "llm_evidence": "图表示学习中的因果推理",
+      "canonical_evidence": "图表示学习中的因果推理",
+      "llm_tldr_en": "Analyzes causal validity in graph representation learning and proposes a model based on indivisible graph units.",
+      "llm_tldr_cn": "分析了图表示学习中的因果有效性，并提出了一种基于不可分图单元的理论模型。",
+      "llm_tldr": "分析了图表示学习中的因果有效性，并提出了一种基于不可分图单元的理论模型。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.07781v1",
+      "title": "Toward Generalizable Graph Learning for 3D Engineering AI: Explainable Workflows for CAE Mode Shape Classification and CFD Field Prediction",
+      "abstract": "Automotive engineering development increasingly relies on heterogeneous 3D data, including finite element (FE) models, body-in-white (BiW) representations, CAD geometry, and CFD meshes. At the same time, engineering teams face growing pressure to shorten development cycles, improve performance and accelerate innovation. Although artificial intelligence (AI) is increasingly explored in this domain, many current methods remain task-specific, difficult to interpret, and hard to reuse across development stages. This paper presents a practical graph learning framework for 3D engineering AI, in which heterogeneous engineering assets are converted into physics-aware graph representations and processed by Graph Neural Networks (GNNs). The framework is designed to support both classification and prediction tasks. The framework is validated on two automotive applications: CAE vibration mode shape classification and CFD aerodynamic field prediction. For CAE vibration mode classification, a region-aware BiW graph supports explainable mode classification across vehicle and FE variants under label scarcity. For CFD aerodynamic field prediction, a physics-informed surrogate predicts pressure and wall shear stress (WSS) across aerodynamic body shape variants, while symmetry preserving down sampling retains accuracy with lower computational cost. The framework also outlines data generation guidance that can help engineers identify which additional simulations or labels are valuable to collect next. These results demonstrate a practical and reusable engineering AI workflow for more trustworthy CAE and CFD decision support.",
+      "authors": [
+        "Tong Duy Son",
+        "Kohta Sugiura",
+        "Marc Brughmans",
+        "Andrey Hense",
+        "Zhihao Liu",
+        "Amirthalakshmi Veeraraghavan",
+        "Ajinkya Bhave",
+        "Jay Masters",
+        "Paolo di Carlo",
+        "Theo Geluk"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-04-09T04:15:17+00:00",
+      "link": "https://arxiv.org/pdf/2604.07781v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "physics-aware graph representations for 3D engineering data",
+      "llm_evidence_cn": "3D工程数据的物理感知图表示",
+      "llm_evidence": "3D工程数据的物理感知图表示",
+      "canonical_evidence": "3D工程数据的物理感知图表示",
+      "llm_tldr_en": "Develops a graph learning framework using physics-aware representations for 3D engineering and CFD prediction.",
+      "llm_tldr_cn": "开发了一个图学习框架，利用物理感知表示进行3D工程和CFD预测。",
+      "llm_tldr": "开发了一个图学习框架，利用物理感知表示进行3D工程和CFD预测。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.09001v1",
+      "title": "Hypergraph Neural Networks Accelerate MUS Enumeration",
+      "abstract": "Enumerating Minimal Unsatisfiable Subsets (MUSes) is a fundamental task in constraint satisfaction problems (CSPs). Its major challenge is the exponential growth of the search space, which becomes particularly severe when satisfiability checks are expensive. Recent machine learning approaches reduce this cost for Boolean satisfiability problems but rely on explicit variable-constraint relationships, limiting their application domains. This paper proposes a domain-agnostic method to accelerate MUS enumeration using Hypergraph Neural Networks (HGNNs). The proposed method incrementally builds a hypergraph with constraints as vertices and MUSes enumerated until the current step as hyperedges, and employs an HGNN-based agent trained via reinforcement learning to minimize the number of satisfiability checks required to obtain an MUS. Experimental results demonstrate the effectiveness of our approach in accelerating MUS enumeration, showing that our method can enumerate more MUSes within the same satisfiability check budget compared to conventional methods.",
+      "authors": [
+        "Hiroya Ijima",
+        "Koichiro Yawata"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI",
+        "cs.LG",
+        "cs.LO"
+      ],
+      "published": "2026-04-10T06:13:41+00:00",
+      "link": "https://arxiv.org/pdf/2604.09001v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "hypergraph neural networks for higher-order network structures",
+      "llm_evidence_cn": "用于高阶网络结构的超图神经网络",
+      "llm_evidence": "用于高阶网络结构的超图神经网络",
+      "canonical_evidence": "用于高阶网络结构的超图神经网络",
+      "llm_tldr_en": "Accelerates MUS enumeration using hypergraph neural networks to model complex constraint relationships.",
+      "llm_tldr_cn": "利用超图神经网络对复杂约束关系建模，加速最小不可满足子集的枚举。",
+      "llm_tldr": "利用超图神经网络对复杂约束关系建模，加速最小不可满足子集的枚举。",
+      "llm_tags": [
+        "query:molrna:composite"
+      ],
+      "matched_query_tag": "query:molrna:composite",
+      "matched_query_text": "Papers central to 检索高阶网络、图表示学习、拓扑深度学习、diffusion generative model和分子或RNA相关的交叉研究, especially work that connects or combines: H; large-scale foundation models for RNA sequence and structure; foundation models for molecular discovery and representation learning; graph representation learning for molecular structures; G; topological deep learning for RNA and molecules; recent advances in molecule and RNA foundation models; generative models for de novo molecular and RNA design; advancements in topological deep learning for molecular property prediction; diffusion models for RNA sequence and structure generation.",
+      "matched_requirement_id": "req-composite-molrna",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.08536v1",
+      "title": "RewardFlow: Generate Images by Optimizing What You Reward",
+      "abstract": "We introduce RewardFlow, an inversion-free framework that steers pretrained diffusion and flow-matching models at inference time through multi-reward Langevin dynamics. RewardFlow unifies complementary differentiable rewards for semantic alignment, perceptual fidelity, localized grounding, object consistency, and human preference, and further introduces a differentiable VQA-based reward that provides fine-grained semantic supervision through language-vision reasoning. To coordinate these heterogeneous objectives, we design a prompt-aware adaptive policy that extracts semantic primitives from the instruction, infers edit intent, and dynamically modulates reward weights and step sizes throughout sampling. Across several image editing and compositional generation benchmarks, RewardFlow delivers state-of-the-art edit fidelity and compositional alignment.",
+      "authors": [
+        "Onkar Susladkar",
+        "Dong-Hwan Jang",
+        "Tushar Prakash",
+        "Adheesh Juvekar",
+        "Vedant Shah",
+        "Ayush Barik",
+        "Nabeel Bashir",
+        "Muntasir Wahed",
+        "Ritish Shrirao",
+        "Ismini Lourentzou"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-04-09T17:59:19+00:00",
+      "link": "https://arxiv.org/pdf/2604.08536v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "steering diffusion models via multi-reward Langevin dynamics",
+      "llm_evidence_cn": "通过多奖励朗之万动力学引导扩散模型",
+      "llm_evidence": "通过多奖励朗之万动力学引导扩散模型",
+      "canonical_evidence": "通过多奖励朗之万动力学引导扩散模型",
+      "llm_tldr_en": "Introduces RewardFlow to steer diffusion models at inference time using multiple differentiable rewards.",
+      "llm_tldr_cn": "引入RewardFlow，在推理时利用多种可微奖励引导扩散模型生成。",
+      "llm_tldr": "引入RewardFlow，在推理时利用多种可微奖励引导扩散模型生成。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "diffusion models for RNA sequence and structure generation",
+      "matched_requirement_id": "req-10",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.09369v1",
+      "title": "Biologically-Grounded Multi-Encoder Architectures as Developability Oracles for Antibody Design",
+      "abstract": "Generative models can now propose thousands of \\emph{de novo} antibody sequences, yet translating these designs into viable therapeutics remains constrained by the cost of biophysical characterization. Here we present CrossAbSense, a framework of property-specific neural oracles that combine frozen protein language model encoders with configurable attention decoders, identified through a systematic hyperparameter campaign totaling over 200 runs per property. On the GDPa1 benchmark of 242 therapeutic IgGs, our oracles achieve notable improvements of 12--20\\% over established baselines on three of five developability assays and competitive performance on the remaining two. The central finding is that optimal decoder architectures \\emph{invert} our initial biological hypotheses: self-attention alone suffices for aggregation-related properties (hydrophobic interaction chromatography, polyreactivity), where the relevant sequence signatures -- such as CDR-H3 hydrophobic patches -- are already fully resolved within single-chain embeddings by the high-capacity 6B encoder. Bidirectional cross-attention, by contrast, is required for expression yield and thermal stability -- properties that inherently depend on the compatibility between heavy and light chains. Learned chain fusion weights independently confirm heavy-chain dominance in aggregation ($w_H = 0.62$) versus balanced contributions for stability ($w_H = 0.51$). We demonstrate practical utility by deploying CrossAbSense on 100 IgLM-generated antibody designs, illustrating a path toward substantial reduction in experimental screening costs.",
+      "authors": [
+        "Simon J. Crouzet"
+      ],
+      "primary_category": "q-bio.BM",
+      "categories": [
+        "q-bio.BM",
+        "cs.LG",
+        "q-bio.QM"
+      ],
+      "published": "2026-04-10T14:39:57+00:00",
+      "link": "https://arxiv.org/pdf/2604.09369v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Generative models for de novo antibody sequence design and property prediction",
+      "llm_evidence_cn": "用于从头抗体序列设计和属性预测的生成模型",
+      "llm_evidence": "用于从头抗体序列设计和属性预测的生成模型",
+      "canonical_evidence": "用于从头抗体序列设计和属性预测的生成模型",
+      "llm_tldr_en": "Presents a framework using protein language models as oracles for antibody developability and design.",
+      "llm_tldr_cn": "提出一个利用蛋白质语言模型作为抗体可开发性和设计的预测框架。",
+      "llm_tldr": "提出一个利用蛋白质语言模型作为抗体可开发性和设计的预测框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.08972v1",
+      "title": "Selective Random Structure Search (SRSS): Unbiased Exploration of Polymorphs in Crystals",
+      "abstract": "Crystal structure prediction has traditionally relied on prototype-based seeding, approaches that often bias sampling toward known low-energy basins and overlook metastable polymorphs with unconventional symmetries. Here, we introduce Selective Random Structure Search (SRSS), a high-throughput, unbiased framework designed to explore the configurational space of crystalline materials across all dimensions. SRSS combines symmetry-constrained random generation with feature-based diversity selection and rapid relaxation and stability evaluation via universal machine-learning interatomic potentials (uMLIPs). Applied to diverse systems, including bulk system SiC and BaPtAs, 2D layered compounds NbSe2, and 1D nanotubes GaN, SRSS successfully recovers known ground states while revealing numerous previously unreported, dynamically stable polymorphs. Notable discoveries include complex cage-like SiC polytypes, low-energy BaPtAs polymorphs beyond experimental records, a semiconducting orthorhombic phase of 2D-NbSe2, and distinct armchair/zigzag GaN nanotubes. Crucially, the entire workflow operates efficiently on standard CPU resources without GPU acceleration, demonstrating that rigorous, hypothesis-free polymorph discovery is accessible even in resource-limited settings. SRSS thus establishes a robust, scalable platform for mapping the full landscape of crystal stability, bridging the gap between exhaustive search and computational feasibility.",
+      "authors": [
+        "Jiexi Song",
+        "Diwei Shi",
+        "Aixian She",
+        "Chongde Cao",
+        "Fengyuan Xuan"
+      ],
+      "primary_category": "cond-mat.mtrl-sci",
+      "categories": [
+        "cond-mat.mtrl-sci"
+      ],
+      "published": "2026-04-10T05:26:54+00:00",
+      "link": "https://arxiv.org/pdf/2604.08972v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "unbiased exploration of crystalline materials via random structure search",
+      "llm_evidence_cn": "通过随机结构搜索对晶体材料进行无偏探索",
+      "llm_evidence": "通过随机结构搜索对晶体材料进行无偏探索",
+      "canonical_evidence": "通过随机结构搜索对晶体材料进行无偏探索",
+      "llm_tldr_en": "Introduces SRSS for unbiased exploration of polymorphs in crystals using machine learning potentials.",
+      "llm_tldr_cn": "引入 SRSS 框架，利用机器学习势能对晶体多晶型进行无偏探索。",
+      "llm_tldr": "引入 SRSS 框架，利用机器学习势能对晶体多晶型进行无偏探索。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "generative models for de novo molecular and RNA design",
+      "matched_requirement_id": "req-8",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.09419v1",
+      "title": "NOMAD: Generating Embeddings for Massive Distributed Graphs",
+      "abstract": "Successful machine learning on graphs or networks requires embeddings that not only represent nodes and edges as low-dimensional vectors but also preserve the graph structure. Established methods for generating embeddings require flexible exploration of the entire graph through repeated use of random walks that capture graph structure with samples of nodes and edges. These methods create scalability challenges for massive graphs with millions-to-billions of edges because single-node solutions have inadequate memory and processing capabilities.   We present NOMAD, a distributed-memory graph embedding framework using the Message Passing Interface (MPI) for distributed graphs. NOMAD implements proximity-based models proposed in the widely popular LINE (Large-scale Information Network Embedding) algorithm. We propose several practical trade-offs to improve the scalability and communication overheads confronted by irregular and distributed graph embedding methods, catering to massive-scale graphs arising in web and science domains. NOMAD demonstrates median speedups of 10/100x on CPU-based NERSC Perlmutter cluster relative to the popular reference implementations of multi-threaded LINE and node2vec, 35-76x over distributed PBG, and competitive embedding quality relative to LINE, node2vec, and GraphVite, while yielding 12-370x end-to-end speedups on real-world graphs.",
+      "authors": [
+        "Aishwarya Sarkar",
+        "Sayan Ghosh",
+        "Nathan R. Tallent",
+        "Ali Jannesari"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.DC"
+      ],
+      "published": "2026-04-10T15:30:43+00:00",
+      "link": "https://arxiv.org/pdf/2604.09419v1",
+      "tags": [
+        "keyword:MOLRNA",
+        "query:MOLRNA"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "distributed graph embedding framework for massive graphs",
+      "llm_evidence_cn": "大规模图的分布式图嵌入框架",
+      "llm_evidence": "大规模图的分布式图嵌入框架",
+      "canonical_evidence": "大规模图的分布式图嵌入框架",
+      "llm_tldr_en": "Presents NOMAD, a distributed framework for generating embeddings for massive graphs with millions of edges.",
+      "llm_tldr_cn": "提出了NOMAD，一个用于为具有数百万条边的海量图生成嵌入的分布式框架。",
+      "llm_tldr": "提出了NOMAD，一个用于为具有数百万条边的海量图生成嵌入的分布式框架。",
+      "llm_tags": [
+        "query:molrna"
+      ],
+      "matched_query_tag": "query:molrna",
+      "matched_query_text": "graph representation learning for molecular structures",
+      "matched_requirement_id": "req-4",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    }
+  ]
+}

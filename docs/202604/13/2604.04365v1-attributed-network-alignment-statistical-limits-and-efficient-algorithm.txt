@@ -1,0 +1,7074 @@
+Title: Attributed Network Alignment: Statistical Limits and Efficient Algorithm
+
+URL Source: https://arxiv.org/pdf/2604.04365v1
+
+Published Time: Tue, 07 Apr 2026 01:21:31 GMT
+
+Number of Pages: 53
+
+Markdown Content:
+# Attributed Network Alignment: Statistical Limits and Efficient Algorithm 
+
+Dong Huang, Chenyang Tian and Pengkun Yang ∗
+
+Abstract 
+
+This paper studies the problem of recovering a hidden vertex correspondence between two correlated graphs when both edge weights and node features are observed. While most existing work on graph alignment relies primarily on edge information, many real-world applications provide informative node features in addition to graph topology. To capture this setting, we in-troduce the featured correlated Gaussian Wigner model, where two graphs are coupled through an unknown vertex permutation, and the node features are correlated under the same permuta-tion. We characterize the optimal information-theoretic thresholds for exact recovery and partial recovery of the latent mapping. On the algorithmic side, we propose QPAlign, an algorithm based on a quadratic programming relaxation, and demonstrate its strong empirical perfor-mance on both synthetic and real datasets. Moreover, we also derive theoretical guarantees for the proposed procedure, supporting its reliability and providing convergence guarantees. 
+
+Keywords— Graph alignments, information-theoretic threshold, algorithm, attributed network 
+
+# Contents 
+
+1 Introduction 2
+
+1.1 Main Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31.2 Related Work . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 51.3 Our Contribution . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+
+2 Information-theoretic Thresholds 6
+
+2.1 Possibility Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 62.2 Impossibility Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+
+3 QPAlign: Quadratic Programming relaxation for attributed graph Alignment 84 Numerical Results 11 
+
+4.1 Simulation Studies . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 4.2 Real Data Analysis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 
+
+5 Discussions and Future Directions 13 
+
+> ∗
+
+D. Huang and P. Yang are with the Department of Statistics and Data Science, Tsinghua University. C. Tian is with Weiyang College, Tsinghua University. P. Yang is supported in part by National Key R&D Program of China 2024YFA1015800, Tsinghua University Dushi Program 2025Z11DSZ001, and High Performance Computing Center, Tsinghua University. 
+
+1
+
+> arXiv:2604.04365v1 [math.ST] 6 Apr 2026
+
+A Experimental Details 14 
+
+A.1 Synthetic Data . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 A.2 ACM-DBLP and Douban Datasets . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 A.3 Spatial Transcriptomic Data . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 
+
+B Proof of Theorems 19 
+
+B.1 Proof of Theorem 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 B.2 Proof of Theorem 2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20 
+
+C Proof of Propositions 20 
+
+C.1 Proof of Proposition 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 20 C.1.1 Bad Event of Weak Signal . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 C.1.2 Bad Event of Strong Noise . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 C.2 Proof of Proposition 2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25 C.3 Proof of Proposition 3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 C.4 Proof of Proposition 4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27 C.5 Proof of Proposition 5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 C.6 Proof of Proposition 6 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31 C.7 Proof of Proposition 7 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34 
+
+D Proof of Lemmas 36 
+
+D.1 Proof of Lemma 1 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 36 D.2 Proof of Lemma 2 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 37 D.3 Proof of Lemma 3 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 39 D.4 Proof of Lemma 4 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 41 D.5 Proof of Lemma 5 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 42 
+
+E Auxiliary Results 44 
+
+# 1 Introduction 
+
+Graph alignment is a fundamental problem in network science and machine learning, with appli-cations in many areas. For example, in computer vision, 3-D shapes can be represented as graphs and a significant problem for pattern recognition and image processing is determining whether two graphs represent the same object under rotations [BBM05, MHK +08]; in natural language process-ing, each sentence can be represented as a graph and the ontology problem refers to uncovering the correlation between different knowledge graphs that are in different languages [HNM05]; in computational biology, proteins can be regarded as vertices and the interactions between them can be formulated as weighted edges [SXB08, VCL +15]. Since real-world scenarios often present challenges due to the noise in real data, many studies focused on random graph models to serve as a pivotal step, including graph alignment problem in Erd˝ os-R´ enyi model [WXY22, DD23b, HSY25], Gaussian Wigner model [FMWX23a, ABT24, DL24], stochastic block model [OGE16, Lyz18, CR24], and graphon model [Zha18]. However, previous works on random graph alignment mainly focus on models that rely solely on topological information. In real scenarios, however, feature information often plays a crucial role. For instance, in the ACM–DBLP dataset, node features such as paper titles or author names are essential for identifying corresponding entities across the two graphs [TZL +23, BVS +24]. This motivates the 2study of alignment models that incorporate both structural and feature information, beyond purely topology-based settings. While existing work on attributed graph alignment mostly builds on correlated Erd˝ os-R´ enyi or community-based model with binary edges and node attributes [ZWWW24, YC24, YC25], many real-world networks are both weighted and attributed. For example, in gene co-expression net-works [ZH05], edge weights encode co-expression strength while genes carry functional annotations, and in social networks [LHK10], edges record rating or interaction strengths while nodes have profile or content features. To bridge this gap, we investigate the following featured correlated Gaussian Wigner model, in which the random graphs are generated from Gaussian distributions. 
+
+Definition 1 (Featured correlated Gaussian Wigner model) . Let G1 and G2 be two weighted random graphs with vertex sets V (G1), V (G2) such that |V (G1)| = |V (G2)| = n. Let π∗ denote a latent bijective mapping from V (G1) to V (G2). We say that a pair of graphs ( G1, G 2) follows featured correlated Gaussian Wigner model G(n, d, ρ, r ) if 1. each pair of weighted edges βuv (G1) and βπ∗(u)π∗(v)(G2) for any u, v ∈ V (G1) are correlated standard normals with correlation ρ ∈ (0 , 1); 2. each pair of features ( xu, yπ∗(u)) for any u ∈ V (G1) follows multivariate normal distribution 
+
+N (0 , Σd) with Σ d =
+
+> [
+
+Id rI d
+
+rI d Id
+
+> ]
+
+, where the dimension d ∈ N and the correlation r ∈ (0 , 1). Moreover, we assume that the features are independent with the weighted edges. We assume features are standardized so that each coordinate has unit variance and is indepen-dent, which justifies the identity matrices in Σ d. Edge weights are likewise centered and variance-normalized, with correlations ρ and r capturing structural and feature dependence, respectively. Furthermore, we assume ρ, r ∈ (0 , 1) without loss of generality, since the model is invariant un-der flipping the signs of all edge weights or node features in G2, and hence negative correlations can be reduced to positive ones. Indeed, this model bridges two significant extremes, it reduces to correlated Gaussian Wigner model [DMWX21] when r = 0 and correlated Gaussian database model [DCK19] when ρ = 0. Given G1 and G2 under G(n, d, ρ, r ), our goal is to recover the latent vertex mapping π∗. Specifically, given two permutations π∗, ˆπ : V (G1) 7 → V (G2), denote the fraction of their overlap by overlap( π∗, ˆπ) = 1 
+
+> n
+
+| { v ∈ V (G1) : π∗(v) = ˆ π(v)} | . To quantify the performance of an estimator ˆ π, we say ˆ π(G1, G 2) achieves 
+
+• partial recovery , if overlap(ˆ π, π ∗) ≥ δ for δ ∈ (0 , 1); 
+
+• exact recovery , if overlap(ˆ π, π ∗) = 1. 
+
+1.1 Main Results 
+
+In this subsection, we present our main results on information-theoretic thresholds. Let Sn denote the set of bijective mappings π : V (G1) 7 → V (G2). Our goal is to determine the correlation required for successful recovery of π∗. Next, we introduce our main theorems. 
+
+Theorem 1 (Partial Recovery) . Under featured correlated Gaussian Wigner model, if d = ω(log n)
+
+and n log( 11−ρ2 )+2 d log( 11−r2 ) ≥ (4+ ϵ) log n for some constant ϵ > 0, then there exists an estimator 
+
+ˆπ such that, for any fixed constant 0 < δ < 1 and π∗ ∈ S n, we have 
+
+P [overlap(ˆ π, π ∗) ≥ δ] = 1 − o(1) .
+
+3Conversely, for any constant 0 < δ < 1, if n log( 11−ρ2 ) + 2 d log( 11−r2 ) ≤ c log n for some constant c,then for any estimator ˆπ,
+
+P [overlap(ˆ π, π ∗) < δ ] ≥ 1 − c
+
+4δ ,
+
+where π∗ is uniformly distributed over Sn.
+
+The upper bound holds uniformly over all π∗ ∈ S n, while the lower bound is obtained by analyzing the Bayes risk under the uniform prior on π∗, which is least favorable in our permutation-symmetric model and therefore leads to the same threshold for the minimax risk. Consequently, the threshold is valid for both minimax and Bayesian risks. As for the assumption d = ω(log n), it is standard in Gaussian database alignment: identifying a vertex among n candidates requires Θ(log n) bits, while each feature coordinate contributes only O(1) bits of discriminative information, so the total feature dimension must eventually dominate log n (see, e.g., [DCK19]). Indeed, this assumption is commonly adopted in prior work on attributed graph alignment; see, e.g., [DCK23, YC25]. Even without this assumption, we can still derive the optimal rate up to universal constants. Theorem 1 characterizes the optimal rate for the information-theoretic threshold in the partial recovery regime. In particular, the special case δ = 1 corresponds to exact recovery. For obtaining a sharper constant in this regime, we have the following theorem. 
+
+Theorem 2 (Exact Recovery) . Under featured correlated Gaussian Wigner model, if d = ω(log n)
+
+and n log( 11−ρ2 ) + d log( 11−r2 ) ≥ (4 + ϵ) log n for some constant ϵ > 0, then there exists an estimator 
+
+ˆπ such that, for any π∗ ∈ S n, we have 
+
+P [overlap(ˆ π, π ∗) = 1] = 1 − o(1) .
+
+Conversely, if r2 ≥ 40  
+
+> d
+
+and n log( 11−ρ2 ) + d log( 11−r2 ) + 4 log d ≤ (4 − ϵ) log n for some constant 
+
+ϵ > 0, then for any estimator ˆπ,
+
+P [overlap(ˆ π, π ∗)̸ = 1] = 1 − o(1) ,
+
+where π∗ is uniformly distributed over Sn.
+
+The technical condition r2 ≥ 40 /d is only imposed to sharpen the leading constant in this regime: Theorem 1 already yields the optimal rate without this assumption under the special case 
+
+δ = 1, while under d = no(1) and d = ω(log n) such a lower bound on the feature signal ensures that our exact recovery threshold attains the optimal constant. In comparison with the special case δ = 1 in Theorem 1, Theorem 2 establishes a sharper information-theoretic threshold for exact recovery under certain conditions on d. Indeed, the difference between the 2 d-term in partial recovery and the d-term in exact recovery arises because exact recovery requires distinguishing much smaller distances between candidate alignments, which in turn necessitates stronger correlation and thus a stronger condition. For the special case r = 0, [WXY22] showed that in the correlated Gaussian Wigner model, there is a phase transition from possible exact recovery to impossible recovery as the quantity    
+
+> nlog(1 /(1 −ρ2)) log n
+
+changes from 4 + ϵ to 4 − ϵ. For another special case ρ = 0, [DCK19] demonstrated that in the Gaussian database model exact recovery is possible when d log(1 /(1 −r2)) ≥ (4+ ϵ) log n,and impossible when d log(1 /(1 − r2)) ≤ (4 − ϵ) log n, under the same condition on the feature dimension d. In our new model G(n, d, ρ, r ), we show that the optimal threshold is determined by the two components of the model: structure and features. Specifically, the term n log(1 /(1 − ρ2)) captures the contribution of structural information, while d log(1 /(1 −r2)) captures the contribution of feature information. Indeed, when n log(1 /(1 − ρ2)) = C1 log n and d log(1 /(1 − r2)) = C2 log n
+
+4with C1, C 2 < 4, and C1 +C2 > 4, there exists an estimator ˆ π that achieves exact recovery only when both edge and feature information are available. This demonstrates that our approach goes beyond the performance attainable by relying on either structural or feature information alone. Indeed, balancing the edge and feature information requires a careful choice of weighting coefficients in our estimator design, instead of simply adding the two parts together. See Section 2.1 for details. 
+
+1.2 Related Work 
+
+Attributed graph alignment In the information-theoretic perspective, [ZWWW24] proposed the attributed Erd˝ os-R´ enyi pair model, where the edges and the features follows Bernoulli distri-bution under a latent bijective mapping, and it derived the information-theoretic thresholds for recovering the latent mappings in both possibility and impossibility regimes. [YC24] proposed the correlated Gaussian-attributed Erd˝ os-R´ enyi model and derived the optimal information-theoretic thresholds for exact recovery by analyzing the k-core estimator. Both work proposed random graph model with additional feature and found that the graph matching becomes feasible in a wider regime through the information of attributed nodes. There are also many algorithms for attributed graph alignment, including methods based on subgraph counting [DZCT17, LDT +19, WWW25], spectral methods [ZT16], optimal transport [TZL +23], and neighborhood statistics [WZWW24]. 
+
+Other graph models Many information-theoretic properties of the correlated Gaussian Wigner model and correlated Erd˝ os-R´ enyi model have been extensively investigated [CK16, CK17, GML21, WXY22, WXY23, DD23b, DD23a, HM23, HSY25, Du25, HY25], along with a rich line of algo-rithmic developments [BES80, Bol82, BCL +19, DCKG19, GM20, DMWX21, MRT21, PSSZ22, MRT23, MWXY23, FMWX23a, FMWX23b, DL23, DL24, ABT24, GMS24, MS24, DGH25]. How-ever, the marginal distributions inherent in these models makes it different from graph models in practical applications. Therefore, it is crucial to explore more general graph models, such as graphon model [WO13, GLZ15], inhomogeneous graph model [RS23, SPT23, DFW25], geometric random graph model [WWXY22, BB24, GL24, SNL +25], planted cycle model [MWZ23, MWZ24], and multiple graph model [AH24, AH25]. 
+
+1.3 Our Contribution 
+
+We study the graph alignment problem under a featured correlated Gaussian Wigner model, where both weighted edges and node features are correlated through an unknown vertex permutation. Our contributions advance both the theoretical understanding and the algorithmic practice of attributed graph alignment. We derive optimal information-theoretic thresholds for both partial and exact recovery. In con-trast to most existing theoretical work on attributed graph alignment, which focus on unweighted Erd˝ os-R´ enyi or stochastic block models [YML13, YC24], our results apply to graphs with contin-uous edge weights, revealing the gap between partial recovery and exact recovery in the featured correlated Gaussian Wigner model. Moreover, unlike prior works on Gaussian-attributed mod-els [YC24, YC25] that require two-step algorithms to achieve optimality, our characterization is directly derived from maximum likelihood objective and does not rely on regime-specific estima-tors. This makes the theoretical conditions directly interpretable and more amenable to algorithmic realization. Algorithmically, we propose QPAlign (see Section 3) to achieve efficient recovery for attributed graphs. While existing methods for attributed graph alignment [BVS +24, ZZXT23] typically lack 5theoretical guarantees, QPAlign has provable convergence guarantees and admits the oracle per-mutation as a feasible optimum of the relaxed objective. Extensive experiments on synthetic data and real datasets indicate that QPAlign performs effectively in regimes predicted by our theory and aligns well with the information-theoretic recovery limits. 
+
+# 2 Information-theoretic Thresholds 
+
+2.1 Possibility Results 
+
+We first introduce our estimator. Given two graphs ( G1, G 2) ∼ G (n, d, ρ, r ) under the featured correlated Gaussian Wigner model, our goal is design an estimator ˆ π(G1, G 2) to recover the la-tent bijective mapping π∗ : V (G1) 7 → V (G2). Let P denote the joint distribution of ( G1, G 2), 
+
+P (·, ·) denote the distribution of two correlated standard normals with correlation ρ, and f (·, ·)denote the multivariate normal distribution N (0 , Σd) with Σ d =
+
+[
+
+Id rI d
+
+rI d Id
+
+]
+
+. Let φ(x) = x 
+
+> 1−x2
+
+and 
+
+Sπ(G1, G 2) = φ(ρ) ∑ 
+
+> e∈E(G1)
+
+βe(G1)βπ(e)(G2)+ φ(r) ∑  
+
+> v∈V(G1)
+
+xvyπ(v). Then the likelihood function 
+
+PG1,G 2|π∗ ∝ exp ( Sπ∗ (G1, G 2)) . Consequently, our estimator takes the form ˆπ ∈ arg max 
+
+> π∈S n
+
+Sπ(G1, G 2). (1) Indeed, Sπ(G1, G 2) represents the similarity score under π between G1 and G2. Then the estimator is equivalent to ˆ π ∈ arg max π Sπ(G1, G 2). For any two bijections π, π ′ : V (G1) 7 → V (G2), let d(π, π ′) = n(1 − overlap( π, π ′)). To prove the recovery guarantee of ˆ π, it suffices to show that 
+
+Sπ∗ (G1, G 2) > max 
+
+> π:d(π,π ∗)≥d0
+
+Sπ(G1, G 2) = max 
+
+> k≥d0
+
+max  
+
+> π:d(π,π ∗)= k
+
+Sπ(G1, G 2)with high probability, where the thresholds d0 = 1 and d0 = (1 − δ)m correspond to the exact and partial recoveries, respectively. Let Tk denote the set of bijective mappings such that d(π, π ∗) = k.Then the failure event satisfies 
+
+{d(ˆ π, π ∗) = k} ⊆ {∃π′ ∈ T k : Sπ∗ (G1, G 2) ≤ Sπ′ (G1, G 2)} .
+
+Accordingly we bound P [d(ˆ π, π ∗) = k] separately for large and small values of k. The next two propositions provide those bounds. 
+
+Proposition 1. If d = ω(log n) and n log 
+
+( 11−ρ2
+
+)
+
++ 2 d log 
+
+( 11−r2
+
+)
+
+≥ (4 + ϵ) log n with some constant 
+
+0 < ϵ < 1, then for any constant 0 < δ < 1 and k ≥ δn , there exists ˆπ such that 
+
+P [d(ˆ π, π ∗) = k] ≤ exp 
+
+(
+
+−nh 
+
+( kn
+
+)) 
+
+1{k≤n−1} + exp ( −2 log n) 1{k=n} + exp 
+
+(
+
+− ϵk log n
+
+32 
+
+)
+
+,
+
+where h(x) = −x log x − (1 − x) log(1 − x) is the binary entropy function. 
+
+In view of Proposition 1, an upper bound is established for any d(ˆ π, π ∗) = k with k ≥ δn .Summing over all k ≥ δn yields an error estimate for P [overlap(ˆ π, π ∗) ≥ δ] in the partial recovery regime. However, the proposition only controls the error probability when k ≥ δn . To derive an error bound in the exact recovery regime, it remains necessary to handle the case k < δn .Specifically, we establish the following proposition. 6Proposition 2. If n log  
+
+> (11−ρ2
+> )
+
++ d log  
+
+> (11−r2
+> )
+
+≥ (4 + ϵ) log n with some constant 0 < ϵ < 1, then for any k ≤ ϵ 
+
+> 16
+
+n, the estimator ˆπ in (1) satisfies 
+
+P [d(ˆ π, π ∗) = k] ≤ exp 
+
+> (
+
+− ϵ
+
+8 k log n
+
+> )
+
+.
+
+The proofs of Propositions 1 and 2 are deferred to Appendices C.1 and C.2, respectively. By combining these two propositions, we obtain the possibility results stated in Theorems 1 and 2, through summing over k ≥ δn and k ≥ 1, respectively. The main task behind Propositions 1 and 2 is to control the MLE score difference Zπ = Sπ(G1, G 2) − Sπ∗ (G1, G 2) uniformly over all per-mutations under a mixed Gaussian channel (continuous edges and high-dimensional features). For permutations with macroscopic Hamming distance, we adapt the cycle decomposition and Gaus-sian moment-generating-function computation from [WXY22] to this structural–feature setting, obtaining sharp bounds with exponent n log(1 /(1 − ρ2)) + 2 d log(1 /(1 − r2)). For permutations very close to π∗, we represent Sπ∗ − Sπ as a quadratic form in a jointly Gaussian vector (edges and features together), decorrelate the coordinates, and apply the Hanson-Wright inequality [HW71] to get uniform bounds and the sharp constant in the exact recovery threshold. 
+
+Remark 1. When two attributed graphs are only partially correlated through a latent injective mapping π : S ⊆ V (G1) → T ⊆ V (G2), the estimator in (1) can be naturally extended by optimizing over the set of injective mappings rather than bijections. Similar techniques have been used to establish information-theoretically optimal rates for partially overlapping graph alignment [HSY25]. We leave this extension to future work. 
+
+2.2 Impossibility Results 
+
+In this subsection, we present information-theoretic impossibility results. For the converse argu-ments, we adopt a Bayesian formulation by endowing the ground-truth permutation π∗ with the uniform prior on Sn; under this prior, the MLE ˆ π minimizes the error probability among all es-timators. For impossibility results, it suffices to prove the failure of MLE, which corresponds to show the existence of a permutation π′ that achieves a higher likelihood than the true permutation 
+
+π∗. However, such strategy only proves impossibility results for exact recovery regime (See Propo-sition 4). We will show the impossibility results for the partial recovery regime by Fano’s method (see, e.g. [CT06, Section 2.10]). Let Mδ be a packing set of Sn such that two distinct elements π, π ′ ∈ M δ differs from a certain threshold. Specifically, we choose min π̸ =π′∈M d(π, π ′) > (1 − δ)n in partial recovery regime and M1 = Sn. The cardinality of Mδ measures the complexity of the parameter space under the corresponding metric. Let P denote the joint distribution of ( G1, G 2), Q be any distribution over ( G1, G 2), and DKL denote the Kullback–Leibler (KL) divergence. We then bound the mutual information I(π∗; G1, G 2) by max π∈S n DKL (PG1,G 2|π∥Q G1,G 2 ). By Fano’s inequality, with π∗ being the discrete uniform prior in the packing set Mδ, for any estimator ˆ π, we have 
+
+P [overlap(ˆ π, π ∗) < δ ] ≥ 1 − I(π∗; G1, G 2) + log 2 log |M δ| . (2) Specifically, we have the following proposition. 7Proposition 3 (Impossibility result, partial recovery) . For any 0 < δ ≤ 1, if n log 
+
+( 11−ρ2
+
+)
+
++2d log 
+
+( 11−r2
+
+)
+
+≤ c log n for some constant c, then 
+
+P [overlap(ˆ π, π ∗) < δ ] ≥ 1 − c
+
+4δ .
+
+Proposition 3 provides an impossibility result for partial recovery, highlighting the relationship between the recovery probability and the threshold. This result also extends to the exact recovery regime when δ = 1. The following proposition strengthens this conclusion under an assumption for the exact recovery regime, achieving both vanishing error and a sharp constant in the threshold. 
+
+Proposition 4 (Impossibility result, exact recovery) . If n log 
+
+( 11−ρ2
+
+)
+
++ d log 
+
+( 11−r2
+
+)
+
++ 4 log d ≤
+
+(4 − ϵ) log n for some constant ϵ > 0 under the assumption r2 ≥ 40  
+
+> d
+
+, then for any estimator ˆπ,
+
+P [ˆ π̸ = π∗] = 1 − o(1) .
+
+By Propositions 2 and 4, we derive sharp thresholds for exact recovery with a gap of 4 log d.When log n ≪ d = no(1) , the threshold is tight at the constant level. 
+
+# 3 QPAlign: Quadratic Programming relaxation for attributed graph Alignment 
+
+In Sections 2.1 and 2.2, we have shown that the MLE in (1) achieves the optimal information-theoretic thresholds. However, this estimator requires an exhaustive search over all possible map-pings in Sn, which has a runtime of order n!. To address this computational bottleneck, we propose QPAlign, an approximation algorithm for attributed graph alignment. Let [ n] ≜ {1, 2, · · · , n }. Without loss of generality, we assume V (G1) = V (G2) = [ n], π : [ n] 7 →
+
+[n] and E(G1) = E(G2) = {(i, j ) : 1 ≤ i < j ≤ n}. Let Π be the permutation matrix of π with Πij = 1{π(i)= j} for any 1 ≤ i, j ≤ n, and define λ ≜ φ(ρ) 
+
+> φ(ρ)+ φ(r)
+
+. Then the MLE ˆ π in (1) is equivalent to minimizing 
+
+λ ∑
+
+> 1≤i<j ≤n
+
+(
+
+βij (G1) − βπ(i)π(j)(G2)
+
+)2
+
++ (1 − λ) ∑
+
+> 1≤i≤n
+
+∥xi − yπ(i)∥2. (3) Denote A1, A 2 as the adjacent matrices of G1, G 2. Let Bi 
+
+> 1
+
+= diag {x1i, x2i, · · · , xni } and Bi 
+
+> 2
+
+=diag {y1i, y2i, · · · , yni } for any i ∈ [d], where xki corresponds to the i−component of vector xk.Then minimizing (3) is equivalent to minimize the following function 
+
+f (Π) ≜ λ∥A1Π − ΠA2∥2 
+
+> F
+
++ (1 − λ)
+
+> d
+
+∑
+
+> i=1
+
+∥Bi
+
+> 1
+
+Π − ΠBi
+
+> 2
+
+∥2 
+
+> F
+
+,
+
+where Π ∈ Pn ≜
+
+{
+
+P ∈ { 0, 1}n×n , P1 = 1, P⊤1 = 1
+
+}
+
+. Indeed, this is an instance of the quadratic assignment problem (QAP) [PRW94, BCPP98], which is NP-hard to solve or to approximate [MMS10]. To obtain a computationally efficient algorithm for estimating ˆ π, we employ a relaxation approach. Relaxing the set of permutations to Birkhoff polytope (the set of doubly stochastic matrices) 
+
+Wn ≜ {W ∈ [0 , 1] n×n : W1 = 1, W⊤1 = 1, 0 ≤ Wij ≤ 1 for all i, j },
+
+we derive the quadratic programming (QP) relaxation min Π∈Wn f (Π) . We solve the above quadratic programming by projected gradient descent. Specifically, we project the matrix to Wn by Euclidean projection: Π k+1 = Proj Wn (Π k −η∇f (Π k)), where η is the step size. We have the following Theorem on the convergence guarantee for the gradient descent method. 8Proposition 5. For any two graphs G1, G 2, there exists a constant L such that for any step size 
+
+η ≤ L−1, for any 0 < δ < 1, if d > 32 log n√δ , then with probability at least 1 − δ,
+
+∥ΠK − Π′∥F ≤ 
+
+> √
+
+n
+
+(1 − λ)(1 − r)dηK 
+
+for any K ≥ 1, where Π′ ∈ arg min Π∈Wn f (Π) , and Π0 is the initial state. 
+
+Relative to [FMWX23a], the node-feature term in our objective plays an important role to their regularization: it ensures the convergence rate remains bounded whenever λ̸ = 1 and r < 
+
+1. Consequently, incorporating node features renders our algorithm stable without introducing any extra regularization term. Indeed, relaxing to Birkhoff polytope is widely adopted in graph matching [VCL +15, BVS +24], and has been proved tight in random graph models [FMWX23a, FMWX23b]. In practice, we often regard λ as a tuning parameter and adapt model selection technique for picking λ. By Proposition 5, we obtain a standard O(1 /K ) convergence guarantee for the projected gradient descent scheme with exact Euclidean projections onto Wn. However, in our implementation, we replace these exact projections by a few iterations of Sinkhorn scaling [Sin64] as a fast approximate projection onto Wn. In practice, since Sinkhorn requires nonnegative entries, we apply it to the truncated matrix (Π (t+1) )+, obtained by setting all negative entries of Π (t+1) to zero. Define D ∈ Rn×n as Dkj = ∥xk −yj ∥22. We note that ∑di=1 ∥Bi
+
+> 1
+
+Π−ΠBi
+
+> 2
+
+∥2 
+
+> F
+
+= ∑ 
+
+> k,j
+
+Dkj Π2 
+
+> kj
+
+. Note that ∑ 
+
+> k,j
+
+Πkj (1 − Πkj ) = 0 for permutation matrix Π. We turn this constraint into a regularizer with parameter μ and derive the following program: min 
+
+> Π∈Wn
+> 
+
+λ∥A1Π − ΠA2∥2 
+
+> F
+
++ (1 − λ) ∑
+
+> k,j
+
+Dkj Π2 
+
+> kj
+
++μ ∑
+
+> k,j
+
+Πkj (1 − Πkj ) 
+
+> 
+
+. (4) We solve the problem in (4) by QPAlign in Algorithm 1. In the following, we outline a general recipe for QPAlign. 
+
+• Gradient descent. We update Π (t+1) = Π (t) − ηG (t) with step size η > 0, where the gradient is given by 
+
+G(t) = 2 λ(A⊤ 
+
+> 1
+
+E − EA ⊤ 
+
+> 2
+
+) + 2(1 − λ)
+
+> (
+
+D ◦ Π(t))
+
++ μ
+
+> (
+
+Jn×n − 2Π (t))
+
+,
+
+where E = A1Π(t) − Π(t)A2 and ( D ◦ Π(t))ij = Dij Π(t) 
+
+> ij
+
+, J ij = 1 for any i, j .
+
+• Sinkhorn normalization. After each gradient step, update Π (t+1) on the set of doubly stochas-tic matrices Wn using K iterations of the Sinkhorn normalization procedure [Sin64]. 
+
+• Rounding via Hungarian algorithm. Once convergence is reached, the final doubly stochastic matrix is converted into a permutation matrix by solving the problem arg max π∈S n 
+
+> ∑
+> i
+
+Π(t)
+
+> i,π (i)
+
+using the Hungarian algorithm [Kuh55, Mun57]. 
+
+Time complexity The construction of the feature-distance matrix D requires O(dn 2) time. Each gradient step has a complexity of O(n3), and the Sinkhorn algorithm with K iterations takes O(Kn 2). Consequently, performing T iterations of gradient descent and Sinkhorn projection costs O(T (K + n)n2). The final rounding via the Hungarian algorithm requires O(n3) [Mun57]. Overall, the time complexity of QPAlign is O(( d + T (K + n)) n2). We have conducted experiments 9Algorithm 1 QPAlign: Quadratic Programming relaxation for attributed graph Alignment  
+
+> 1:
+
+Input: Adjacency matrices A1, A 2 ∈ Rn×n; node features xi, yi, 1 ≤ i ≤ n; weights λ, μ > 0; step size η > 0; Sinkhorn iters K; max iters T ; tolerance tol.  
+
+> 2:
+
+Output: Estimated permutation ˆ π. 
+
+> 3:
+
+Construct feature-distance matrix D ∈ Rn×n with Dij = ∥xi − yj ∥22. 
+
+> 4:
+
+Initialize Π (0) . 
+
+> 5:
+
+for t = 0 , . . . , T − 1 do  
+
+> 6:
+
+E ← A1Π(t) − Π(t)A2. 
+
+> 7:
+
+f (t) ← λ∥E∥2 
+
+> F
+
++ (1 − λ) ∑ 
+
+> i,j
+
+Dij (Π (t) 
+
+> ij
+
+)2 + μ ∑ 
+
+> i,j
+
+Π(t) 
+
+> ij
+
+(1 − Π(t) 
+
+> ij
+
+).  
+
+> 8:
+
+G(t) ← 2λ(A⊤ 
+
+> 1
+
+E − EA ⊤ 
+
+> 2
+
+) + 2(1 − λ)
+
+(
+
+D ◦ Π(t))
+
++ μ
+
+(
+
+Jn×n − 2Π (t))
+
+. 
+
+> 9:
+
+Gradient step: Π (t+1) ← Π(t) − ηG (t). 
+
+> 10:
+
+Truncate negative entries: Π (t+1) ← (Π (t+1) )+, ( ·)+: elementwise max {· , 0}. 
+
+> 11:
+
+Update Π (t+1) on the Birkhoff polytope via Sinkhorn: Π (t+1) ← Sinkhorn ((Π (t+1) )+, K ).  
+
+> 12:
+
+if t > 0 and |f (t) − f (t−1) | < tol then  
+
+> 13:
+
+break  
+
+> 14:
+
+end if  
+
+> 15:
+
+end for  
+
+> 16:
+
+Round to a permutation via Hungarian algorithm: ˆ π ← arg max π∈S n
+
+∑ 
+
+> i
+
+Π(t)
+
+> i,π (i)
+
+. 
+
+> 17:
+
+Return: ˆπ.in Section 4 on graphs with up to 3,000 nodes. For larger graphs, one possible direction is to first prune the candidate matches for each node using features or local structural signatures, then solve the alignment problem on a compressed graph, and finally replace dense matrix scaling with sparse, approximate, or distributed Sinkhorn updates. In practice, when solving the quadratic program in (4), the parameter λ is typically difficult to estimate from the observations G1 and G2, since the correlation structure between the two graphs (and hence the relative reliability of topology versus features) is usually unknown. In the following, we establish recovery guarantees that hold uniformly over all λ ∈ (δ, 1 − δ), for any fixed constant δ ∈ (0 , 1/2). Define Edge = n log 11−ρ2 and Vertex = d log 11−r2 , which quantify the mutual information contributed by edges and vertices, respectively. 
+
+Assumption 1. We assume that there exists a universal constant Γ, such that 1Γ ≤ Edge Vertex ≤ Γ.
+
+This assumption is reasonable in many practical settings. If it is known a priori that either the topological information or the feature information is unreliable, one may instead employ algorithms that rely solely on the reliable component to achieve the recovery objective. Therefore, we focus here exclusively on the balanced regime, in which neither the topological nor the feature information is extremely unreliable, and both provide comparably informative signals. For any 0 < λ < 1, we consider the estimator ˆπλ = argmax 
+
+> π∈S n
+
+λ ∑
+
+> e∈E(G1)
+
+βe(G1)βπ(e)(G2) + (1 − λ) ∑ 
+
+> v∈V(G1)
+
+x⊤ 
+
+> v
+
+yπ(v)
+
+ .
+
+The following proposition provides theoretical guarantee on ˆ πλ for any λ ∈ (δ, 1 − δ). 
+
+Proposition 6. Under Assumption 1, for any constant δ ∈ (0 , 1/2) , if d = ω(log n) and n log 11−ρ2 +
+
+d log 11−r2 ≥ C0 log n for some constant C0 = C0(δ, Γ) , then there exists an estimator ˆπλ only depending on λ, G 1, G 2 such that, for all λ ∈ (δ, 1 − δ),
+
+P [ˆ πλ̸ = π∗] = o(1) .
+
+10 Proposition 6 bridges the gap between the information-theoretic results and the theoretical guarantee for the algorithm, demonstrating the achievability of the oracle solution ˆ πλ for λ.
+
+Remark 2 (Regularization term) . We add a regularization term ∑ 
+
+> k,j
+
+Πkj (1 − Πkj ) in (4). This term encourages the entries of Π to approach 0 or 1. While some previous works employ a penalty of the form ∥Π∥2 
+
+> F
+
+to obtain an explicit solution (see, e.g. [FMWX20]), our relaxation directly pushes the solution toward the boundary of the Birkhoff polytope. As a result, the intermediate matrix Π (t) becomes more concentrated near the vertices of the Birkhoff polytope, which allows the final rounding via the Hungarian algorithm to be more precise. Therefore, the inclusion of this regularization term helps to improve the overall accuracy of the estimated permutation ˆ π.
+
+# 4 Numerical Results 
+
+4.1 Simulation Studies 
+
+In this subsection, we provide numerical results for QPAlign in Algorithm 1 on synthetic data. One related model is the correlated Gaussian-attributed Erd˝ os-R´ enyi model [YC24], where the correlated pairs of edges follow a multivariate Bernoulli distribution with connection probability p
+
+and correlation ρ. Fixing n = 3000 and d = 512 (with p = 0 .5 in the Erd˝ os-R´ enyi case), we run the algorithm and report the value of overlap(ˆ π, π ∗) for varying correlations ρ ∈ [0 , 1] and r ∈ [0 , 1]. We evaluate our method with step size η = 10 −4, T = 400, K = 80, λ = 0 .1 and μ = 0 .1 for the experiments reported here. Our results are summarized in Figure 1. Figure 1a displays the heatmap of the overlap under the featured correlated Gaussian Wigner model. We observe that the overlap increases smoothly with both ρ and r, starting from nearly zero when both correlations vanish and approaching one when both correlations are close to unity. This indicates that the estimator ˆ π gradually aligns with the ground truth π∗ as the signal in either edges or features becomes stronger. For the low-dimensional setting with n = 100 and d = 16, we present additional results in Figure 4 in Appendix A.1, which exhibit the same qualitative trend, confirming the effectiveness of our method in both regimes. 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> ρ
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> r
+> 0.2 0.4 0.6 0.8 1.0 overlap
+
+(a) Gaussian Wigner model: n = 3000 and d = 512. 0.0 0.2 0.4 0.6 0.8 1.0  
+
+> ρ
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> r
+> 0.0 0.2 0.4 0.6 0.8 1.0 overlap
+
+(b) Erd˝ os-R´ enyi model: n = 3000 and d = 512. 
+
+Figure 1: Overlap between the estimator ˆ π in Algorithm 1 and the ground truth π∗ in two models with n = 3000 and d = 512, evaluated across varying correlations ρ ∈ [0 , 1] and r ∈ [0 , 1]. Importantly, these numerical results are consistent with the information-theoretic exact recov-ery thresholds given in Theorem 2. We also note that in certain intermediate regimes, there exists 11 a statistic-computation gap: while exact recovery is theoretically possible, computationally achiev-ing it may require stronger correlations. See Figure 2 for a more detailed comparison between the information-theoretic thresholds and the empirical phase-transition boundaries of QPAlign. The numerical behavior aligns with the theoretical thresholds established in Theorem 2, while also highlighting the presence of a statistical–computational gap in certain intermediate regimes. In par-ticular, Figure 2 illustrates how the empirical phase-transition boundaries of QPAlign, for different choices of λ ∈ { 0.1, 0.2, . . . , 1.0}, closely track the information-theoretic limit, thereby providing a direct connection between the algorithm’s empirical success and our derived thresholds. 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> ρ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> r
+> Transition Boundaries
+> λ=0.1
+> λ=0.2
+> λ=0.3
+> λ=0.4
+> λ=0.5
+> λ=0.6
+> λ=0.7
+> λ=0.8
+> λ=0.9
+> λ=1.0
+> IT limit
+
+Figure 2: Phase-transition boundaries of QPAlign under different regularization parameters λ,together with the information-theoretic exact recovery limit. Figure 1b shows the corresponding result under the featured correlated Erd˝ os-R´ enyi model with p = 0 .5. A qualitatively similar pattern is observed: the algorithm achieves high overlap once either ρ or r is sufficiently large. Together, these experiments confirm that our algorithm behaves stably across different correlation regimes and successfully interpolates between weak and strong signal cases, with overlap(ˆ π, π ∗) ranging from 0 to 1 as ( ρ, r ) varies from (0 , 0) to (1 , 1). The results show that our approach is effective for both weighted and unweighted graphs, which broadens the applicability relative to prior methods. See more comparisons with the benchmarks in Appendix A.1. We also conduct ablation studies on synthetic data with n = 100 and d = 16 to verify the effectiveness of regularization. In the Gaussian Wigner model, using a positive regularization weight μ = 0 .1 (instead of μ = 0) improves the overlap on 86.57% of the parameter grid points, while in the Erd˝ os-R´ enyi model the corresponding proportion is 60.74%, where μ is the weight on the regularization term introduced in equation (4). 
+
+4.2 Real Data Analysis 
+
+ACM-DBLP dataset The ACM-DBLP dataset [TZY +08] is a widely used benchmark for at-tributed graph alignment, containing 2,224 ground-truth matched pairs. In our construction, each node represents a paper from either the ACM or DBLP source, and edges are weighted by co-authorship relations. The ground-truth alignment is given by the set of papers appearing in both sources. We implemented the experiments with hyperparameters μ = 0 .01, T = 1000, K = 200, step size η = 10 −5, and λ ∈ { 0, 0.2, 0.4, 0.6, 0.8, 1}.
+
+Douban (Online–Offline) dataset The Douban Online–Offline dataset [TZY +08] is another widely used benchmark for attributed graph alignment, consisting of two graphs that share 1,118 12 ground-truth matched pairs. Each node represents a user, with edges in the online graph encoding platform interactions (e.g., replying to a post) and edges in the offline graph capturing co-attendance at social events. Node features are given by user locations. The online graph strictly contains all users from the offline graph, and the ground-truth alignment is defined by the users present in both. We implemented the experiments with hyperparameters μ = 0, T = 1000, K = 200, step size η = 5 × 10 −3, and λ ∈ { 0, 0.2, 0.4, 0.6, 0.8, 1}.Indeed, the ACM-DBLP dataset corresponds to a featured Gaussian-Wigner graph, while the Douban dataset is treated as a featured Erd˝ os-R´ enyi graph, each representing different structural settings for graph alignment. We compare our method with three types of baselines: 1) based solely on edge structure (Grampa [FMWX23a], IsoRank [SXB08], Umeyama [Ume88], GW [PCS16]); 2) based solely on node features (MAP [DCK19], kNN); and 3) exploiting both edge structure and node features (FGW [TCTF19], REGAL [HSSK18], PARROT [ZZXT23]). To ensure a fair comparison, we follow the official implementations and parameter choices recommended in the original papers. Since the baselines are designed for different settings (edge-only, feature-only, or joint), the results should be viewed within their respective information settings rather than as direct head-to-head comparisons. The results are reported in Figure 3 and Table 1. 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> λ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> ACM-DBLP
+> Douban
+
+Figure 3: Overlap vs. λ on ACM-DBLP and Douban datasets. We report the experimental results averaged over 5 random seeds. The faint curves represent the results of individual runs, while the bold curves show their average. To fairly compare with baselines using the corresponding information source in Table 1, we conducted two ablated versions: 
+
+λ = 0, which corresponds to using only feature information, and λ = 1, which corresponds to using only edge information. The results in Figure 3 and Table 1 both demonstrate that combining the two sources of information yields performance that surpasses relying on either source alone. See more details in Appendix A.2. We also conduct experiments on spatial transcriptomic data; see Appendix A.3 for details. 
+
+# 5 Discussions and Future Directions 
+
+In this paper, we studied the graph alignment problem where both weighted edges and node features are jointly observed under an unknown vertex permutation. We established sharp information-theoretic thresholds for both partial and exact recovery in the featured correlated Gaussian Wigner model, revealing how structural and feature correlations together govern the fundamental limits of alignment. Our theoretical analysis establishes the optimal rates for both partial and exact recovery 13 ACM-DBLP Douban QPAlign (max) 0.3445 0.8370 FGW 0.0018 0.2773 REGAL 0.0301 0.1118 PARROT 0.0441 0.8462                   
+
+> QPAlign ( λ= 0) 0.0004 0.0767 MAP 0.0004 0.0411 kNN 0.0004 0.0725 QPAlign ( λ= 1) 0.2896 0.1118 Grampa 0.0746 0.0027 IsoRank 0.0018 0.0000 Umeyama 0.0346 0.0089 GW 0.0202 0.0000
+
+Table 1: Alignment accuracy in ACM-DBLP and Douban datasets. regimes. These results primarily depend on the analysis of the maximum likelihood estimator, where careful weighting of edge and feature information is selected to achieve optimal results. This provides a unified theoretical understanding of several previously studied alignment models and highlights the benefits of jointly leveraging both topology and attributes. From an algorithmic perspective, we proposed QPAlign, which efficiently combines edge and feature information to achieve recovery with theoretical guarantees, confirming the achievability of the oracle solution and convergence. Empirical results on synthetic data and real datasets demonstrate that QPAlign performs effectively, achieving high-quality alignments and comparing favorably with existing baselines. There are also several promising directions for future work. 
+
+• Extension to partially overlap. Our framework can be extended to the setting where only a pair of subgraphs of the original graphs are correlated through a latent injective mapping. The optimal rate under this partially overlapping featured correlation model remains unknown. 
+
+• Statistical–computational gap. The computational limits of this model remain unknown. A possible direction is to study this question via the low-degree framework [HKP +17, Hop18]. 
+
+• Non-Gaussian and heavy-tailed distributions. An interesting direction is to investigate whether our results under the Gaussian assumption can be extended to more general non-Gaussian settings, including heavy-tailed distributions. 
+
+# A Experimental Details 
+
+A.1 Synthetic Data 
+
+Figure 4 reports the results for the low-dimensional setting with n = 100 and d = 16. We again observe that the overlap increases monotonically with both ρ and r, starting near zero when both correlations vanish and approaching one when either correlation becomes large. These results mirror the high-dimensional case in Figure 1, thereby confirming that our method remains effective in both low-dimensional and high-dimensional regimes. To facilitate a comprehensive comparison, we evaluate our approach against FGW with vari-ous fixed values of r, as well as against purely topology-based methods, including GW, Grampa, IsoRank, and Umeyama. All evaluations are conducted on synthetic featured Gaussian–Wigner graphs with n = 100 vertices and d = 16 dimensions. For the correlation parameter, we report 14 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> ρ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> r
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> overlap
+
+(a) Featured correlated Gaussian Wigner model with n = 100 and d = 16. 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> ρ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> r
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> overlap
+
+(b) Featured correlated Erd˝ os-R´ enyi model with n = 100, d = 16, and p = 0 .5. 
+
+Figure 4: Overlap between the estimator ˆ π in Algorithm 1 and the ground truth π∗ in two models with n = 100 and d = 16, evaluated across varying correlations ρ ∈ [0 , 1] and r ∈ [0 , 1]. results in terms of σ = √(1 − ρ2)/ρ 2 ∈ [0 , 0.5] , which serves as a noise-to-signal ratio relative to the original graph, as showed in Figure 5. We adopt σ instead of ρ since several algorithms exhibit sharp performance transitions when ρ ≈ 1 (i.e., σ ≈ 0), making results easier to interpret under this reparametrization. In addition, we compare with FGW at fixed ρ and with MAP across different values of r ∈ [0 , 1] in Figure 6. Because MAP degenerates and becomes numerically unstable at 
+
+r = 1, we replace the endpoint with r = 0 .999 for all methods to ensure consistent and stable evaluation. In the synthetic data experiments presented here, our method is evaluated with step size η = 10 −4, T = 400, K = 80, λ = 0 .1, and μ = 0 .1. Figure 5 reports the alignment accuracy as a function of σ = √(1 − ρ2)/ρ 2 with λ = 0 .05 , 0.1, and 0 .15, respectively, where smaller σ corresponds to stronger graph correlation. Our method consistently outperforms the purely edge-based baselines (GW, Grampa, IsoRank, Umeyama) and the joint edge–feature baseline FGW across different feature correlations r. Notably, even when r
+
+is small (e.g., r = 0 .1), our approach achieves higher overlap than FGW under the same setting, indicating robustness to weak feature correlation. By contrast, classical spectral and matching-based methods (Grampa, IsoRank, Umeyama, GW) quickly degrade as noise increases. 0.0 0.1 0.2 0.3 0.4 0.5          
+
+> σ=√(1 − ρ2)/ ρ2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> QPAlign r=0
+> QPAlign r=0.1
+> QPAlign r=0.3
+> FGW r=0
+> FGW r=0.1
+> Grampa Isorank Umeyama GW
+
+(a) λ = 0 .05. 0.0 0.1 0.2 0.3 0.4 0.5           
+
+> σ=√(1 − ρ2)/ ρ2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> QPAlign r=0
+> QPAlign r=0.1
+> QPAlign r=0.3
+> FGW r=0
+> FGW r=0.1
+> Grampa Isorank Umeyama GW
+
+(b) λ = 0 .1. 0.0 0.1 0.2 0.3 0.4 0.5           
+
+> σ=√(1 − ρ2)/ ρ2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> QPAlign r=0
+> QPAlign r=0.1
+> QPAlign r=0.3
+> FGW r=0
+> FGW r=0.1
+> Grampa Isorank Umeyama GW
+
+(c) λ = 0 .15. 
+
+Figure 5: Overlap between the estimator ˆ π in Algorithm 1 and the ground truth π∗ evaluated by different algorithms across varying correlations σ ∈ [0 , 0.5] with different λ.Figure 6 shows the overlap as a function of feature correlation r with λ = 0 .05 , 0.1, and 0 .15, respectively, under different edge correlations ρ. Our method again demonstrates superior per-15 formance, achieving near-perfect alignment at much smaller r compared to FGW and MAP. For example, with ρ = 0 .8, our method reaches almost perfect overlap already at r = 0 .2, whereas FGW and MAP require significantly larger r to attain comparable accuracy. Overall, except for the degenerate case r = 0 or ρ = 0, our method consistently achieves higher overlap than existing baselines under the same r or ρ.0.0 0.2 0.4 0.6 0.8 1.0       
+
+> r
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> QPAlign ρ=0
+> QPAlign ρ=0.4
+> QPAlign ρ=0.8
+> FGW ρ=0
+> FGW ρ=0.4
+> FGW ρ=0.8
+> MAP
+
+(a) λ = 0 .05. 0.0 0.2 0.4 0.6 0.8 1.0        
+
+> r
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> QPAlign ρ=0
+> QPAlign ρ=0.4
+> QPAlign ρ=0.8
+> FGW ρ=0
+> FGW ρ=0.4
+> FGW ρ=0.8
+> MAP
+
+(b) λ = 0 .1. 0.0 0.2 0.4 0.6 0.8 1.0        
+
+> r
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> QPAlign ρ=0
+> QPAlign ρ=0.4
+> QPAlign ρ=0.8
+> FGW ρ=0
+> FGW ρ=0.4
+> FGW ρ=0.8
+> MAP
+
+(c) λ = 0 .15. 
+
+Figure 6: Overlap between the estimator ˆ π in Algorithm 1 and the ground truth π∗ evaluated by different algorithms across varying correlations r ∈ [0 , 1] with different λ.To investigate the effect of non-Gaussianity and heavy tails, we also conduct experiments under a Student-t model. Specifically, we consider the setting n = 100 and d = 16, and generate the edge weights and node features from Student-t distributions with degrees of freedom ν ∈ { 3, 5, 10 }. The results in Figure 7 show that QPAlign remains effective across all three choices of ν: the overlap increases steadily as either ρ or r becomes larger, and the overall phase transition pattern is broadly consistent with that observed in the Gaussian case. 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> ρ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> r
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> overlap
+
+(a) ν = 3. 0.0 0.2 0.4 0.6 0.8 1.0  
+
+> ρ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> r
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> overlap
+
+(b) ν = 5. 0.0 0.2 0.4 0.6 0.8 1.0  
+
+> ρ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> r
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> overlap
+
+(c) ν = 10. 
+
+Figure 7: Overlap between the estimator ˆ π and the ground truth π∗ under Student-t distributions with degrees of freedom ν ∈ { 3, 5, 10 }, for n = 100 and d = 16. To initialize for synthetic datasets, we leverage both feature and degree information to construct a mixed similarity matrix. Specifically, given node feature matrices X = [ x⊤
+
+1 , · · · , x⊤
+
+n ] ∈ Rn×d and 
+
+Y = [ y⊤
+
+1 , · · · , y⊤
+
+n ] ∈ Rn×d, we first compute a feature similarity matrix as Sfeat = max( XY ⊤, 0), i.e., the inner product similarity clamped elementwise at zero. We then compute a degree similarity matrix by setting d1 = A11 and d2 = A21, and defining Sdeg = (1 + |d11⊤ − 1d⊤
+
+2 |)−1. These two components are combined into a mixed similarity matrix, S = Sfeat + νS deg , which balances feature and structural signals. We empirically set ν = 0 .1. The initial transport plan Π (0) is then obtained by applying the Sinkhorn algorithm with K iterations to S. Across all datasets, we further employ the Barzilai–Borwein (BB) step-size rule [BB88] to adaptively determine the learning rate for the 16 gradient descent updates. 
+
+A.2 ACM-DBLP and Douban Datasets 
+
+We introduce the construction of edges and features in the ACM-DBLP dataset as follows: 
+
+• Features. Features are constructed from authors and venues only, while paper titles are discarded. Author strings are lowercased, split on commas or semicolons, and tokenized by collapsing spaces into underscores. Venue names are tokenized into words, and merged phrase tokens are created. We use a pretrained RoBERTa model [LLSZ21] to obtain embeddings of the corpus, and all representations are reduced to d = 256 dimensions via PCA before whitening to zero mean and unit variance. 
+
+• Edges. The graph is constructed by treating papers as nodes with edges defined by co-authorship and same-venue co-occurrence. We assign weights α1 = 1 .0 for shared authors and α2 = 0 .5 for shared venues, the weight edge βij (G) is given by ˜βij (G) = α1 Cauthor  
+
+> ij
+
++ α2 Cvenue  
+
+> ij
+
+, βij (G) = ˜βij (G) − E 
+
+> [
+
+˜βij (G)
+
+> ]√
+
+Var  
+
+> (
+
+˜βij (G) 
+
+> )
+
+,
+
+where Cauthor  
+
+> ij
+
+and Cvenue  
+
+> ij
+
+denote co-occurrence counts. We employ the same Douban dataset used in PARROT and other prior works, without any addi-tional processing. 
+
+Baseline comparison. For completeness, we note two method-specific adjustments. First, RE-GAL assumes non-negative adjacency, which does not strictly match our setting; we therefore follow the standard workaround of omitting nodes with negative degree when running REGAL. Second, PARROT is designed as an anchor-based semi-supervised method, while our experiments do not assume anchor nodes; in this case, we adopt the ablated variant without anchors described in the original paper. For ACM-DBLP and Douban datasets, we adopt a random initialization followed by a pro-jection step. In practice, we initialize Π (0) with a random matrix (using fixed seeds to ensure reproducibility), and then project it onto the Birkhoff polytope using the Sinkhorn algorithm. This initialization avoids numerical instabilities that may arise from directly relying on feature or degree similarities in high-dimensional sparse settings. 
+
+Sensitivity analysis. In Figure 3, we report the experimental results over five random seeds for λ ∈ { 0, 0.2, 0.4, 0.6, 0.8, 1}. The results indicate that the performance is stable with respect to both λ and the initialization. We further provide a sensitivity analysis with respect to μ and K in Table 2. The results again show that the performance remains stable across different choices of μ
+
+and K.
+
+A.3 Spatial Transcriptomic Data 
+
+Spatial transcriptomic (ST) data [SSV +16] consists of gene expression profiles measured at spatially localized spots on a tissue slice, where each feature corresponds to a gene and the spatial coordinates represent the physical locations of the spots. We use an ST slice containing 255 spots with 7,998 gene 17 ACM-DBLP Douban 
+
+μ 0 10 −5 10 −4 10 −3 10 −2 0 10 −5 10 −4 10 −3 10 −2
+
+overlap 0.3230 0.3219 0.3205 0.3166 0.3249 0.8220 0.8216 0.8229 0.8188 0.7919 
+
+K 20 50 100 200 400 20 50 100 200 400 overlap 0.3253 0.3237 0.3246 0.3249 0.3251 0.8220 0.8220 0.8220 0.8220 0.8220 
+
+Table 2: Sensitivity analysis of μ and K on ACM-DBLP and Douban. features as the base dataset. To enable quantitative evaluation with ground-truth correspondences, we generate simulated slices by rotating the spot coordinates and resampling expression counts after adding a pseudocount δ to each gene in each spot. We consider five noise levels ( δ ∈ 0, 1, 2, 3, 4, 5) to model increasing experimental variability. In the experiment, we further examined the sensitivity of our method with respect to λ. Re-call that λ = 0 corresponds to using only the feature information, while λ = 1 corresponds to relying solely on the structural information. Across the entire range of λ, our method consistently achieved strong alignment performance, indicating remarkable robustness to the choice of λ. In comparison with widely adopted baselines for spatial transcriptomics data alignment, including BBKNN [PYM +20] and Harmony [KMF +19], our approach yields consistently superior results. We implemented the experiments with parameters T = 400, K = 80, μ = 0 .1, η = 10 −5.0 1 2 3 4 5                      
+
+> Pseudocount δ
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Overlap
+> Max accuracy (baseline δ=0) QPAlign: λ= 0 Gene-only QPAlign: λ= 1 Spatial-only QPAlign: λ= 0.01 Mixed QPAlign: λ= 0.1 Mixed QPAlign: λ= 0.2 Mixed QPAlign: λ= 0.5 Mixed QPAlign: λ= 0.9 Mixed BBKNN Harmony
+
+Figure 8: Alignment accuracy across different λ in ST data. In this following, we describe the experimental setup on simulated spatial transcriptomic data. Synthetic slices were generated by perturbing both spatial coordinates and transcript counts. Let (X, Z ) denote a transcript count matrix X ∈ Np×n and spot coordinates Z ∈ R2×n. To model sectioning variability, each coordinate was rotated by 
+
+z′ 
+
+> i
+
+= R(θ)zi, R(θ) = 
+
+[
+
+cos θ − sin θ
+
+sin θ cos θ
+
+]
+
+,
+
+where θ was sampled uniformly from [0 , 2π). Spots mapped outside the array were discarded to mimic tissue loss. Pairwise distances dik = ∥zi − zk∥2 were used to ensure invariance to global translation and rotation. Transcript counts were perturbed in two stages. First, spot-level UMI counts Ni were sampled from a negative binomial distribution Ni ∼ NB( r, p ) with mean μ and variance σ2, modeling over-dispersion. Second, given Ni, gene-level counts were drawn from a multinomial distribution with 18 probabilities 
+
+πi = xi + δ
+
+∥xi + δ∥1
+
+,
+
+where the pseudocount δ controls smoothing: small δ preserves heterogeneity, while large δ yields more uniform profiles. After rotation, duplicate grid positions were resolved by keeping one spot per location, preserving a one-to-one mapping. Besides, Z-score transformation was applied to both edge and feature information, and L2 normalization was performed on the feature vectors to better align with our theoretical settings. This perturbation procedure—combining rigid-body rotation, spot loss, and controlled count noise—produces slices that retain biological structure while reflecting realistic variability. It ensures that slices retain key biological structures while reflecting realistic experimental variability such as tissue dropout and technical noise. For example, [ZLSR22] used a similar framework to study align-ment robustness under geometric perturbations. We evaluated our method across different values of λ, where λ = 0 and λ = 1 correspond to feature-only and structure-only settings, respectively. The results show that our approach consistently balances edge and feature information, achieving robust performance superior to BBKNN [PYM +20] and Harmony [KMF +19]. Finally, we introduce our intialization steps. We exploit domain-specific structure for initializa-tion. Similar to synthetic datasets, we construct Sfeat and Sdeg , combine them with ν = 0 .1, and apply the Sinkhorn algorithm with K iterations to obtain Π (0) .
+
+# B Proof of Theorems 
+
+B.1 Proof of Theorem 1 
+
+The impossibility result directly follows from Proposition 3. We then show the possibility result. By Proposition 1, 
+
+P [d(ˆ π, π ∗) = k] ≤ exp 
+
+(
+
+−nh 
+
+( kn
+
+)) 
+
+1{k≤n−1} + exp ( −2 log n) 1{k=n} + exp 
+
+(
+
+− ϵk log n
+
+16 
+
+)
+
+.
+
+Summing over k ≥ (1 − δ)n, we have 
+
+> n−1
+
+∑
+
+> k=(1 −δ)n
+
+exp 
+
+(
+
+−nh 
+
+( kn
+
+)) 
+
+≤
+
+> n−1
+
+∑
+
+> k=1
+
+exp 
+
+(
+
+−nh 
+
+( kn
+
+)) 
+
+> (a)
+
+≤ 2 ∑
+
+> 1≤k≤n/ 2
+
+exp 
+
+(
+
+−k log nk
+
+)
+
+≤ 2 
+
+> 10 log n
+
+∑
+
+> k=1
+
+exp( −k log nk ) + 2 ∑ 
+
+> 10 log n≤k≤n/ 2
+
+2−k
+
+≤ 2e− log n · 10 log n + 4 · 2−10 log n = n−1+ o(1) ,
+
+where (a) follows from h(x) = h(1 − x) and h(x) ≥ x log 1 
+
+> x
+
+. Since 
+
+∑
+
+> k≥(1 −δ)n
+
+exp 
+
+(
+
+− 132 ϵk log n
+
+)
+
+≤ exp (− ϵ 
+
+> 32
+
+(1 − δ)n log n)
+
+1 − exp (− ϵ 
+
+> 32
+
+log n) = n−Ω( n),
+
+19 we obtain that 
+
+> n
+
+∑
+
+> k=(1 −δ)n
+
+P [d(ˆ π, π ∗) = k]
+
+≤
+
+> n
+
+∑
+
+> k=(1 −δ)n
+
+[
+
+exp 
+
+(
+
+−nh 
+
+( kn
+
+)) 
+
+1{k≤n−1} + exp ( −2 log n) 1{k=n} + exp 
+
+(
+
+− ϵk log n
+
+32 
+
+)] 
+
+≤ n−1+ o(1) + n−2 + n−Ω( n). (5) Since P [overlap(ˆ π, π ∗) ≥ δ] ≥ 1 − ∑nk=(1 −δ)n P [d(ˆ π, π ∗) = k], we finish the proof of Theorem 1. 
+
+B.2 Proof of Theorem 2 
+
+The impossibility results directly follows from Proposition 4. When n log 
+
+( 11−ρ2
+
+)
+
++ d log 
+
+( 11−r2
+
+)
+
+≥
+
+(4 + ϵ) log n, we have 
+
+n log 
+
+( 11 − ρ2
+
+)
+
++ 2 d log 
+
+( 11 − r2
+
+)
+
+≥ (4 + ϵ) log n, 
+
+and thus (5) holds for δ = 1 − ϵ 
+
+> 16
+
+. It remains to upper bound ∑ϵn/ 16  
+
+> k=1
+
+P [d(ˆ π, π ∗) = k]. By Proposi-tion 2, 
+
+> ϵn/ 16
+
+∑
+
+> k=1
+
+P [d(ˆ π, π ∗) = k] ≤
+
+> ϵn/ 16
+
+∑
+
+> k=1
+
+exp 
+
+(
+
+− ϵ
+
+8 k log n
+
+)
+
+≤ exp ( −ϵ log n/ 8) 1 − exp ( −ϵ log n/ 8) .
+
+Combining this with (5), we finish the proof of Theorem 2. 
+
+# C Proof of Propositions 
+
+C.1 Proof of Proposition 1 
+
+It is shown in [WXY22] and [DCK19] that when n log(1 /(1 −ρ2)) ≥ (4+ ϵ) log n or d log(1 /(1 −r2)) ≥
+
+(4 + ϵ) log n there exists an estimator ˆ π such that P [ˆ π = π∗] = 1 − o(1). In this paper, we focus on the remaining regime, where n log(1 /(1 − ρ2)) ∨ d log(1 /(1 − r2)) ≤ C0 log n for some universal constant C0 > 4, where a ∨ b = max( a, b ) for any a, b ∈ R. Recall that we assume d = ω(log n), which implies that ρ, r = o(1). For any bijective mappings π′ : V (G1) 7 → V (G2), let Fπ′ ≜ {v ∈ V (G1) : π∗(v) = π′(v)} be the set of fixed points. Recall that Tk = {π ∈ S n : d(π, π ∗) = k} and 
+
+{d(ˆ π, π ∗) = k} ⊆ {∃π′ ∈ T k : Sπ∗ (G1, G 2) ≤ Sπ′ (G1, G 2)} ,
+
+where Sπ(G1, G 2) = φ(ρ) ∑ 
+
+> e∈E(G1)
+
+βe(G1)βπ(e)(G2) + φ(r) ∑  
+
+> v∈V(G1)
+
+xvyπ(v). Let G[F ] denote the induced subgraph of G over a vertex set F . Then for any τ ∈ R, we have that 
+
+{d(ˆ π, π ∗) = k}⊆ {∃π′ ∈ T k : Sπ∗ (G1, G 2) ≤ Sπ′ (G1, G 2)}
+
+= {∃π′ ∈ T k : [ Sπ∗ (G1, G 2) − Sπ∗ (G1[Fπ′ ], G 2[Fπ′ ])] ≤ [Sπ′ (G1, G 2) − Sπ′ (G1[Fπ′ ], G 2[Fπ′ ])] }
+
+⊆ {∃π′ ∈ T k : Sπ∗ (G1, G 2) − Sπ∗ (G1[Fπ′ ], G 2[Fπ′ ]) < τ }
+
+∪ {∃π′ ∈ T k : Sπ′ (G1, G 2) − Sπ′ (G1[Fπ′ ], G 2[Fπ′ ]) ≥ τ } .
+
+We then bound the two events separately. 20 C.1.1 Bad Event of Weak Signal 
+
+We first upper bound P [∃π′ ∈ T k : Sπ∗ (G1, G 2) − Sπ∗ (G1[Fπ′ ], G 2[Fπ′ ]) < τ ]. We write F = Fπ′
+
+when π′ is given. Let Nk = (n
+
+> 2
+
+) − (n−k
+
+> 2
+
+). Without loss of generality, we define E(G1)\(F
+
+> 2
+
+) =
+
+{e1, e 2, · · · , e Nk } and V (G1)\F = {v1, v 2, · · · , v k}. Let X, Y ∈ R(Nk +dk )×1 be defined as 
+
+X ≜
+
+(
+
+βe1 (G1), β e2 (G1), · · · , β eNk (G1), x⊤ 
+
+> v1
+
+, x⊤ 
+
+> v2
+
+, · · · , x⊤
+
+> vk
+
+)⊤
+
+,Y ≜
+
+(
+
+βπ∗(e1)(G2), β π∗(e2)(G2), · · · , β π∗(eNk )(G2), y⊤
+
+> π∗(v1)
+
+, y⊤
+
+> π∗(v2)
+
+, · · · , y⊤ 
+
+> π∗(vk)
+
+)⊤
+
+.
+
+Let W = Sπ∗ (G1, G 2) − Sπ∗ (G1[F ], G 2[F ]). Then, we have that W = X⊤AY , where A =diag {φ(ρ)INk , φ (r)Idk } with ∥A∥2 
+
+> F
+
+= φ(ρ)2Nk + φ(r)2dk and ∥A∥2 = φ(ρ) ∨ φ(r). The follow-ing Lemma provides concentration for W .
+
+Lemma 1. There exists a universal constant C, such that with probability at least 1 − δ0,
+
+|W − (ρφ (ρ)Nk + rφ (r)kd )| ≤ C
+
+(
+
+∥A∥F
+
+√
+
+log 1
+
+δ0
+
++ ∥A∥2 log 1
+
+δ0
+
+)
+
+.
+
+Pick τ = ( ρφ (ρ)Nk + rφ (r)kd ) − ak, where 
+
+ak =
+
+
+
+3C
+
+√
+
+(ρ2Nk + r2kd )2 nh ( kn ), k ≤ n − 1,
+
+3C√(nρ 2 + dr 2)n log n, k = n, (6) and h(x) = −x log x − (1 − x) log(1 − x) is the binary entropy function. 
+
+Case 1: k = n. We choose δ0 = exp ( −2 log n) in Lemma 1. Recall that ρ, r = o(1). Then, with probability at least 1 − δ0,
+
+|W − (ρφ (ρ)Nk + rφ (r)dk )| ≤ C
+
+[√ 
+
+φ(ρ)2Nk + φ(r)2dk √2 log n + (( φ(ρ) ∨ φ(r))2 log n)
+
+]
+
+≤ C
+
+√
+
+4n log n(dr 2 + nρ 2) + C
+
+√
+
+n log n(nρ 2 + dr 2)= 3 C
+
+√
+
+(nρ 2 + dr 2)n log n = an,
+
+where the last inequality follows from (φ(ρ) ∨ φ(r))2 log n ≤
+
+√
+
+nρ 2 + dr 2 log n ≤ C
+
+√
+
+n log n(nρ 2 + dr 2).
+
+Consequently, we have P [W ≤ τ ] ≤ exp ( −2 log n). 
+
+Case 2: δn ≤ k ≤ n − 1. We choose δ0 = exp 
+
+(
+
+−2nh 
+
+( kn
+
+)) 
+
+in Lemma 1. Then, with probability 1 − δ0, we have 
+
+|W − (ρφ (ρ)Nk + rφ (r)kd )|≤ C
+
+√
+
+φ(ρ)2Nk + φ(r)2dk 
+
+√
+
+2nh ( kn )
+
+ +
+
+(
+
+(φ(ρ) ∨ φ(r))2 nh ( kn )
+
+)
+
+≤ C
+
+(√ 
+
+4( ρ2Nk + r2dk )
+
+√
+
+2nh ( kn )
+
+)
+
++
+
+(
+
+(φ(ρ) ∨ φ(r))2 nh ( kn )
+
+)
+
+≤ 3C
+
+√
+
+(ρ2Nk + r2dk )2 nh ( kn ),
+
+21 where the last inequality follows from (φ(ρ) ∨ φ(r))2 nh ( kn ) ≤
+
+√
+
+(ρ2Nk + r2kd )2 nh ( kn )
+
+√
+
+4n(ρ2 + r2)(ρ2Nk + r2kd )
+
+≤
+
+√
+
+(ρ2Nk + r2kd )2 nh ( kn )
+
+√
+
+8n(ρ2 + r2)
+
+k(ρ2n + r2d) ,
+
+and 8n(ρ2 + r2)
+
+k(ρ2n + r2d) ≤ 16 nδn (ρ2n + r2d) ≤ 16 nδn (4 + ϵ/ 2) log n ≤ 1,
+
+where the last inequality is because ρ, r = o(1) and n log( 11−ρ2 ) + d log( 11−r2 ) ≥ (4 + ϵ) log n implies 
+
+nρ 2 + dr 2 ≥ (4 + ϵ/ 2) log n. Consequently, P [W ≤ τ ] ≤ exp 
+
+(
+
+−2nh 
+
+( kn
+
+)) 
+
+when k ≤ n − 1. By the union bound, we obtain 
+
+P [∃π′ ∈ T k : Sπ∗ (G1, G 2) − Sπ∗ (G1[Fπ′ ], G 2[Fπ′ ]) < τ ]
+
+≤ P
+
+ ⋃   
+
+> F⊆V(G1): |F|=n−k
+
+{Sπ∗ (G1, G 2) − Sπ∗ (G1[F ], G 2[F ]) < τ }
+
+
+
+≤
+
+(nk
+
+)
+
+P [Sπ∗ (G1, G 2) − Sπ∗ (G1[F ], G 2[F ]) < τ ]
+
+≤
+
+(nk
+
+)
+
+P [W ≤ τ ] 1{k≤n−1} + P [W ≤ τ ] 1{k=n}
+
+≤ exp 
+
+(
+
+−nh 
+
+( kn
+
+)) 
+
+1{k≤n−1} + exp ( −2 log n) 1{k=n}, (7) where the last inequality is because (nk
+
+) ≤ exp 
+
+(
+
+nh 
+
+( kn
+
+)) 
+
+.
+
+C.1.2 Bad Event of Strong Noise 
+
+We then upper bound P [∃π′ ∈ T k : Sπ′ (G1, G 2) − Sπ′ (G1[Fπ′ ], G 2[Fπ′ ]) ≥ τ ]. Given π′, we define 
+
+Z ≜ Sπ′ (G1, G 2) − Sπ′ (G1[Fπ′ ], G 2[Fπ′ ]). We also write F = Fπ′ when π′ is given. By Chernoff’s inequality, for any t > 0, 
+
+P [Z ≥ τ ] ≤ e−tτ E
+
+[
+
+etZ ]
+
+.
+
+In order to compute the moment generating function E
+
+[
+
+etZ ]
+
+, we introduce the definition of orbits. 
+
+Cycle decomposition For any σ ∈ S n, it induces a permutation σE on the edge set (V (G1)2
+
+) with 
+
+σE(( u, v )) ≜ (σ(u), σ (v)) for u, v ∈ V (G1). We refer to σ and σE as a node permutation and edge permutation. Each permutation can be decomposed as disjoint cycles known as orbits. Orbits of σ
+
+(resp. σE) are referred as node orbits (resp. edge orbits ). For example, a node orbit ( u1, u 2, · · · , u k)indicates that ui+1 = σ(ui) for 1 ≤ i ≤ k − 1 and u1 = σ(uk). Let nk (resp. Nk) denote the number of k-node (resp. k-edge) orbits in σ (resp. σE). For any π′ ∈ T k, let σ ≜ (π∗)−1 ◦ π′. Define CV 
+
+> i
+
+and CE 
+
+> i
+
+the set of node orbits and edge orbits of length i induced by σ, respectively. Denote CV = ∪i≥1CV 
+
+> i
+
+and CE = ∪i≥1CE 
+
+> i
+
+. Then, 22 V (G1) = ∪i≥1
+
+{
+
+v : v ∈ C V
+
+> i
+
+}
+
+, E (G1) = ∪i≥1
+
+{
+
+e : e ∈ C E
+
+> i
+
+}
+
+, and CV 
+
+> 1
+
+= F . Let 
+
+ZE = φ(ρ) ∑
+
+> e∈E(G1)\
+
+(F 
+
+> 2
+
+)
+
+βe(G1)βπ′(e)(G2), ZV = φ(r) ∑ 
+
+> v∈V(G1)\F
+
+xvyπ′(v). (8) Then Z = ZV + ZE. Since ZV and ZE are independent, we obtain that 
+
+E
+
+[
+
+etZ ]
+
+= E
+
+[
+
+etZ V ]
+
+E
+
+[
+
+etZ E ]
+
+. (9) We then derive the upper bounds for E
+
+[
+
+etZ V ]
+
+and E
+
+[
+
+etZ E ]
+
+, respectively. For any edge cycle 
+
+C =
+
+{
+
+e1, e 2, · · · , e |C|
+
+}
+
+with ei+1 = σE(ei) for all 1 ≤ i ≤ | C| − 1 and e1 = σE(e|C|), we define the cumulant generating function as 
+
+κE
+
+> |C|
+
+(t) = log E
+
+exp 
+
+tφ (ρ)
+
+> |C|
+
+∑
+
+> i=1
+
+βei (G1)βπ′(ei)(G2)
+
+ ,
+
+where we define ( u|C|+1 , v |C|+1 ) = ( u1, v 1). Similarly, for any node cycle C =
+
+{
+
+v1, · · · , v |C|
+
+}
+
+, we define v|C|+1 = v1 and 
+
+κV
+
+> |C|
+
+(t) = log E
+
+exp 
+
+tφ (r)
+
+> |C|
+
+∑
+
+> i=1
+
+xvi yπ′(vi)
+
+ .
+
+The lower-order cumulants can be calculated directly: 
+
+κE 
+
+> 1
+
+(t) = − 12 log(1 − 2tρφ (ρ) − t2φ2(ρ)(1 − ρ2)) ,κV 
+
+> 1
+
+(t) = − d
+
+2 log(1 − 2trφ (r) − t2φ2(r)(1 − r2)) ,κE 
+
+> 2
+
+(t) = − 12 log(1 − 2t2φ2(ρ)(1 + ρ2) + t4φ4(ρ)(1 − ρ2)2),κV 
+
+> 2
+
+(t) = − d
+
+2 log(1 − 2t2φ2(r)(1 + r2) + t4φ4(r)(1 − r2)2).
+
+Let Nk = (n
+
+> 2
+
+) − (n−k
+
+> 2
+
+). The following Lemma provides an upper bound on the cumulant function log E [exp( tZ )]. 
+
+Lemma 2. If d(π∗, π ′) = k, for any 0 < t ≤ (ρ−1 − 2) ∧ (r−1 − 2) , we have 
+
+log E [exp( tZ )] ≤ Nk
+
+2 κE 
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE 
+
+> 1
+
+(t) − 12 κE 
+
+> 2
+
+(t) + 12 κV 
+
+> 2
+
+(t)
+
+)
+
+.
+
+Recall that τ = ( ρφ (ρ)Nk + rφ (r)kd ) − ak, where 
+
+ak =
+
+
+
+3C
+
+√
+
+(ρ2Nk + r2kd )2 nh ( kn ), k ≤ n − 13C√(nρ 2 + dr 2)n log n, k = n (10) and h(x) = −x log x − (1 − x) log(1 − x) is the binary entropy function. We then show that 
+
+(
+
+1 − ϵ
+
+16 
+
+)
+
+(ρφ (ρ)Nk + rφ (r)kd ) ≤ τ ≤ ρφ (ρ)Nk + rφ (r)kd. 
+
+23 Recall that ρ, r = o(1). For any δn ≤ k ≤ n − 1, since n log 
+
+( 11−ρ2
+
+)
+
++ 2 d log 
+
+( 11−r2
+
+)
+
+≥ (4 + ϵ) log n,we have nρ 2 + dr 2 ≥ (2 + ϵ/ 4) log n. Therefore, we obtain nk h
+
+( kn
+
+)
+
+≤ h(δ) 
+
+> δ
+
+≤ ϵ2 
+
+> 215 C2
+
+(nρ 2 + dr 2) for sufficiently large n. When k ≤ n − 1, we have 
+
+ak = 3 C
+
+√
+
+(ρ2Nk + r2kd )2 nh ( kn ) ≤ 4C
+
+√
+
+(ρ2Nk + r2kd ) ϵ2
+
+214 C2 (nρ 2 + dr 2)k
+
+> (a)
+
+≤ ϵ
+
+32 
+
+√
+
+(ρ2Nk + r2kd )4( ρ2Nk + r2kd ) = ϵ
+
+16 (ρ2Nk + r2kd ) ≤ ϵ
+
+16 (ρφ (ρ)Nk + rφ (r)kd ),
+
+where (a) is because nk ≤ 4Nk. For k = n, since n log( 11−ρ2 ) + 2 d log( 11−r2 ) ≥ (4 + ϵ) log n and 
+
+ρ2, r 2 = o(1), we conclude that nρ 2 + dr 2 ≥ 12 (nρ 2 + 2 dr 2) ≥ 2 log n holds for sufficiently large n.Therefore, 
+
+ak = 3 C
+
+√
+
+(nρ 2 + dr 2)n log n ≤ 3C
+
+√
+
+(nρ 2 + dr 2) (nρ 2 + dr 2)n
+
+2
+
+≤ 4C
+
+√n (ρφ (ρ)n2 + rφ (r)nd ) ≤ ϵ
+
+16 (ρφ (ρ)Nk + rφ (r)kd ).
+
+Therefore, we conclude 
+
+(
+
+1 − ϵ
+
+16 
+
+)
+
+(ρφ (ρ)Nk + rφ (r)kd ) ≤ τ ≤ ρφ (ρ)Nk + rφ (r)kd. 
+
+We then upper bound P [Z ≥ τ ]. We note that 
+
+P [Z ≥ τ ] ≤ e−tτ E
+
+[
+
+etZ ]
+
+≤ exp 
+
+(
+
+−tτ + Nk
+
+2 κE 
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE 
+
+> 1
+
+(t) − 12 κE 
+
+> 2
+
+(t) + 12 κV 
+
+> 2
+
+(t)
+
+)) 
+
+.
+
+Pick t = 1. Since ρ, r = o(1), we have ρ2, r 2 ≤ ϵ 
+
+> 256
+
+. Recall that φ(ρ) = ρ 
+
+> 1−ρ2
+
+. Then, 
+
+κE 
+
+> 1
+
+(t) − 12 κE 
+
+> 2
+
+(t) = 14 log 1 − 2t2φ2(ρ)(1 + ρ2) + t4φ4(ρ)(1 − ρ2)2
+
+(1 − 2tρφ (ρ) − t2φ2(ρ)(1 − ρ2)) 2
+
+= 14 log 
+
+(
+
+1 + 4tρ 2
+
+1 − ρ2(1 + t)2
+
+)
+
+≤ ρ2
+
+1 − 4ρ2 ≤ 2,
+
+where the last inequality is because log(1 + x) ≤ x and ρ < 14 . We then bound κE 
+
+> 2
+
+(t). We note that 
+
+κE 
+
+> 2
+
+(t)
+
+ρφ (ρ) = − 1 − ρ2
+
+2ρ2 log(1 − 2t2φ2(ρ)(1 + ρ2) + t4φ4(ρ)(1 − ρ2)2)= − 1 − ρ2
+
+2ρ2 log 
+
+(
+
+1 − ρ2(2 + ρ2)(1 − ρ2)2
+
+) (a) 
+
+≤ 1 + 4 ρ2 ≤
+
+(
+
+1 + ϵ
+
+64 
+
+)
+
+,
+
+where the inequality (a) is from Lemma 8. Hence, we have κE 
+
+> 2
+
+(t) ≤ (1 + ϵ
+
+> 64
+
+) ρφ (ρ). Similarly, we have 
+
+κV 
+
+> 2
+
+(t) = − d
+
+2 log(1 − 2t2φ2(r)(1 + r2) + t4φ4(r)(1 − r2)2) ≤
+
+(
+
+1 + ϵ
+
+64 
+
+)
+
+drφ (r).
+
+24 Therefore, for t = 1, 
+
+− tτ + Nk
+
+2 κE 
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE 
+
+> 1
+
+(t) − 12 κE 
+
+> 2
+
+(t)
+
+)
+
++ k
+
+2 κV 
+
+> 2
+
+(t)
+
+≤ − 
+
+(
+
+1 − ϵ
+
+16 
+
+)
+
+(ρφ (ρ)Nk + rφ (r)kd ) + 
+
+( 12 + ϵ
+
+128 
+
+)
+
+(ρφ (ρ)Nk + kdrφ (r)) + k
+
+≤ − 
+
+( 12 − ϵ
+
+32 
+
+)
+
+(ρφ (ρ)Nk + rφ (r)kd ) + k
+
+≤ − 
+
+( 12 − ϵ
+
+32 
+
+) ( 
+
+2 + ϵ
+
+4
+
+)
+
+k log n + k, 
+
+where the last inequality is because Nk = (n
+
+> 2
+
+) − (n−k
+
+> 2
+
+) ≥ 12
+
+(
+
+1 − 1
+
+> n
+
+)
+
+kn and 
+
+ρφ (ρ)Nk + rφ (r)kd ≥ k
+
+( n − 12 log( 11 − ρ2 ) + d log( 11 − r2 )
+
+)
+
+≥ k(2 + ϵ
+
+4 ) log n. 
+
+Consequently, by the union bound and |T k| = (nk
+
+)k! ≤ nk,
+
+P [∃π′ ∈ T k : Sπ′ (G1, G 2) − Sπ′ (G1[Fπ′ ], G 2[Fπ′ ]) ≥ τ ]
+
+≤ nkP [Z ≥ τ ]
+
+≤ exp 
+
+(
+
+k log n −
+
+( 12 − ϵ
+
+32 
+
+) ( 
+
+2 + ϵ
+
+4
+
+)
+
+k log n + k
+
+)
+
+≤ exp 
+
+(
+
+− ϵ
+
+32 k log n
+
+)
+
+.
+
+Combining this with (7), we obtain that 
+
+P [d(ˆ π, π ∗) = k] ≤ P [∃π′ ∈ T k : Sπ∗ (G1, G 2) − Sπ∗ (G1[Fπ′ ], G 2[Fπ′ ]) < τ ]
+
++ P [∃π′ ∈ T k : Sπ′ (G1, G 2) − Sπ′ (G1[Fπ′ ], G 2[Fπ′ ]) ≥ τ ]
+
+≤ exp 
+
+(
+
+−nh 
+
+( kn
+
+)) 
+
+1{k≤n−1} + exp ( −2 log n) 1{k=n} + exp 
+
+(
+
+− ϵk log n
+
+32 
+
+)
+
+.
+
+C.2 Proof of Proposition 2 
+
+For any π′ ∈ T k, let 
+
+Yπ′ ≜ φ(ρ) ∑
+
+> e∈E(G1)\C E
+> 1
+
+(
+
+βe(G1)βπ′(e)(G2) − βe(G1)βπ∗(e)(G2)
+
+)
+
++ φ(r) ∑ 
+
+> v∈V(G1)\C V
+> 1
+
+(
+
+x⊤ 
+
+> v
+
+yπ′(v) − x⊤ 
+
+> v
+
+yπ∗(v)
+
+)
+
+,
+
+where CE 
+
+> 1
+
+and CV 
+
+> 1
+
+denote the edge orbit and vertex orbit of length 1 induced by σ = ( π∗)−1 ◦ π′.For notational simplicity, we write Y = Yπ′ when π′ is given. Then for any t > 0, {d(ˆ π, π ∗) = k} ⊆ {∃ π′ ∈ T k : Y ≥ 0} and 
+
+P [d(ˆ π, π ∗) = k] ≤ P [∃π′ ∈ T k : Y ≥ 0] (a) 
+
+≤ |T k|P [Y ≥ 0] (b) 
+
+≤ nkE [exp ( tY )] , (11) where (a) uses union bound and (b) follows from Chernoff’s inequality and |T k| = (nk
+
+)k! ≤ nk. Let 
+
+Y E ≜ φ(ρ) ∑
+
+> e∈E(G1)\C E
+> 1
+
+(
+
+βe(G1)βπ′(e)(G2) − βe(G1)βπ∗(e)(G2)
+
+)
+
+,Y V ≜ φ(r) ∑ 
+
+> v∈V(G1)\C V
+> 1
+
+(
+
+x⊤ 
+
+> v
+
+yπ′(v) − x⊤ 
+
+> v
+
+yπ∗(v)
+
+)
+
+.
+
+25 Then Y = Y E + Y V and E [exp( tY )] = E
+
+[
+
+exp( tY E)
+
+]
+
+E
+
+[
+
+exp 
+
+(
+
+tY V)] 
+
+. We then derive the upper bounds for E
+
+[
+
+exp 
+
+(
+
+tY V)] 
+
+and E
+
+[
+
+exp 
+
+(
+
+tY E)] 
+
+, respectively. For any edge cycle C =
+
+{
+
+e1, e 2, · · · , e |C|
+
+}
+
+with ei+1 = σE(ei) for all 1 ≤ i ≤ | C| − 1 and e1 = σE(e|C|), we define the cumulant generating function as 
+
+μE
+
+> |C|
+
+(t) = log E
+
+exp 
+
+tφ (ρ)
+
+> |C|
+
+∑
+
+> i=1
+
+βei (G1)βπ′(ei)(G2) − tφ (ρ)
+
+> |C|
+
+∑
+
+> i=1
+
+βei (G1)βπ∗(ei)(G2)
+
+ ,
+
+where we define ( u|C|+1 , v |C|+1 ) = ( u1, v 1). Similarly, for any node cycle C =
+
+{
+
+v1, · · · , v |C|
+
+}
+
+, we define v|C|+1 = v1 and 
+
+μV
+
+> |C|
+
+(t) = log E
+
+exp 
+
+tφ (r)
+
+> |C|
+
+∑
+
+> i=1
+
+xvi yπ′(vi) − tφ (r)
+
+> |C|
+
+∑
+
+> i=1
+
+xvi yπ∗(vi)
+
+ .
+
+The lower-order cumulants can be calculated directly: 
+
+μE 
+
+> 2
+
+(t) = − 12 log 
+
+(
+
+1 + ρ2
+
+1 − ρ2 (4 t − 4t2)
+
+)
+
+, μV 
+
+> 2
+
+(t) = − d
+
+2 log 
+
+(
+
+1 + r2
+
+1 − r2 (4 t − 4t2)
+
+)
+
+.
+
+Recall that Nk = (n
+
+> 2
+
+) − (n−k
+
+> 2
+
+). The following Lemma provides an upper bound on the cumulant function log E [exp ( tY )]. 
+
+Lemma 3. If d(π∗, π ′) = k, for any 0 < t < 1, we have 
+
+log E [exp ( tY )] ≤ 12
+
+(
+
+Nk − k
+
+2
+
+)
+
+μE 
+
+> 2
+
+(t) + k
+
+2 μV 
+
+> 2
+
+(t).
+
+Pick t = 12 . By Lemma 3, log E [exp ( tY )] ≤ − nk 
+
+4
+
+(
+
+1 − k + 2 2n
+
+)
+
+log 
+
+( 11 − ρ2
+
+)
+
+− kd 
+
+4 log 
+
+( 11 − r2
+
+)
+
+.
+
+Combining this with (11), we have 
+
+P [d(ˆ π, π ∗) = k] ≤ nkE [exp ( tY )] 
+
+≤ exp 
+
+(
+
+k log n − nk 
+
+4
+
+(
+
+1 − k + 2 2n
+
+)
+
+log 
+
+( 11 − ρ2
+
+)
+
+− kd 
+
+4 log 
+
+( 11 − r2
+
+)) 
+
+≤ exp 
+
+(
+
+k log n − k
+
+4
+
+(
+
+1 − k + 2 2n
+
+) ( 
+
+n log 
+
+( 11 − ρ2
+
+)
+
++ d log 
+
+( 11 − r2
+
+))) 
+
+> (a)
+
+≤ exp 
+
+(
+
+−
+
+( ϵ
+
+4 − k + 2 2n
+
+(
+
+1 + ϵ
+
+4
+
+)) 
+
+k log n
+
+) (b) 
+
+≤ exp 
+
+(
+
+− ϵ
+
+8 k log n
+
+)
+
+,
+
+where (a) is because n log 
+
+( 11−ρ2
+
+)
+
++ d log 
+
+( 11−r2
+
+)
+
+≥ (4 + ϵ) log n; (b) follows from k ≤ ϵ 
+
+> 16
+
+n.
+
+C.3 Proof of Proposition 3 
+
+We first introduce the following lemma. 26 Lemma 4. For any 0 < δ ≤ 1, we have 
+
+|M δ| ≥ 
+
+( δn e
+
+)δn 
+
+, (12) 
+
+I(π∗; G1, G 2) ≤ 12
+
+(n
+
+2
+
+)
+
+log 
+
+( 11 − ρ2
+
+)
+
++ nd 
+
+2 log 
+
+( 11 − r2
+
+)
+
+. (13) The proof of Lemma 4 is deferred to Appendix D.4. We directly apply Fano’s inequality in (2). For any 0 < δ < 1, by Lemma 4, 
+
+P [overlap(ˆ π, π ∗) < δ ] ≥ 1 − I(π∗; G1, G 2) + log 2 log |M δ|≥ 1 −
+
+(n
+
+> 2
+
+) 12 log( 11−ρ2 ) + nd  
+
+> 2
+
+log( 11−r2 ) + log 2 
+
+δn log( δn/e ) ≥ 1 − c
+
+4δ ,
+
+where the last inequality follows from n log 
+
+( 11−ρ2
+
+)
+
++ 2 d log 
+
+( 11−r2
+
+)
+
+≤ c log n.
+
+C.4 Proof of Proposition 4 
+
+In this subsection, we provide the proof on Proposition 4. Recall that 
+
+Sπ(G1, G 2) = φ(ρ) ∑
+
+> e∈E(G1)
+
+βe(G1)βπ(e)(G2) + φ(r) ∑ 
+
+> v∈V(G1)
+
+xvyπ(v).
+
+Define 
+
+E(π∗, π ′) ≜ {(G1, G 2) : Sπ∗(G1, G 2) ≤ Sπ′ (G1, G 2)} ,
+
+M ≜ {π′ ∈ S n : π′̸ = π∗, (G1, G 2) ∈ E (π∗, π ′)} .
+
+Since the true permutation π∗ is uniformly distributed, the MLE ˆ πML minimizes the error prob-ability among all estimators. Therefore, to prove the impossibility result, it suffices to prove the failure of MLE. We note that ˆ π in (1) achieves exact recovery is equivalent to M = ∅. To prove the impossibility of exact recovery, it suffices to show P [|M| = 0] = o(1). Let I = |M∩T 2| with T2 = {π′ ∈ S n : d(π∗, π ′) = 2 }. Then I ≤ |M| . By Chebyshev’s inequality, we have 
+
+P [|M| = 0] ≤ P [I = 0] ≤ P
+
+[
+
+(I − E [I]) 2 ≥ (E [I]) 2]
+
+≤ Var [ I](E [I]) 2 . (14) Given π′, let ϵ1 ≜ P [( G1, G 2) ∈ E (π∗, π ′)]. Since |T 2| = (n
+
+> 2
+
+), the expectation E [I] is then given by 
+
+E [I] = ∑
+
+> π′∈T 2
+
+P [(G1, G 2) ∈ E (π∗, π ′)] =
+
+(n
+
+2
+
+)
+
+ϵ1.
+
+We then compute the second moment E [I2]. Note that 
+
+I2 =
+
+ ∑
+
+> π′∈T 2
+
+1{(G1,G 2)∈E (π∗,π ′)}
+
+
+
+> 2
+
+= ∑
+
+> π′∈T 2
+
+1{(G1,G 2)∈E (π∗,π ′)} + ∑ 
+
+> π1,π 2∈T 2:π1̸=π2
+
+1{(G1,G 2)∈E (π∗,π 1)}1{(G1,G 2)∈E (π∗,π 2)}. (15) 27 It remains to compute ∑  
+
+> π1̸=π2∈T 2
+
+P [( G1, G 2) ∈ E (π∗, π 1) ∩ E (π∗, π 2)]. Indeed, we have d(π1, π 2) ∈{3, 4} for any π1̸ = π2 ∈ T 2. The number of pairs ( π1, π 2) with π1̸ = π2 ∈ T 2 with d(π1, π 2) = 3 and d(π1, π 2) = 4 are 6 (n
+
+> 3
+
+) and 6 (n
+
+> 4
+
+), respectively. For π1̸ = π2 ∈ T 2 with d(π1, π 2) = 4, since 
+
+Sπ∗ (G1, G 2) − Sπ1 (G1, G 2) and Sπ∗ (G1, G 2) − Sπ2 (G1, G 2) are independent, we have 
+
+P [( G1, G 2) ∈ E (π∗, π 1) ∩ E (π∗, π 2)] = P [( G1, G 2) ∈ E (π∗, π 1)] P [( G1, G 2) ∈ E (π∗, π 2)] = ϵ21.
+
+For π1̸ = π2 ∈ T 2 with d(π1, π 2) = 3, we have the following Lemma. 
+
+Lemma 5. For any π1̸ = π2 ∈ T 2 with d(π1, π 2) = 3 , we have 
+
+P [( G1, G 2) ∈ E (π∗, π 1) ∩ E (π∗, π 2)] ≤ (1 − ρ2) 3( n−2) 4 (1 − r2) 3d 
+
+> 4
+
+.
+
+Next we prove a lower bound of ϵ1. For any π′ ∈ T 2, we assume that π∗(v) = π′(v) for any 
+
+v ∈ V (G1)\ { v1, v 2}, π∗(v1) = π′(v2), and π∗(v2) = π′(v1). Consequently, 
+
+ϵ1 = P [(G1, G 2) ∈ E (π∗, π ′)]
+
+= P
+
+[
+
+φ(ρ) ∑
+
+> e∈E(G1)
+
+βe(G1)
+
+(
+
+βπ′(e)(G2) − βπ∗(e)(G2)
+
+)
+
++ φ(r) ∑ 
+
+> v∈V(G1)
+
+x⊤
+
+> v
+
+(
+
+yπ′(v) − yπ∗(v)
+
+)
+
+≥ 0
+
+]
+
+= P
+
+[
+
+φ(ρ) ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+(βvv 1 (G1) − βvv 2 (G1))( βπ∗(vv 1)(G2) − βπ∗(vv 2)(G2)) + φ(r)( xv1 − xv2 )⊤(yπ∗(v1) − yπ∗(v2)) ≤ 0
+
+]
+
+≥ P
+
+ ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+(βvv 1 (G1) − βvv 2 (G1))( βπ∗(vv 1)(G2) − βπ∗(vv 2)(G2)) ≤ 0
+
+
+
+· P
+
+[
+
+(xv1 − xv2 )⊤(yπ∗(v1) − yπ∗(v2)) ≤ 0
+
+]
+
+.
+
+We then bound the probability of two events separately. We note that 
+
+[
+
+Xv
+
+Yv
+
+]
+
+≜
+
+[
+
+βvv 1 (G1) − βvv 2 (G1)
+
+βπ∗(vv 1)(G2) − βπ∗(vv 2)(G2)
+
+]
+
+∼ N 
+
+([ 
+
+00
+
+]
+
+, 2
+
+[
+
+1 ρρ 1
+
+]) 
+
+.
+
+Let ξv i.i.d.
+
+∼ N (0 , 1) for any v ∈ V (G1)\ { v1, v 2}. We note that 
+
+P
+
+ ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+XvYv ≥ 0
+
+
+
+= E
+
+P
+
+ ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+XvYv ≥ 0
+
+∣∣∣ {v ∈ V (G1)\ { v1, v 2}} 
+
+
+
+> (a)
+
+= E
+
+P
+
+ ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+ρX 2 
+
+> v
+
++
+
+√
+
+2(1 − ρ2)Xvξv ≤ 0
+
+∣∣∣ {v ∈ V (G1)\ { v1, v 2}} 
+
+
+
+> (b)
+
+= E
+
+P
+
+N (0 , 1) ≥ ρ√∑  
+
+> v∈V(G1)\{ v1,v 2}
+
+X2
+
+> v
+
+√2(1 − ρ2)
+
+∣∣∣ {v ∈ V (G1)\ { v1, v 2}} 
+
+ ,
+
+28 where (a) is because Yv|Xv ∼ N (ρX v, 2(1 − ρ2)) and {Yv|Xv, v ∈ V (G1)\ { v1, v 2}} are independent; (b) is because 
+
+∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+Xvξv
+
+∣∣∣∣∣ {Xv : v ∈ V (G1)\ { v1, v 2}} ∼ N 
+
+0, 2(1 − ρ2) ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+X2
+
+> v
+
+ .
+
+By Lemma 9, since ∑   
+
+> v∈V(G1)\{ v1,v 2}12
+
+X2 
+
+> v
+
+∼ χ2(n − 2), we have 
+
+P
+
+ ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+X2 
+
+> v
+
+≤ 2( n + √n log n)
+
+ = 1 − o(1) .
+
+Consequently, 
+
+P
+
+ ∑ 
+
+> v∈V(G1)\{ v1,v 2}
+
+XvYv ≥ 0
+
+
+
+≥ E
+
+(1 − o(1)) P
+
+N (0 , 1) ≥ ρ
+
+√
+
+2( n + √n log n)
+
+√2(1 − ρ2)
+
+
+
+> (a)
+
+≥ 1 − o(1) 
+
+√2π exp 
+
+(
+
+− 12
+
+ρ2(n + √n log n)1 − ρ2
+
+) 2
+
+> ρ
+
+√n+√n log n
+
+√1−ρ2 +
+
+√
+
+4 + ρ2(n+√n log n)1−ρ2
+
+> (b)
+
+≥ 116 √log n (1 − ρ2)− 12 (n−2)(1+ o(1)) ,
+
+where (a) is because P [Z ≥ t] ≥ 2 
+
+> t+√t2+4 1√2π
+
+exp 
+
+(
+
+− 12 t2)
+
+for Z ∼ N (0 , 1) [Bir42]; (b) is because 
+
+n log 
+
+( 11−ρ2
+
+)
+
+≤ (4 −ϵ) log n implies ρ2 
+
+> 1−ρ2
+
+(n+√n log n) ≤ 4 log n, 1−o(1) √2π · 2√4 log n+√4+4 log n ≥ 116 √log n ,and ρ2 
+
+> 1−ρ2
+
+= (1 + o(1)) log 
+
+( 11−ρ2
+
+)
+
+. It follows from [KNW22, Proposition 4.3] that when r2 ≥ 40  
+
+> d
+
+,
+
+P
+
+[
+
+(xv1 − xv2 )⊤(yπ∗(v1) − yπ∗(v2)) ≤ 0
+
+]
+
+≥ 11000 √d (1 − r2) d 
+
+> 2
+
+.
+
+Consequently, 
+
+ϵ1 ≥ 116000 √d log n (1 − ρ2) n−22 (1+ o(1)) (1 − r2) d 
+
+> 2
+
+.
+
+By Lemma 5, for any π1̸ = π2 ∈ T 2 with d(π1, π 2) = 3, we have 
+
+ϵ2 ≜ P [( G1, G 2) ∈ E (π∗, π 1) ∩ E (π∗, π 2)] ≤ (1 − ρ2) 3( n−2) 4 (1 − r2) 3d 
+
+> 4
+
+.
+
+By (14) and (15), 
+
+P [|M| = 0] ≤ E [I2] − (E [I]) 2
+
+(E [I]) 2 =
+
+(n
+
+> 2
+
+)ϵ1 + 6 (n
+
+> 3
+
+)ϵ2 + 6 (n
+
+> 4
+
+)ϵ21 − (n
+
+> 2
+
+)2ϵ21
+
+(n
+
+> 2
+
+)2ϵ21
+
+≤ 4
+
+n2ϵ1
+
++ 4ϵ2
+
+nϵ 21
+
+.
+
+29 Since n log 
+
+( 11−ρ2
+
+)
+
++ d log 
+
+( 11−r2
+
+)
+
++ 4 log d ≤ (4 − ϵ) log n , we obtain 
+
+n2ϵ1 ≥ 116000 √log n
+
+· exp 
+
+(
+
+2 log n − 12 log d − n − 22 (1 + o(1)) log 
+
+( 11 − ρ2
+
+)
+
+− d
+
+2 log 
+
+( 11 − r2
+
+)) 
+
+≥ 116000 √log n exp 
+
+( ϵ
+
+4 log n
+
+)
+
+and 
+
+nϵ 21
+
+ϵ2
+
+≥ 1256 · 10 6 log n
+
+· exp 
+
+(
+
+log n − log d − n − 24 (1 + o(1)) log 
+
+( 11 − ρ2
+
+)
+
+− d
+
+4 log 
+
+( 11 − r2
+
+)) 
+
+≥ 1256 · 10 6 log n exp 
+
+( ϵ
+
+8 log n
+
+)
+
+.
+
+Therefore, we obtain P [|M| = 0] ≤ 4 
+
+> n2ϵ1
+
++ 4ϵ2
+
+> nϵ 21
+
+= o(1), we finish the proof. 
+
+C.5 Proof of Proposition 5 
+
+Recall f :
+
+f (Π) ≜ λ∥A1Π − ΠA2∥2 
+
+> F
+
++ (1 − λ)
+
+> d
+
+∑
+
+> i=1
+
+∥Bi
+
+> 1
+
+Π − ΠBi
+
+> 2
+
+∥2 
+
+> F
+
+.
+
+To prove Proposition 5, we need the following proposition to establish the convergence of function 
+
+f .
+
+Proposition 7. For any two graphs G1, G 2, there exists a universal constant L = L(G1, G 2) such that for any η ≤ L−1, we have 
+
+|f (Π K ) − f (Π ′)| ≤ 12ηK ∥Π0 − Π′∥2 
+
+> F
+
+≤ nηK 
+
+for any integer K ≥ 1, where Π′ ∈ arg min Π∈Wn f (Π) and Π0 is the initial state. 
+
+The proof of Proposition 5 is deferred to Appendix C.7. Without loss of generality, in the following analysis, we suppose π∗ = id for simplicity. To obtain the convergence guarantee of 
+
+∥ΠK − Π′∥, we need the following lemma: 
+
+Lemma 6. For the distance matrix D ∈ Rn×n defined as Dij = ∥xi − yj ∥22, for any 0 < δ < 1, if 
+
+d > 32 log n√δ , then with probability at least 1 − δ, min i,j Di,j ≥ (1 − r)d.Proof of Lemma 6. Since π∗ = id, for correlated pair xi, yi, we have xi − yi ∼ N (0, 2(1 − r)Id), which implies Dii = ∥xi−yi∥2 ∼ 2(1 −r)χ2
+
+> d
+
+. For independent pair xk, yj , k̸ = j, xk −yj ∼ N (0, 2Id), 
+
+Dkj = ∥xk − yj ∥2 ∼ 2χ2
+
+> d
+
+.By Lemma 9, we have 
+
+P [Dii < (1 − r)d] ≤ exp 
+
+(
+
+− 116 d
+
+)
+
+, P [Dkj < d ] ≤ exp 
+
+(
+
+− 116 d
+
+)
+
+.
+
+30 Taking union bound, we obtain 
+
+P
+
+[
+
+min  
+
+> i,j
+
+Dij < (1 − r)d
+
+]
+
+≤ n2 exp 
+
+(
+
+− 116 d
+
+)
+
+≤ δ. 
+
+The Hessian of f has matrix expression 
+
+∇2f = 2 λ(I ⊗ A1 − A⊤ 
+
+> 2
+
+⊗ I)⊤(I ⊗ A1 − A⊤ 
+
+> 2
+
+⊗ I) + 2(1 − λ) diag( {Dij }1≤i,j ≤n)
+
+⪰ 2(1 − λ) min 
+
+> 1≤i,j ≤n
+
+(Dij )I, 
+
+where A ⪰ B means that for symmetric matrices A and B, A − B is positive semidefinite. Denote 
+
+m ≜ 2(1 − λ) min i,j (Dij ). Since Π ′ minimizes f on Wn, it satisfies ⟨∇ f (Π ′), Π − Π′⟩ ≥ 0. Therefore, for any Π ∈ Wn, f (Π) ≥ f (Π ′) + ⟨∇ f (Π ′), Π − Π′⟩ + m 
+
+> 2
+
+∥Π − Π′∥2 
+
+> F
+
+≥ f (Π ′) + m 
+
+> 2
+
+∥Π − Π′∥2 
+
+> F
+
+.
+
+Following Lemma 6, for any 0 < δ < 1, if d > 32 log n√δ , then with probability at least 1 − δ,min i,j Di,j ≥ (1 − r)d, which implies 
+
+∥ΠK − Π′∥2 
+
+> F
+
+≤ 2
+
+m |f (Π K ) − f (Π ′)| ≤ n
+
+(1 − λ)(1 − r)dηK ,
+
+where the second inequality follows from Proposition 7. 
+
+C.6 Proof of Proposition 6 
+
+We consider the following estimator: ˆπλ = argmax 
+
+> π∈S n
+
+λ ∑
+
+> e∈E(G1)
+
+βe(G1)βπ(e)(G2) + (1 − λ) ∑ 
+
+> v∈V(G1)
+
+x⊤ 
+
+> v
+
+yπ(v)
+
+ .
+
+Note that for any τ ∈ R we have 
+
+{d(ˆ πλ, π ) = k} ⊆ {∃ π′ ∈ T k, s.t., λ ∑
+
+> e
+
+βe(G1)βπ(e)(G2) + (1 − λ) ∑
+
+> v
+
+x⊤ 
+
+> v
+
+yπ(v)
+
+− λ ∑
+
+> e
+
+βe(G1)βπ′(e)(G2) − (1 − λ) ∑
+
+> v
+
+x⊤ 
+
+> v
+
+yπ′(v) ≤ 0}
+
+= {∃ π′ ∈ T k, s.t., λ 
+
+∑
+
+> e / ∈E
+
+βe(G1)βπ(e)(G2) − ∑
+
+> e / ∈E
+
+βe(G1)βπ′(e)(G2)
+
+
+
++ (1 − λ)
+
+ ∑
+
+> v / ∈F
+
+x⊤ 
+
+> v
+
+yπ(v) − ∑
+
+> v / ∈F
+
+x⊤ 
+
+> v
+
+yπ′(v)
+
+ ≤ 0}⊆
+
+∃ π′ ∈ T k, s.t., λ ∑
+
+> e / ∈E
+
+βe(G1)βπ(e)(G2) + (1 − λ) ∑
+
+> v / ∈F
+
+x⊤ 
+
+> v
+
+yπ(v) < τ 
+
+ (16) 
+
+⋃∃ π′ ∈ T k, s.t., λ ∑
+
+> e / ∈E
+
+βe(G1)βπ′(e)(G2) + (1 − λ) ∑
+
+> v / ∈F
+
+x⊤ 
+
+> v
+
+yπ′(v) ≥ τ
+
+ . (17) We then upper bound the error probability for (16) and (17), respectively. We first consider (16). 31 Let X = ( X1, · · · , X Nk , ˜X1, · · · , ˜Xk)⊤ and Y = ( Y1, · · · , Y Nk , ˜Y1, · · · , ˜Yk)⊤, where ( Xi, Y i) i.i.d. 
+
+∼N (
+
+[
+
+00
+
+]
+
+,
+
+[
+
+1 ρρ 1
+
+]
+
+), and ( ˜Xi, ˜Yi) i.i.d. 
+
+∼ N (
+
+[
+
+00
+
+]
+
+,
+
+[
+
+Id rI d
+
+rI d Id
+
+]
+
+). Then 
+
+W ≜ λ ∑
+
+> e / ∈
+
+(F 
+
+> 2
+
+)
+
+βe(G1)βπ(e)(G2) + (1 − λ) ∑
+
+> v / ∈F
+
+x⊤ 
+
+> v
+
+yπ(v)
+
+> d
+
+= X⊤AY, 
+
+where A = diag {λI Nk , (1 − λ)Idk } with ∥A∥2 
+
+> F
+
+= λ2Nk + (1 − λ)2dk and ∥A∥2 = λ ∨ (1 − λ). By Lemma 1, there exists a universal constant C, such that with probability at least 1 − δ0,
+
+|W − (ρλN k + r(1 − λ)kd )| ≤ C
+
+(
+
+∥A∥F
+
+√
+
+log 1
+
+δ0
+
++ ∥A∥2 log 1
+
+δ0
+
+)
+
+.
+
+Let τ = ( ρλN k + r(1 − λ)kd ) − C(∥A∥F
+
+√
+
+log 1 
+
+> δ0
+
+∨ ∥ A∥2 log 1 
+
+> δ0
+
+) with δ0 = exp( −2k log n): 
+
+τ = ( ρλN k + r(1 − λ)kd ) − C(∥A∥F
+
+√2k log n + ∥A∥2 · 2k log n). (18) We obtain 
+
+P
+
+ ⋃
+
+> π′∈T k
+
+{λ ∑
+
+> e / ∈E
+
+βe(G1)βπ(e)(G2) + (1 − λ) ∑
+
+> v / ∈F
+
+xTv yπ(v) < τ }
+
+ ≤
+
+(nk
+
+)
+
+δ0 ≤ n−k, (19) where the last inequality is because δ0 = exp( −2k log n) and (nk
+
+) ≤ nk.We then focus on (17). We first introduce the following lemma. 
+
+Lemma 7. Under Assumption 1, if d = ω(log n) and n log 11−ρ2 + d log 11−r2 ≥ C0 log n for some 
+
+C0 ≥ (32(13+ C)) 2(1+Γ)  
+
+> δ2
+
+, then for τ in (18) and any λ ∈ (δ, 1 − δ), we have 
+
+P
+
+ ⋃
+
+> π′∈Tk
+
+λ ∑
+
+> e / ∈E
+
+βe(G1)βπ′(e)(G2) + (1 − λ) ∑
+
+> v / ∈F
+
+xTv yπ′(v) ≥ τ
+
+ ≤ n−2k. (20) By (16), (17), (19), and (20), we obtain 
+
+P [ˆ πλ̸ = π∗] ≤ ∑
+
+> k≥1
+
+(
+
+n−k + n−2k)
+
+= o(1) .
+
+Proof of Lemma 7. Let Zλ ≜ λ ∑ 
+
+> e / ∈E
+
+βe(G1)βπ′(e)(G2) + (1 − λ) ∑ 
+
+> v / ∈F
+
+xTv yπ′(v). Following a similar argument with Appendix C.2, we have 
+
+P [Zλ ≥ τ ] ≤ e−tτ E
+
+[
+
+etZ ]
+
+= exp 
+
+(
+
+−tτ + Nk
+
+2 κE,λ  
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE,λ  
+
+> 1
+
+(t) − 12 κE,λ  
+
+> 2
+
+(t)
+
+)
+
++ k
+
+2 κV,λ  
+
+> 2
+
+(t)
+
+)
+
+,
+
+where 
+
+κE,λ  
+
+> 2
+
+(t) ≜ − 12 log(1 − 2t2λ2(1 + ρ2) + t4λ4(1 − ρ2)2),κV,λ  
+
+> 2
+
+(t) ≜ − d
+
+2 log(1 − 2t2(1 − λ)2(1 + r2) + t4(1 − λ)4(1 − r2)2),
+
+32 and 
+
+κE,λ  
+
+> 1
+
+(t) ≜ − 12 log(1 − 2tρλ − t2λ2(1 − ρ2)) ,κV,λ  
+
+> 1
+
+(t) ≜ − d
+
+2 log(1 − 2tr (1 − λ) − t2(1 − λ)2(1 − r2)) .
+
+When t ≤ 116 , (1 ± ρ)2, (1 ± r)2 ≤ 4, and thus 4 t2 ≤ 1/64. Since − log(1 − x) ≤ x 
+
+> 1−x
+
+≤ 2x holds for all x ≤ 1/2, we have 
+
+κE,λ  
+
+> 2
+
+(t) = − 12 log(1 − t2λ2(1 + ρ)2) − 12 log(1 − t2λ2(1 − ρ)2)
+
+≤ t2λ2(1 + ρ)2 + t2λ2(1 − ρ)2 ≤ 4t2λ2,
+
+where the last inequality follows from (1 + x)2 + (1 − x)2 ≤ 4 for 0 ≤ x ≤ 1. Similarly, 
+
+κV,λ  
+
+> 2
+
+(t) ≤ 4dt 2(1 − λ)2, κE,λ  
+
+> 1
+
+≤ 2tρλ + t2λ2.
+
+Recall that 
+
+τ = ( ρλN k + r(1 − λ)kd ) − C(∥A∥F
+
+√2k log n + ∥A∥2 · 2k log n)= ( ρλN k + r(1 − λ)kd ) − C
+
+((√ 
+
+λ2Nk + (1 − λ)2kd √2k log n
+
+)
+
++
+
+(
+
+(λ ∨ (1 − λ)) · 2k log n
+
+))
+
+.
+
+(21) Note that Nk = nk (1 − k+1 2n ) ≥ kn  
+
+> 3
+
+. Let P = ρλ (Nk − k) + r(1 − λ)kd , Q = λ2Nk + (1 − λ)2kd . We have 
+
+− tτ + Nk
+
+2 κE,λ  
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE,λ  
+
+> 1
+
+(t) − 12 κE,λ  
+
+> 2
+
+(t)
+
+)
+
++ k
+
+2 κV,λ  
+
+> 2
+
+(t)
+
+> (a)
+
+≤ − tτ + 2 Nkt2λ2 + ktρλ + k
+
+2 t2λ2 + 2 kdt 2(1 − λ)2
+
+≤ − tτ + 3 t2(λ2Nk + (1 − λ)2kd ) + ktρλ 
+
+> (b)
+
+≤ − t (ρλ (Nk − k) + r(1 − λ)kd ) + 3 t2(λ2Nk + (1 − λ)2kd )+ tC 
+
+√
+
+2k log n(λ2Nk + (1 − λ)2kd ) + tC 2k log n
+
+= − tP + 3 t2Q + tC √2Qk log n + tC 2k log n, (22) where (a) is because κE,λ  
+
+> 2
+
+(t) ≤ 4t2λ2, κE,λ  
+
+> 1
+
+(t) − 12 κE,λ  
+
+> 2
+
+(t) ≤ κE,λ  
+
+> 1
+
+(t) ≤ 2tρλ + t2λ2, and κV,λ  
+
+> 2
+
+(t) ≤
+
+4dt 2(1 − λ)2; (b) follows from (21) and λ ∨ (1 − λ) ≤ 1. Pick t0 = 116 
+
+(√ 2k log nQ ∧ 1
+
+)
+
+. Then 3 t20Q ≤ 18 k log n, t0C√2k log nQ ≤ C 
+
+> 8
+
+log n, and t0C2k log n ≤ 
+
+> C
+> 8
+
+log n. Under Assumption 1, since n log 11−ρ2 + d log 11−r2 ≥ C0 log n, we have 
+
+n log 
+
+( 11 − ρ2
+
+)
+
+≥ C0 log n
+
+1 + Γ , d log 
+
+( 11 − r2
+
+)
+
+≥ C0 log n
+
+1 + Γ .
+
+Since n = ω(log n) and d = ω(log n), we have ρ = o(1) and r = o(1). Hence log(1 /(1 − ρ2)) = (1 + o(1)) ρ2 and log(1 /(1 − r2)) = (1 + o(1)) r2. Therefore, 
+
+nρ 2 ≥ C0 log n
+
+2(1 + Γ) , dr 2 ≥ C0 log n
+
+2(1 + Γ) .
+
+33 Note that Nk − k = kn (1 − k+3 2n ) ≥ kn  
+
+> 3
+
+for sufficiently large n. Consequently, if t0 = 116 , since 
+
+λ, 1 − λ ≥ δ, then 
+
+t0P ≥ δ
+
+16 ( ρkn 
+
+3 + rkd ) ≥ δk 
+
+64 (nρ + rd )
+
+≥ δk 
+
+64 
+
+√n
+
+√
+
+12
+
+C0 log n
+
+1 + Γ + √d
+
+√
+
+12
+
+C0 log n
+
+1 + Γ 
+
+ ≥√C0δk 
+
+128 log n
+
+√1 + Γ .
+
+If t0 = 116 
+
+√ 2k log nQ , then 
+
+t0P ≥√2k log n
+
+32  
+
+> 12
+
+λρN k + (1 − λ)rkd 
+
+√λ2Nk + (1 − λ)2kd 
+
+> (a)
+
+≥ δ√2k log n
+
+32 ( ρ
+
+> 2
+
+√Nk ∧ r√kd )( λ√Nk + (1 − λ)√kd )
+
+λ√Nk + (1 − λ)√kd 
+
+= δ√2k log n
+
+32 ( ρ
+
+2
+
+√Nk ∧ r√kd ) ≥ δ√2k log n√k
+
+128 (
+
+√
+
+nρ 2 ∧ √dr 2)
+
+≥ δ
+
+128 
+
+√C0k log n
+
+√1 + Γ ,
+
+where (a) is because λ, 1 − λ ≥ δ and √λ2Nk + (1 − λ)2kd ≤ λ√Nk + (1 − λ)√kd . Therefore, by Chernoff’s bound, 
+
+P [Zλ ≥ τ ] ≤ exp( −t0τ )E [exp( t0Zλ)] = exp 
+
+(
+
+−tτ + Nk
+
+2 κE,λ  
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE,λ  
+
+> 1
+
+(t) − 12 κE,λ  
+
+> 2
+
+(t)
+
+)
+
++ k
+
+2 κV,λ  
+
+> 2
+
+(t)
+
+)
+
+> (a)
+
+≤ exp 
+
+(
+
+−t0P + 3 t20Q + t0C√2kQ log n + t0C2k log n
+
+)
+
+> (b)
+
+≤ exp 
+
+(
+
+− δ√C0
+
+128 √1 + Γ k log n + 1 + C
+
+4 k log n
+
+)
+
+≤ exp( −3k log n),
+
+where (a) follows from (22); (b) is because 3 t20Q ≤ 18 k log n, t0C√2k log nQ ≤ C 
+
+> 8
+
+log n, t0C2k log n ≤ 
+
+> C
+> 8
+
+log n, and t0P ≥ δ   
+
+> 128
+> √C0klog n√1+Γ
+
+. Applying union bound yields 
+
+P
+
+ ⋃
+
+> π′∈Tk
+
+λ ∑
+
+> e / ∈E
+
+βe(G1)βπ′(e)(G2) + (1 − λ) ∑
+
+> v / ∈F
+
+xTv yπ′(v) ≥ τ
+
+
+
+≤
+
+(nk
+
+)
+
+k! exp 
+
+(
+
+inf 
+
+> t> 0
+
+{
+
+−tτ + Nk
+
+2 κE,λ  
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE,λ  
+
+> 1
+
+(t) − 12 κE,λ  
+
+> 2
+
+(t)
+
+)
+
++ k
+
+2 κV,λ  
+
+> 2
+
+(t)
+
+}) 
+
+≤ nk exp ( −3k log n)
+
+≤ exp ( k log n − 3k log n) = n−2k.
+
+C.7 Proof of Proposition 7 
+
+Let L ≜ 2
+
+{
+
+λ(∥A1∥2 + ∥A2∥2)2 + (1 − λ) ∑di=1 (∥Bi
+
+> 1
+
+∥2 + ∥Bi
+
+> 2
+
+∥2)2}
+
+. We first show that ∇f is L-Lipschitz. Define the linear operator 
+
+T (X) ≜
+
+(√λ(A1X − XA 2), √1 − λ(B11 X − XB 12 ), · · · , √1 − λ(Bd 
+
+> 1
+
+X − XB d 
+
+> 2
+
+)
+
+)
+
+,
+
+34 then f (Π) = ∥T (Π) ∥2 
+
+> F
+
+= ⟨Π, T ∗T Π⟩ and ∇f (Π) = 2 T ∗T (Π), where T ∗ denotes the adjoint of T
+
+with respect to the Frobenius inner product ⟨X, Y ⟩F = tr( X⊤Y ). Therefore, 
+
+∥∇ f (X) − ∇ f (Y )∥F ≤ 2∥T ∥2∥X − Y ∥F . (23) For each component of T (X), ∥A1X − XA 2∥F ≤ (∥A1∥2 + ∥A2∥2)∥X∥F , and similarly, ∥Bi
+
+> 1
+
+X −
+
+XB i
+
+> 2
+
+∥F ≤ (∥Bi
+
+> 1
+
+∥2 + ∥Bi
+
+> 2
+
+∥2)∥X∥F , which implies 
+
+∥T ∥2 ≤ λ(∥A1∥2 + ∥A2∥2)2 + (1 − λ)
+
+> d
+
+∑
+
+> i=1
+
+(∥Bi
+
+> 1
+
+∥2 + ∥Bi
+
+> 2
+
+∥2)2.
+
+Combining this with (23), we conclude that ∇f is L-Lipschitz. Recall that Π k+1 = Proj Wn (Π k − η∇f (Π k)) . Let Y k = Π k − η∇f (Π k). Since 
+
+∥X − Y k∥2 
+
+> F
+
+= ∥X − Πk + η∇f (Π k)∥2
+
+> F
+
+= ∥X − Πk∥2 
+
+> F
+
++ 2 η⟨∇ f (Π k), X − Πk⟩ + η2∥∇ f (Π k)∥2 
+
+> F
+
+,
+
+we have 
+
+⟨∇ f (Π k), X − Πk⟩ + 12η ∥X − Πk∥2 
+
+> F
+
+= 12η ∥X − Y k∥2 
+
+> F
+
+− η
+
+2 ∥∇ f (Π k)∥2 
+
+> F
+
+.
+
+Therefore, the Euclidean projection 
+
+Proj Wn (Π k − η∇f (Π k)) = arg min 
+
+> X∈Wn
+
+∥X − Y k∥2
+
+> F
+
+= arg min 
+
+> X∈Wn
+
+{
+
+⟨∇ f (Π k), X − Πk⟩ + 12η ∥X − Πk∥2
+
+> F
+
+}
+
+.
+
+Since Wn is convex, we have that Π k+1 + t(Π − Πk+1 ) ∈ Wn for any t ∈ (−1, 1) and Π ∈ Wn. Since Πk+1 minimizes g(X) ≜ 12 ∥X − Y k∥2 
+
+> F
+
+, we have ddt g(Π k+1 + t(Π − Πk+1 )) 
+
+∣∣∣t=0+ ≥ 0, which implies 
+
+⟨Πk+1 − Y k, Π − Πk+1 ⟩ ≥ 0 (24) for any Π ∈ Wn. Consequently, take Π = Π ′ yields that 
+
+⟨∇ f (Π k), Πk+1 − Π′⟩ ≤ 1
+
+η ⟨Πk+1 − Πk, Πk+1 − Π′⟩
+
+= 12η
+
+(
+
+∥Πk − Π′∥2 
+
+> F
+
+− ∥ Πk+1 − Π′∥2 
+
+> F
+
+− ∥ Πk+1 − Πk∥2
+
+> F
+
+)
+
+(25) We then establish the upper bound for |f (Π K ) − f (Π ′)|. For L−Lipschitz function f , we have 
+
+f (Y ) ≤ f (X) + ⟨∇ f (X), Y − X⟩ + L
+
+2 ∥Y − X∥2 
+
+> F
+
+, ∀X, Y ∈ Wn,
+
+which implies 
+
+f (Π k+1 ) ≤ f (Π k) + ⟨∇ f (Π k), Πk+1 − Πk⟩ + L
+
+2 ∥Πk+1 − Πk∥2 
+
+> F
+
+. (26) We decompose the second term as 
+
+⟨∇ f (Π k), Πk+1 − Πk⟩ = ⟨∇ f (Π k), Πk+1 − Π′⟩ + ⟨∇ f (Π k), Π′ − Πk⟩.
+
+35 Since f is convex, f (Π ′) ≥ f (Π k) + ⟨∇ f (Π k), Π′ − Πk⟩. Combining this with (25) and (26), we obtain that 
+
+f (Π k+1 ) − f (Π ′) ≤ 12η
+
+(
+
+∥Πk − Π′∥2 
+
+> F
+
+− ∥ Πk+1 − Π′∥2 
+
+> F
+
+− ∥ Πk+1 − Πk∥2
+
+> F
+
+)
+
++ L
+
+2 ∥Πk+1 − Πk∥2
+
+> F
+
+= 12η
+
+(
+
+∥Πk − Π′∥2 
+
+> F
+
+− ∥ Πk+1 − Π′∥2
+
+> F
+
+)
+
++ Lη − 12η ∥Πk+1 − Πk∥2
+
+> F
+
+≤ 12η
+
+(
+
+∥Πk − Π′∥2 
+
+> F
+
+− ∥ Πk+1 − Π′∥2
+
+> F
+
+)
+
+,
+
+where the last inequality follows from η ≤ 1/L .Take Π = Π k in (24), we obtain that 
+
+⟨∇ f (Π k), Πk+1 − Πk⟩ ≤ − 1
+
+η ∥Πk+1 − Πk∥2 
+
+> F
+
+.
+
+Combining this with (26), we obtain 
+
+f (Π k+1 ) − f (Π k) ≤ Lη − 22η ∥Πk+1 − Πk∥2 
+
+> F
+
+≤ 0.
+
+Taking sum for k = 0 , 1, · · · , K − 1, since f (Π K ) ≤ f (Π k) for any k = 0 , 1, · · · K − 1, 
+
+K|f (Π K ) − f (Π ′)| = K(f (Π K ) − f (Π ′)) ≤
+
+> K−1
+
+∑
+
+> k=0
+
+f (Π k) − Kf (Π ′) ≤ 12η ∥Π0 − Π′∥2 
+
+> F
+
+.
+
+The Birkhoff-von Neumann theorem (see, e.g. [HJ12, Theorem 8.7.2]) states that a doubly stochas-tic matrix is a convex combination of permutation matrices, which implies Wn is the convex hull of 
+
+n × n permutation matrices. For any P, Q ∈ Wn, ( P, Q ) 7 → ∥ P − Q∥2 
+
+> F
+
+is convex for each variable, hence the maximum admits on the extreme points of Wn, i.e., P, Q are permutation matrices. For permutation matrices P, Q , Tr( P ⊤P ) = Tr( Q⊤Q) = n. Therefore, 
+
+∥Π0 − Π′∥2 
+
+> F
+
+≤ ∥ P − Q∥2 
+
+> F
+
+= Tr( P ⊤P ) + Tr( Q⊤Q) − 2Tr( P ⊤Q) ≤ 2n. 
+
+Consequently, 
+
+|f (Π K ) − f (Π ′)| ≤ 12ηK ∥Π0 − Π′∥2 
+
+> F
+
+≤ nηK .
+
+# D Proof of Lemmas 
+
+D.1 Proof of Lemma 1 
+
+Note that W = X⊤AY = 14 (X + Y )⊤A(X + Y ) − 14 (X − Y )⊤A(X − Y ) and 
+
+E
+
+[
+
+(X + Y )⊤A(X + Y )
+
+]
+
+= (2 + 2 ρ)φ(ρ)Nk + (2 + 2 r)φ(r)dk 
+
+E
+
+[
+
+(X − Y )⊤A(X − Y )
+
+]
+
+= (2 − 2ρ)φ(ρ)Nk + (2 − 2r)φ(r)dk. 
+
+36 By Hanson-Wright inequality [HW71], there exists some universal constant C such that 
+
+P
+
+[ ∣∣∣∣
+
+14 (X + Y )⊤A(X + Y ) − E
+
+[ 14 (X + Y )⊤A(X + Y )
+
+]∣ ∣∣∣
+
+≥ C
+
+2
+
+(
+
+∥A∥F
+
+√
+
+log 
+
+( 1
+
+δ0
+
+)
+
+∨ ∥ A∥2 log 
+
+( 1
+
+δ0
+
+)) ] 
+
+≤ δ0
+
+2 ,
+
+P
+
+[ ∣∣∣∣
+
+14 (X − Y )⊤A(X − Y ) − E
+
+[ 14 (X − Y )⊤A(X − Y )
+
+]∣ ∣∣∣
+
+≥ C
+
+2
+
+(
+
+∥A∥F
+
+√
+
+log 
+
+( 1
+
+δ0
+
+)
+
+∨ ∥ A∥2 log 
+
+( 1
+
+δ0
+
+)) ] 
+
+≤ δ0
+
+2for any δ0 > 0. Consequently, 
+
+P
+
+[∣∣∣X⊤AY − ρφ (ρ)Nk − rφ (r)dk 
+
+∣∣∣ ≥ C
+
+(
+
+∥A∥F
+
+√
+
+log 
+
+( 1
+
+δ0
+
+)
+
+∨ ∥ A∥2 log 
+
+( 1
+
+δ0
+
+))] 
+
+≤ P
+
+[ ∣∣∣∣
+
+14 (X + Y )⊤A(X + Y ) − E
+
+[ 14 (X + Y )⊤A(X + Y )
+
+]∣ ∣∣∣
+
+≥ C
+
+2
+
+(
+
+∥A∥F
+
+√
+
+log 
+
+( 1
+
+δ0
+
+)
+
+∨ ∥ A∥2 log 
+
+( 1
+
+δ0
+
+)) ] 
+
++ P
+
+[ ∣∣∣∣
+
+14 (X − Y )⊤A(X − Y ) − E
+
+[ 14 (X − Y )⊤A(X − Y )
+
+]∣ ∣∣∣
+
+≥ C
+
+2
+
+(
+
+∥A∥F
+
+√
+
+log 
+
+( 1
+
+δ0
+
+)
+
+∨ ∥ A∥2 log 
+
+( 1
+
+δ0
+
+)) ] 
+
+≤ δ0.
+
+We finish the proof of Lemma 1. 
+
+D.2 Proof of Lemma 2 
+
+By (9), the cumulant generating function is given by log E [exp ( tZ )] = log E
+
+[
+
+exp 
+
+(
+
+tZ V)] 
+
++ log E
+
+[
+
+exp 
+
+(
+
+tZ E)] 
+
+.
+
+We first calculate E
+
+[
+
+exp 
+
+(
+
+tZ E)] 
+
+. Define the moment generating function (MGF) as mE 
+
+> k
+
+=exp 
+
+(
+
+κE
+
+> k
+
+)
+
+for any k ≥ 1. For any edge cycle C = {e1, e 2, · · · , e k} with ei+1 = σE(ei) for all 1 ≤ i ≤ k − 1 and e1 = σE(ek), let Ai−1 = βei (G1) and Bi = βπ′(ei)(G2) for any 1 ≤ i ≤ k,and we set Ak = A0 for notational simplicity. Since π∗(ei+1 ) = π′(ei), each pair ( Ai, B i) follows bivariate normal distribution N
+
+(
+
+0,
+
+[
+
+1 ρρ 1
+
+]
+
+)
+
+)
+
+, and thus the conditional distribution is given by 
+
+Ai|Bi ∼ N (ρB i, 1 − ρ2). Consequently, the MGF is given by 
+
+mE 
+
+> k
+
+= E
+
+[
+
+E
+
+[ k∏
+
+> i=1
+
+exp ( tφ (ρ)Ai−1Bi) ∣∣B1, · · · Bk
+
+]] 
+
+= E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+tρφ (ρ)Bi−1Bi + 12 t2φ(ρ)2B2 
+
+> i
+
+(1 − ρ2)
+
+)]
+
+,
+
+37 where the last equality is because E [exp ( tX )] = exp 
+
+(
+
+tμ + 12 t2σ2)
+
+for X ∼ N (μ, σ 2). Let λ1, λ 2 denote the roots of the quadratic function x2 −[1 − t2φ(ρ)2(1 − ρ2)] x+t2φ(ρ)2ρ2 = 0. Since t ≤ 1 
+
+> ρ
+
+− 2, we have λ1 + λ2 > 0 and the discriminant [1 − t2φ(ρ)2(1 − ρ2)]2 − 4t2φ(ρ)2ρ2 > 0. Since λ1λ2 > 0, we have λ1 > λ 2 > 0. Define the matrix 
+
+Jk ≜
+
+
+
+λ1/21 −λ1/22 0 · · · 00 λ1/21 −λ1/22 · · · 00 0 λ1/21 · · · 0... ... ... . . . −λ1/22
+
+−λ1/22 0 · · · 0 0 λ1/21
+
+
+
+∈ Rk×k.
+
+Denote Bk = [ B1, B 2, · · · , B k]⊤. Then we have 
+
+mE 
+
+> k
+
+= E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+tρφ (ρ)Bi−1Bi + 12 t2φ(ρ)2B2 
+
+> i
+
+(1 − ρ2)
+
+)]
+
+=
+
+∫
+
+· · · 
+
+∫ ( 1
+
+√2π
+
+)k
+
+exp 
+
+(
+
+− 12
+
+> k
+
+∑
+
+> i=1
+
+(
+
+B2 
+
+> i
+
+−
+
+(
+
+2tρφ (ρ)Bi−1Bi + t2φ(ρ)2(1 − ρ2)B2
+
+> i
+
+)) )
+
+dB1 · · · dBk
+
+=
+
+∫
+
+· · · 
+
+∫ ( 1
+
+√2π
+
+)k
+
+exp 
+
+(
+
+− 12
+
+> k
+
+∑
+
+> i=1
+
+(
+
+λ1/21 Bi−1 − λ1/22 Bi
+
+)2
+
+)
+
+dB1 · · · dBk
+
+=
+
+∫
+
+· · · 
+
+∫ ( 1
+
+√2π
+
+)k
+
+exp 
+
+(
+
+− 12 B⊤ 
+
+> k
+
+J⊤ 
+
+> k
+
+JkBk
+
+)
+
+dB1 · · · dBk = [det( Jk)] −1 = 1
+
+λk/ 21 − λk/ 22
+
+.
+
+We then calculate E
+
+[
+
+exp 
+
+(
+
+tZ V)] 
+
+. Define the moment generating function (MGF) as mV 
+
+> k
+
+=exp 
+
+(
+
+κV
+
+> k
+
+)
+
+for any k ≥ 1. For any vertex cycle C = {v1, · · · , v k} with vi+1 = σ(vi) for any 1 ≤ i ≤
+
+k − 1 and v1 = σ(vk), let ˜Ai−1 = xvi and ˜Bi = yπ′(vi), and we set ˜Ak = ˜A0 for notational simplicity. Since π∗(vi+1 ) = π′(vi), each pair ( ˜Ai, ˜Bi) ∼ N (0,
+
+[
+
+Id rI d
+
+rI d Id
+
+]
+
+). Similarly, 
+
+mV 
+
+> k
+
+= E
+
+[
+
+E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+tφ (r) ˜A⊤ 
+
+> i−1
+
+˜Bi
+
+) ∣∣ ˜B1, · · · ˜Bk
+
+]] 
+
+= E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+trφ (r) ˜B⊤ 
+
+> i−1
+
+˜Bi + 12 t2φ(r)2 ˜B⊤ 
+
+> i
+
+˜Bi(1 − r2)
+
+)]
+
+=
+
+> d
+
+∏
+
+> j=1
+
+E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+trφ (r) ˜B⊤ 
+
+> i−1,j
+
+˜Bi,j + 12 t2φ(r)2 ˜B⊤ 
+
+> i,j
+
+˜Bi,j (1 − r2)
+
+)]
+
+,
+
+where ˜Bi,j denotes the j−th element of vector ˜Bi and the last equality is because ˜Bi,j and ˜Bi′,j ′
+
+are independent for any ( i, j )̸ = ( i′, j ′). Let μ1 > μ 2 denote two roots of the quadratic equation 
+
+x2 − [1 − t2φ(r)2(1 − r2)] x + t2φ(r)2r2 = 0. Since t ≤ 1 
+
+> r
+
+− 2, we have μ1 + μ2 > 0 and the discriminant [1 − t2φ(r)2(1 − r2)]2 − 4t2φ(r)2r2 > 0. Since μ1μ2 > 0, we have μ1 > μ 2 > 0. By a similar argument with calculation for the edge cycle, we have 
+
+mV 
+
+> k
+
+=
+
+( 1
+
+μk/ 21 − μk/ 22
+
+)d
+
+.
+
+38 For any k ≥ 2, we have λk/ 21 − λk/ 22 ≥ (λ1 − λ2)k/ 2, and thus mE 
+
+> k
+
+≤ (mE 
+
+> 2
+
+)k/ 2 for any k ≥ 2. Similarly, 
+
+mV 
+
+> k
+
+≤ (mV 
+
+> 2
+
+)k/ 2 for any k ≥ 2. Recall ZE and ZV defined in (8). We have log E [exp( tZ )] = log E
+
+[
+
+exp( tZ E)
+
+]
+
++ log E
+
+[
+
+exp( tZ V)
+
+]
+
+= ∑
+
+> C∈C E\
+
+(F 
+
+> 2
+
+)
+
+κE 
+
+> |C|
+
++ ∑
+
+> C∈C V\F
+
+κV
+
+> |C|
+> (a)
+
+≤ ∑
+
+> i≥2
+
+∑
+
+> C∈C E
+> i
+
+|C|
+
+2 κE 
+
+> 2
+
+(t) + ∑ 
+
+> C∈C E
+> 1\
+
+(F 
+
+> 2
+
+)
+
+κE 
+
+> 1
+
+(t) + ∑
+
+> i≥2
+
+∑
+
+> C∈C V
+> i
+
+|C|
+
+2 κV 
+
+> 2
+
+(t)= ∑
+
+> C∈C E\
+
+(F 
+
+> 2
+
+)
+
+|C|
+
+2 κE 
+
+> 2
+
+(t) + ∑ 
+
+> C∈C E
+> 1\
+
+(F 
+
+> 2
+
+)
+
+(
+
+κE 
+
+> 1
+
+(t) − 12 κE 
+
+> 2
+
+(t)
+
+)
+
++ ∑
+
+> C∈C V\F
+
+|C|
+
+2 κV 
+
+> 2
+
+(t)
+
+> (b)
+
+≤ Nk
+
+2 κE 
+
+> 2
+
+(t) + k
+
+2
+
+(
+
+κE 
+
+> 1
+
+− 12 κE 
+
+> 2
+
+(t) + 12 κV 
+
+> 2
+
+(t)
+
+)
+
+,
+
+where (a) is because κE 
+
+> k
+
+(t) ≤ k 
+
+> 2
+
+κE 
+
+> 2
+
+(t) and κV 
+
+> k
+
+(t) ≤ k 
+
+> 2
+
+κV 
+
+> 2
+
+(t) for any k ≥ 2; (b) is because ∑
+
+> C∈C E\
+
+(F 
+
+> 2
+
+) |C| =
+
+(n
+
+> 2
+
+) − (n−k
+
+> 2
+
+) = Nk, ∑ 
+
+> C∈C V\F
+
+|C| = n − (n − k) = k. It remains to show |C E 
+
+> 1
+
+\(F
+
+> 2
+
+)| ≤ k 
+
+> 2
+
+. Indeed, for any e = uv ∈ C ∈ C E 
+
+> 1
+
+\(F
+
+> 2
+
+), we have π′(uv ) = π∗(uv ). Since e / ∈ (F
+
+> 2
+
+), we have π′(u) = π∗(v) and 
+
+π′(v) = π∗(u), which contribute two mismatched vertices in the reconstruction of the underlying mapping. Since the total number of mismatched vertices for π ∈ T k equals k, we have |C E 
+
+> 1
+
+\(F
+
+> 2
+
+)| ≤ k 
+
+> 2
+
+.Therefore, we finish the proof of Lemma 2. 
+
+D.3 Proof of Lemma 3 
+
+The cumulant generating function is given by log E [exp ( tY )] = log E
+
+[
+
+exp 
+
+(
+
+tY V)] 
+
++ log E
+
+[
+
+exp 
+
+(
+
+tY E)] 
+
+.
+
+We first calculate E
+
+[
+
+exp 
+
+(
+
+tY E)] 
+
+. Define the moment generating function (MGF) as ˜mE 
+
+> k
+
+=exp 
+
+(
+
+μE
+
+> k
+
+)
+
+for any k ≥ 1. For any edge cycle C = {e1, e 2, · · · , e k} with ei+1 = σE(ei) for all 1 ≤ i ≤ k − 1 and e1 = σE(ek), let Ai−1 = βei (G1) and Bi = βπ′(ei)(G2) for any 1 ≤ i ≤ k,and we set Ak = A0 for notational simplicity. Since π∗(ei+1 ) = π′(ei), each pair ( Ai, B i) follows bivariate normal distribution N
+
+(
+
+0,
+
+[
+
+1 ρρ 1
+
+]
+
+)
+
+)
+
+, and thus the conditional distribution is given by 
+
+Ai|Bi ∼ N (ρB i, 1 − ρ2). Consequently, the MGF is given by ˜mE 
+
+> k
+
+= E
+
+[
+
+E
+
+[ k∏
+
+> i=1
+
+exp ( tφ (ρ)( Ai−1Bi − Ai−1Bi−1)) ∣∣B1, · · · Bk
+
+]] 
+
+= E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+tρφ (ρ)Bi−1(Bi − Bi−1) + 12 t2φ(ρ)2(Bi − Bi−1)2(1 − ρ2)
+
+)]
+
+= E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+(tρφ (ρ) − t2φ(ρ)2(1 − ρ2))( Bi−1Bi − B2 
+
+> i
+
+)
+
+)]
+
+,
+
+where the second equality is because E [exp ( tX )] = exp 
+
+(
+
+tμ + 12 t2σ2)
+
+for X ∼ N (μ, σ 2). 39 Let λ1, λ 2 denote the roots of the quadratic function 
+
+x2 −
+
+[
+
+1 − 2( t2φ(ρ)2(1 − ρ2) − tρφ (ρ)) 
+
+]
+
+x + ( t2φ(ρ)2(1 − ρ2) − tρφ (ρ)) 2 = 0 .
+
+Since 0 < t < 1, we have 
+
+f (t, ρ ) ≜ t2φ(ρ)2(1 − ρ2) − tρφ (ρ) = ( t2 − t) ρ2
+
+1 − ρ2 ∈
+
+(
+
+− 14 , 0
+
+)
+
+.
+
+Therefore, we have λ1 + λ2 = 1 − 2f (t, ρ ) > 0, λ1λ2 = f (t, ρ )2 > 0 and the discriminant (1 −
+
+2f (t, ρ )) 2 − 4f (t, ρ )2 = 1 − 4f (t, ρ ) > 0, and thus λ1 > λ 2 > 0. Define the matrix 
+
+Jk ≜
+
+
+
+λ1/21 −λ1/22 0 · · · 00 λ1/21 −λ1/22 · · · 00 0 λ1/21 · · · 0... ... ... . . . −λ1/22
+
+−λ1/22 0 · · · 0 0 λ1/21
+
+
+
+∈ Rk×k.
+
+Denote Bk = [ B1, B 2, · · · , B k]⊤. Then we have ˜mE 
+
+> k
+
+= E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+(tρφ (ρ) − t2φ(ρ)2(1 − ρ2))( Bi−1Bi − B2 
+
+> i
+
+)
+
+)]
+
+=
+
+∫
+
+· · · 
+
+∫ ( 1
+
+√2π
+
+)k
+
+exp 
+
+(
+
+− 12
+
+> k
+
+∑
+
+> i=1
+
+B2
+
+> i
+
+)
+
+exp 
+
+( k∑
+
+> i=1
+
+[
+
+(tρφ (ρ) − t2φ(ρ)2(1 − ρ2))( Bi−1Bi − B2 
+
+> i
+
+)
+
+])
+
+dB1 · · · dBk
+
+=
+
+∫
+
+· · · 
+
+∫ ( 1
+
+√2π
+
+)k
+
+exp 
+
+(
+
+− 12
+
+> k
+
+∑
+
+> i=1
+
+(
+
+λ1/21 Bi−1 − λ1/22 Bi
+
+)2
+
+)
+
+dB1 · · · dBk
+
+=
+
+∫
+
+· · · 
+
+∫ ( 1
+
+√2π
+
+)k
+
+exp 
+
+(
+
+− 12 B⊤ 
+
+> k
+
+J⊤ 
+
+> k
+
+JkBk
+
+)
+
+dB1 · · · dBk
+
+= [det( Jk)] −1 = 1
+
+λk/ 21 − λk/ 22
+
+.
+
+We then calculate E
+
+[
+
+exp 
+
+(
+
+tY V)] 
+
+. Define the moment generating function (MGF) as ˜mV 
+
+> k
+
+=exp 
+
+(
+
+μV
+
+> k
+
+)
+
+for any k ≥ 1. For any vertex cycle C = {v1, · · · , v k} with vi+1 = σ(vi) for any 1 ≤ i ≤
+
+k − 1 and v1 = σ(vk), let ˜Ai−1 = xvi and ˜Bi = yπ′(vi), and we set ˜Ak = ˜A0 for notational simplicity. Since π∗(vi+1 ) = π′(vi), each pair ( ˜Ai, ˜Bi) ∼ N (0,
+
+[
+
+Id rI d
+
+rI d Id
+
+]
+
+). Similarly, 
+
+mV 
+
+> k
+
+= E
+
+[
+
+E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+tφ (r)( ˜A⊤ 
+
+> i−1
+
+˜Bi − ˜A⊤ 
+
+> i−1
+
+˜Bi−1)
+
+) ∣∣ ˜B1, · · · ˜Bk
+
+]] 
+
+= E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+trφ (r) ˜B⊤
+
+> i−1
+
+( ˜Bi − ˜Bi−1) + 12 t2φ(r)2( ˜Bi − ˜Bi−1)⊤( ˜Bi − ˜Bi−1)(1 − r2)
+
+)]
+
+=
+
+> d
+
+∏
+
+> j=1
+
+E
+
+[ k∏
+
+> i=1
+
+exp 
+
+(
+
+(trφ (r) − t2φ(r)2(1 − r2))( Bi−1,j Bi,j − B2 
+
+> i,j
+
+)
+
+)]
+
+,
+
+40 where ˜Bi,j denotes the j−th element of vector ˜Bi and the last equality is because ˜Bi,j and ˜Bi′,j ′
+
+are independent for any ( i, j )̸ = ( i′, j ′). Let μ1 > μ 2 denote two roots of the quadratic equation 
+
+x2 −
+
+[
+
+1 − 2( t2φ(r)2(1 − r2) − trφ (r)) 
+
+]
+
+x + ( t2φ(r)2(1 − r2) − trφ (r)) 2 = 0 .
+
+Since 0 < t < 1, we have 
+
+f (t, r ) ≜ t2φ(r)2(1 − r2) − trφ (r) = ( t2 − t) r2
+
+1 − r2 ∈
+
+(
+
+− 14 , 0
+
+)
+
+.
+
+Therefore, we have λ1 + λ2 = 1 − 2f (t, r ) > 0, λ1λ2 = f (t, r )2 > 0 and the discriminant (1 −
+
+2f (t, r )) 2 − 4f (t, r )2 = 1 − 4f (t, r ) > 0, and thus μ1 > μ 2 > 0. By a similar argument with calculation for the edge cycle, we have ˜mV 
+
+> k
+
+=
+
+( 1
+
+μk/ 21 − μk/ 22
+
+)d
+
+.
+
+For any k ≥ 2, we have λk/ 21 − λk/ 22 ≥ (λ1 − λ2)k/ 2, and thus ˜ mE 
+
+> k
+
+≤ ( ˜ mE 
+
+> 2
+
+)k/ 2 for any k ≥ 2. Similarly, ˜mV 
+
+> k
+
+≤ ( ˜ mV 
+
+> 2
+
+)k/ 2 for any k ≥ 2. Then, we upper bound log E [exp ( tY )]. We have log E [exp( tY )] = log E
+
+[
+
+exp( tY E)
+
+]
+
++ log E
+
+[
+
+exp( tY V)
+
+]
+
+= ∑
+
+> C∈C E\C E
+> 1
+
+μE 
+
+> |C|
+
++ ∑
+
+> C∈C V\F
+
+μV
+
+> |C|
+
+≤ ∑
+
+> C∈C E\C E
+> 1
+
+|C|
+
+2 μE 
+
+> 2
+
+(t) + ∑
+
+> C∈C V\F
+
+|C|
+
+2 μV 
+
+> 2
+
+(t),
+
+where the inequality is because μE 
+
+> k
+
+(t) ≤ k 
+
+> 2
+
+μE 
+
+> 2
+
+(t) and μV 
+
+> k
+
+(t) ≤ k 
+
+> 2
+
+μV 
+
+> 2
+
+(t) for any k ≥ 2. We note that 
+
+μE 
+
+> 2
+
+(t) = − 12 log 
+
+(
+
+1 + ρ2
+
+1 − ρ2 (4 t − 4t2)
+
+)
+
+< 0, for any 0 < t < 1.
+
+Consequently, log E [exp( tY )] ≤ ∑
+
+> C∈C E\C E
+> 1
+
+|C|
+
+2 μE 
+
+> 2
+
+(t) + ∑
+
+> C∈C V\F
+
+|C|
+
+2 μV 
+
+> 2
+
+(t)
+
+≤ 12
+
+(
+
+Nk − k
+
+2
+
+)
+
+μE 
+
+> 2
+
+(t) + k
+
+2 μV 
+
+> 2
+
+(t),
+
+where the inequality is because ∑
+
+> C∈C E\
+
+(F 
+
+> 2
+
+) |C| = (n
+
+> 2
+
+) − (n−k
+
+> 2
+
+) = Nk, ∑ 
+
+> C∈C V\F
+
+|C| = n − (n − k) = k,and |C E 
+
+> 1
+
+\(F
+
+> 2
+
+)| ≤ k 
+
+> 2
+
+. We finish the proof of Lemma 3. 
+
+D.4 Proof of Lemma 4 
+
+We first lower bound the packing number |M δ|. For any 0 < δ < 1 and π ∈ S n, let B(π, r ) ≜
+
+{π′ : d(π, π ′) ≤ r} denote the ball of radius r centered at π. By a standard volume argument [PW25, Theorem 27.3], we have 
+
+|M δ| ≥ |S n|
+
+max π |B(π, (1 − δ)n)| = n!max π |B(π, (1 − δ)n)| .
+
+41 To upper bound |B(π, (1 − δ)n)|, we first choose δn elements from the domain of π and map to the same value as π, and the remaining domain and range of size n − δn and the mapping are selected arbitrarily. We get B(π, (1 − δ)n) ≤ ( nδn 
+
+)(n − δn )!. Consequently, 
+
+|M δ| ≥ n!max π |B(π, (1 − δ)n)| ≥ n!
+
+( nδn 
+
+)(n − δn )! = ( δn )! ≥
+
+( δn e
+
+)δn 
+
+.
+
+We then upper bound the mutual information. Recall that the likelihood function is given by 
+
+PG1,G 2|π∗ = ∏
+
+> e∈E(G1)
+
+P (βe(G1), β π∗(e)(G2)) ∏ 
+
+> v∈V(G1)
+
+f (xv, yπ∗(v)).
+
+Next, we introduce an auxiliary distribution Q under which G1 and G2 are independent, while maintaining the same marginals as under P. Denote Q(·, ·) as the distribution of two independent standard normals and g(x, y) as the multivariate normal distribution N
+
+(
+
+0,
+
+[
+
+Id OO Id
+
+]) 
+
+. Then 
+
+QG1,G 2 = ∏
+
+> e∈E(G1)
+
+Q(βe(G1), β π∗(e)(G2)) ∏ 
+
+> v∈V(G1)
+
+g(xv, yπ(v)).
+
+The KL-divergence between the product measures PG1,G 2|π∗ and QG1,G 2 is given by 
+
+DKL (PG1,G 2|π∗ ∥Q G1,G 2 ) = 
+
+(n
+
+2
+
+)
+
+DKL (P ∥Q) + nD KL (f ∥g).
+
+We note that 
+
+DKL (P ∥Q) = 
+
+∫∫ 
+
+P (a, b ) log 
+
+( P (a, b )
+
+Q(a, b )
+
+)
+
+dadb
+
+=
+
+∫∫ 
+
+P (a, b )
+
+[ 12 log 
+
+( 11 − ρ2
+
+)
+
++ ρab 
+
+1 − ρ2 − ρ2(a2 + b2)2(1 − ρ2)
+
+]
+
+dadb
+
+= 12 log 
+
+( 11 − ρ2
+
+)
+
++ ρ2
+
+1 − ρ2 − 2ρ2
+
+2(1 − ρ2) = 12 log 
+
+( 11 − ρ2
+
+)
+
+.
+
+Similarly, DKL (f ∥g) = d 
+
+> 2
+
+log 
+
+( 11−r2
+
+)
+
+. Consequently, 
+
+I(π∗; G1, G 2) = Eπ∗
+
+[
+
+DKL (PG1,G 2|π∗ ∥P G1,G 2 )
+
+]
+
+≤ max 
+
+> π∈S n
+
+DKL (PG1,G 2|π∥Q G1,G 2 ) = 
+
+(n
+
+2
+
+) 12 log( 11 − ρ2 ) + nd 
+
+2 log( 11 − r2 ).
+
+D.5 Proof of Lemma 5 
+
+In this subsection, without loss of generality, we assume V (G1) = V (G2) = [ n]. Define adjacent matrices A, B ∈ Rn×n with Aij = βij (G1) and Bij = βij (G2) for any 1 ≤ i < j ≤ n. Let 
+
+X, Y ∈ Rn×1 with Xi = xi and Yi = yi with 1 ≤ i ≤ n. For any π ∈ S n, define Aπ ∈ Rn×n with 
+
+Aπij = Aπ(i)π(j) for any 1 ≤ i < j ≤ n, Xπ ∈ Rn×1 with Xπi = Xπ(i) for any 1 ≤ i ≤ n. For two matrices A and B, define the inner product as ⟨A, B ⟩ = ∑ 
+
+> 1≤i<j ≤n
+
+Aij Bij . Then, 
+
+Sπ(G1, G 2) = φ(ρ) ∑
+
+> e∈E(G1)
+
+βe(G1)βπ(e)(G2) + φ(r) ∑ 
+
+> v∈V(G1)
+
+xvyπ(v)
+
+= φ(ρ)⟨A, B π⟩ + φ(r)⟨X, Y π⟩.
+
+42 For any π1̸ = π2 ∈ T 2 with d(π1, π 2) = 3, 
+
+P [( G1, G 2) ∈ E (π∗, π 1) ∩ E (π∗, π 2)] = E
+
+[
+
+1{Sπ∗ (G1,G 2)≤Sπ1 (G1,G 2)}1{Sπ∗ (G1,G 2)≤Sπ2 (G1,G 2)}
+
+]
+
+≤ E
+
+[
+
+exp 
+
+( 12 (Sπ1 (G1, G 2) − Sπ∗ (G1, G 2)) 
+
+)
+
+exp 
+
+( 12 (Sπ2 (G1, G 2) − Sπ∗ (G1, G 2)) 
+
+)] 
+
+= E
+
+[
+
+exp 
+
+(
+
+φ(ρ)
+
+( 12 ⟨A, B π1 ⟩ + 12 ⟨A, B π2 ⟩ − ⟨ A, B π∗
+
+⟩
+
+))] 
+
+· E
+
+[
+
+exp 
+
+(
+
+φ(r)
+
+( 12 ⟨X, Y π1 ⟩ + 12 ⟨X, Y π2 ⟩ − ⟨ X, Y π∗
+
+⟩
+
+))] 
+
+.
+
+For simplicity, we denote d AdB = d A12 dA13 · · · dAn−1 ndB12 dB13 · · · dBn−1 n. For the first term, we note that 
+
+E
+
+[
+
+exp 
+
+(
+
+φ(ρ)
+
+( 12 ⟨A, B π1 ⟩ + 12 ⟨A, B π2 ⟩ − ⟨ A, B π∗
+
+⟩
+
+))] 
+
+=
+
+( 12π√1 − ρ2
+
+)(n
+
+> 2
+
+)
+
+·
+
+∫
+
+· · · 
+
+∫
+
+exp 
+
+( φ(ρ)2 (⟨A, B π1 ⟩ + ⟨A, B π2 ⟩) − 12(1 − ρ2)
+
+(
+
+∥A∥2 
+
+> F
+
++ ∥B∥2
+
+> F
+
+))
+
+dAdB. 
+
+Let vec( A) = ( A12 , A 13 , · · · , A 21 , · · · An−1 n) for any adjacent matrix A. For any π1̸ = π2 ∈ T 2,define permutation matrices Π E 
+
+> 1
+
+and Π E 
+
+> 2
+
+∈ { 0, 1}(n
+
+> 2
+
+)×(n
+
+> 2
+
+) as vec( Bπ1 ) = Π E 
+
+> 1
+
+vec( B), vec( Bπ2 ) = Π E 
+
+> 2
+
+vec( B).
+
+Then, 
+
+φ(ρ)2 (⟨A, B π1 ⟩ + ⟨A, B π2 ⟩) − 12(1 − ρ2)
+
+(
+
+∥A∥2 
+
+> F
+
++ ∥B∥2
+
+> F
+
+)
+
+= ρ
+
+2(1 − ρ2) vec( A)⊤(Π E 
+
+> 1
+
++ Π E 
+
+> 2
+
+)vec( B) − 12(1 − ρ2) (∥vec( A)∥22 + ∥vec( B)∥22)= − 12(1 − ρ2)
+
+[
+
+vec( A)vec( B)
+
+]⊤
+
+Σ
+
+[
+
+vec( A)vec( B)
+
+]
+
+,
+
+where Σ ≜
+
+ I(n
+
+> 2
+
+)×(n
+
+> 2
+
+) − ρ 
+
+> 2
+
+(Π E 
+
+> 1
+
++ Π E 
+
+> 2
+
+)
+
+− ρ 
+
+> 2
+
+(Π E 
+
+> 1
+
++ Π E 
+
+> 2
+
+)⊤ I(n
+
+> 2
+
+)×(n
+
+> 2
+
+)
+
+. Therefore, 
+
+E
+
+[
+
+exp 
+
+(
+
+φ(ρ)
+
+( 12 ⟨A, B π1 ⟩ + 12 ⟨A, B π2 ⟩ − ⟨ A, B π∗
+
+⟩
+
+))] 
+
+=
+
+( 12π√1 − ρ2
+
+)(n
+
+> 2
+
+) ∫
+
+· · · 
+
+∫
+
+exp 
+
+− 12(1 − ρ2)
+
+[
+
+vec( A)vec( B)
+
+]⊤
+
+Σ
+
+[
+
+vec( A)vec( B)
+
+] dAdB
+
+=
+
+√√√√ (1 − ρ2)(n
+
+> 2
+
+)det(Σ) .
+
+43 Let σ ≜ π2 ◦ π−11 Recall that CE 
+
+> i
+
+and CV 
+
+> i
+
+denote the set of edge orbits and node orbits with length i induced by σ. It follows from [DCK19, Lemmas 4.2 and 4.3] that det(Σ) = 
+
+> n
+
+∏
+
+> k=1
+
+
+
+> k
+
+∏
+
+> j=1
+
+(
+
+1 − ρ2
+
+2
+
+(
+
+1 + cos 
+
+( 2πj k
+
+)) ) 
+
+> |C E
+> k|
+
+≥ (1 − ρ2)|C E 
+
+> 1|
+> n
+
+∏
+
+> k=2
+
+(1 − ρ2)k|C E  
+
+> k|/2
+
+= (1 − ρ2) 12 (( n
+
+> 2
+
+)+|C E 
+
+> 1|
+
+),
+
+where the inequality follows from Lemma 10 and the last equality is because ∑nk=1 k|C E 
+
+> k
+
+| = (n
+
+> 2
+
+).Therefore, 
+
+E
+
+[
+
+exp 
+
+(
+
+φ(ρ)
+
+( 12 ⟨A, B π1 ⟩ + 12 ⟨A, B π2 ⟩ − ⟨ A, B π∗
+
+⟩
+
+))] 
+
+≤ (1 − ρ2) 14 (( n
+
+> 2
+
+)−|C E 
+
+> 1|
+
+).
+
+Similarly, 
+
+E
+
+[
+
+exp 
+
+(
+
+φ(r)
+
+( 12 ⟨X, Y π1 ⟩ + 12 ⟨X, Y π2 ⟩ − ⟨ X, Y π∗
+
+⟩
+
+))] 
+
+≤ (1 − r2) d(n−|C V  
+
+> 1|)4
+
+.
+
+For any π1̸ = π2 ∈ T 2 with d(π1, π 2) = 3. Let F ≜ {i ∈ [n] : π1(i) = π2(i)}. Then there exists 1 ≤ i, j, k ≤ n with i̸ = j̸ = k such that, 
+
+π1(i) = π2(j), π 1(j) = π2(k), π 1(k) = π2(i), and π1(ℓ) = π2(ℓ) for any ℓ ∈ [n]\ { i, j, k } .
+
+Then, 
+
+|C V 
+
+> 1
+
+| = | { ℓ ∈ [n] : ℓ / ∈ { i, j, k }} | = n − 3,
+
+|C E 
+
+> 1
+
+| = |(ℓ1, ℓ 2) : 1 ≤ ℓ1 < ℓ 2 ≤ n, ℓ 1, ℓ 2 /∈ { i, j, k } | =
+
+(n − 32
+
+)
+
+.
+
+Consequently, 
+
+P [( G1, G 2) ∈ E (π∗, π 1) ∩ E (π∗, π 2)] 
+
+≤ E
+
+[
+
+exp 
+
+(
+
+φ(ρ)
+
+( 12 ⟨A, B π1 ⟩ + 12 ⟨A, B π2 ⟩ − ⟨ A, B π∗
+
+⟩
+
+))] 
+
+· E
+
+[
+
+exp 
+
+(
+
+φ(r)
+
+( 12 ⟨X, Y π1 ⟩ + 12 ⟨X, Y π2 ⟩ − ⟨ X, Y π∗
+
+⟩
+
+))] 
+
+≤ (1 − ρ2) (n
+
+> 2
+
+)−(n−32 ) 
+
+> 4
+
+(1 − r2) 3d 
+
+> 4
+
+= (1 − ρ2) 3( n−2) 4 (1 − r2) 3d 
+
+> 4
+
+.
+
+# E Auxiliary Results 
+
+Lemma 8. For 0 < ρ 2 < 110 , we have 
+
+− 1 − ρ2
+
+2ρ2 log 
+
+(
+
+1 − ρ2(2 + ρ2)(1 − ρ2)2
+
+)
+
+≤ 1 + 4 ρ2.
+
+44 Proof. Let x ≜ ρ2 ∈ (0 , 110 ) and define 
+
+t ≜ x(2 + x)(1 − x)2 , (0 < t < 1) .
+
+Since x < 14 , we have 1 − t = (1 − x)2 − x(2 + x)(1 − x)2 = 1 − 4x
+
+(1 − x)2 > 0.
+
+For any 0 < t < 1, 
+
+− log(1 − t) = 
+
+> ∞
+
+∑
+
+> k=1
+
+tk
+
+k = t +
+
+> ∞
+
+∑
+
+> k=2
+
+tk
+
+k ≤ t + 12
+
+> ∞
+
+∑
+
+> k=2
+
+tk = t + t2
+
+2(1 − t) .
+
+Consequently, we have 
+
+− 1 − x
+
+2x log 
+
+(
+
+1 − x(2 + x)(1 − x)2
+
+)
+
+− (1 + 4 x) ≤ 1 − x
+
+2x
+
+(
+
+t + t2
+
+2(1 − t)
+
+)
+
+− (1 + 4 x)= 3x (−21 x2 + 20 x − 2) 4(4 x2 − 5x + 1) .
+
+For 0 < x < 14 , we have 4 x2 − 5x + 1 > 0. The numerator factor f (x) = −21 x2 + 20 x − 2 is strictly increasing on [0 , 110 ] (since f ′(x) = −42 x + 20 > 0), and f
+
+( 110 
+
+)
+
+= −0.21 < 0. Thus f (x) < 0 for all 0 < x ≤ 110 , making the whole fraction nonpositive. Therefore, for any 0 < ρ 2 < 110 ,
+
+− 1 − ρ2
+
+2ρ2 log 
+
+(
+
+1 − ρ2(2 + ρ2)(1 − ρ2)2
+
+)
+
+≤ 1 + 4 ρ2.
+
+Lemma 9 (Chernoff’s inequality for Chi-squared distribution) . Suppose ξ follows the chi-squared distribution with n degrees of freedom. Then, for any δ > 0,
+
+P [ξ > (1 + δ)n] ≤ exp 
+
+(
+
+− n
+
+2 (δ − log (1 + δ)) 
+
+)
+
+, (27) 
+
+P [ξ < (1 − δ)n] ≤ exp 
+
+(
+
+− δ2
+
+4 n
+
+)
+
+. (28) 
+
+Proof. The result follows from (author?) [Gho21, Theorems 1 and 2]. 
+
+Lemma 10. For any integer k ≥ 1 and any 0 ≤ ρ ≤ 1, we have 
+
+> k
+
+∏
+
+> j=1
+
+(( 
+
+1 − ρ2
+
+2
+
+)
+
+− ρ2
+
+2 cos 2πj k
+
+)
+
+≥ (1 − ρ2)k/ 2.
+
+Proof. We note that (
+
+1 − ρ2
+
+2
+
+)
+
+− ρ2
+
+2 cos 2πj k = 1 − ρ2 cos 2
+
+( πj k
+
+)
+
+,
+
+so the product equals 
+
+P =
+
+> k
+
+∏
+
+> j=1
+
+(
+
+1 − ρ2 cos 2( πj k )
+
+)
+
+.
+
+45 For any a, t ∈ [0 , 1], we have 1 − at ≥ (1 − a)t, which follows from concavity of g(t) = ln(1 − at ) −
+
+t ln(1 − a) and g(0) = g(1) = 0. Applying this with a = ρ2 and t = cos 2(πj/k ) yields 1 − ρ2 cos 2( πj k ) ≥ (1 − ρ2)cos 2(πj/k ).
+
+Multiplying over j = 1 , . . . , k gives 
+
+P ≥ (1 − ρ2) 
+
+> ∑kj=1 cos 2(πj/k )
+
+.
+
+Since ∑kj=1 cos 2(πj/k ) = ∑kj=1 1+cos(2 πj/k )2 = k 
+
+> 2
+
+, we conclude that 
+
+P =
+
+> k∏
+> j=1
+> ((
+
+1 − ρ2
+
+2
+
+> )
+
+− ρ2
+
+2 cos 2πj k
+
+> )
+
+≥ (1 − ρ2)k/ 2.
+
+# References 
+
+[ABT24] Ernesto Araya, Guillaume Braun, and Hemant Tyagi. Seeded graph matching for the correlated Gaussian Wigner model via the projected power method. Journal of Machine Learning Research , 25(5):1–43, 2024. [AH24] Taha Ameen and Bruce Hajek. Exact random graph matching with multiple graphs. 
+
+arXiv preprint arXiv:2405.12293 , 2024. [AH25] Taha Ameen and Bruce Hajek. Detecting correlation between multiple unlabeled Gaussian networks. arXiv preprint arXiv:2504.16279 , 2025. [BB88] Jonathan Barzilai and Jonathan M Borwein. Two-point step size gradient methods. 
+
+IMA Journal of Numerical Analysis , 8(1):141–148, 1988. [BB24] Kiril Bangachev and Guy Bresler. Detection of L∞ geometry in random geometric graphs: suboptimality of triangles and cluster expansion. In Proceedings of Thirty Seventh Conference on Learning Theory , pages 427–497. PMLR, 2024. [BBM05] Alexander C Berg, Tamara L Berg, and Jitendra Malik. Shape matching and object recognition using low distortion correspondences. In 2005 IEEE Computer Soci-ety Conference on Computer Vision and Pattern Recognition (CVPR’05) , volume 1, pages 26–33. IEEE, 2005. [BCL +19] Boaz Barak, Chi-Ning Chou, Zhixian Lei, Tselil Schramm, and Yueqi Sheng. (Nearly) efficient algorithms for the graph matching problem on correlated random graphs. 
+
+Advances in Neural Information Processing Systems , 32, 2019. [BCPP98] Rainer E Burkard, Eranda Cela, Panos M Pardalos, and Leonidas S Pitsoulis. The quadratic assignment problem. In Handbook of Combinatorial Optimization: Volume1–3 , pages 1713–1809. Springer, 1998. [BES80] L´ aszl´ o Babai, Paul Erd˝ os, and Stanley M Selkow. Random graph isomorphism. SIAM Journal on Computing , 9(3):628–635, 1980. 46 [Bir42] Z. W. Birnbaum. An inequality for Mill’s ratio. The Annals of Mathematical Statistics ,13(2):245 – 246, 1942. [Bol82] B´ ela Bollob´ as. Distinguishing vertices of random graphs. In North-Holland Mathe-matics Studies , volume 62, pages 33–49. Elsevier, 1982. [BVS +24] Aditya Bommakanti, Harshith Vonteri, Konstantinos Skitsas, Sayan Ranu, Davide Mottin, and Panagiotis Karras. FUGAL: Feature-fortified Unrestricted Graph Align-ment. Advances in Neural Information Processing Systems , 37:19523–19546, 2024. [CK16] Daniel Cullina and Negar Kiyavash. Improved achievability and converse bounds for Erd˝ os-R´ enyi graph matching. ACM SIGMETRICS Performance Evaluation Review ,44(1):63–72, 2016. [CK17] Daniel Cullina and Negar Kiyavash. Exact alignment recovery for correlated Erd˝ os-R´ enyi graphs. arXiv preprint arXiv:1711.06783 , 2017. [CR24] Shuwen Chai and Mikl´ os Z R´ acz. Efficient graph matching for correlated stochas-tic block models. Advances in Neural Information Processing Systems , 37:116388– 116461, 2024. [CT06] Thomas M. Cover and Joy A Thomas. Elements of Information Theory . Wiley-Interscience, 2006. [DCK19] Osman E Dai, Daniel Cullina, and Negar Kiyavash. Database alignment with Gaus-sian features. In The 22nd International Conference on Artificial Intelligence and Statistics , pages 3225–3233. PMLR, 2019. [DCK23] Osman Emre Dai, Daniel Cullina, and Negar Kiyavash. Gaussian database alignment and gaussian planted matching. arXiv preprint arXiv:2307.02459 , 2023. [DCKG19] Osman Emre Dai, Daniel Cullina, Negar Kiyavash, and Matthias Grossglauser. Anal-ysis of a canonical labeling algorithm for the alignment of correlated Erd˝ os-R´ enyi graphs. Proceedings of the ACM on Measurement and Analysis of Computing Sys-tems , 3(2):1–25, 2019. [DD23a] Jian Ding and Hang Du. Detection threshold for correlated Erd˝ os-R´ enyi graphs via densest subgraph. IEEE Transactions on Information Theory , 69(8):5289–5298, 2023. [DD23b] Jian Ding and Hang Du. Matching recovery threshold for correlated random graphs. 
+
+The Annals of Statistics , 51(4):1718–1743, 2023. [DFW25] Jian Ding, Yumou Fei, and Yuanzheng Wang. Efficiently matching random inhomo-geneous graphs via degree profiles. The Annals of Statistics , 53(4):1808–1832, 2025. [DGH25] Hang Du, Shuyang Gong, and Rundong Huang. The algorithmic phase transi-tion of random graph alignment problem. Probability Theory and Related Fields ,191:1233–1288, 2025. [DL23] Jian Ding and Zhangsong Li. A polynomial-time iterative algorithm for random graph matching with non-vanishing correlation. arXiv preprint arXiv:2306.00266 , 2023. 47 [DL24] Jian Ding and Zhangsong Li. A polynomial time iterative algorithm for matching Gaussian matrices with non-vanishing correlation. Foundations of Computational Mathematics , pages 1–58, 2024. [DMWX21] Jian Ding, Zongming Ma, Yihong Wu, and Jiaming Xu. Efficient random graph matching via degree profiles. Probability Theory and Related Fields , 179:29–115, 2021. [Du25] Hang Du. Optimal recovery of correlated Erd˝ os-R´ enyi graphs. arXiv preprint arXiv:2502.12077 , 2025. [DZCT17] Boxin Du, Si Zhang, Nan Cao, and Hanghang Tong. First: Fast interactive attributed subgraph matching. In Proceedings of the 23rd ACM SIGKDD International Confer-ence on Knowledge Discovery and Data Mining , pages 1447–1456, 2017. [FMWX20] Zhou Fan, Cheng Mao, Yihong Wu, and Jiaming Xu. Spectral graph matching and regularized quadratic relaxations: Algorithm and theory. In International Conference on Machine Learning , pages 2985–2995. PMLR, 2020. [FMWX23a] Zhou Fan, Cheng Mao, Yihong Wu, and Jiaming Xu. Spectral graph matching and regularized quadratic relaxations I: The Gaussian model. Foundations of Computa-tional Mathematics , 23(5):1511–1565, 2023. [FMWX23b] Zhou Fan, Cheng Mao, Yihong Wu, and Jiaming Xu. Spectral graph matching and regularized quadratic relaxations II: Erd˝ os-R´ enyi graphs and universality. Founda-tions of Computational Mathematics , 23(5):1567–1617, 2023. [Gho21] Malay Ghosh. Exponential tail bounds for chisquared random variables. Journal of Statistical Theory and Practice , 15(2):35, 2021. [GL24] Shuyang Gong and Zhangsong Li. The Umeyama algorithm for matching corre-lated Gaussian geometric models in the low-dimensional regime. arXiv preprint arXiv:2402.15095 , 2024. [GLZ15] Chao Gao, Yu Lu, and Harrison H Zhou. Rate-optimal graphon estimation. The Annals of Statistics , 43(6):2624–2652, 2015. [GM20] Luca Ganassali and Laurent Massouli´ e. From tree matching to sparse graph align-ment. In Conference on Learning Theory , pages 1633–1665. PMLR, 2020. [GML21] Luca Ganassali, Laurent Massouli´ e, and Marc Lelarge. Impossibility of partial re-covery in the graph alignment problem. In Conference on Learning Theory , pages 2080–2102. PMLR, 2021. [GMS24] Luca Ganassali, Laurent Massouli´ e, and Guilhem Semerjian. Statistical limits of correlation detection in trees. The Annals of Applied Probability , 34(4):3701–3734, 2024. [HJ12] Roger A Horn and Charles R Johnson. Matrix analysis . Cambridge university press, 2012. [HKP +17] Samuel B Hopkins, Pravesh K Kothari, Aaron Potechin, Prasad Raghavendra, Tselil Schramm, and David Steurer. The power of sum-of-squares for detecting hidden structures. In 2017 IEEE 58th Annual Symposium on Foundations of Computer Science (FOCS) , pages 720–731. IEEE, 2017. 48 [HM23] Georgina Hall and Laurent Massouli´ e. Partial recovery in the graph alignment prob-lem. Operations Research , 71(1):259–272, 2023. [HNM05] Aria Haghighi, Andrew Y Ng, and Christopher D Manning. Robust textual inference via graph matching. In Proceedings of Human Language Technology Conference and Conference on Empirical Methods in Natural Language Processing , pages 387–394, 2005. [Hop18] Samuel Hopkins. Statistical inference and the sum of squares method . PhD thesis, Cornell University, 2018. [HSSK18] Mark Heimann, Haoming Shen, Tara Safavi, and Danai Koutra. REGAL: represen-tation learning-based graph alignment. In Proceedings of the 27th ACM International Conference on Information and Knowledge Management , pages 117–126. ACM, 2018. [HSY25] Dong Huang, Xianwen Song, and Pengkun Yang. Information-theoretic thresholds for the alignments of partially correlated graphs. IEEE Transactions on Information Theory , 71(12):9674–9697, 2025. [HW71] David Lee Hanson and Farroll Tim Wright. A bound on tail probabilities for quadratic forms in independent random variables. The Annals of Mathematical Statistics ,42(3):1079–1083, 1971. [HY25] Dong Huang and Pengkun Yang. Sample complexity of correlation detection in the Gaussian Wigner model. arXiv preprint arXiv:2505.14138 , 2025. [KMF +19] Ilya Korsunsky, Nghia Millard, Jean Fan, Kamil Slowikowski, Fan Zhang, Kevin Wei, Yuriy Baglaenko, Michael Brenner, Po-ru Loh, and Soumya Raychaudhuri. Fast, sensitive and accurate integration of single-cell data with Harmony. Nature Methods ,16(12):1289–1296, 2019. [KNW22] Dmitriy Kunisky and Jonathan Niles-Weed. Strong recovery of geometric planted matchings. In Proceedings of the 2022 Annual ACM-SIAM Symposium on Discrete Algorithms (SODA) , pages 834–876. SIAM, 2022. [Kuh55] Harold W Kuhn. The Hungarian method for the assignment problem. Naval Research Logistics Quarterly , 2(1-2):83–97, 1955. [LDT +19] Lihui Liu, Boxin Du, Hanghang Tong, et al. G-finder: Approximate attributed sub-graph matching. In 2019 IEEE International Conference on Big Data , pages 513–522. IEEE, 2019. [LHK10] Jure Leskovec, Daniel Huttenlocher, and Jon Kleinberg. Predicting positive and negative links in online social networks. In Proceedings of the 19th International Conference on World Wide Web , pages 641–650, 2010. [LLSZ21] Zhuang Liu, Wayne Lin, Ya Shi, and Jun Zhao. A robustly optimized BERT pre-training approach with post-training. In China National Conference on Chinese Com-putational Linguistics , pages 471–484. Springer, 2021. [Lyz18] Vince Lyzinski. Information recovery in shuffled graphs via graph matching. IEEE Transactions on Information Theory , 64(5):3254–3273, 2018. 49 [MHK +08] Diana Mateus, Radu Horaud, David Knossow, Fabio Cuzzolin, and Edmond Boyer. Articulated shape matching using laplacian eigenfunctions and unsupervised point registration. In 2008 IEEE Conference on Computer Vision and Pattern Recognition ,pages 1–8. IEEE, 2008. [MMS10] Konstantin Makarychev, Rajsekar Manokaran, and Maxim Sviridenko. Maximum quadratic assignment problem: Reduction from maximum label cover and lp-based approximation algorithm. In International Colloquium on Automata, Languages, and Programming , pages 594–604. Springer, 2010. [MRT21] Cheng Mao, Mark Rudelson, and Konstantin Tikhomirov. Random graph matching with improved noise robustness. In Conference on Learning Theory , pages 3296–3329. PMLR, 2021. [MRT23] Cheng Mao, Mark Rudelson, and Konstantin Tikhomirov. Exact matching of random graphs with constant correlation. Probability Theory and Related Fields , 186(1-2):327– 389, 2023. [MS24] Andrea Muratori and Guilhem Semerjian. Faster algorithms for the alignment of sparse correlated Erd˝ os-R´ enyi random graphs. Journal of Statistical Mechanics: The-ory and Experiment , 2024(11):113405, 2024. [Mun57] James Munkres. Algorithms for the assignment and transportation problems. Journal of the Society for Industrial and Applied Mathematics , 5(1):32–38, 1957. [MWXY23] Cheng Mao, Yihong Wu, Jiaming Xu, and Sophie H Yu. Random graph matching at Otter’s threshold via counting chandeliers. In Proceedings of the 55th Annual ACM Symposium on Theory of Computing , pages 1345–1356, 2023. [MWZ23] Cheng Mao, Alexander S Wein, and Shenduo Zhang. Detection-recovery gap for planted dense cycles. In The Thirty Sixth Annual Conference on Learning Theory ,pages 2440–2481. PMLR, 2023. [MWZ24] Cheng Mao, Alexander S. Wein, and Shenduo Zhang. Information-theoretic thresh-olds for planted dense cycles. arXiv preprint arXiv:2402.00305 , 2024. [OGE16] Efe Onaran, Siddharth Garg, and Elza Erkip. Optimal de-anonymization in random graphs with community structure. In 2016 50th Asilomar Conference on Signals, Systems and Computers , pages 709–713. IEEE, 2016. [PCS16] Gabriel Peyr´ e, Marco Cuturi, and Justin Solomon. Gromov-Wasserstein averaging of kernel and distance matrices. In International Conference on Machine Learning ,pages 2664–2672. PMLR, 2016. [PRW94] Panos M Pardalos, Franz Rendl, and Henry Wolkowicz. The quadratic assignment problem: A survey and recent developments. In Proceedings of the DIMACS Work-shop on Quadratic Assignment Problems, volume 16 of DIMACS Series in Discrete Mathematics and Theoretical Computer Science , pages 1–42. American Mathematical Society, 1994. [PSSZ22] Giovanni Piccioli, Guilhem Semerjian, Gabriele Sicuro, and Lenka Zdeborov´ a. Align-ing random graphs with a sub-tree similarity message-passing algorithm. Journal of Statistical Mechanics: Theory and Experiment , 2022(6):063401, 2022. 50 [PW25] Yury Polyanskiy and Yihong Wu. Information theory: From coding to learning . Cam-bridge university press, 2025. [PYM +20] Krzysztof Pola´ nski, Matthew D Young, Zhichao Miao, Kerstin B Meyer, Sarah A Teichmann, and Jong-Eun Park. BBKNN: fast batch alignment of single cell tran-scriptomes. Bioinformatics , 36(3):964–965, 2020. [RS23] Mikl´ os Z R´ acz and Anirudh Sridhar. Matching correlated inhomogeneous random graphs using the k-core estimator. In 2023 IEEE International Symposium on Infor-mation Theory (ISIT) , pages 2499–2504. IEEE, 2023. [Sin64] Richard Sinkhorn. A relationship between arbitrary positive matrices and doubly stochastic matrices. The Annals of Mathematical Statistics , 35(2):876–879, 1964. [SNL +25] Flore Sentenac, Nathan Noiry, Matthieu Lerasle, Laurent M´ enard, and Vianney Perchet. Online matching in geometric random graphs. Mathematics of Operations Research , 2025. [SPT23] Yukun Song, Carey E Priebe, and Minh Tang. Independence testing for inhomoge-neous random graphs. arXiv preprint arXiv:2304.09132 , 2023. [SSV +16] Patrik L St˚ ahl, Fredrik Salm´ en, Sanja Vickovic, Anna Lundmark, Jos´ e Fern´ andez Navarro, Jens Magnusson, Stefania Giacomello, Michaela Asp, Jakub O Westholm, Mikael Huss, et al. Visualization and analysis of gene expression in tissue sections by spatial transcriptomics. Science , 353(6294):78–82, 2016. [SXB08] Rohit Singh, Jinbo Xu, and Bonnie Berger. Global alignment of multiple protein interaction networks with application to functional orthology detection. Proceedings of the National Academy of Sciences , 105(35):12763–12768, 2008. [TCTF19] Vayer Titouan, Nicolas Courty, Romain Tavenard, and R´ emi Flamary. Optimal trans-port for structured data with application on graphs. In International Conference on Machine Learning , pages 6275–6284. PMLR, 2019. [TZL +23] Jianheng Tang, Weiqi Zhang, Jiajin Li, Kangfei Zhao, Fugee Tsung, and Jia Li. Robust attributed graph alignment via joint structure learning and optimal transport. In 2023 IEEE 39th International Conference on Data Engineering (ICDE) , pages 1638–1651. IEEE, 2023. [TZY +08] Jie Tang, Jing Zhang, Limin Yao, Juanzi Li, Li Zhang, and Zhong Su. Arnetminer: extraction and mining of academic social networks. In Proceedings of the 14th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , pages 990–998, 2008. [Ume88] Shinji Umeyama. An eigendecomposition approach to weighted graph matching prob-lems. IEEE Transactions on Pattern Analysis and Machine Intelligence , 10(5):695– 703, 1988. [VCL +15] Joshua T Vogelstein, John M Conroy, Vince Lyzinski, Louis J Podrazik, Steven G Kratzer, Eric T Harley, Donniell E Fishkind, R Jacob Vogelstein, and Carey E Priebe. Fast approximate quadratic programming for graph matching. PLOS ONE , 10(4):1– 17, 2015. 51 [WO13] Patrick J Wolfe and Sofia C Olhede. Nonparametric graphon estimation. arXiv preprint arXiv:1309.5936 , 2013. [WWW25] Ziao Wang, Weina Wang, and Lele Wang. Efficient algorithms for attributed graph alignment with vanishing edge correlation. IEEE Transactions on Information The-ory , 71(6):4556–4580, 2025. [WWXY22] Haoyu Wang, Yihong Wu, Jiaming Xu, and Israel Yolou. Random graph matching in geometric models: the case of complete graphs. In Conference on Learning Theory ,pages 3441–3488. PMLR, 2022. [WXY22] Yihong Wu, Jiaming Xu, and Sophie H Yu. Settling the sharp reconstruction thresholds of random graph matching. IEEE Transactions on Information Theory ,68(8):5391–5417, 2022. [WXY23] Yihong Wu, Jiaming Xu, and Sophie H Yu. Testing correlation of unlabeled random graphs. The Annals of Applied Probability , 33(4):2519–2558, 2023. [WZWW24] Ziao Wang, Ning Zhang, Weina Wang, and Lele Wang. On the feasible region of effi-cient algorithms for attributed graph alignment. IEEE Transactions on Information Theory , 70(5):3622–3639, 2024. [YC24] Joonhyuk Yang and Hye Won Chung. Exact graph matching in correlated Gaussian-attributed Erd˝ os-R´ enyi mode. In 2024 IEEE International Symposium on Informa-tion Theory (ISIT) , pages 3450–3455. IEEE, 2024. [YC25] Joonhyuk Yang and Hye Won Chung. Exact matching in correlated networks with node attributes for improved community recovery. IEEE Transactions on Information Theory , 71(10):7916–7941, 2025. [YML13] Jaewon Yang, Julian McAuley, and Jure Leskovec. Community detection in networks with node attributes. In 2013 IEEE 13th International Conference on Data Mining ,pages 1151–1156. IEEE, 2013. [ZH05] Bin Zhang and Steve Horvath. A general framework for weighted gene co-expression network analysis. Statistical Applications in Genetics and Molecular Biology , 4(1), 2005. [Zha18] Yuan Zhang. Consistent polynomial-time unseeded graph matching for Lipschitz graphons. arXiv preprint arXiv:1807.11027 , 2018. [ZLSR22] Ron Zeira, Max Land, Alexander Strzalkowski, and Benjamin J Raphael. Alignment and integration of spatial transcriptomics data. Nature Methods , 19(5):567–575, 2022. [ZT16] Si Zhang and Hanghang Tong. Final: Fast attributed network alignment. In Proceed-ings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining , pages 1345–1354, 2016. [ZWWW24] Ning Zhang, Ziao Wang, Weina Wang, and Lele Wang. Attributed graph alignment. 
+
+IEEE Transactions on Information Theory , 70(8):5910–5934, 2024. 52 [ZZXT23] Zhichen Zeng, Si Zhang, Yinglong Xia, and Hanghang Tong. PARROT: Position-aware regularized optimal transport for network alignment. In Proceedings of the ACM Web Conference 2023 , pages 372–382. Association for Computing Machinery, 2023. 53
